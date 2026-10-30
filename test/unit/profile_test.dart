@@ -64,6 +64,48 @@ paths: { plans: docs/plans }
     );
   });
 
+  test('other is valid for every family and needs a name', () {
+    final profile = parse('''
+toolkit: 1
+agents: [claude-code]
+stack:
+  state: { use: other, name: mobx }
+  di: { use: other, name: injectable }
+''');
+
+    expect(profile.stack['state']!.option, 'other');
+    expect(profile.stack['state']!.params, {'name': 'mobx'});
+    final context = profile.toContext();
+    expect(context['stack_other'], [
+      {'family': 'di', 'name': 'injectable'},
+      {'family': 'state', 'name': 'mobx'},
+    ]);
+    expect(context['has_stack_other'], true);
+  });
+
+  for (final raw in ['other', '{ use: other }', "{ use: other, name: '' }", '{ use: other, name: [a] }']) {
+    test('other without a name fails with its path ($raw)', () {
+      expect(
+        () => parse('toolkit: 1\nagents: [claude-code]\nstack: { state: $raw }\n'),
+        throwsA(isA<ProfileException>().having((e) => e.path, 'path', 'stack.state.name')),
+      );
+    });
+  }
+
+  test('unknown option error lists other', () {
+    expect(
+      () => parse('toolkit: 1\nagents: [claude-code]\nstack: { state: mobx }\n'),
+      throwsA(isA<ProfileException>().having((e) => e.message, 'message', contains('other'))),
+    );
+  });
+
+  test('no other choice gives an empty stack_other', () {
+    final context = parse('toolkit: 1\nagents: [claude-code]\nstack: { state: bloc }\n').toContext();
+
+    expect(context['stack_other'], isEmpty);
+    expect(context['has_stack_other'], false);
+  });
+
   test('unknown stack family fails with its path', () {
     expect(
       () => parse('toolkit: 1\nagents: [claude-code]\nstack: { orm: drift }\n'),

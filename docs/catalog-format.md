@@ -58,7 +58,11 @@ Templates are strict: an unknown variable is a render error. Use only these.
 | `project.branch_prefix.feat` / `.fix` / `.hotfix` | `feat/`, `fix/`, `hotfix/` |
 | `project.build_wrapper` | null |
 | `stack.<family>.use` | selected option; absent when the family is not selected |
+| `stack_other` (list of `family`, `name`) | the families set to `use: other`, sorted by family; empty |
+| `has_stack_other` | `true` when `stack_other` is not empty; gate fragments that loop over it |
 | `pack.<family>.<param>` | pack param; use only inside that pack's own fragments |
+
+Every family also accepts `use: other` with a required `name` (the library package name) for a library that has no pack. It selects no pack, so `pack.<family>` is absent; `core/rules/stack-other.md` renders the generic rules.
 
 Inverted sections (`{{^x}}`) over a string value fail in strict mode; write optional text with a positive section only.
 

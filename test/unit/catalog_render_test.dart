@@ -30,6 +30,26 @@ void main() {
     }
   });
 
+  test('every family set to other renders one line per family and stays under the size limit', () {
+    final families = catalog.knownOptions().keys.toList()..sort();
+    final stack = [for (final family in families) '  $family: { use: other, name: lib_$family }'].join('\n');
+    final targets = render('toolkit: 1\nagents: [claude-code]\nstack:\n$stack\n');
+    final agentsMd = targets.singleWhere((t) => t.target == 'agents_md');
+
+    expect(agentsMd.content, contains('## Libraries without a dashcrew pack'));
+    for (final family in families) {
+      expect(agentsMd.content, contains('- $family: `lib_$family`'));
+    }
+    expect(agentsMd.rules, contains('stack.other-follow-official-docs'));
+    expect(agentsMdBytes(targets), lessThan(32 * 1024));
+  });
+
+  test('no other choice renders no libraries section', () {
+    final targets = render('toolkit: 1\nagents: [claude-code]\nstack: { state: bloc }\n');
+
+    expect(targets.singleWhere((t) => t.target == 'agents_md').content, isNot(contains('without a dashcrew pack')));
+  });
+
   test('sample full stack stays under the AGENTS.md size limit with every policy flipped', () {
     final targets = render('''
 toolkit: 1

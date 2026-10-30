@@ -35,6 +35,9 @@ class Profile {
 
   static const supportedAgents = {'claude-code', 'codex'};
 
+  /// Option valid for every family: a library with no pack, named by the required `name` param.
+  static const otherOption = 'other';
+
   static const _topLevelKeys = {'toolkit', 'agents', 'language', 'stack', 'project', 'policy', 'paths'};
 
   static const _languageDefaults = <String, Object?>{'dartdoc': 'en', 'pr': 'en', 'chat': 'en'};
@@ -129,8 +132,12 @@ class Profile {
       } else {
         option = null;
       }
-      if (option == null || !options.contains(option)) {
-        throw ProfileException('stack.$family', 'expected one of ${options.join(', ')}');
+      if (option == null || !(options.contains(option) || option == otherOption)) {
+        throw ProfileException('stack.$family', 'expected one of ${{...options, otherOption}.join(', ')}');
+      }
+      final name = params['name'];
+      if (option == otherOption && (name is! String || name.isEmpty)) {
+        throw ProfileException('stack.$family.name', 'required with use: $otherOption, the library package name');
       }
       choices[family] = StackChoice(option, params);
     }
@@ -138,15 +145,24 @@ class Profile {
   }
 
   /// Template context: every section as plain maps; `stack.<family>` is `{use: option, ...params}`.
-  Map<String, Object?> toContext() => {
-        'agents': agents,
-        'language': language,
-        'stack': {
-          for (final MapEntry(key: family, value: choice) in stack.entries)
-            family: {'use': choice.option, ...choice.params},
-        },
-        'project': project,
-        'policy': policy,
-        'paths': paths,
-      };
+  /// `stack_other` lists the `other` choices as `{family, name}` sorted by family.
+  Map<String, Object?> toContext() {
+    final others = [
+      for (final family in stack.keys.toList()..sort())
+        if (stack[family]!.option == otherOption) {'family': family, 'name': stack[family]!.params['name']},
+    ];
+    return {
+      'agents': agents,
+      'language': language,
+      'stack': {
+        for (final MapEntry(key: family, value: choice) in stack.entries)
+          family: {'use': choice.option, ...choice.params},
+      },
+      'stack_other': others,
+      'has_stack_other': others.isNotEmpty,
+      'project': project,
+      'policy': policy,
+      'paths': paths,
+    };
+  }
 }
