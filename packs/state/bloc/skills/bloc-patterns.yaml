@@ -1,0 +1,2 @@
+description: Bloc and Cubit patterns for this project - choosing between them, state shape, rebuild scope, side effects, lifecycle and tests.
+when_to_use: When adding or changing a Bloc or Cubit, its states or events, or the widgets that listen to it.

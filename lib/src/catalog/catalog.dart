@@ -37,17 +37,42 @@ class Fragment {
 
 /// One option of a stack family, e.g. `state/bloc`.
 class Pack {
-  const Pack({required this.family, required this.option, required this.params, required this.fragments});
+  const Pack({
+    required this.family,
+    required this.option,
+    required this.params,
+    required this.fragments,
+    this.skills = const {},
+  });
 
   final String family;
   final String option;
   final Map<String, Object?> params;
   final List<Fragment> fragments;
+
+  /// Skills this pack adds, from `skills/<name>.yaml`.
+  final Map<String, DocMeta> skills;
+}
+
+/// Description of a skill or workflow, from its `meta.yaml`.
+class DocMeta {
+  const DocMeta({required this.description, this.whenToUse, this.argumentHint});
+
+  final String description;
+  final String? whenToUse;
+  final String? argumentHint;
 }
 
 /// `core/roles/<name>/role.yaml`: what the role may touch and how it should run.
 class RoleMeta {
-  const RoleMeta({required this.name, required this.description, required this.capability, this.model, this.effort});
+  const RoleMeta({
+    required this.name,
+    required this.description,
+    required this.capability,
+    this.model,
+    this.effort,
+    this.when = const {},
+  });
 
   static const capabilities = {'read', 'write-plans', 'write-code'};
 
@@ -56,15 +81,28 @@ class RoleMeta {
   final String capability;
   final String? model;
   final String? effort;
+
+  /// Same matching as fragment `when`; the role is generated only when it matches.
+  final Map<String, Object?> when;
 }
 
 /// Neutral sources: `core/` fragments, `core/roles/*/role.yaml` and `packs/<family>/<option>/`.
 class Catalog {
-  const Catalog({required this.core, required this.packs, this.roles = const {}});
+  const Catalog({
+    required this.core,
+    required this.packs,
+    this.roles = const {},
+    this.skills = const {},
+    this.workflows = const {},
+  });
 
   final List<Fragment> core;
   final Map<String, Map<String, Pack>> packs;
   final Map<String, RoleMeta> roles;
+
+  /// Core skill and workflow descriptions; pack skills live in [Pack.skills].
+  final Map<String, DocMeta> skills;
+  final Map<String, DocMeta> workflows;
 
   static Catalog load(String root) {
     final coreDir = Directory(p.join(root, 'core'));
@@ -79,6 +117,9 @@ class Catalog {
       }
     }
 
+    final skills = _metasIn(root, Directory(p.join(root, 'core', 'skills')));
+    final workflows = _metasIn(root, Directory(p.join(root, 'core', 'workflows')));
+
     final packs = <String, Map<String, Pack>>{};
     final packsDir = Directory(p.join(root, 'packs'));
     if (packsDir.existsSync()) {
@@ -90,7 +131,29 @@ class Catalog {
         }
       }
     }
-    return Catalog(core: core, packs: packs, roles: roles);
+    return Catalog(core: core, packs: packs, roles: roles, skills: skills, workflows: workflows);
+  }
+
+  static Map<String, DocMeta> _metasIn(String root, Directory dir) {
+    if (!dir.existsSync()) return {};
+    return {
+      for (final sub in _sortedDirs(dir))
+        if (File(p.join(sub.path, 'meta.yaml')).existsSync())
+          p.basename(sub.path): _docMeta(root, File(p.join(sub.path, 'meta.yaml'))),
+    };
+  }
+
+  static DocMeta _docMeta(String root, File file) {
+    final source = p.relative(file.path, from: root);
+    final yaml = plainYaml(loadYaml(file.readAsStringSync()));
+    if (yaml is! Map<String, Object?> || yaml['description'] is! String) {
+      throw CatalogException(source, 'needs a description');
+    }
+    return DocMeta(
+      description: yaml['description'] as String,
+      whenToUse: yaml['when_to_use']?.toString(),
+      argumentHint: yaml['argument_hint']?.toString(),
+    );
   }
 
   static RoleMeta _role(String root, File manifest) {
@@ -107,6 +170,7 @@ class Catalog {
       capability: capability,
       model: yaml['model']?.toString(),
       effort: yaml['effort']?.toString(),
+      when: (yaml['when'] as Map<String, Object?>?) ?? const {},
     );
   }
 
@@ -124,7 +188,13 @@ class Catalog {
     final params = yaml['params'] ?? <String, Object?>{};
     if (params is! Map<String, Object?>) throw CatalogException(source, 'params must be a map');
 
-    return Pack(family: family, option: option, params: params, fragments: _fragmentsIn(root, dir));
+    final skillsDir = Directory(p.join(dir.path, 'skills'));
+    final skills = <String, DocMeta>{
+      if (skillsDir.existsSync())
+        for (final file in skillsDir.listSync().whereType<File>().where((f) => f.path.endsWith('.yaml')))
+          p.basenameWithoutExtension(file.path): _docMeta(root, file),
+    };
+    return Pack(family: family, option: option, params: params, fragments: _fragmentsIn(root, dir), skills: skills);
   }
 
   static List<Directory> _sortedDirs(Directory parent) =>

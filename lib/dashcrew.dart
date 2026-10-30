@@ -7,3 +7,4 @@ export 'src/guard/guard.dart';
 export 'src/guard/shell.dart';
 export 'src/profile/profile.dart';
 export 'src/render/renderer.dart';
+export 'src/sync/sync.dart';

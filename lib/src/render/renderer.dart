@@ -32,21 +32,12 @@ class Renderer {
   final Catalog catalog;
 
   List<RenderedTarget> render(Profile profile) {
-    final context = profile.toContext();
-    final packParams = <String, Object?>{};
-    final fragments = [...catalog.core];
-
-    for (final MapEntry(key: family, value: choice) in profile.stack.entries) {
-      final pack = catalog.packs[family]?[choice.option];
-      if (pack == null) continue;
-      packParams[family] = {...pack.params, ...choice.params};
-      fragments.addAll(pack.fragments);
-    }
-    context['pack'] = packParams;
+    final context = contextFor(profile);
+    final fragments = [...catalog.core, for (final pack in selectedPacks(profile)) ...pack.fragments];
 
     final byTarget = <String, List<Fragment>>{};
     for (final fragment in fragments) {
-      if (_matches(fragment.when, context)) (byTarget[fragment.target] ??= []).add(fragment);
+      if (whenMatches(fragment.when, context)) (byTarget[fragment.target] ??= []).add(fragment);
     }
 
     final targets = byTarget.keys.toList()..sort();
@@ -77,7 +68,23 @@ class Renderer {
     }
   }
 
-  static bool _matches(Map<String, Object?> when, Map<String, Object?> context) {
+  /// Packs chosen by `profile.stack` that exist in the catalog.
+  List<Pack> selectedPacks(Profile profile) => [
+        for (final MapEntry(key: family, value: choice) in profile.stack.entries)
+          ?catalog.packs[family]?[choice.option],
+      ];
+
+  /// Template context: the profile plus `pack.<family>` params merged over pack defaults.
+  Map<String, Object?> contextFor(Profile profile) {
+    final context = profile.toContext();
+    context['pack'] = {
+      for (final pack in selectedPacks(profile)) pack.family: {...pack.params, ...profile.stack[pack.family]!.params},
+    };
+    return context;
+  }
+
+  /// True when every `when` key matches; a list value means any of.
+  static bool whenMatches(Map<String, Object?> when, Map<String, Object?> context) {
     for (final MapEntry(key: path, value: expected) in when.entries) {
       final actual = lookupPath(context, path);
       final ok = expected is List ? expected.contains(actual) : expected == actual;

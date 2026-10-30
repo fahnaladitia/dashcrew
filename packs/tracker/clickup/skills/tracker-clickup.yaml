@@ -1,0 +1,2 @@
+description: Read ClickUp tasks and comments, and update task status or post PR links only through the documented status flow.
+when_to_use: When a task arrives as a ClickUp id or URL, or a PR for a ClickUp task is created.

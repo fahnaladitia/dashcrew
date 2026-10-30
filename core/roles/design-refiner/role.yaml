@@ -2,3 +2,4 @@ description: Converts the design frames the user links into a checkable design s
 capability: write-plans
 model: high
 effort: medium
+when: { stack.design.use: [figma] }
