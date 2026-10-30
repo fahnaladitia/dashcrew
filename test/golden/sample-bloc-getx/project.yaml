@@ -1,0 +1,29 @@
+toolkit: 1
+agents: [claude-code]
+language: { dartdoc: id, pr: id, chat: en }
+stack:
+  state: bloc
+  di: get_it
+  router: getx
+  network: dio
+  storage: hive
+  test: manual-fakes
+  analytics: posthog
+  qa: semantics-identifier
+project:
+  flavors: { staging: lib/main_staging.dart, production: lib/main_production.dart }
+  local_packages: [core, analytics_facade]
+  base_branches: [develop, main]
+  branch_prefix: { feat: feature/, fix: bugfix/, hotfix: hotfix/ }
+  build_wrapper: tool/build.sh
+policy:
+  agent_commit: false
+  formatter: false
+  dartdoc_max_lines: 2
+  tier_gates: true
+  terse_prompts: true
+paths:
+  plans: docs/plans
+  audits: docs/audits
+  pr: docs/pr
+  memory: docs/memory
