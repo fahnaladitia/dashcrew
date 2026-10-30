@@ -2,6 +2,7 @@
 library;
 
 export 'src/catalog/catalog.dart';
+export 'src/doctor/doctor.dart';
 export 'src/guard/compile.dart';
 export 'src/guard/guard.dart';
 export 'src/guard/shell.dart';

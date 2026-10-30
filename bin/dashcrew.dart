@@ -8,7 +8,9 @@ Future<void> main(List<String> arguments) async {
   final runner = CommandRunner<int>(
     'dashcrew',
     'Agent-agnostic AI coding toolkit for Flutter projects.',
-  )..addCommand(SyncCommand());
+  )
+    ..addCommand(SyncCommand())
+    ..addCommand(DoctorCommand());
   try {
     exitCode = await runner.run(arguments) ?? 0;
   } on UsageException catch (error) {
@@ -57,5 +59,32 @@ class SyncCommand extends Command<int> {
     }
     if (result.written.isEmpty && result.removed.isEmpty) stdout.writeln('up to date');
     return 0;
+  }
+}
+
+class DoctorCommand extends Command<int> {
+  DoctorCommand() {
+    argParser.addOption('project', abbr: 'p', help: 'Project root holding .ai/project.yaml.', defaultsTo: '.');
+  }
+
+  @override
+  String get name => 'doctor';
+
+  @override
+  String get description => 'Check that the generated toolkit is installed, untouched and current. Writes nothing.';
+
+  @override
+  Future<int> run() async {
+    final root = dashcrewPackageRoot();
+    final checks = await Doctor(
+      catalog: Catalog.load(root),
+      projectDir: Directory(argResults!['project'] as String).absolute.path,
+      packageRoot: root,
+    ).run();
+
+    for (final check in checks) {
+      stdout.writeln('${check.status.name.padRight(6)}${check.id.padRight(16)}${check.detail}');
+    }
+    return checks.any((check) => check.status == CheckStatus.fail) ? 1 : 0;
   }
 }

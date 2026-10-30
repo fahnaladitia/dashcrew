@@ -13,6 +13,14 @@ class ClaudeCodeAdapter {
 
   static const guardMatcher = 'Bash|Write|Edit|MultiEdit|NotebookEdit';
   static const guardCommand = r'"$CLAUDE_PROJECT_DIR/.ai/bin/guard" "$CLAUDE_PROJECT_DIR/.ai/guard.json"';
+
+  /// PreToolUse entry `sync` keeps in `.claude/settings.json`.
+  static const guardHook = <String, Object?>{
+    'matcher': guardMatcher,
+    'hooks': [
+      {'type': 'command', 'command': guardCommand},
+    ],
+  };
   static const mcpServers = <String, Map<String, Object?>>{
     'dart-mcp-server': {
       'type': 'stdio',

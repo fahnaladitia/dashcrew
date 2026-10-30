@@ -48,36 +48,16 @@ class Sync {
   static const supportedAgents = {'claude-code'};
 
   SyncResult run({bool force = false, bool adopt = false}) {
-    final profile = _profile();
-    final unsupported = profile.agents.where((a) => !supportedAgents.contains(a)).toList();
-    if (unsupported.isNotEmpty) {
-      throw SyncException('Agent adapter not available yet: ${unsupported.join(', ')}. Supported: ${supportedAgents.join(', ')}.');
-    }
-
-    final renderer = Renderer(catalog);
-    final targets = renderer.render(profile);
-    final context = renderer.contextFor(profile);
+    final warnings = <String>[];
+    final files = render(adopt: adopt, warnings: warnings);
     final lock = _readLock();
     final lockedFiles = (lock['files'] as Map?)?.cast<String, String>() ?? {};
-    final warnings = <String>[];
-
-    final files = <String, String>{
-      'AGENTS.md': _agentsMd(targets, adopt: adopt),
-      '.ai/guard.json': '${const JsonEncoder.withIndent('  ').convert(compileGuardPolicy(profile, catalog).toJson())}\n',
-      ...ClaudeCodeAdapter(catalog).files(profile, targets, context),
-    };
-    final claudeMd = _file('CLAUDE.md');
-    if (!claudeMd.existsSync() || lockedFiles.containsKey('CLAUDE.md')) {
-      files['CLAUDE.md'] = '@AGENTS.md\n';
-    } else if (!claudeMd.readAsStringSync().contains('@AGENTS.md')) {
-      warnings.add('CLAUDE.md does not import AGENTS.md; add a line "@AGENTS.md" so Claude Code loads the rules.');
-    }
 
     final conflicts = <String>[];
     for (final path in {...files.keys, ...lockedFiles.keys}) {
       final file = _file(path);
       if (!file.existsSync()) continue;
-      final onDisk = _hash(path, file.readAsStringSync());
+      final onDisk = fileHash(path, file.readAsStringSync());
       final locked = lockedFiles[path];
       final adoptedAgentsMd = path == 'AGENTS.md' && locked == null;
       if (!adoptedAgentsMd && locked != onDisk && (locked != null || files[path] != file.readAsStringSync())) {
@@ -114,13 +94,41 @@ class Sync {
 
     final newLock = {
       'schema': 1,
-      'files': {for (final path in files.keys.toList()..sort()) path: _hash(path, files[path]!)},
+      'files': {for (final path in files.keys.toList()..sort()) path: fileHash(path, files[path]!)},
       'mcp_servers': mcpResult.owned.toList()..sort(),
       'guard_source': ?guardHash,
     };
     _writeIfChanged(lockPath, '${const JsonEncoder.withIndent('  ').convert(newLock)}\n');
 
     return SyncResult(written: written, removed: removed, warnings: warnings);
+  }
+
+  /// Generated files as `sync` would write them now, without touching the disk.
+  /// Throws [SyncException] for a missing or invalid profile, an unsupported agent, or a foreign AGENTS.md.
+  Map<String, String> render({bool adopt = false, List<String>? warnings}) {
+    final profile = _profile();
+    final unsupported = profile.agents.where((a) => !supportedAgents.contains(a)).toList();
+    if (unsupported.isNotEmpty) {
+      throw SyncException('Agent adapter not available yet: ${unsupported.join(', ')}. Supported: ${supportedAgents.join(', ')}.');
+    }
+
+    final renderer = Renderer(catalog);
+    final targets = renderer.render(profile);
+    final context = renderer.contextFor(profile);
+    final lockedFiles = (_readLock()['files'] as Map?)?.cast<String, String>() ?? {};
+
+    final files = <String, String>{
+      'AGENTS.md': _agentsMd(targets, adopt: adopt),
+      '.ai/guard.json': '${const JsonEncoder.withIndent('  ').convert(compileGuardPolicy(profile, catalog).toJson())}\n',
+      ...ClaudeCodeAdapter(catalog).files(profile, targets, context),
+    };
+    final claudeMd = _file('CLAUDE.md');
+    if (!claudeMd.existsSync() || lockedFiles.containsKey('CLAUDE.md')) {
+      files['CLAUDE.md'] = '@AGENTS.md\n';
+    } else if (!claudeMd.readAsStringSync().contains('@AGENTS.md')) {
+      warnings?.add('CLAUDE.md does not import AGENTS.md; add a line "@AGENTS.md" so Claude Code loads the rules.');
+    }
+    return files;
   }
 
   Profile _profile() {
@@ -149,8 +157,9 @@ class Sync {
     return true;
   }
 
+  /// Hash stored in the lock for one generated file.
   /// AGENTS.md is hashed without the project block, so editing that block never counts as a hand edit.
-  static String _hash(String path, String content) {
+  static String fileHash(String path, String content) {
     final hashed = path == 'AGENTS.md' ? _withoutProjectBlock(content) : content;
     return sha256.convert(utf8.encode(hashed)).toString();
   }
@@ -188,12 +197,7 @@ class Sync {
     final hooks = (settings['hooks'] as Map?)?.cast<String, Object?>() ?? <String, Object?>{};
     final preToolUse = [...(hooks['PreToolUse'] as List?) ?? const []];
 
-    final ours = {
-      'matcher': ClaudeCodeAdapter.guardMatcher,
-      'hooks': [
-        {'type': 'command', 'command': ClaudeCodeAdapter.guardCommand},
-      ],
-    };
+    final ours = ClaudeCodeAdapter.guardHook;
     final index = preToolUse.indexWhere((entry) => jsonEncode(entry).contains('.ai/bin/guard'));
     if (index >= 0) {
       preToolUse[index] = ours;
@@ -233,20 +237,26 @@ class Sync {
     return _writeIfChanged('.gitignore', '$prefix# dashcrew: compiled guard, per machine\n.ai/bin/\n');
   }
 
+  /// Hash of the guard sources in the dashcrew package; the lock keeps the one the binary was built from.
+  static String guardSourceHash(String packageRoot) {
+    final sources = [
+      p.join(packageRoot, 'bin', 'guard.dart'),
+      ...Directory(p.join(packageRoot, 'lib', 'src', 'guard')).listSync().whereType<File>().map((f) => f.path).toList()..sort(),
+    ];
+    return sha256.convert(utf8.encode(sources.map((s) => File(s).readAsStringSync()).join('\u0000'))).toString();
+  }
+
   /// Recompiles `.ai/bin/guard` when the guard sources changed or the binary is missing.
   String _compileGuard(String? previousHash) {
     final root = packageRoot;
     if (root == null) throw SyncException('Cannot compile the guard: dashcrew package root unknown.');
-    final sources = [
-      p.join(root, 'bin', 'guard.dart'),
-      ...Directory(p.join(root, 'lib', 'src', 'guard')).listSync().whereType<File>().map((f) => f.path).toList()..sort(),
-    ];
-    final hash = sha256.convert(utf8.encode(sources.map((s) => File(s).readAsStringSync()).join('\u0000'))).toString();
+    final hash = guardSourceHash(root);
     final binary = _file('.ai/bin/guard');
     if (hash == previousHash && binary.existsSync()) return hash;
 
     binary.parent.createSync(recursive: true);
-    final result = Process.runSync(Platform.resolvedExecutable, ['compile', 'exe', sources.first, '-o', binary.path],
+    final result = Process.runSync(
+        Platform.resolvedExecutable, ['compile', 'exe', p.join(root, 'bin', 'guard.dart'), '-o', binary.path],
         workingDirectory: root);
     if (result.exitCode != 0) throw SyncException('Guard compile failed:\n${result.stderr}');
     return hash;
