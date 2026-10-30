@@ -45,16 +45,39 @@ class Pack {
   final List<Fragment> fragments;
 }
 
-/// Neutral sources: `core/` fragments and `packs/<family>/<option>/`.
+/// `core/roles/<name>/role.yaml`: what the role may touch and how it should run.
+class RoleMeta {
+  const RoleMeta({required this.name, required this.description, required this.capability, this.model, this.effort});
+
+  static const capabilities = {'read', 'write-plans', 'write-code'};
+
+  final String name;
+  final String description;
+  final String capability;
+  final String? model;
+  final String? effort;
+}
+
+/// Neutral sources: `core/` fragments, `core/roles/*/role.yaml` and `packs/<family>/<option>/`.
 class Catalog {
-  const Catalog({required this.core, required this.packs});
+  const Catalog({required this.core, required this.packs, this.roles = const {}});
 
   final List<Fragment> core;
   final Map<String, Map<String, Pack>> packs;
+  final Map<String, RoleMeta> roles;
 
   static Catalog load(String root) {
     final coreDir = Directory(p.join(root, 'core'));
     final core = coreDir.existsSync() ? _fragmentsIn(root, coreDir) : <Fragment>[];
+
+    final roles = <String, RoleMeta>{};
+    final rolesDir = Directory(p.join(root, 'core', 'roles'));
+    if (rolesDir.existsSync()) {
+      for (final dir in _sortedDirs(rolesDir)) {
+        final manifest = File(p.join(dir.path, 'role.yaml'));
+        if (manifest.existsSync()) roles[p.basename(dir.path)] = _role(root, manifest);
+      }
+    }
 
     final packs = <String, Map<String, Pack>>{};
     final packsDir = Directory(p.join(root, 'packs'));
@@ -67,7 +90,24 @@ class Catalog {
         }
       }
     }
-    return Catalog(core: core, packs: packs);
+    return Catalog(core: core, packs: packs, roles: roles);
+  }
+
+  static RoleMeta _role(String root, File manifest) {
+    final source = p.relative(manifest.path, from: root);
+    final yaml = plainYaml(loadYaml(manifest.readAsStringSync()));
+    if (yaml is! Map<String, Object?>) throw CatalogException(source, 'expected a YAML map');
+    final capability = yaml['capability'];
+    if (capability is! String || !RoleMeta.capabilities.contains(capability)) {
+      throw CatalogException(source, 'capability must be one of ${RoleMeta.capabilities.join(', ')}');
+    }
+    return RoleMeta(
+      name: p.basename(manifest.parent.path),
+      description: yaml['description']?.toString() ?? '',
+      capability: capability,
+      model: yaml['model']?.toString(),
+      effort: yaml['effort']?.toString(),
+    );
   }
 
   Map<String, Set<String>> knownOptions() => {
