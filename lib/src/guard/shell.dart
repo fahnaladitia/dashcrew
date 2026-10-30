@@ -1,6 +1,9 @@
 /// Simple commands in a shell script, as argv words; quoted text and heredoc bodies are data.
 /// Commands inside `$(...)` and backticks are returned too, also when they sit inside double quotes.
+/// A heredoc body is parsed as commands when its line runs a shell (`bash <<EOF`, `cat <<EOF | sh`).
 List<List<String>> shellCommands(String script) => _ShellScanner(script).scan();
+
+const _shellReceivers = {'sh', 'bash', 'zsh', 'dash', 'ksh', 'ssh', 'eval', 'source', '.'};
 
 class _ShellScanner {
   _ShellScanner(this.source);
@@ -13,14 +16,17 @@ class _ShellScanner {
   final _word = StringBuffer();
   var _inWord = false;
   final _pendingHeredocs = <({String delimiter, bool stripTabs})>[];
+  var _lineStart = 0;
 
   List<List<String>> scan() {
     while (_pos < source.length) {
       final c = source[_pos];
       if (c == '\n') {
         _endCommand();
+        final feedsShell = _commands.skip(_lineStart).any((argv) => argv.any((w) => _shellReceivers.contains(w.split('/').last)));
         _pos++;
-        _skipHeredocBodies();
+        _skipHeredocBodies(parse: feedsShell);
+        _lineStart = _commands.length;
       } else if (c == ' ' || c == '\t') {
         _endWord();
         _pos++;
@@ -190,8 +196,10 @@ class _ShellScanner {
     return buffer.toString();
   }
 
-  void _skipHeredocBodies() {
+  /// Moves past pending heredoc bodies; with [parse] their lines are scanned as commands instead of dropped.
+  void _skipHeredocBodies({required bool parse}) {
     for (final heredoc in _pendingHeredocs) {
+      final body = <String>[];
       while (_pos < source.length) {
         final end = source.indexOf('\n', _pos);
         final stop = end < 0 ? source.length : end;
@@ -199,7 +207,9 @@ class _ShellScanner {
         if (heredoc.stripTabs) line = line.replaceFirst(RegExp(r'^\t+'), '');
         _pos = stop + 1;
         if (line == heredoc.delimiter) break;
+        body.add(line);
       }
+      if (parse) _substitutions.addAll(shellCommands(body.join('\n')));
     }
     _pendingHeredocs.clear();
   }

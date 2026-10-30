@@ -37,6 +37,9 @@ void main() {
     'git tag v1': 'tag',
     'git cherry-pick abc': 'cherry-pick',
     'git revert abc': 'revert',
+    'bash <<EOF\ngit push\nEOF': 'heredoc run by bash',
+    "ssh host <<'EOF'\ngit push\nEOF": 'heredoc run over ssh',
+    'cat <<EOF | sh\ngit commit -m x\nEOF': 'heredoc piped into sh',
   };
   blockedShell.forEach((command, why) {
     test('blocks: $why ($command)', () {
@@ -50,6 +53,7 @@ void main() {
     'git log --oneline dev..HEAD': 'log',
     'grep -rn "git commit" docs/': 'quoted text',
     'cat > a.md <<\'EOF\'\nnever git push here\nEOF': 'heredoc body',
+    "python3 - <<'PY'\nprint('git push')\nPY": 'heredoc read by python',
     'dart analyze lib/': 'analyze',
     'flutter test test/a_test.dart': 'test',
     'git checkout --no-track -b feat/x main': 'branch creation',

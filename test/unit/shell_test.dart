@@ -43,6 +43,15 @@ void main() {
     ]);
   });
 
+  test('heredoc fed to a shell on its line is parsed as commands', () {
+    expect(commands('bash <<EOF\ngit push\nEOF\nls'), containsAll([
+      ['bash'],
+      ['git', 'push'],
+      ['ls'],
+    ]));
+    expect(commands("cat <<'EOF' | /bin/sh\ndart format lib\nEOF"), anyElement(equals(['dart', 'format', 'lib'])));
+  });
+
   test('redirect targets are not argv words', () {
     expect(commands('flutter test > out.txt 2>&1'), [
       ['flutter', 'test'],
