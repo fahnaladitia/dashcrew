@@ -1,0 +1,2 @@
+description: Where Dartdoc is required, where it is not, and the shape it takes.
+when_to_use: While writing or reviewing code that adds or changes a documented unit.

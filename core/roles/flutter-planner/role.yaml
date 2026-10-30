@@ -1,0 +1,4 @@
+description: Writes the implementation plan (plan.md and code.md) before any code, maps files per layer, assesses risk, and closes with a GO or NO-GO verdict.
+capability: write-plans
+model: high
+effort: high

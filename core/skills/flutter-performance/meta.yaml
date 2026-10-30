@@ -1,0 +1,2 @@
+description: Checkable Flutter performance rules for widgets, lists, images and heavy work.
+when_to_use: When refactoring, when a performance problem is measured, and when reviewing list or image code.

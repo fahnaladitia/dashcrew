@@ -1,0 +1,2 @@
+description: Test cases and patterns for data-layer TDD in Flutter - mappers, repositories, models and state holders.
+when_to_use: When writing or changing a mapper, repository, model or state holder, before the implementation.

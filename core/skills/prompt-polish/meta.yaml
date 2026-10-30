@@ -1,0 +1,2 @@
+description: Turn a raw request into the confirmed step 0 block before any planning starts.
+when_to_use: At the start of every task that runs the chain, before the plan workflow.

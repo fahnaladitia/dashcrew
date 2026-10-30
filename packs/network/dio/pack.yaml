@@ -1,0 +1,4 @@
+description: Dio HTTP client, configured in one client folder and reached through repositories.
+params:
+  client_dir: lib/data/client/
+  tool_exception_dir: null

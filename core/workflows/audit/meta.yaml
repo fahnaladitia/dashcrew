@@ -1,0 +1,2 @@
+description: Read-only audit of existing code under a path, of one feature flow, of one bug question (with or without a tracker task), or of the AI toolkit itself; findings become new tasks.
+argument_hint: "<path> [--focus arch,lifecycle,perf,security,qa,test] | flow <name> [--from <entry>] [--to <exit>] [--task <id>] [--full] | toolkit | [<task id or url>] <question>"

@@ -1,0 +1,2 @@
+description: Run two or more tasks at once - build a backlog matrix of dependencies and write surfaces, then give each parallel task its own branch and worktree.
+argument_hint: "backlog <task A>; <task B> | create <branch> <base> [--detached] | link <name> | list | watch [<name>...] | remove <name>"

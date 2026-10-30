@@ -1,0 +1,4 @@
+description: Final read-only gate of the team flow - merges reviewer verdicts with the product and design specs, decides GO or NO-GO with rework per role, and drafts the PR description on GO.
+capability: read
+model: high
+effort: high

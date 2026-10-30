@@ -1,0 +1,4 @@
+description: Reviews the Dart and Flutter diff for correctness, lifecycle, architecture boundaries and AGENTS.md compliance, read-only, and returns a severity-ranked verdict.
+capability: read
+model: high
+effort: high

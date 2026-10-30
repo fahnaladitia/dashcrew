@@ -1,0 +1,5 @@
+description: flutter_bloc state management with Bloc and Cubit, provided per screen.
+params:
+  shared_dir: lib/blocs/
+  feature_dir: lib/features/<feature>/
+  reference_folder: lib/features/orders/blocs/

@@ -1,0 +1,5 @@
+description: Hive local storage with untyped boxes owned by one database class.
+params:
+  package: hive_ce
+  owner_class: LocalDatabase
+  auth_box: auth

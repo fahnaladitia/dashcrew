@@ -1,0 +1,2 @@
+description: Record or compare a snapshot of the working state at a phase boundary, without writing anything to git.
+argument_hint: "create <name> | verify <name> | list | clear"

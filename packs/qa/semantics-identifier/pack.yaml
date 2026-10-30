@@ -1,0 +1,4 @@
+description: Stable QA identifiers through Semantics key plus identifier, readable by flutter_test and native automation tools.
+params:
+  example_id: 'order_item_${order.id}'
+  example_static_id: order_list_checkout_button

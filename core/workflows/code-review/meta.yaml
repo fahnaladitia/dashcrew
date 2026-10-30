@@ -1,0 +1,2 @@
+description: Review the current change against architecture, lifecycle, security and project rules, stating each bug with its fix and ending in a verdict.
+argument_hint: "[base branch]"

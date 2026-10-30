@@ -1,0 +1,2 @@
+description: Compact the context deliberately at phase boundaries, after writing down the state that must survive.
+when_to_use: At a phase boundary in a long session, or when the agent suggests compacting.

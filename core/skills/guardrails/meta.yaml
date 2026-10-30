@@ -1,0 +1,2 @@
+description: What the generated guard hooks block or warn about, and why a command was refused.
+when_to_use: When a guard blocks a command or prints a post-edit warning.

@@ -1,0 +1,2 @@
+description: Ask about, check and open the GitHub PR for the current branch; handle merge requests safely.
+when_to_use: At step 8 after the PR description is written, or when the user explicitly asks to merge a PR.

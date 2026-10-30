@@ -1,0 +1,7 @@
+description: ClickUp as the task tracker, read through its MCP server, written only per the status flow or on request.
+params:
+  status_start: in progress
+  status_review: in review
+  comment_max_chars: 1000
+  token_env: CLICKUP_API_TOKEN
+  my_tasks_script: null

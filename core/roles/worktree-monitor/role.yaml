@@ -1,0 +1,4 @@
+description: Background read-only watcher for parallel worktrees, started once by the worktree watch command; filters events and forwards only actionable ones to the main session.
+capability: read
+model: standard
+effort: medium

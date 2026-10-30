@@ -1,0 +1,2 @@
+description: Implement data-layer logic test first - RED on an assertion, minimal GREEN, refactor only while green - then the UI.
+argument_hint: "<plan stage or unit to implement>"

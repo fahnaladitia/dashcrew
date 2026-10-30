@@ -1,0 +1,4 @@
+description: Turns a raw request or business brief into an engineering PRD, user stories and acceptance criteria before any design or code work; writes no code.
+capability: write-plans
+model: high
+effort: medium

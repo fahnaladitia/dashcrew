@@ -1,0 +1,4 @@
+description: Audits the mobile app change for credential exposure, insecure storage, transport security, personal-data leaks and platform attack surface, read-only.
+capability: read
+model: high
+effort: high

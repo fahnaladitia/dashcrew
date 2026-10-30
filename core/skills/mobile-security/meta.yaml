@@ -1,0 +1,2 @@
+description: Security checklist for a Flutter mobile app - secrets, storage, transport, platform config, scanners and verdict.
+when_to_use: When a change touches auth, tokens, storage, networking, deep links, WebViews or platform config, and in a security review.

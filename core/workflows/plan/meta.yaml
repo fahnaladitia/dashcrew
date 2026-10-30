@@ -1,0 +1,2 @@
+description: Plan a change before any code is written - restate it, map files by layer, assess risk, stage the work, and close with a GO or NO-GO verdict.
+argument_hint: "<task description or confirmed step 0 prompt>"

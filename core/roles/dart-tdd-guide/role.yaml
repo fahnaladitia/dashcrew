@@ -1,0 +1,4 @@
+description: Runs the red-green-refactor cycle for Dart data-layer logic (mappers, repositories, models, state holders) outside the team flow.
+capability: write-code
+model: high
+effort: high

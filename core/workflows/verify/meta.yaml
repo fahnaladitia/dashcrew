@@ -1,0 +1,2 @@
+description: Run the scoped quality gate - analyze, tests, secrets, architecture, QA identifiers, leaks and diff - and report PASS or FAIL backed by real output.
+argument_hint: "quick | full | pre-pr | codegen"

@@ -1,0 +1,2 @@
+description: Save reusable lessons from a session as one-fact memory files so the same correction never has to be given twice.
+when_to_use: At the end of a session, when /learn runs, or right after the user corrects the same thing a second time.
