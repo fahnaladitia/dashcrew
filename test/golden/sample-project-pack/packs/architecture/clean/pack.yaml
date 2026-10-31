@@ -1,0 +1,3 @@
+description: Clean architecture layers with use cases between repositories and state holders.
+params:
+  domain_dir: lib/domain/

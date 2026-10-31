@@ -37,8 +37,10 @@ class ClaudeCodeAdapter {
   static const _models = {'high': 'opus', 'standard': 'sonnet'};
 
   /// Relative path -> content for every agent and skill file of this profile.
-  /// Throws [StateError] when a rendered skill or workflow has no description in the catalog.
-  Map<String, String> files(Profile profile, List<RenderedTarget> targets, Map<String, Object?> context) {
+  /// A skill no selected pack describes is skipped with a warning (its owner was replaced by a project pack).
+  /// Throws [StateError] when a rendered workflow has no description in the catalog.
+  Map<String, String> files(Profile profile, List<RenderedTarget> targets, Map<String, Object?> context,
+      {List<String>? warnings}) {
     final renderer = Renderer(catalog);
     final packSkills = {for (final pack in renderer.selectedPacks(profile)) ...pack.skills};
     final files = <String, String>{};
@@ -56,7 +58,10 @@ class ClaudeCodeAdapter {
           files['.claude/agents/$name.md'] = _agent(role, target.content);
         case 'skill':
           final meta = catalog.skills[name] ?? packSkills[name];
-          if (meta == null) throw StateError('skill/$name has no meta.yaml');
+          if (meta == null) {
+            warnings?.add('skill $name skipped: no selected pack defines skills/$name.yaml');
+            continue;
+          }
           files['.claude/skills/$name/SKILL.md'] = _skill(name, meta, target.content);
         case 'workflow':
           final meta = catalog.workflows[name];

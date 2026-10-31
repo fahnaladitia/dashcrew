@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "files": {
+    ".ai/guard.json": "1bb801d1b46cefeeee28ff4801d20435edba2263a6a6dee89007b2d62cfbd3dc",
+    ".claude/agents/dart-tdd-guide.md": "403a3aa2f8cf05d20abaac82884b82ba3494ec9c2248938f14ba84841a31e1dc",
+    ".claude/agents/flutter-architect.md": "471f6f30f97b68b14938a570a890f6e9bc35e2f14c29ecfe5c8598dae08de619",
+    ".claude/agents/flutter-build-error-resolver.md": "1bceaeb716d8c46214fae93d58da59526bdba3c74a9ee2ce4dfa7337ec25cba8",
+    ".claude/agents/flutter-code-reviewer.md": "9a484b7e3f51a13047e09e0d73104d31e9d328ad75c80c66a16dfb27fb33aca0",
+    ".claude/agents/flutter-engineer.md": "d57ec87f2f177d661c7e1a8fc4a8b3fe64c67e47ba2d1c16791e817b667cd4de",
+    ".claude/agents/flutter-planner.md": "367a0fef8c7e3b1e8eef4d6f138cdc5c5be148ecbf72994238d3c55d713b22ee",
+    ".claude/agents/flutter-security-reviewer.md": "8555a75cf9b1bb42763046da19e1ee2cbf26928dad758df21bc8e3da3c917cd5",
+    ".claude/agents/local-storage-engineer.md": "d7987b20e8f1150caea76ade254158f64b7da53f1706e81b992de88e5fb2c630",
+    ".claude/agents/product-manager.md": "ab74ef9038ae602e65b48ef019d60ac5fbb247e8bbe22d523eeb60a5b70f09b3",
+    ".claude/agents/qa-engineer.md": "51f7118296ffd5eaad67fc3fba8aa340a11c18c6801c375b036f44843beb8991",
+    ".claude/agents/tech-lead.md": "bfc47b7aba7717bc150c941ede3708e53ae9c1e9ad3c4aa723d40d66479373dc",
+    ".claude/agents/worktree-monitor.md": "c6acb06caa4d72489df579c6324b417181130a7f3c1755ebfb919a65f496706e",
+    ".claude/skills/audit/SKILL.md": "facff9f49d4d9107b589b91295a97d0bfac45b950703f5b89d8bd75704cf346d",
+    ".claude/skills/bloc-patterns/SKILL.md": "5c2b4ac80f7e9ea5964df941f8ed014c709ba7668b8e06dffdbcefa86a61ff22",
+    ".claude/skills/branching/SKILL.md": "4e7384e8daa6900ef850d3ca800a5895ad8c7765795ed3e5959e77027d145fa7",
+    ".claude/skills/build-fix/SKILL.md": "c807037ad37e2e1bf55b2f446210b3a4fa4bd9ee40acccb74cb0f0b2cff475c2",
+    ".claude/skills/checkpoint/SKILL.md": "9039eff6e6f851170166a0edbe4d6614b7dec6573f78ca35e61f0842f947319e",
+    ".claude/skills/code-review/SKILL.md": "66d4c2222f955970eb573416c30de618971efc7927bdad68d2487bb0d71eee35",
+    ".claude/skills/continuous-learning/SKILL.md": "3b909401612610103ecc53048acefe5732fc659cd3d6303e608f21e11b6fdd6d",
+    ".claude/skills/data-layer-tdd/SKILL.md": "b78e29987d9b733fcf343ade88cd0cf1b54155133546d0bbc21cbe55e0ac15a7",
+    ".claude/skills/design-fidelity/SKILL.md": "0d2af3b303cc6b07ae481e1f45f88fd36ca74958da33d26b8f633fba1a93a33d",
+    ".claude/skills/documentation/SKILL.md": "31906773f54c291c9cdae1d82ff06e5618993f7ccfe54edf5e8971cca0083d13",
+    ".claude/skills/flutter-performance/SKILL.md": "dbe6f8a82a787b69579c0a651e3728bfe9475812200a91692bcee7f8204d4b90",
+    ".claude/skills/guardrails/SKILL.md": "e4eac50f412b52a685b0cdea7d09964d0ddff2ea129af7d3182c774580359c63",
+    ".claude/skills/learn/SKILL.md": "ac9d26c73748faa74d7a5d8145f3c368c4b3cac0a02fb286ac662e618d245747",
+    ".claude/skills/mobile-security/SKILL.md": "a33067c8aad79967d5db09ef59f5b8b7aa22bb95ea188537e69ec35ad6f76201",
+    ".claude/skills/orchestrate/SKILL.md": "9f14107090adcf6974f8c8a04b611946c21872c62bb8ef64114506923cbabc67",
+    ".claude/skills/plan/SKILL.md": "a8bea8de52537837de23c9a17ff7c0baa2af49d0e2efac676a055873991eaf35",
+    ".claude/skills/pr-create/SKILL.md": "91a152a4b52607083177277ca0ac529d65deac6f694aca98cfef8bb3fd9cce25",
+    ".claude/skills/pr-description/SKILL.md": "d5420cbe1562ec2f70193b58434f63320fe5ab700f49437267b9c29ca398be82",
+    ".claude/skills/prompt-polish/SKILL.md": "6238d7319d08613c8bc878d918307735b66c40fd27ff843296db518af61e68e6",
+    ".claude/skills/strategic-compact/SKILL.md": "1a843649af2f0cf738990de7170b8412a5e7b559a370cd2de00d3b54af506882",
+    ".claude/skills/tdd/SKILL.md": "9f2074ae54d3aca7d5345448fb0c24adab224cb85b993177295384a3d527be76",
+    ".claude/skills/verification-loop/SKILL.md": "0ea007da2db3bdcd8706022b9986de5c187d07818b33c502fefed0ef10c23ed0",
+    ".claude/skills/verify/SKILL.md": "c6ad74389008e4db1049422e47c818e75fbc31ea302875bddd9470e39ab4c9c7",
+    ".claude/skills/work-modes/SKILL.md": "cb5d207f368eb77649ecb5efee882cfdd9a3f0a623c48642a402cf8d2922316d",
+    ".claude/skills/worktree/SKILL.md": "7d48d47dd658bf41834bf53c6458be0bd494019319a044d60e70950a4f7f0ad7",
+    "AGENTS.md": "c61720503f112e86fd40d69a5628b835d5da1c9156ee131fd0b6aa47ae7a0560",
+    "CLAUDE.md": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49"
+  },
+  "packs": {
+    "architecture/clean": "project",
+    "di/get_it": "builtin",
+    "state/bloc": "project"
+  },
+  "mcp_servers": [
+    "dart-mcp-server"
+  ]
+}

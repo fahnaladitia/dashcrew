@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:yaml/yaml.dart';
 
+import '../profile/profile.dart';
 import '../yaml_util.dart';
 
 /// Error in a catalog file, with the catalog-relative path of that file.
@@ -43,6 +44,7 @@ class Pack {
     required this.params,
     required this.fragments,
     this.skills = const {},
+    this.fromProject = false,
   });
 
   final String family;
@@ -52,6 +54,9 @@ class Pack {
 
   /// Skills this pack adds, from `skills/<name>.yaml`.
   final Map<String, DocMeta> skills;
+
+  /// True for a pack from the project's `.ai/packs/`; it replaces a built-in pack of the same family and option.
+  final bool fromProject;
 }
 
 /// Description of a skill or workflow, from its `meta.yaml`.
@@ -120,18 +125,32 @@ class Catalog {
     final skills = _metasIn(root, Directory(p.join(root, 'core', 'skills')));
     final workflows = _metasIn(root, Directory(p.join(root, 'core', 'workflows')));
 
+    final packs = _packsIn(root, 'packs', fromProject: false);
+    return Catalog(core: core, packs: packs, roles: roles, skills: skills, workflows: workflows);
+  }
+
+  /// This catalog plus the packs in `<projectDir>/.ai/packs/`, which replace built-in packs of the same name.
+  /// Source paths of project packs are relative to [projectDir].
+  Catalog withProjectPacks(String projectDir) {
+    final packs = {for (final MapEntry(:key, :value) in this.packs.entries) key: {...value}};
+    _packsIn(projectDir, p.join('.ai', 'packs'), fromProject: true).forEach((family, options) {
+      (packs[family] ??= {}).addAll(options);
+    });
+    return Catalog(core: core, packs: packs, roles: roles, skills: skills, workflows: workflows);
+  }
+
+  static Map<String, Map<String, Pack>> _packsIn(String root, String relativeDir, {required bool fromProject}) {
     final packs = <String, Map<String, Pack>>{};
-    final packsDir = Directory(p.join(root, 'packs'));
-    if (packsDir.existsSync()) {
-      for (final familyDir in _sortedDirs(packsDir)) {
-        final family = p.basename(familyDir.path);
-        for (final optionDir in _sortedDirs(familyDir)) {
-          final option = p.basename(optionDir.path);
-          (packs[family] ??= {})[option] = _pack(root, family, option, optionDir);
-        }
+    final packsDir = Directory(p.join(root, relativeDir));
+    if (!packsDir.existsSync()) return packs;
+    for (final familyDir in _sortedDirs(packsDir)) {
+      final family = p.basename(familyDir.path);
+      for (final optionDir in _sortedDirs(familyDir)) {
+        final option = p.basename(optionDir.path);
+        (packs[family] ??= {})[option] = _pack(root, family, option, optionDir, fromProject: fromProject);
       }
     }
-    return Catalog(core: core, packs: packs, roles: roles, skills: skills, workflows: workflows);
+    return packs;
   }
 
   static Map<String, DocMeta> _metasIn(String root, Directory dir) {
@@ -178,9 +197,10 @@ class Catalog {
         for (final MapEntry(key: family, value: options) in packs.entries) family: options.keys.toSet(),
       };
 
-  static Pack _pack(String root, String family, String option, Directory dir) {
+  static Pack _pack(String root, String family, String option, Directory dir, {required bool fromProject}) {
     final manifest = File(p.join(dir.path, 'pack.yaml'));
     final source = p.relative(manifest.path, from: root);
+    if (option == Profile.otherOption) throw CatalogException(source, 'option name "$option" is reserved');
     if (!manifest.existsSync()) throw CatalogException(source, 'missing pack.yaml');
 
     final yaml = plainYaml(loadYaml(manifest.readAsStringSync()));
@@ -194,7 +214,14 @@ class Catalog {
         for (final file in skillsDir.listSync().whereType<File>().where((f) => f.path.endsWith('.yaml')))
           p.basenameWithoutExtension(file.path): _docMeta(root, file),
     };
-    return Pack(family: family, option: option, params: params, fragments: _fragmentsIn(root, dir), skills: skills);
+    return Pack(
+      family: family,
+      option: option,
+      params: params,
+      fragments: _fragmentsIn(root, dir),
+      skills: skills,
+      fromProject: fromProject,
+    );
   }
 
   static List<Directory> _sortedDirs(Directory parent) =>

@@ -49,7 +49,7 @@ class Sync {
 
   SyncResult run({bool force = false, bool adopt = false}) {
     final warnings = <String>[];
-    final files = render(adopt: adopt, warnings: warnings);
+    final (:files, :packs) = _render(adopt: adopt, warnings: warnings);
     final lock = _readLock();
     final lockedFiles = (lock['files'] as Map?)?.cast<String, String>() ?? {};
 
@@ -95,6 +95,7 @@ class Sync {
     final newLock = {
       'schema': 1,
       'files': {for (final path in files.keys.toList()..sort()) path: fileHash(path, files[path]!)},
+      'packs': packs,
       'mcp_servers': mcpResult.owned.toList()..sort(),
       'guard_source': ?guardHash,
     };
@@ -105,8 +106,19 @@ class Sync {
 
   /// Generated files as `sync` would write them now, without touching the disk.
   /// Throws [SyncException] for a missing or invalid profile, an unsupported agent, or a foreign AGENTS.md.
-  Map<String, String> render({bool adopt = false, List<String>? warnings}) {
-    final profile = _profile();
+  /// Project packs in `.ai/packs/` are overlaid on [catalog]; a broken one throws [SyncException] too.
+  Map<String, String> render({bool adopt = false, List<String>? warnings}) =>
+      _render(adopt: adopt, warnings: warnings).files;
+
+  /// Files plus `family/option -> builtin|project` for every rendered pack, as the lock records them.
+  ({Map<String, String> files, Map<String, String> packs}) _render({required bool adopt, List<String>? warnings}) {
+    final Catalog catalog;
+    try {
+      catalog = this.catalog.withProjectPacks(projectDir);
+    } on CatalogException catch (error) {
+      throw SyncException('Project pack: $error');
+    }
+    final profile = _profile(catalog);
     final unsupported = profile.agents.where((a) => !supportedAgents.contains(a)).toList();
     if (unsupported.isNotEmpty) {
       throw SyncException('Agent adapter not available yet: ${unsupported.join(', ')}. Supported: ${supportedAgents.join(', ')}.');
@@ -114,13 +126,17 @@ class Sync {
 
     final renderer = Renderer(catalog);
     final targets = renderer.render(profile);
+    final packs = {
+      for (final pack in renderer.selectedPacks(profile).toList()..sort((a, b) => a.family.compareTo(b.family)))
+        '${pack.family}/${pack.option}': pack.fromProject ? 'project' : 'builtin',
+    };
     final context = renderer.contextFor(profile);
     final lockedFiles = (_readLock()['files'] as Map?)?.cast<String, String>() ?? {};
 
     final files = <String, String>{
       'AGENTS.md': _agentsMd(targets, adopt: adopt),
       '.ai/guard.json': '${const JsonEncoder.withIndent('  ').convert(compileGuardPolicy(profile, catalog).toJson())}\n',
-      ...ClaudeCodeAdapter(catalog).files(profile, targets, context),
+      ...ClaudeCodeAdapter(catalog).files(profile, targets, context, warnings: warnings),
     };
     final claudeMd = _file('CLAUDE.md');
     if (!claudeMd.existsSync() || lockedFiles.containsKey('CLAUDE.md')) {
@@ -128,10 +144,10 @@ class Sync {
     } else if (!claudeMd.readAsStringSync().contains('@AGENTS.md')) {
       warnings?.add('CLAUDE.md does not import AGENTS.md; add a line "@AGENTS.md" so Claude Code loads the rules.');
     }
-    return files;
+    return (files: files, packs: packs);
   }
 
-  Profile _profile() {
+  Profile _profile(Catalog catalog) {
     final file = _file('.ai/project.yaml');
     if (!file.existsSync()) throw SyncException('No .ai/project.yaml in $projectDir. Run dashcrew init first.');
     try {

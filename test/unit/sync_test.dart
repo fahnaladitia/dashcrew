@@ -176,4 +176,49 @@ project: { local_packages: [core] }
 
     expect(() => sync(), throwsA(isA<SyncException>()));
   });
+
+  group('project packs', () {
+    void writeArchitecturePack() {
+      write('.ai/packs/architecture/clean/pack.yaml', 'description: clean\nparams: { domain_dir: lib/domain }\n');
+      write('.ai/packs/architecture/clean/rules.md', '---\ntarget: agents_md\norder: 380\n---\n## Clean layers\n\nUse cases live in `{{pack.architecture.domain_dir}}`.\n');
+    }
+
+    test('project family renders and the lock records pack sources', () {
+      writeArchitecturePack();
+      write('.ai/packs/state/bloc/pack.yaml', 'description: team bloc\n');
+      write('.ai/packs/state/bloc/rules.md', '---\ntarget: agents_md\norder: 300\n---\n## State: team bloc\n');
+      write('.ai/project.yaml', '''
+toolkit: 1
+agents: [claude-code]
+stack:
+  state: bloc
+  di: get_it
+  router: { use: other, name: go_router }
+  architecture: clean
+''');
+
+      final result = sync();
+
+      expect(result.warnings, contains('skill bloc-patterns skipped: no selected pack defines skills/bloc-patterns.yaml'));
+      expect(exists('.claude/skills/bloc-patterns/SKILL.md'), isFalse);
+      final agentsMd = read('AGENTS.md');
+      expect(agentsMd, contains('Use cases live in `lib/domain`.'));
+      expect(agentsMd, contains('## State: team bloc'));
+      expect(agentsMd, isNot(contains('## State: flutter_bloc')));
+      final lock = jsonDecode(read('.ai/lock.json')) as Map<String, Object?>;
+      expect(lock['packs'], {'architecture/clean': 'project', 'di/get_it': 'builtin', 'state/bloc': 'project'});
+    });
+
+    test('project family without its pack is an unknown family', () {
+      write('.ai/project.yaml', 'toolkit: 1\nagents: [claude-code]\nstack: { architecture: clean }\n');
+
+      expect(sync, throwsA(isA<SyncException>().having((e) => e.message, 'message', contains('stack.architecture'))));
+    });
+
+    test('broken project pack stops sync with its path', () {
+      write('.ai/packs/state/bloc/rules.md', '---\ntarget: agents_md\n---\nx\n');
+
+      expect(sync, throwsA(isA<SyncException>().having((e) => e.message, 'message', contains('.ai/packs/state/bloc/pack.yaml'))));
+    });
+  });
 }

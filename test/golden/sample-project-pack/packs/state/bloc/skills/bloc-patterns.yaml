@@ -1,0 +1,2 @@
+description: Cubit patterns for this team - state shape, rebuild scope and tests.
+when_to_use: When adding or changing a Cubit or the widgets that listen to it.

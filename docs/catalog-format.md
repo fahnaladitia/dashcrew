@@ -68,6 +68,17 @@ Inverted sections (`{{^x}}`) over a string value fail in strict mode; write opti
 
 Lists: `{{#project.base_branches}}` `{{.}}` `{{/project.base_branches}}`. A section over a key with a default (`{{#project.build_wrapper}}...{{/project.build_wrapper}}`) is safe. A section over `stack.<family>` is not: an unselected family is an error, so gate those fragments with `when` instead.
 
+## Project packs
+
+A project keeps its own packs in `.ai/packs/<family>/<option>/`, in the same format as `packs/` (`pack.yaml`, fragments, `skills/<name>.yaml`). `sync` and `doctor` overlay them on the built-in catalog:
+
+- Same family and option as a built-in pack: the project pack replaces it whole; nothing is merged. Fragments of other packs gated on `stack.<family>.use: <option>` still render, because the option name stays.
+- A new family (`architecture/clean`) becomes a valid `stack` key for that project.
+- A skill whose `skills/<name>.yaml` came from the replaced pack is skipped with a warning unless the project pack ships it again.
+- The option name `other` is reserved.
+- Errors point at the project file (`.ai/packs/state/bloc/pack.yaml`).
+- `.ai/lock.json` records `packs` as `family/option -> builtin | project`; the `project-packs` doctor check fails on a pack that does not parse and warns on one the profile does not select.
+
 ## Writing rules
 
 - English, imperative, short. One obligation per sentence.

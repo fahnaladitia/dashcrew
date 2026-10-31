@@ -39,12 +39,25 @@ class Doctor {
   static const agentsMdLimit = 32 * 1024;
   static final _skillReference = RegExp(r'`([a-z0-9][a-z0-9-]*)` skill|skill `([a-z0-9][a-z0-9-]*)`');
 
+  /// Every check, with the project packs in `.ai/packs/` overlaid on [catalog] when they parse.
   Future<List<DoctorCheck>> run() async {
+    final Catalog overlaid;
+    try {
+      overlaid = catalog.withProjectPacks(projectDir);
+    } on CatalogException catch (error) {
+      return _checks(DoctorCheck('project-packs', CheckStatus.fail, error.toString()));
+    }
+    final doctor = Doctor(catalog: overlaid, projectDir: projectDir, packageRoot: packageRoot, userSkillsDir: userSkillsDir);
+    return doctor._checks(doctor._projectPacks());
+  }
+
+  Future<List<DoctorCheck>> _checks(DoctorCheck projectPacks) async {
     final profile = _profileCheck();
     final (lockCheck, lock) = _lockCheck();
     final lockedFiles = (lock?['files'] as Map?)?.cast<String, String>();
     return [
       profile,
+      projectPacks,
       lockCheck,
       _drift(lockedFiles),
       _stale(lockedFiles, profileOk: profile.status == CheckStatus.ok),
@@ -71,6 +84,30 @@ class Doctor {
     } catch (error) {
       return DoctorCheck(id, CheckStatus.fail, '.ai/project.yaml invalid: $error');
     }
+  }
+
+  DoctorCheck _projectPacks() {
+    const id = 'project-packs';
+    final names = [
+      for (final options in catalog.packs.values)
+        for (final pack in options.values)
+          if (pack.fromProject) '${pack.family}/${pack.option}',
+    ]..sort();
+    if (names.isEmpty) return const DoctorCheck(id, CheckStatus.ok, 'no project packs in .ai/packs');
+
+    Profile? profile;
+    try {
+      profile = Profile.parse(_file('.ai/project.yaml').readAsStringSync(), knownOptions: catalog.knownOptions());
+    } catch (_) {
+      profile = null;
+    }
+    final unused = [
+      if (profile != null)
+        for (final name in names)
+          if (profile.stack[name.split('/').first]?.option != name.split('/').last) name,
+    ];
+    if (unused.isNotEmpty) return DoctorCheck(id, CheckStatus.warn, 'not selected in .ai/project.yaml: ${unused.join(', ')}');
+    return DoctorCheck(id, CheckStatus.ok, '${names.length} project packs: ${names.join(', ')}');
   }
 
   (DoctorCheck, Map<String, Object?>?) _lockCheck() {

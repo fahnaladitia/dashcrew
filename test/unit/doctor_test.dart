@@ -197,4 +197,47 @@ stack:
     expect(checks['profile']!.status, CheckStatus.fail);
     expect(checks['stale']!.status, CheckStatus.skip);
   });
+
+  group('project-packs', () {
+    test('no project packs is ok', () async {
+      sync();
+
+      expect((await doctor())['project-packs']!.status, CheckStatus.ok);
+    });
+
+    test('a pack that does not parse fails', () async {
+      sync();
+      write('.ai/packs/state/bloc/rules.md', '---\ntarget: agents_md\n---\nx\n');
+
+      final checks = await doctor();
+
+      expect(checks['project-packs']!.status, CheckStatus.fail);
+      expect(checks['project-packs']!.detail, contains('.ai/packs/state/bloc/pack.yaml'));
+    });
+
+    test('a pack the profile does not select warns', () async {
+      write('.ai/packs/architecture/clean/pack.yaml', 'description: clean\n');
+      sync();
+
+      final checks = await doctor();
+
+      expect(checks['project-packs']!.status, CheckStatus.warn);
+      expect(checks['project-packs']!.detail, contains('architecture/clean'));
+    });
+
+    test('selected project pack is ok and editing it turns stale', () async {
+      write('.ai/packs/state/bloc/pack.yaml', 'description: team bloc\n');
+      write('.ai/packs/state/bloc/rules.md', '---\ntarget: agents_md\n---\nTeam Bloc.\n');
+      sync();
+
+      expect((await doctor())['project-packs']!.status, CheckStatus.ok);
+      expect((await doctor())['stale']!.status, CheckStatus.ok);
+
+      write('.ai/packs/state/bloc/rules.md', '---\ntarget: agents_md\n---\nTeam Bloc, edited.\n');
+      final checks = await doctor();
+
+      expect(checks['stale']!.status, CheckStatus.warn);
+      expect(checks['drift']!.status, CheckStatus.ok);
+    });
+  });
 }

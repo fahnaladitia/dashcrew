@@ -90,4 +90,66 @@ params:
 
     expect(() => Catalog.load(root.path), throwsA(isA<CatalogException>()));
   });
+
+  group('project packs', () {
+    late Directory project;
+
+    void writeProject(String relative, String content) {
+      final file = File(p.join(project.path, relative));
+      file.parent.createSync(recursive: true);
+      file.writeAsStringSync(content);
+    }
+
+    setUp(() {
+      project = Directory.systemTemp.createTempSync('dashcrew_project_packs_');
+      write('packs/state/bloc/pack.yaml', 'description: bloc\n');
+      write('packs/state/bloc/rules.md', '---\ntarget: agents_md\n---\nUse Bloc.\n');
+      write('packs/state/riverpod/pack.yaml', 'description: riverpod\n');
+    });
+    tearDown(() => project.deleteSync(recursive: true));
+
+    test('replace a built-in option and add a family', () {
+      writeProject('.ai/packs/state/bloc/pack.yaml', 'description: team bloc\nparams: { dir: lib/blocs }\n');
+      writeProject('.ai/packs/state/bloc/rules.md', '---\ntarget: agents_md\n---\nTeam Bloc.\n');
+      writeProject('.ai/packs/architecture/clean/pack.yaml', 'description: clean\n');
+      writeProject('.ai/packs/architecture/clean/rules.md', '---\ntarget: agents_md\n---\nClean layers.\n');
+      final builtin = Catalog.load(root.path);
+
+      final catalog = builtin.withProjectPacks(project.path);
+
+      final bloc = catalog.packs['state']!['bloc']!;
+      expect(bloc.fromProject, isTrue);
+      expect(bloc.params, {'dir': 'lib/blocs'});
+      expect(bloc.fragments.single.body.trim(), 'Team Bloc.');
+      expect(bloc.fragments.single.source, '.ai/packs/state/bloc/rules.md');
+      expect(catalog.packs['state']!['riverpod']!.fromProject, isFalse);
+      expect(catalog.knownOptions(), {'state': {'bloc', 'riverpod'}, 'architecture': {'clean'}});
+      expect(builtin.packs['state']!['bloc']!.fromProject, isFalse);
+      expect(builtin.packs.keys, ['state']);
+    });
+
+    test('no .ai/packs keeps the built-in packs', () {
+      final catalog = Catalog.load(root.path).withProjectPacks(project.path);
+
+      expect(catalog.knownOptions(), {'state': {'bloc', 'riverpod'}});
+    });
+
+    test('broken project pack fails with its project path', () {
+      writeProject('.ai/packs/state/bloc/rules.md', '---\ntarget: agents_md\n---\nx\n');
+
+      expect(
+        () => Catalog.load(root.path).withProjectPacks(project.path),
+        throwsA(isA<CatalogException>().having((e) => e.source, 'source', '.ai/packs/state/bloc/pack.yaml')),
+      );
+    });
+
+    test('option named other is reserved', () {
+      writeProject('.ai/packs/state/other/pack.yaml', 'description: x\n');
+
+      expect(
+        () => Catalog.load(root.path).withProjectPacks(project.path),
+        throwsA(isA<CatalogException>().having((e) => e.message, 'message', contains('reserved'))),
+      );
+    });
+  });
 }

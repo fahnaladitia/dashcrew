@@ -10,7 +10,7 @@ final update = Platform.environment['DASHCREW_UPDATE_GOLDENS'] == '1';
 void main() {
   final catalog = Catalog.load('.');
 
-  for (final fixture in ['sample-bloc-getx']) {
+  for (final fixture in ['sample-bloc-getx', 'sample-project-pack']) {
     group(fixture, () {
       final fixtureDir = p.join('test', 'golden', fixture);
       final expectedDir = p.join(fixtureDir, 'expected');
@@ -21,12 +21,19 @@ void main() {
       setUp(() {
         project = Directory.systemTemp.createTempSync('dashcrew_golden_');
         File(p.join(fixtureDir, 'project.yaml')).copySync(p.join((Directory(p.join(project.path, '.ai'))..createSync()).path, 'project.yaml'));
+        _tree(p.join(fixtureDir, 'packs')).forEach((path, content) {
+          File(p.join(project.path, '.ai', 'packs', path))
+            ..parent.createSync(recursive: true)
+            ..writeAsStringSync(content);
+        });
         sync().run();
       });
       tearDown(() => project.deleteSync(recursive: true));
 
       test('sync output matches expected/', () {
-        final actual = _tree(project.path)..remove('.ai/project.yaml');
+        final actual = _tree(project.path)
+          ..remove('.ai/project.yaml')
+          ..removeWhere((path, _) => path.startsWith('.ai/packs/'));
         if (update) {
           final dir = Directory(expectedDir);
           if (dir.existsSync()) dir.deleteSync(recursive: true);
@@ -65,8 +72,8 @@ void main() {
   }
 }
 
-/// Relative path (always `/`) -> content for every file under [root].
-Map<String, String> _tree(String root) => {
+/// Relative path (always `/`) -> content for every file under [root]; empty when [root] does not exist.
+Map<String, String> _tree(String root) => !Directory(root).existsSync() ? {} : {
       for (final file in Directory(root).listSync(recursive: true).whereType<File>())
         p.relative(file.path, from: root).replaceAll(r'\', '/'): file.readAsStringSync(),
     };

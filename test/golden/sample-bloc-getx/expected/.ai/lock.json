@@ -42,6 +42,16 @@
     "AGENTS.md": "df2629e15f125d32d2c9818bb9fe48f8867f9492930f300e0a82d1e466429356",
     "CLAUDE.md": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49"
   },
+  "packs": {
+    "analytics/posthog": "builtin",
+    "di/get_it": "builtin",
+    "network/dio": "builtin",
+    "qa/semantics-identifier": "builtin",
+    "router/getx": "builtin",
+    "state/bloc": "builtin",
+    "storage/hive": "builtin",
+    "test/manual-fakes": "builtin"
+  },
   "mcp_servers": [
     "dart-mcp-server"
   ]

@@ -1,0 +1,10 @@
+# Synthetic profile: one built-in option replaced by a project pack, one project-only family, one library without a pack.
+toolkit: 1
+agents: [claude-code]
+stack:
+  state: { use: bloc, feature_dir: lib/features/<feature>/ }
+  di: get_it
+  router: { use: other, name: go_router }
+  architecture: clean
+project:
+  base_branches: [main]
