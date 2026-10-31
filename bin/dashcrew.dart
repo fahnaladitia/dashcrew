@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:args/command_runner.dart';
+import 'package:path/path.dart' as p;
 import 'package:dashcrew/dashcrew.dart';
 import 'package:dashcrew/src/package_root.dart';
 
@@ -9,6 +10,7 @@ Future<void> main(List<String> arguments) async {
     'dashcrew',
     'Agent-agnostic AI coding toolkit for Flutter projects.',
   )
+    ..addCommand(InitCommand())
     ..addCommand(SyncCommand())
     ..addCommand(DoctorCommand());
   try {
@@ -19,6 +21,42 @@ Future<void> main(List<String> arguments) async {
   } on SyncException catch (error) {
     stderr.writeln(error.message);
     exitCode = 1;
+  } on InitException catch (error) {
+    stderr.writeln(error.message);
+    exitCode = 1;
+  }
+}
+
+class InitCommand extends Command<int> {
+  InitCommand() {
+    argParser
+      ..addOption('project', abbr: 'p', help: 'Flutter project root holding pubspec.yaml.', defaultsTo: '.')
+      ..addFlag('yes', abbr: 'y', help: 'Write the detected profile without asking.', negatable: false)
+      ..addMultiOption('agents', help: 'Agents to render for.', allowed: Profile.supportedAgents, defaultsTo: ['claude-code'])
+      ..addFlag('force', help: 'Replace an existing .ai/project.yaml.', negatable: false);
+  }
+
+  @override
+  String get name => 'init';
+
+  @override
+  String get description => 'Detect the stack from pubspec.yaml and write .ai/project.yaml. Writes nothing else.';
+
+  @override
+  int run() {
+    final args = argResults!;
+    final projectDir = p.normalize(Directory(args['project'] as String).absolute.path);
+    Init(catalog: Catalog.load(dashcrewPackageRoot()), projectDir: projectDir, agents: args['agents'] as List<String>).run(
+      yes: args['yes'] as bool,
+      force: args['force'] as bool,
+      remoteBranches: remoteBranches(projectDir),
+      ask: (prompt) {
+        stdout.write(prompt);
+        return stdin.readLineSync();
+      },
+      out: stdout.writeln,
+    );
+    return 0;
   }
 }
 

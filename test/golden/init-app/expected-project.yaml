@@ -1,0 +1,16 @@
+# Written by dashcrew init. Edit it, then run dashcrew sync.
+toolkit: 1
+agents: [claude-code]
+stack:
+  analytics: posthog
+  di: get_it
+  router: { use: other, name: go_router }
+  state: bloc
+  storage: hive
+  test: { use: other, name: mocktail }
+project:
+  flavors:
+    dev: lib/main_dev.dart
+    prod: lib/main_prod.dart
+  local_packages: [packages/core]
+  base_branches: [main, develop]

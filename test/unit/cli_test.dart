@@ -21,4 +21,22 @@ void main() {
     expect(result.stdout, contains('fail  profile'));
     expect(result.stdout, contains('fail  lock'));
   });
+
+  test('dashcrew init --yes writes the profile, and a second run refuses with exit 1', () async {
+    final project = Directory.systemTemp.createTempSync('dashcrew_cli_');
+    addTearDown(() => project.deleteSync(recursive: true));
+    File('${project.path}/pubspec.yaml').writeAsStringSync('name: app\ndependencies:\n  dio: ^5.0.0\n');
+    final args = ['run', 'bin/dashcrew.dart', 'init', '--project', project.path, '--yes'];
+
+    final first = await Process.run(Platform.resolvedExecutable, args);
+
+    expect(first.exitCode, 0, reason: '${first.stderr}');
+    expect(first.stdout, contains('next: dashcrew sync'));
+    expect(File('${project.path}/.ai/project.yaml').readAsStringSync(), contains('  network: dio\n'));
+
+    final second = await Process.run(Platform.resolvedExecutable, args);
+
+    expect(second.exitCode, 1);
+    expect(second.stderr, contains('--force'));
+  });
 }
