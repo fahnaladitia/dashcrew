@@ -42,7 +42,7 @@ flutter test test/order_mapper_test.dart --reporter expanded
 flutter test test/order_mapper_test.dart test/order_repository_test.dart --reporter expanded
 ```
 
-- Never run the whole suite here. Regressions outside the scope are caught by `/verify` on the diff.
+- Never run the whole suite here. Regressions outside the scope are caught by `verify` on the diff.
 
 ## Output
 

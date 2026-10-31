@@ -43,7 +43,7 @@ Relevant files: <paths>
 
 What you write explicitly is far more likely to survive than what is only implied across dozens of tool calls.
 
-## With /orchestrate
+## With `orchestrate`
 
-Phase boundaries in `/orchestrate` are the best compact points there are.
+Phase boundaries in `orchestrate` are the best compact points there are.
 The HANDOFF block is designed to be enough to continue after a compact. If it is not, the handoff is too thin.

@@ -5,7 +5,7 @@ rules:
   - audit.read-only
   - audit.mode-selection
 ---
-# /audit
+# audit
 
 Four modes, one workflow. It sits outside the chain.
 
@@ -15,7 +15,7 @@ Four modes, one workflow. It sits outside the chain.
 - Create no branch and no checkpoint.
 - Fixes are proposals only. Each one becomes a new task that runs the normal chain.
 
-`/audit` judges code that is already merged. It does not replace `/code-review` (the change in progress) or `/verify` (the gate before a PR).
+`audit` judges code that is already merged. It does not replace `code-review` (the change in progress) or `verify` (the gate before a PR).
 
 ## Mode selection
 

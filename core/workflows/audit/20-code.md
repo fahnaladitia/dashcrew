@@ -9,7 +9,7 @@ rules:
   - audit.consolidate-findings
   - audit.not-findings
 ---
-## Code mode: `/audit <path> [--focus ...]`
+## Code mode: `audit <path> [--focus ...]`
 
 - A path is required. Without one, ask.
 - Audit all of `lib/` only when the user writes it explicitly; then audit it one feature folder at a time.
@@ -77,7 +77,7 @@ Extra checks for `arch` and `perf`:
 
 ### Phase 4: Consolidate
 
-- Use the `/code-review` severities: BLOCKER, HIGH, MEDIUM.
+- Use the `code-review` severities: BLOCKER, HIGH, MEDIUM.
 - Merge repeated findings into one ("7 widgets without `const` in `components/`" is one finding, not seven).
 - Keep only findings you are sure of. In doubt, open the file again or drop the finding.
 - Every finding has `file:line`, the current code and a concrete fix.

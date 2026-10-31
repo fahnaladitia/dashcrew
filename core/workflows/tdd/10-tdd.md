@@ -7,7 +7,7 @@ rules:
   - tdd.ui-after-data-layer
   - tdd.ui-tests-on-request
 ---
-# /tdd
+# tdd
 
 Apply `test-driven-development` and `data-layer-tdd`. The test cases each unit type needs are in `data-layer-tdd`.
 

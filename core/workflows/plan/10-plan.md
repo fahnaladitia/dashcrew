@@ -9,7 +9,7 @@ rules:
   - plan.code-md-no-test-bodies
   - plan.planner-writes-own-files
 ---
-# /plan
+# plan
 
 Runs the `flutter-planner` role. No implementation code is written until the plan is accepted (see Closing).
 

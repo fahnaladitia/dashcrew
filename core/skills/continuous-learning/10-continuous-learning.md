@@ -10,7 +10,7 @@ rules:
 # Continuous learning
 
 Goal: a correction given once is never needed again in a later session.
-What to extract and what to skip is listed in the `/learn` workflow.
+What to extract and what to skip is listed in the `learn` workflow.
 
 ## Where
 
@@ -55,4 +55,4 @@ Add one pointer line per memory to `{{paths.memory}}/MEMORY.md`:
 ## Reminders are not the work
 
 An end-of-session reminder, where the agent supports one, can only say the session was long enough to review.
-It cannot read the transcript and extract patterns. The extraction is `/learn`.
+It cannot read the transcript and extract patterns. The extraction is `learn`.

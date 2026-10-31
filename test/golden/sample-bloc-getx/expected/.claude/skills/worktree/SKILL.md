@@ -4,7 +4,7 @@ description: "Run two or more tasks at once - build a backlog matrix of dependen
 argument-hint: "backlog <task A>; <task B> | create <branch> <base> [--name <dir>] [--no-pub] | link <name> | list | watch [<name>...] | remove <name>"
 ---
 
-# /worktree
+# worktree
 
 This workflow sits outside the chain. It only prepares one worktree per parallel task; each worktree session then runs the chain itself.
 
@@ -42,7 +42,7 @@ This workflow sits outside the chain. It only prepares one worktree per parallel
 
 ## backlog
 
-Use it when one input holds two or more tasks, directly or forwarded by `/orchestrate`.
+Use it when one input holds two or more tasks, directly or forwarded by `orchestrate`.
 It replaces step 0 for multi-task input: the matrix first, code later.
 
 1. Split the input into tasks, one row each.
@@ -70,7 +70,7 @@ C <summary>       small     A           lib/ui/orders/                      <pro
 Commands to run after confirmation:
   dashcrew worktree create <branch A> <base>
   dashcrew worktree create <branch B> <base>
-  /worktree watch
+  worktree watch
 
 AWAITING CONFIRMATION: are base, branch names, modes and this split correct?
 ```
@@ -109,7 +109,7 @@ If `pub get` failed, say so and give the command to rerun in the worktree. Never
 
 A `trivial` or `small` task that this session runs in another worktree, without a new session.
 
-- The full chain still runs. Only the place of work changes. This session still owns checkpoint, scoped `/verify`, the PR description and the PR question, per task.
+- The full chain still runs. Only the place of work changes. This session still owns checkpoint, scoped `verify`, the PR description and the PR question, per task.
 - Every role prompt carries `Worktree: <absolute path>` and these rules:
   - prefix every shell command with `cd <path> &&` in the same command, because the working directory may persist between calls
   - run git as `git -C <path>`
@@ -123,7 +123,7 @@ A `trivial` or `small` task that this session runs in another worktree, without 
 ## watch
 
 ```
-/worktree watch [<name>...]
+worktree watch [<name>...]
 ```
 
 - Start exactly one `worktree-monitor` role in the background, with the main repo path and the worktree names, then return to the user. The monitor runs `dashcrew worktree watch`.
@@ -138,7 +138,7 @@ A `trivial` or `small` task that this session runs in another worktree, without 
 
 - Merge in dependency order.
 - After each merge, check every open worktree against the updated base with `git merge-tree --write-tree origin/<base> <branch>`.
-- Rerun scoped `/verify` in that worktree before its PR is opened.
+- Rerun scoped `verify` in that worktree before its PR is opened.
 - After a parent merges, moving a dependent branch onto the base is the user's call.
 
 ## remove

@@ -10,16 +10,16 @@ rules:
   - orchestrate.agent-name-exact
   - orchestrate.phase-complete-first
 ---
-# /orchestrate
+# orchestrate
 
 Arguments: a flow name (`team`, `feature`, `bugfix`, `refactor`, `security`, `slicing`), then the task description.
 
-`/orchestrate` replaces `/plan` through `/code-review`. Checkpoint, verify, the PR description and the PR question stay with the main session.
+`orchestrate` replaces `plan` through `code-review`. Checkpoint, verify, the PR description and the PR question stay with the main session.
 
 ## More than one task
 
 - When the description holds two or more tasks (separated by `;`, new lines or a numbered list), pick no flow and run no role.
-- Forward the description as is to `/worktree backlog` and follow it to the end: matrix, base question, confirmation, one worktree per independent task.
+- Forward the description as is to `worktree backlog` and follow it to the end: matrix, base question, confirmation, one worktree per independent task.
 - Only then run the flow, and only for the task the matrix marks `current` or `inline`.
 - Never run the flow for a task that belongs to another worktree, except an `inline` task.
 

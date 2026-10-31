@@ -4,7 +4,7 @@ description: "Record or compare a snapshot of the working state at a phase bound
 argument-hint: "create <name> | verify <name> | list | clear"
 ---
 
-# /checkpoint
+# checkpoint
 
 Arguments: `create <name>` | `verify <name>` | `list` | `clear`.
 
@@ -26,11 +26,11 @@ Arguments: `create <name>` | `verify <name>` | `list` | `clear`.
 Take checkpoints at phase boundaries, not every few minutes:
 
 ```
-task start         -> /checkpoint create <task>-start
-data layer green   -> /checkpoint create <task>-data-green
-UI ready           -> /checkpoint create <task>-ui-ready
-before refactor    -> /checkpoint create <task>-pre-refactor
-after refactor     -> /checkpoint verify <task>-pre-refactor
+task start         -> checkpoint create <task>-start
+data layer green   -> checkpoint create <task>-data-green
+UI ready           -> checkpoint create <task>-ui-ready
+before refactor    -> checkpoint create <task>-pre-refactor
+after refactor     -> checkpoint verify <task>-pre-refactor
 ```
 
 A checkpoint is a session aid. It is not a backup and it does not replace a commit.
@@ -67,7 +67,7 @@ flutter analyze lib/ui/orders test/order_mapper_test.dart 2>&1 | tail -5
 ```
 
 - A checkpoint without an analyze result is useless as a baseline; always record it.
-- Run no `flutter test` in `create`. The test baseline comes from `/verify` at step 5, after code exists.
+- Run no `flutter test` in `create`. The test baseline comes from `verify` at step 5, after code exists.
 
 ## verify
 
@@ -82,7 +82,7 @@ git diff --stat
 diff <(git status --porcelain) "$DIR/$NAME.status"
 ```
 
-- Do not rerun `/verify full`. Reuse the numbers step 5 just produced.
+- Do not rerun `verify full`. Reuse the numbers step 5 just produced.
 - Rerun `flutter analyze` only on the scope recorded in the meta file, so the comparison is like for like.
 
 ```
@@ -92,7 +92,7 @@ Branch:   <then> -> <now>
 HEAD:     <then> -> <now>
 Scope:    <from meta>
 Analyze:  <then> -> <now>
-Tests:    <X/Y passed, from /verify at step 5, scoped>
+Tests:    <X/Y passed, from verify at step 5, scoped>
 New files since checkpoint: <list>
 
 Direction: [BETTER / SAME / WORSE]

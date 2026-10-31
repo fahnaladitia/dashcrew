@@ -41,7 +41,7 @@ stack:
     final frontMatter = plan.substring(4, plan.indexOf('\n---\n', 4));
     expect(frontMatter.split('\n').map((line) => line.split(':').first), ['name', 'description']);
     expect(plan, startsWith('---\nname: plan\ndescription: "Plan a change'));
-    expect(plan, contains('\n---\n\nArguments: `<task description or confirmed step 0 prompt>`\n\n# /plan'));
+    expect(plan, contains('\n---\n\nArguments: `<task description or confirmed step 0 prompt>`\n\n# plan'));
     expect(files.keys, contains('.agents/skills/bloc-patterns/SKILL.md'));
     expect(files.keys.where((path) => !path.startsWith('.agents/skills/')), isEmpty);
   });

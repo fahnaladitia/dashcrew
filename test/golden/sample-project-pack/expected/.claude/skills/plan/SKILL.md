@@ -4,7 +4,7 @@ description: "Plan a change before any code is written - restate it, map files b
 argument-hint: "<task description or confirmed step 0 prompt>"
 ---
 
-# /plan
+# plan
 
 Runs the `flutter-planner` role. No implementation code is written until the plan is accepted (see Closing).
 

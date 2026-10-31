@@ -4,7 +4,7 @@ description: "Implement data-layer logic test first - RED on an assertion, minim
 argument-hint: "<plan stage or unit to implement>"
 ---
 
-# /tdd
+# tdd
 
 Apply `test-driven-development` and `data-layer-tdd`. The test cases each unit type needs are in `data-layer-tdd`.
 
@@ -51,7 +51,7 @@ flutter test test/order_mapper_test.dart --reporter expanded
 flutter test test/order_mapper_test.dart test/order_repository_test.dart --reporter expanded
 ```
 
-- Never run the whole suite here. Regressions outside the scope are caught by `/verify` on the diff.
+- Never run the whole suite here. Regressions outside the scope are caught by `verify` on the diff.
 
 ## Output
 

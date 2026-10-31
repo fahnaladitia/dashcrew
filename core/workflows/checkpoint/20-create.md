@@ -36,4 +36,4 @@ flutter analyze lib/ui/orders test/order_mapper_test.dart 2>&1 | tail -5
 ```
 
 - A checkpoint without an analyze result is useless as a baseline; always record it.
-- Run no `flutter test` in `create`. The test baseline comes from `/verify` at step 5, after code exists.
+- Run no `flutter test` in `create`. The test baseline comes from `verify` at step 5, after code exists.

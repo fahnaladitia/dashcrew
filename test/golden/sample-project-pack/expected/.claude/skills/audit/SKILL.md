@@ -4,7 +4,7 @@ description: "Read-only audit of existing code under a path, of one feature flow
 argument-hint: "<path> [--focus arch,lifecycle,perf,security,qa,test] | flow <name> [--from <entry>] [--to <exit>] [--task <id>] [--full] | toolkit | [<task id or url>] <question>"
 ---
 
-# /audit
+# audit
 
 Four modes, one workflow. It sits outside the chain.
 
@@ -14,7 +14,7 @@ Four modes, one workflow. It sits outside the chain.
 - Create no branch and no checkpoint.
 - Fixes are proposals only. Each one becomes a new task that runs the normal chain.
 
-`/audit` judges code that is already merged. It does not replace `/code-review` (the change in progress) or `/verify` (the gate before a PR).
+`audit` judges code that is already merged. It does not replace `code-review` (the change in progress) or `verify` (the gate before a PR).
 
 ## Mode selection
 
@@ -26,7 +26,7 @@ Pick the mode from the first argument, checking in this order:
 4. a task id or URL of the project's tracker -> investigation mode with a task
 5. anything else (a free sentence) -> investigation mode without a task
 
-## Code mode: `/audit <path> [--focus ...]`
+## Code mode: `audit <path> [--focus ...]`
 
 - A path is required. Without one, ask.
 - Audit all of `lib/` only when the user writes it explicitly; then audit it one feature folder at a time.
@@ -94,7 +94,7 @@ Extra checks for `arch` and `perf`:
 
 ### Phase 4: Consolidate
 
-- Use the `/code-review` severities: BLOCKER, HIGH, MEDIUM.
+- Use the `code-review` severities: BLOCKER, HIGH, MEDIUM.
 - Merge repeated findings into one ("7 widgets without `const` in `components/`" is one finding, not seven).
 - Keep only findings you are sure of. In doubt, open the file again or drop the finding.
 - Every finding has `file:line`, the current code and a concrete fix.
@@ -120,9 +120,9 @@ Top 3 actions:
 File: <audit file>
 ```
 
-## Flow mode: `/audit flow <name> [--from <entry>] [--to <exit>] [--task <id>] [--full]`
+## Flow mode: `audit flow <name> [--from <entry>] [--to <exit>] [--task <id>] [--full]`
 
-Examples: `/audit flow checkout --from CartPage` for a whole journey, `/audit flow change-avatar --from "tap change photo" --to "profile header shows the new photo"` for one action.
+Examples: `audit flow checkout --from CartPage` for a whole journey, `audit flow change-avatar --from "tap change photo" --to "profile header shows the new photo"` for one action.
 
 - `--from` and `--to` may be a screen, a route, a state holder event, a widget tap (QA identifier) or a state.
 - Without `--from`, find candidate entry points and ask the user.
@@ -231,9 +231,9 @@ Draft tracker comment (not sent, under 1000 characters):
 
 Send the comment only when the user says so.
 
-## Investigation mode: `/audit [<task id or url>] <question>`
+## Investigation mode: `audit [<task id or url>] <question>`
 
-Example: `/audit why does the order list keep the old status after going back from the order detail page`.
+Example: `audit why does the order list keep the old status after going back from the order detail page`.
 
 One question, one answer: the root cause with evidence, not a general audit.
 Read the code first, then state the finding, its location and the fix. If the cause is unclear, say so; never guess.
@@ -269,7 +269,7 @@ Draft tracker comment (not sent, under 1000 characters, only with a task):
 File: <audit file>
 ```
 
-## Toolkit mode: `/audit toolkit`
+## Toolkit mode: `audit toolkit`
 
 Run the fixed checks T1 to T7, in this order, so the result repeats for the same commit.
 Add no other dimension.

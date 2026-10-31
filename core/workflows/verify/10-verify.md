@@ -6,7 +6,7 @@ rules:
   - verify.scope-from-base
   - skill.verify-phase
 ---
-# /verify
+# verify
 
 Run the phases in order. Stop at a phase marked STOP when it fails.
 

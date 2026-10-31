@@ -4,7 +4,7 @@ description: "Run the scoped quality gate - analyze, tests, secrets, architectur
 argument-hint: "quick | full | pre-pr | codegen"
 ---
 
-# /verify
+# verify
 
 Run the phases in order. Stop at a phase marked STOP when it fails.
 

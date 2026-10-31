@@ -7,7 +7,7 @@ rules:
   - checkpoint.no-restore
   - checkpoint.phase-boundaries
 ---
-# /checkpoint
+# checkpoint
 
 Arguments: `create <name>` | `verify <name>` | `list` | `clear`.
 
@@ -29,11 +29,11 @@ Arguments: `create <name>` | `verify <name>` | `list` | `clear`.
 Take checkpoints at phase boundaries, not every few minutes:
 
 ```
-task start         -> /checkpoint create <task>-start
-data layer green   -> /checkpoint create <task>-data-green
-UI ready           -> /checkpoint create <task>-ui-ready
-before refactor    -> /checkpoint create <task>-pre-refactor
-after refactor     -> /checkpoint verify <task>-pre-refactor
+task start         -> checkpoint create <task>-start
+data layer green   -> checkpoint create <task>-data-green
+UI ready           -> checkpoint create <task>-ui-ready
+before refactor    -> checkpoint create <task>-pre-refactor
+after refactor     -> checkpoint verify <task>-pre-refactor
 ```
 
 A checkpoint is a session aid. It is not a backup and it does not replace a commit.

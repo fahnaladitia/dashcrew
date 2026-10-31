@@ -7,7 +7,7 @@ rules:
   - build.one-error-one-fix
   - build.output
 ---
-# /build-fix
+# build-fix
 
 Runs the `flutter-build-error-resolver` role.
 This is not a chain step: use it when a build error blocks any step, then resume where you were.

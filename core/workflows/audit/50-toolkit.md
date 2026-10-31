@@ -10,7 +10,7 @@ rules:
   - audit.skill-map
   - audit.toolkit-change-needs-yes
 ---
-## Toolkit mode: `/audit toolkit`
+## Toolkit mode: `audit toolkit`
 
 Run the fixed checks T1 to T7, in this order, so the result repeats for the same commit.
 Add no other dimension.

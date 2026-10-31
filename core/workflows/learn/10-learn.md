@@ -7,9 +7,9 @@ rules:
   - learn.what-to-skip
   - learn.nothing-say-so
 ---
-# /learn
+# learn
 
-Run `/learn` at the end of every session. It can also run mid-session after a hard-won fix.
+Run `learn` at the end of every session. It can also run mid-session after a hard-won fix.
 The file format and index rules live in the `continuous-learning` skill; apply it.
 
 ## Extract

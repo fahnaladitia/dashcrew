@@ -7,7 +7,7 @@ when_to_use: "When writing or changing a mapper, repository, model or state hold
 # Data-layer TDD
 
 Every feature ships data-layer tests in the same task, not later.
-The cycle (RED, GREEN, REFACTOR, run budget) is in the `/tdd` workflow.
+The cycle (RED, GREEN, REFACTOR, run budget) is in the `tdd` workflow.
 The test-double style (hand-written fakes or a mocking library) is set by the selected test pack; follow AGENTS.md.
 
 ## Fixtures

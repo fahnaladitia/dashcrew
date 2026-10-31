@@ -1,2 +1,2 @@
 description: Layered Flutter quality gate that produces evidence, not claims - analyze, scoped tests, secrets, architecture, QA identifiers and diff.
-when_to_use: After a feature or large change, before a PR, after a refactor, and at /orchestrate phase boundaries.
+when_to_use: After a feature or large change, before a PR, after a refactor, and at `orchestrate` phase boundaries.

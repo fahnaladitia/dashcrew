@@ -8,7 +8,7 @@ rules:
 ## watch
 
 ```
-/worktree watch [<name>...]
+worktree watch [<name>...]
 ```
 
 - Start exactly one `worktree-monitor` role in the background, with the main repo path and the worktree names, then return to the user. The monitor runs `dashcrew worktree watch`.
@@ -23,5 +23,5 @@ rules:
 
 - Merge in dependency order.
 - After each merge, check every open worktree against the updated base with `git merge-tree --write-tree origin/<base> <branch>`.
-- Rerun scoped `/verify` in that worktree before its PR is opened.
+- Rerun scoped `verify` in that worktree before its PR is opened.
 - After a parent merges, moving a dependent branch onto the base is the user's call.

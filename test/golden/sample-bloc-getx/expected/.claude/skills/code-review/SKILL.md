@@ -4,7 +4,7 @@ description: "Review the current change against architecture, lifecycle, securit
 argument-hint: "[base branch]"
 ---
 
-# /code-review
+# code-review
 
 Runs the `flutter-code-reviewer` role on the current change.
 Review the change against clean architecture, security and the project rules in AGENTS.md.

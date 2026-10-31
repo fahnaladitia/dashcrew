@@ -4,9 +4,9 @@ order: 40
 rules:
   - audit.investigation
 ---
-## Investigation mode: `/audit [<task id or url>] <question>`
+## Investigation mode: `audit [<task id or url>] <question>`
 
-Example: `/audit why does the order list keep the old status after going back from the order detail page`.
+Example: `audit why does the order list keep the old status after going back from the order detail page`.
 
 One question, one answer: the root cause with evidence, not a general audit.
 Read the code first, then state the finding, its location and the fix. If the cause is unclear, say so; never guess.

@@ -10,7 +10,7 @@ rules:
 ---
 ## backlog
 
-Use it when one input holds two or more tasks, directly or forwarded by `/orchestrate`.
+Use it when one input holds two or more tasks, directly or forwarded by `orchestrate`.
 It replaces step 0 for multi-task input: the matrix first, code later.
 
 1. Split the input into tasks, one row each.
@@ -38,7 +38,7 @@ C <summary>       small     A           lib/ui/orders/                      <pro
 Commands to run after confirmation:
   dashcrew worktree create <branch A> <base>
   dashcrew worktree create <branch B> <base>
-  /worktree watch
+  worktree watch
 
 AWAITING CONFIRMATION: are base, branch names, modes and this split correct?
 ```

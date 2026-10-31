@@ -4,7 +4,7 @@ description: "Diagnose and fix Flutter, code generation, dependency, Gradle and 
 argument-hint: "[error output or failing command]"
 ---
 
-# /build-fix
+# build-fix
 
 Runs the `flutter-build-error-resolver` role.
 This is not a chain step: use it when a build error blocks any step, then resume where you were.

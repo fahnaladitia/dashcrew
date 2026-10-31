@@ -1,11 +1,12 @@
 ---
 target: agents_md
 order: 20
-rules: [workflow.discover-toolkit, workflow.agents-md-wins, workflow.precedence-design-user, workflow.human-decision-points, workflow.when-to-read-what, skill.flutter-expert-all-phases, skill.runtime-fix-through-chain, skill.mcp-servers, skill.graph-journeys-manual, guard.plans-only-roles, tracker.description-is-requirement, project.memory]
+rules: [workflow.discover-toolkit, workflow.names-without-prefix, workflow.agents-md-wins, workflow.precedence-design-user, workflow.human-decision-points, workflow.when-to-read-what, skill.flutter-expert-all-phases, skill.runtime-fix-through-chain, skill.mcp-servers, skill.graph-journeys-manual, guard.plans-only-roles, tracker.description-is-requirement, project.memory]
 ---
 ## Using this toolkit
 
 - Discover the workflows and skills yourself at session start and whenever a task matches one; never wait to be pointed at them.
+- Workflows and skills are named here without the agent's invocation prefix: `plan` is the workflow you invoke as `/plan` or `$plan`, depending on the agent.
 - This file wins over every workflow, role and skill on conflict; they only add detail. For UI, the design frame beats the backend contract. The user's decision beats the plan.
 - Never decide for the user at these points: the polished prompt, branch name and base, the plan, analytics, the tech-lead gate, commit and push, opening a PR, merging.
 - Apply Flutter and Dart expertise in every phase (reading, planning, implementing, refactoring, fixing, reviewing), with the `flutter-expert` and `flutter-development` skills when installed.

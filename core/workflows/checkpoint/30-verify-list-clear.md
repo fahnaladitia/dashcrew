@@ -19,7 +19,7 @@ git diff --stat
 diff <(git status --porcelain) "$DIR/$NAME.status"
 ```
 
-- Do not rerun `/verify full`. Reuse the numbers step 5 just produced.
+- Do not rerun `verify full`. Reuse the numbers step 5 just produced.
 - Rerun `flutter analyze` only on the scope recorded in the meta file, so the comparison is like for like.
 
 ```
@@ -29,7 +29,7 @@ Branch:   <then> -> <now>
 HEAD:     <then> -> <now>
 Scope:    <from meta>
 Analyze:  <then> -> <now>
-Tests:    <X/Y passed, from /verify at step 5, scoped>
+Tests:    <X/Y passed, from verify at step 5, scoped>
 New files since checkpoint: <list>
 
 Direction: [BETTER / SAME / WORSE]

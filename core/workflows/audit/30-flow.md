@@ -11,9 +11,9 @@ rules:
   - audit.stale-check
   - audit.verdict-values
 ---
-## Flow mode: `/audit flow <name> [--from <entry>] [--to <exit>] [--task <id>] [--full]`
+## Flow mode: `audit flow <name> [--from <entry>] [--to <exit>] [--task <id>] [--full]`
 
-Examples: `/audit flow checkout --from CartPage` for a whole journey, `/audit flow change-avatar --from "tap change photo" --to "profile header shows the new photo"` for one action.
+Examples: `audit flow checkout --from CartPage` for a whole journey, `audit flow change-avatar --from "tap change photo" --to "profile header shows the new photo"` for one action.
 
 - `--from` and `--to` may be a screen, a route, a state holder event, a widget tap (QA identifier) or a state.
 - Without `--from`, find candidate entry points and ask the user.

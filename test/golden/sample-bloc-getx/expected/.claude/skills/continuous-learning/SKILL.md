@@ -1,13 +1,13 @@
 ---
 name: continuous-learning
 description: "Save reusable lessons from a session as one-fact memory files so the same correction never has to be given twice."
-when_to_use: "At the end of a session, when /learn runs, or right after the user corrects the same thing a second time."
+when_to_use: "At the end of a session, when `learn` runs, or right after the user corrects the same thing a second time."
 ---
 
 # Continuous learning
 
 Goal: a correction given once is never needed again in a later session.
-What to extract and what to skip is listed in the `/learn` workflow.
+What to extract and what to skip is listed in the `learn` workflow.
 
 ## Where
 
@@ -52,4 +52,4 @@ Add one pointer line per memory to `docs/memory/MEMORY.md`:
 ## Reminders are not the work
 
 An end-of-session reminder, where the agent supports one, can only say the session was long enough to review.
-It cannot read the transcript and extract patterns. The extraction is `/learn`.
+It cannot read the transcript and extract patterns. The extraction is `learn`.

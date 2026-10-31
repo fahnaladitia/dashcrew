@@ -4,16 +4,16 @@ description: "Run a chain of role agents for large work, one phase at a time, wi
 argument-hint: "team | feature | bugfix | refactor | security | slicing <task description>"
 ---
 
-# /orchestrate
+# orchestrate
 
 Arguments: a flow name (`team`, `feature`, `bugfix`, `refactor`, `security`, `slicing`), then the task description.
 
-`/orchestrate` replaces `/plan` through `/code-review`. Checkpoint, verify, the PR description and the PR question stay with the main session.
+`orchestrate` replaces `plan` through `code-review`. Checkpoint, verify, the PR description and the PR question stay with the main session.
 
 ## More than one task
 
 - When the description holds two or more tasks (separated by `;`, new lines or a numbered list), pick no flow and run no role.
-- Forward the description as is to `/worktree backlog` and follow it to the end: matrix, base question, confirmation, one worktree per independent task.
+- Forward the description as is to `worktree backlog` and follow it to the end: matrix, base question, confirmation, one worktree per independent task.
 - Only then run the flow, and only for the task the matrix marks `current` or `inline`.
 - Never run the flow for a task that belongs to another worktree, except an `inline` task.
 
@@ -183,7 +183,7 @@ Close with HANDOFF (including Skills used / Skills skipped) and save it to .ai/p
 
 - Only the read-only reviewers run in parallel: flutter-code-reviewer, qa-engineer and flutter-security-reviewer. Start all three in one turn, then pass all three handoffs to tech-lead.
 - Roles that write code run one at a time and alone in the working tree.
-- A second task that writes code needs its own worktree (see `/worktree`).
+- A second task that writes code needs its own worktree (see `worktree`).
 - product-manager, design-refiner and flutter-architect run one after another, because each reads the previous output.
 - A role never starts another role. When it needs one, it writes the need under "For next phase", and the main session runs that role.
 - Within one task, only these may run in the background without a worktree: analyze and test runs, the three read-only reviewers, and read-only research.

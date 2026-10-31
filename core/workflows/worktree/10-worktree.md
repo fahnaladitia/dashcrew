@@ -8,7 +8,7 @@ rules:
   - worktree.inter-session-not-approval
   - worktree.session-runs-full-chain
 ---
-# /worktree
+# worktree
 
 This workflow sits outside the chain. It only prepares one worktree per parallel task; each worktree session then runs the chain itself.
 
