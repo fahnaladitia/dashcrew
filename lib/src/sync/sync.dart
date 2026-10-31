@@ -72,7 +72,14 @@ class Sync {
 
     final conflicts = <String>[];
     _removeCompiledGuard();
+    final project = ProjectFiles(projectDir);
     for (final path in {...files.keys, ...lockedFiles.keys}) {
+      final link = project.linkWithin(path);
+      if (link != null) {
+        conflicts.add('$path (${link.path} is a link to ${link.target}; --force replaces the link with a real file '
+            'and leaves its target alone)');
+        continue;
+      }
       final file = _file(path);
       if (!file.existsSync()) continue;
       final onDisk = fileHash(path, file.readAsStringSync());
@@ -93,7 +100,7 @@ class Sync {
 
     final removed = <String>[];
     for (final path in lockedFiles.keys) {
-      if (files.containsKey(path)) continue;
+      if (files.containsKey(path) || project.linkWithin(path) != null) continue;
       final file = _file(path);
       if (file.existsSync()) {
         file.deleteSync();

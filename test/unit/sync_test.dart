@@ -331,6 +331,64 @@ project: { local_packages: [core] }
     });
   });
 
+  group('links in the project', () {
+    late Directory outside;
+
+    setUp(() {
+      outside = Directory.systemTemp.createTempSync('dashcrew_link_target_');
+      write('.ai/project.yaml', 'toolkit: 1\nagents: [claude-code]\n');
+    });
+    tearDown(() => outside.deleteSync(recursive: true));
+
+    File outsideFile(String name, String content) => File('${outside.path}/$name')
+      ..parent.createSync(recursive: true)
+      ..writeAsStringSync(content);
+
+    void link(String relative, String target) {
+      Directory('${project.path}/$relative').parent.createSync(recursive: true);
+      Link('${project.path}/$relative').createSync(target);
+    }
+
+    test('a generated file that is a link is reported, and --force never writes into its target', () {
+      final source = outsideFile('planner.md', 'team planner\n');
+      link('.claude/agents/flutter-planner.md', source.path);
+
+      expect(() => sync(), throwsA(isA<SyncException>().having((e) => e.message, 'message', contains('link to ${source.path}'))));
+      expect(source.readAsStringSync(), 'team planner\n');
+
+      sync(force: true);
+
+      expect(source.readAsStringSync(), 'team planner\n');
+      expect(FileSystemEntity.isLinkSync('${project.path}/.claude/agents/flutter-planner.md'), isFalse);
+      expect(read('.claude/agents/flutter-planner.md'), contains('name: flutter-planner'));
+    });
+
+    test('a generated file inside a linked folder is reported, and --force leaves the folder target alone', () {
+      final source = outsideFile('skills/verify/SKILL.md', 'team verify\n');
+      link('.claude/skills/verify', source.parent.path);
+
+      expect(() => sync(), throwsA(isA<SyncException>().having((e) => e.message, 'message', contains('.claude/skills/verify'))));
+
+      sync(force: true);
+
+      expect(source.readAsStringSync(), 'team verify\n');
+      expect(FileSystemEntity.isLinkSync('${project.path}/.claude/skills/verify'), isFalse);
+      expect(read('.claude/skills/verify/SKILL.md'), contains('name: verify'));
+    });
+
+    test('a merged file that is a link is merged into a real file, its target untouched', () {
+      final source = outsideFile('settings.json', '{"hooks": {"Stop": [{"hooks": [{"type": "command", "command": "notify"}]}]}}');
+      link('.claude/settings.json', source.path);
+
+      sync();
+
+      expect(source.readAsStringSync(), contains('"notify"'));
+      expect(source.readAsStringSync(), isNot(contains('.ai/bin/guard')));
+      expect(FileSystemEntity.isLinkSync('${project.path}/.claude/settings.json'), isFalse);
+      expect(read('.claude/settings.json'), allOf(contains('notify'), contains('.ai/bin/guard')));
+    });
+  });
+
   group('guard shim', () {
     test('sync writes an executable shim for this dashcrew and locks it', () {
       sync();
