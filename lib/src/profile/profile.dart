@@ -31,6 +31,7 @@ class Profile {
     required this.project,
     required this.policy,
     required this.paths,
+    required this.ci,
   });
 
   static const supportedAgents = {'claude-code', 'codex', 'antigravity'};
@@ -38,7 +39,9 @@ class Profile {
   /// Option valid for every family: a library with no pack, named by the required `name` param.
   static const otherOption = 'other';
 
-  static const _topLevelKeys = {'toolkit', 'agents', 'language', 'stack', 'project', 'policy', 'paths'};
+  static const _topLevelKeys = {'toolkit', 'agents', 'language', 'stack', 'project', 'policy', 'paths', 'ci'};
+
+  static const _ciDefaults = <String, Object?>{'github': false, 'dashcrew_ref': null};
 
   static const _languageDefaults = <String, Object?>{'dartdoc': 'en', 'pr': 'en', 'chat': 'en'};
 
@@ -73,6 +76,9 @@ class Profile {
   final Map<String, Object?> policy;
   final Map<String, Object?> paths;
 
+  /// `github: true` makes sync write a workflow running `dashcrew check` at the pinned `dashcrew_ref`.
+  final Map<String, Object?> ci;
+
   static Profile parse(String yaml, {required Map<String, Set<String>> knownOptions}) {
     final root = plainYaml(loadYaml(yaml));
     if (root is! Map<String, Object?>) throw ProfileException('', 'expected a YAML map');
@@ -89,6 +95,7 @@ class Profile {
       project: _project(root['project']),
       policy: _merge('policy', _policyDefaults, root['policy'], strict: true),
       paths: _merge('paths', _pathDefaults, root['paths'], strict: false),
+      ci: _ci(root['ci']),
     );
   }
 
@@ -123,6 +130,15 @@ class Profile {
       }
     }
     return project;
+  }
+
+  static Map<String, Object?> _ci(Object? value) {
+    final ci = _merge('ci', _ciDefaults, value, strict: true);
+    final ref = ci['dashcrew_ref'];
+    if (ci['github'] == true && (ref is! String || ref.isEmpty)) {
+      throw ProfileException('ci.dashcrew_ref', 'required with github: true, the dashcrew commit or tag CI installs');
+    }
+    return ci;
   }
 
   static Map<String, StackChoice> _stack(Object? value, Map<String, Set<String>> knownOptions) {
@@ -181,6 +197,7 @@ class Profile {
       'project': project,
       'policy': policy,
       'paths': paths,
+      'ci': ci,
       'build': {'flavors': buildFlavors, 'has_flavors': buildFlavors.isNotEmpty},
     };
   }

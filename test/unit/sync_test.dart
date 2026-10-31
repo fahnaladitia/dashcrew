@@ -5,6 +5,7 @@ import 'package:dashcrew/dashcrew.dart';
 import 'package:dashcrew/src/package_root.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
+import 'package:yaml/yaml.dart';
 
 void main() {
   late Directory project;
@@ -386,6 +387,48 @@ project: { local_packages: [core] }
       expect(source.readAsStringSync(), isNot(contains('.ai/bin/guard')));
       expect(FileSystemEntity.isLinkSync('${project.path}/.claude/settings.json'), isFalse);
       expect(read('.claude/settings.json'), allOf(contains('notify'), contains('.ai/bin/guard')));
+    });
+  });
+
+  group('github workflow', () {
+    const path = '.github/workflows/dashcrew.yml';
+
+    test('ci.github writes a workflow that runs dashcrew check at the pinned ref', () {
+      write('.ai/project.yaml', 'toolkit: 1\nagents: [claude-code]\nci: { github: true, dashcrew_ref: 0123abc }\n');
+
+      sync();
+
+      final workflow = loadYaml(read(path)) as YamlMap;
+      expect((workflow['on'] as YamlMap).keys, ['pull_request']);
+      final steps = ((workflow['jobs'] as YamlMap)['check'] as YamlMap)['steps'] as YamlList;
+      final runs = [for (final step in steps) (step as YamlMap)['run']].whereType<String>().toList();
+      expect(runs, contains(contains('--git-ref 0123abc')));
+      expect(runs.last, 'dart pub global run dashcrew check');
+      expect(read(path), contains(r'GITHUB_TOKEN: ${{ github.token }}'));
+      expect(((jsonDecode(read('.ai/lock.json')) as Map)['files'] as Map).keys, contains(path));
+    });
+
+    test('no workflow without ci.github, and turning it off removes it', () {
+      sync();
+      expect(exists(path), isFalse);
+
+      write('.ai/project.yaml', 'toolkit: 1\nagents: [claude-code]\nci: { github: true, dashcrew_ref: 0123abc }\n');
+      sync();
+      write('.ai/project.yaml', 'toolkit: 1\nagents: [claude-code]\n');
+      final result = sync();
+
+      expect(exists(path), isFalse);
+      expect(result.removed, contains(path));
+    });
+
+    test('a workflow the team wrote under that name is left alone with a warning', () {
+      write(path, 'name: ours\n');
+      write('.ai/project.yaml', 'toolkit: 1\nagents: [claude-code]\nci: { github: true, dashcrew_ref: 0123abc }\n');
+
+      final result = sync();
+
+      expect(read(path), 'name: ours\n');
+      expect(result.warnings.join('\n'), contains(path));
     });
   });
 

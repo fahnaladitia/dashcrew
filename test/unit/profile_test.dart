@@ -158,6 +158,21 @@ project: { flavors: { staging: lib/main_staging.dart, dev: lib/main_dev.dart } }
     });
   }
 
+  test('ci defaults to off; github needs a pinned dashcrew ref', () {
+    final profile = parse('toolkit: 1\nagents: [claude-code]\n');
+    expect(profile.ci, {'github': false, 'dashcrew_ref': null});
+
+    expect(parse('toolkit: 1\nagents: [claude-code]\nci: { github: true, dashcrew_ref: 0123abc }\n').ci['dashcrew_ref'], '0123abc');
+    expect(
+      () => parse('toolkit: 1\nagents: [claude-code]\nci: { github: true }\n'),
+      throwsA(isA<ProfileException>().having((e) => e.path, 'path', 'ci.dashcrew_ref')),
+    );
+    expect(
+      () => parse('toolkit: 1\nagents: [claude-code]\nci: { gitlab: true }\n'),
+      throwsA(isA<ProfileException>().having((e) => e.path, 'path', 'ci.gitlab')),
+    );
+  });
+
   test('toContext exposes nested maps for templates', () {
     final profile = parse('''
 toolkit: 1

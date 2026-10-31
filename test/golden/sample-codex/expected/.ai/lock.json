@@ -79,6 +79,7 @@
     ".codex/agents/tech-lead.toml": "099412053e73b00d2e220acedc33283642abf13bf28bf7dbb26113e45fcd742d",
     ".codex/agents/worktree-monitor.toml": "1c8804574c570c86163e8f3a7089426d5080dda12b4fd1600e2cd867063aa002",
     ".github/pull_request_template.md": "d04513360a2435b2a27fa0e0218d96c66c1a787a82ef950ea445f63073c982b9",
+    ".github/workflows/dashcrew.yml": "c73056fa27c99de0f0ca18d4e61fb632befe28a7d6a8215413d49d547687ada6",
     "AGENTS.md": "5d950d1bea9fd4c0cfd85db1ab782be130d2e6e9d284602cfc4a578de2766380",
     "CLAUDE.md": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49"
   },

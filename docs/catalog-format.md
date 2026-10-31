@@ -53,6 +53,8 @@ Templates are strict: an unknown variable is a render error. Use only these.
 | `policy.tier_gates` | `true` |
 | `policy.terse_prompts` | `false` |
 | `paths.plans`, `paths.audits`, `paths.pr`, `paths.memory` | `.ai/plans`, `.ai/audits`, `.ai/pr`, `.ai/memory` |
+| `policy.plan_gate` | `false` |
+| `ci.github`, `ci.dashcrew_ref` | `false`, null |
 | `project.flavors` (map of flavor name to entrypoint), `project.local_packages` (list) | empty |
 | `project.base_branches` (list) | `[main]` |
 | `project.branch_prefix.feat` / `.fix` / `.hotfix` | `feat/`, `fix/`, `hotfix/` |

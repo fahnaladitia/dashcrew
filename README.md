@@ -75,7 +75,9 @@ policy:
   dartdoc_max_lines: 3
   tier_gates: true
   terse_prompts: false
+  plan_gate: false
 paths: { plans: .ai/plans, audits: .ai/audits, pr: .ai/pr, memory: .ai/memory }
+ci: { github: true, dashcrew_ref: <commit or tag> }
 ```
 
 | Key | Default | Effect |
@@ -94,6 +96,9 @@ paths: { plans: .ai/plans, audits: .ai/audits, pr: .ai/pr, memory: .ai/memory }
 | `policy.tier_gates` | `true` | trivial and small tasks with a GO plan continue without waiting |
 | `policy.terse_prompts` | `false` | agents answer short and blunt |
 | `paths.*` | `.ai/plans`, `.ai/audits`, `.ai/pr`, `.ai/memory` | where plans, audits, PR descriptions and project memory live |
+| `policy.plan_gate` | `false` | app code stays closed until the branch's plan issue is approved; see [Gates on GitHub](#gates-on-github) |
+| `ci.github` | `false` | write `.github/workflows/dashcrew.yml`, which runs `dashcrew check` on every pull request |
+| `ci.dashcrew_ref` | none | dashcrew commit or tag that workflow installs; required with `ci.github` |
 
 ## Stack options
 
@@ -163,6 +168,24 @@ Compiles the guard once into `${DASHCREW_HOME:-~/.dashcrew}/guard/<hash>/guard` 
 
 Agent checks run only for the agents in the profile.
 
+### `dashcrew gate`
+
+| Subcommand | |
+|---|---|
+| `submit plan --file <plan.md> [--issue <n>]` | posts the plan to the branch's GitHub issue (the given one, the linked one, or a new `Plan: <branch>` issue), links it to the branch and records the gate as pending |
+| `status` | reads the issue and records whether the latest plan is approved; prints `plan: approved`, `pending` or `no issue linked` |
+
+Both use `gh`. There is no approve command: approval is a comment on GitHub.
+
+### `dashcrew check`
+
+| Flag | Default | |
+|---|---|---|
+| `-p, --project` | `.` | project root |
+| `--pr-body <file>` | none | the PR description to check; in a pull request workflow the event supplies it |
+
+Read-only; exit 1 on any failure, with `::error` annotations in GitHub Actions. It runs the toolkit checks of `doctor` that need no agent or guard binary, then `pr-sections` (every heading of `.github/pull_request_template.md` in the PR body) and `plan-approval` (a `Plan: #<n>` line whose issue is approved; required only with `policy.plan_gate`).
+
 ### `dashcrew worktree`
 
 One worktree per parallel task, at `<repo>.worktrees/<name>`. It never commits, pushes or deletes a branch.
@@ -187,7 +210,7 @@ Every subcommand takes `-p, --project`, any folder inside the repository.
 | Guard hook | `.claude/settings.json` | `.codex/hooks.json` | `.agents/hooks.json`, key `dashcrew-guard` |
 | MCP (`dart-mcp-server`) | `.mcp.json` | `.codex/config.toml`, between `# dashcrew:begin` and `# dashcrew:end` | `.agents/mcp_config.json` |
 
-Settings, hooks and MCP files are merged: your own entries stay, and an MCP server you defined differently is left alone with a warning. Every agent also gets `.ai/guard.json`, `.ai/lock.json` and the guard shim `.ai/bin/guard`.
+Settings, hooks and MCP files are merged: your own entries stay, and an MCP server you defined differently is left alone with a warning. Every agent also gets `.ai/guard.json`, `.ai/lock.json`, the guard shim `.ai/bin/guard` and `.github/pull_request_template.md`; with `ci.github`, also `.github/workflows/dashcrew.yml`. A template or workflow your team wrote under those names is left alone with a warning.
 
 ## Guard
 
@@ -196,11 +219,31 @@ Each agent's pre-tool hook sends the tool call to `.ai/bin/guard`, which blocks:
 - `git commit` (unless `policy.agent_commit`), `push`, `stash`, `reset`, `rebase`, `cherry-pick`, `revert`, `merge`, `tag`, including behind `sudo`, `env`, `rtk`, `fvm`, variable assignments, git global options (`-C`, `-c`), `&&` chains, `$( )`, and heredocs fed to a shell;
 - `dart format`, `dart fix`, `flutter format` (unless `policy.formatter`);
 - writes by a `read` role, and writes outside `paths.plans` by a `write-plans` role;
-- importing the analytics vendor package in the app's `lib/` (the selected analytics pack's `vendor_import`), outside local packages.
+- importing the analytics vendor package in the app's `lib/` (the selected analytics pack's `vendor_import`), outside local packages;
+- with `policy.plan_gate`, writes under the app's `lib/` or `test/` while the branch's plan issue is pending;
+- a `gh` command whose arguments contain `/approve`: approvals are the user's.
 
 Claude Code and Codex get exit code 2 with the reason on stderr; Antigravity gets `{"decision": "deny", "reason": ...}` on stdout. The guard fails open: a missing or broken guard never stops work, and `doctor` reports it.
 
 **Where it runs.** `.ai/bin/guard` is a short `sh` script that `sync` writes and you commit. It runs `${DASHCREW_HOME:-~/.dashcrew}/guard/<hash>/guard`, compiled once per machine for the guard source in the lock and shared by every project. When that binary is missing and `dashcrew` is on `PATH`, the shim installs it first (about 2 s, once per machine and guard version); otherwise it prints `not installed on this machine: run dashcrew sync` and lets the call through. A teammate whose dashcrew builds a different guard gets an error instead of a wrong guard. The shim adds about 3 ms per tool call (about 15 ms in total on the maintainer's machine). The shim needs a POSIX shell, so Windows is not supported yet.
+
+## Gates on GitHub
+
+Two human gates, enforced instead of only described. GitHub is the only infrastructure.
+
+**Plan gate** (opt-in, `policy.plan_gate: true`):
+
+1. When the plan waits for the user, the agent runs `dashcrew gate submit plan --file <plan.md>`. The plan lands on the branch's GitHub issue and the agent stops.
+2. You read it there and comment `/approve plan` (first line), from the browser or the GitHub mobile app. Only an owner, member or collaborator of the repository counts, and only after the latest plan comment, so a revised plan needs a new approval.
+3. The agent runs `dashcrew gate status`. Until it prints `plan: approved`, the guard refuses writes under `lib/` and `test/` on that branch. A branch with no plan issue is not blocked, so small fixes keep their fast path.
+
+**Merge gate:**
+
+1. Set `ci: { github: true, dashcrew_ref: <commit or tag> }` and run `dashcrew sync`. Commit `.github/workflows/dashcrew.yml`.
+2. In the repository settings, add a branch protection rule (or ruleset) for your base branches that requires the status check `check` from the `dashcrew check` workflow.
+3. Every pull request then needs: a current toolkit, every heading of the PR template, and, when its body says `Plan: #<n>`, an approved plan issue. Failures show as annotations on the PR.
+
+The guard keeps the agent from posting approvals, but on GitHub an agent and its user share one token: this prevents mistakes, not deliberate misuse.
 
 ## Using dashcrew in a team
 
@@ -251,6 +294,9 @@ dashcrew keeps AGENTS.md under the smallest cut of the selected agents, and `doc
 | `.ai/lock.json was written by dashcrew X` | install that dashcrew (or the team's pinned ref) |
 | `guard-binary`: `not installed on this machine` | `dashcrew sync`, or `dashcrew guard install` |
 | `guard install`: `This project expects guard X` | install the dashcrew ref the team uses, then `dashcrew sync` |
+| guard: `The plan for <branch> is not approved yet` | comment `/approve plan` on the issue, then `dashcrew gate status` |
+| `check`: `pr-sections` `missing: ## ...` | add the heading to the PR description; write "None" under it when it does not apply |
+| `check`: `plan #<n> is not approved` | the latest plan on the issue has no `/approve plan` from a collaborator after it |
 | `gitignore`: `.ai/bin/ is in .gitignore` | remove that line so the shim is committed |
 | `codex-trust`: `project not trusted` | trust the project when Codex asks, then approve the hook in `/hooks` |
 | `skill <name> skipped` | a project pack replaced the pack that defined it; add `skills/<name>.yaml` to your pack |
