@@ -12,7 +12,8 @@ Future<void> main(List<String> arguments) async {
   )
     ..addCommand(InitCommand())
     ..addCommand(SyncCommand())
-    ..addCommand(DoctorCommand());
+    ..addCommand(DoctorCommand())
+    ..addCommand(WorktreeCommand());
   try {
     exitCode = await runner.run(arguments) ?? 0;
   } on UsageException catch (error) {
@@ -22,6 +23,9 @@ Future<void> main(List<String> arguments) async {
     stderr.writeln(error.message);
     exitCode = 1;
   } on InitException catch (error) {
+    stderr.writeln(error.message);
+    exitCode = 1;
+  } on WorktreeException catch (error) {
     stderr.writeln(error.message);
     exitCode = 1;
   }
@@ -124,5 +128,142 @@ class DoctorCommand extends Command<int> {
       stdout.writeln('${check.status.name.padRight(6)}${check.id.padRight(16)}${check.detail}');
     }
     return checks.any((check) => check.status == CheckStatus.fail) ? 1 : 0;
+  }
+}
+
+class WorktreeCommand extends Command<int> {
+  WorktreeCommand() {
+    addSubcommand(_WorktreeCreate());
+    addSubcommand(_WorktreeList());
+    addSubcommand(_WorktreeLink());
+    addSubcommand(_WorktreeRemove());
+    addSubcommand(_WorktreeWatch());
+  }
+
+  @override
+  String get name => 'worktree';
+
+  @override
+  String get description => 'One worktree per parallel task. Never commits, pushes or deletes a branch.';
+}
+
+abstract class _WorktreeSubcommand extends Command<int> {
+  _WorktreeSubcommand() {
+    argParser.addOption('project', abbr: 'p', help: 'Any folder inside the repository.', defaultsTo: '.');
+  }
+
+  Worktrees get worktrees => Worktrees(projectDir: argResults!['project'] as String);
+
+  String positional(int index, String label) {
+    final rest = argResults!.rest;
+    if (rest.length <= index) usageException('Missing <$label>.');
+    return rest[index];
+  }
+}
+
+class _WorktreeCreate extends _WorktreeSubcommand {
+  _WorktreeCreate() {
+    argParser
+      ..addOption('name', help: 'Folder name; defaults to the branch with / replaced by -.')
+      ..addFlag('pub', help: 'Run flutter pub get in the new worktree.', defaultsTo: true);
+  }
+
+  @override
+  String get name => 'create';
+
+  @override
+  String get invocation => 'dashcrew worktree create <branch> <base>';
+
+  @override
+  String get description => 'Create <branch> from <base> in <repo>.worktrees/<name>, with no upstream and the toolkit linked.';
+
+  @override
+  int run() {
+    worktrees.create(positional(0, 'branch'), positional(1, 'base'),
+        name: argResults!['name'] as String?, pubGet: argResults!['pub'] as bool, out: stdout.writeln);
+    return 0;
+  }
+}
+
+class _WorktreeList extends _WorktreeSubcommand {
+  @override
+  String get name => 'list';
+
+  @override
+  String get description => 'Show each task worktree: branch, base, upstream, dirty lines, missing links.';
+
+  @override
+  int run() {
+    final infos = worktrees.list();
+    if (infos.isEmpty) stdout.writeln('no task worktrees');
+    for (final info in infos) {
+      final links = info.missingLinks.isEmpty ? 'links ok' : 'missing links: ${info.missingLinks.join(', ')}';
+      stdout.writeln('${info.name}  ${info.branch}  base ${info.base ?? '-'}  upstream ${info.upstream ?? '-'}  dirty ${info.dirty}  $links');
+    }
+    return 0;
+  }
+}
+
+class _WorktreeLink extends _WorktreeSubcommand {
+  @override
+  String get name => 'link';
+
+  @override
+  String get invocation => 'dashcrew worktree link <name>';
+
+  @override
+  String get description => 'Add missing toolkit links to a worktree and drop an upstream it should not have.';
+
+  @override
+  int run() {
+    worktrees.link(positional(0, 'name'), out: stdout.writeln);
+    return 0;
+  }
+}
+
+class _WorktreeRemove extends _WorktreeSubcommand {
+  @override
+  String get name => 'remove';
+
+  @override
+  String get invocation => 'dashcrew worktree remove <name>';
+
+  @override
+  String get description => 'Remove a clean worktree. The branch is kept.';
+
+  @override
+  int run() {
+    worktrees.remove(positional(0, 'name'), out: stdout.writeln);
+    return 0;
+  }
+}
+
+class _WorktreeWatch extends _WorktreeSubcommand {
+  _WorktreeWatch() {
+    argParser
+      ..addFlag('once', help: 'Run one pass and exit.', negatable: false)
+      ..addOption('state-dir', help: 'Where seen events are kept; defaults to <git dir>/dashcrew-watch.')
+      ..addOption('interval', help: 'Seconds between passes.', defaultsTo: '60');
+  }
+
+  @override
+  String get name => 'watch';
+
+  @override
+  String get invocation => 'dashcrew worktree watch [<name>...]';
+
+  @override
+  String get description => 'Print one line per new event (commit, pushed, pr, base-moved, merge-tree, overlap) until done.';
+
+  @override
+  Future<int> run() async {
+    final worktrees = this.worktrees;
+    final interval = int.tryParse(argResults!['interval'] as String);
+    if (interval == null || interval < 1) usageException('--interval must be a positive number of seconds.');
+    await Watch(
+      worktrees: worktrees,
+      stateDir: (argResults!['state-dir'] as String?) ?? p.join(worktrees.gitDir, 'dashcrew-watch'),
+    ).run(argResults!.rest, once: argResults!['once'] as bool, interval: Duration(seconds: interval), out: stdout.writeln);
+    return 0;
   }
 }

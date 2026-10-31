@@ -17,6 +17,7 @@ Not affiliated with or endorsed by Google or the Flutter team.
 | `dashcrew init` | detect the stack from `pubspec.yaml`, ask what it cannot detect, write `.ai/project.yaml` |
 | `dashcrew sync` | render rules, roles, skills, hooks and MCP config for the selected agents |
 | `dashcrew doctor` | check generated files, hooks and skills against the lock file |
+| `dashcrew worktree` | one worktree per parallel task: `create`, `list`, `link`, `remove`, `watch` |
 
 ## License
 

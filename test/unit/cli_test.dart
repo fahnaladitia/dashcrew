@@ -39,4 +39,31 @@ void main() {
     expect(second.exitCode, 1);
     expect(second.stderr, contains('--force'));
   });
+
+  test('dashcrew worktree create, list and remove', () async {
+    final root = Directory.systemTemp.createTempSync('dashcrew_cli_').resolveSymbolicLinksSync();
+    addTearDown(() => Directory(root).deleteSync(recursive: true));
+    final app = '$root/app';
+    for (final args in [
+      ['init', '-q', '-b', 'main', app],
+      ['-C', app, '-c', 'user.name=t', '-c', 'user.email=t@example.com', 'commit', '-q', '--allow-empty', '-m', 'init'],
+    ]) {
+      expect((await Process.run('git', args)).exitCode, 0);
+    }
+    Future<ProcessResult> dashcrew(List<String> args) =>
+        Process.run(Platform.resolvedExecutable, ['run', 'bin/dashcrew.dart', 'worktree', ...args, '--project', app]);
+
+    final create = await dashcrew(['create', 'feat/a', 'main', '--no-pub']);
+    expect(create.exitCode, 0, reason: '${create.stderr}');
+    expect(create.stdout, contains('upstream: none'));
+
+    final list = await dashcrew(['list']);
+    expect(list.stdout, contains('feat-a  feat/a  base main  upstream -  dirty 0'));
+
+    final missing = await dashcrew(['remove', 'nope']);
+    expect(missing.exitCode, 1);
+    expect(missing.stderr, contains('No worktree named nope'));
+
+    expect((await dashcrew(['remove', 'feat-a'])).exitCode, 0);
+  });
 }

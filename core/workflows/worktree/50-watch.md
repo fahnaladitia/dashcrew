@@ -11,9 +11,9 @@ rules:
 /worktree watch [<name>...]
 ```
 
-- Start exactly one `worktree-monitor` role in the background, with the main repo path and the worktree names, then return to the user.
+- Start exactly one `worktree-monitor` role in the background, with the main repo path and the worktree names, then return to the user. The monitor runs `dashcrew worktree watch`.
 - Never start a second monitor for the same set of worktrees; check first whether one is already running.
-- Without names, the monitor watches every worktree with a recorded base whose PR is not merged.
+- Without names, it watches every worktree with a recorded base, until each one is merged or removed.
 - Relay the monitor's messages to the user in one or two lines, as is.
 - Never act or run git on behalf of a worker session.
 - A monitor that reports it is waiting for events is normal. Never stop its background watcher.

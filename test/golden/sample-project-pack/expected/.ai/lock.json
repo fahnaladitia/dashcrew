@@ -13,7 +13,7 @@
     ".claude/agents/product-manager.md": "ab74ef9038ae602e65b48ef019d60ac5fbb247e8bbe22d523eeb60a5b70f09b3",
     ".claude/agents/qa-engineer.md": "51f7118296ffd5eaad67fc3fba8aa340a11c18c6801c375b036f44843beb8991",
     ".claude/agents/tech-lead.md": "bfc47b7aba7717bc150c941ede3708e53ae9c1e9ad3c4aa723d40d66479373dc",
-    ".claude/agents/worktree-monitor.md": "c6acb06caa4d72489df579c6324b417181130a7f3c1755ebfb919a65f496706e",
+    ".claude/agents/worktree-monitor.md": "db1592d05bfd121e20a8a3fc29ddffd6732bf1b13a8fce80b038f2b4ad4319fa",
     ".claude/skills/audit/SKILL.md": "facff9f49d4d9107b589b91295a97d0bfac45b950703f5b89d8bd75704cf346d",
     ".claude/skills/bloc-patterns/SKILL.md": "5c2b4ac80f7e9ea5964df941f8ed014c709ba7668b8e06dffdbcefa86a61ff22",
     ".claude/skills/branching/SKILL.md": "4e7384e8daa6900ef850d3ca800a5895ad8c7765795ed3e5959e77027d145fa7",
@@ -38,7 +38,7 @@
     ".claude/skills/verification-loop/SKILL.md": "0ea007da2db3bdcd8706022b9986de5c187d07818b33c502fefed0ef10c23ed0",
     ".claude/skills/verify/SKILL.md": "c6ad74389008e4db1049422e47c818e75fbc31ea302875bddd9470e39ab4c9c7",
     ".claude/skills/work-modes/SKILL.md": "cb5d207f368eb77649ecb5efee882cfdd9a3f0a623c48642a402cf8d2922316d",
-    ".claude/skills/worktree/SKILL.md": "7d48d47dd658bf41834bf53c6458be0bd494019319a044d60e70950a4f7f0ad7",
+    ".claude/skills/worktree/SKILL.md": "eb18e8b6c518e80513a5888e700ea732ea812031609f94d266b84873461d01da",
     "AGENTS.md": "c61720503f112e86fd40d69a5628b835d5da1c9156ee131fd0b6aa47ae7a0560",
     "CLAUDE.md": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49"
   },

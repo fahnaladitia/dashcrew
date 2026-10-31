@@ -8,11 +8,11 @@ rules:
 ## remove
 
 ```
-<worktree helper> remove <name>
+dashcrew worktree remove <name>
 ```
 
 - Remove a worktree only when the user asks for that worktree.
-- The helper refuses a dirty worktree and one whose detached session is still alive. Show the reason and stop.
+- It refuses a dirty worktree. Show the reason and stop.
 - Committing, stashing and closing sessions stay the user's decisions.
 - The branch is never deleted, and never suggest deleting it.
 
