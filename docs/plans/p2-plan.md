@@ -113,3 +113,4 @@ Tests: each subcommand against a temp git repo with a bare origin (create links 
 
 - Stage 1 done. Context adds `has_stack_other` next to `stack_other`, because `when` cannot test for a non-empty list. The fragment lists one line per family and states the shared rules once, which keeps AGENTS.md small with every family set to `other`.
 - Stage 2 done. A built-in pack can add a fragment to a skill owned by another pack (`di/get_it` adds to `bloc-patterns` of `state/bloc`). When a project pack replaces the owner without shipping that skill, the adapter skips the skill with a warning instead of failing. Golden `sample-bloc-getx` changed only in `lock.json` (`packs`).
+- Stage 3 done. `project.flavors` is now validated (each value a non-empty entrypoint path). The section is gated on flavors; a build wrapper without flavors stays covered by the security rule.

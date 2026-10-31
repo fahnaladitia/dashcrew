@@ -53,10 +53,12 @@ Templates are strict: an unknown variable is a render error. Use only these.
 | `policy.tier_gates` | `true` |
 | `policy.terse_prompts` | `false` |
 | `paths.plans`, `paths.audits`, `paths.pr`, `paths.memory` | `.ai/plans`, `.ai/audits`, `.ai/pr`, `.ai/memory` |
-| `project.flavors` (map), `project.local_packages` (list) | empty |
+| `project.flavors` (map of flavor name to entrypoint), `project.local_packages` (list) | empty |
 | `project.base_branches` (list) | `[main]` |
 | `project.branch_prefix.feat` / `.fix` / `.hotfix` | `feat/`, `fix/`, `hotfix/` |
 | `project.build_wrapper` | null |
+| `build.flavors` (list of `name`, `entrypoint`) | `project.flavors` sorted by name; empty |
+| `build.has_flavors` | `true` when `build.flavors` is not empty |
 | `stack.<family>.use` | selected option; absent when the family is not selected |
 | `stack_other` (list of `family`, `name`) | the families set to `use: other`, sorted by family; empty |
 | `has_stack_other` | `true` when `stack_other` is not empty; gate fragments that loop over it |

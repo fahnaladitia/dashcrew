@@ -150,6 +150,12 @@ Where to look:
 - Run `flutter test --reporter expanded` so test names are visible.
 - There is no coverage threshold; never invent one.
 
+## Build and run
+
+- `production`: `flutter run --flavor production -t lib/main_production.dart`
+- `staging`: `flutter run --flavor staging -t lib/main_staging.dart`
+- Real builds go through `tool/build.sh`, which injects the required defines; a bare `flutter build` may miss them.
+
 ## Debugging
 
 - Read the relevant code before saying anything about a bug.

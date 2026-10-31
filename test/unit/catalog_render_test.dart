@@ -50,6 +50,31 @@ void main() {
     expect(targets.singleWhere((t) => t.target == 'agents_md').content, isNot(contains('without a dashcrew pack')));
   });
 
+  test('flavors render one run line each, in name order, with the build wrapper', () {
+    final targets = render('''
+toolkit: 1
+agents: [claude-code]
+project:
+  flavors: { staging: lib/main_staging.dart, dev: lib/main_dev.dart }
+  build_wrapper: tool/run.sh
+''');
+    final agentsMd = targets.singleWhere((t) => t.target == 'agents_md').content;
+
+    expect(
+      agentsMd,
+      contains('## Build and run\n\n'
+          '- `dev`: `flutter run --flavor dev -t lib/main_dev.dart`\n'
+          '- `staging`: `flutter run --flavor staging -t lib/main_staging.dart`\n'
+          '- Real builds go through `tool/run.sh`'),
+    );
+  });
+
+  test('no flavors renders no build section', () {
+    final targets = render('toolkit: 1\nagents: [claude-code]\nproject: { build_wrapper: tool/run.sh }\n');
+
+    expect(targets.singleWhere((t) => t.target == 'agents_md').content, isNot(contains('## Build and run')));
+  });
+
   test('sample full stack stays under the AGENTS.md size limit with every policy flipped', () {
     final targets = render('''
 toolkit: 1

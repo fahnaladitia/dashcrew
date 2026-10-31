@@ -127,6 +127,36 @@ stack:
     );
   });
 
+  test('flavors become a build list sorted by name', () {
+    final context = parse('''
+toolkit: 1
+agents: [claude-code]
+project: { flavors: { staging: lib/main_staging.dart, dev: lib/main_dev.dart } }
+''').toContext();
+
+    expect((context['build'] as Map)['flavors'], [
+      {'name': 'dev', 'entrypoint': 'lib/main_dev.dart'},
+      {'name': 'staging', 'entrypoint': 'lib/main_staging.dart'},
+    ]);
+    expect((context['build'] as Map)['has_flavors'], true);
+  });
+
+  test('no flavors gives an empty build list', () {
+    final build = parse('toolkit: 1\nagents: [claude-code]\n').toContext()['build'] as Map;
+
+    expect(build['flavors'], isEmpty);
+    expect(build['has_flavors'], false);
+  });
+
+  for (final flavors in ['[dev]', '{ dev: [a] }', "{ dev: '' }"]) {
+    test('flavors must map a name to an entrypoint ($flavors)', () {
+      expect(
+        () => parse('toolkit: 1\nagents: [claude-code]\nproject: { flavors: $flavors }\n'),
+        throwsA(isA<ProfileException>().having((e) => e.path, 'path', startsWith('project.flavors'))),
+      );
+    });
+  }
+
   test('toContext exposes nested maps for templates', () {
     final profile = parse('''
 toolkit: 1

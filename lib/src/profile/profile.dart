@@ -85,7 +85,7 @@ class Profile {
       agents: _agents(root['agents']),
       language: _merge('language', _languageDefaults, root['language'], strict: true),
       stack: _stack(root['stack'], knownOptions),
-      project: _merge('project', _projectDefaults, root['project'], strict: false),
+      project: _project(root['project']),
       policy: _merge('policy', _policyDefaults, root['policy'], strict: true),
       paths: _merge('paths', _pathDefaults, root['paths'], strict: false),
     );
@@ -110,6 +110,18 @@ class Profile {
       }
     }
     return {...defaults, ...value};
+  }
+
+  static Map<String, Object?> _project(Object? value) {
+    final project = _merge('project', _projectDefaults, value, strict: false);
+    final flavors = project['flavors'];
+    if (flavors is! Map<String, Object?>) throw ProfileException('project.flavors', 'expected a map of flavor name to entrypoint');
+    for (final MapEntry(key: name, value: entrypoint) in flavors.entries) {
+      if (entrypoint is! String || entrypoint.isEmpty) {
+        throw ProfileException('project.flavors.$name', 'expected the entrypoint path, e.g. lib/main_$name.dart');
+      }
+    }
+    return project;
   }
 
   static Map<String, StackChoice> _stack(Object? value, Map<String, Set<String>> knownOptions) {
@@ -146,7 +158,12 @@ class Profile {
 
   /// Template context: every section as plain maps; `stack.<family>` is `{use: option, ...params}`.
   /// `stack_other` lists the `other` choices as `{family, name}` sorted by family.
+  /// `build.flavors` lists `project.flavors` as `{name, entrypoint}` sorted by name.
   Map<String, Object?> toContext() {
+    final flavors = project['flavors'] as Map<String, Object?>;
+    final buildFlavors = [
+      for (final name in flavors.keys.toList()..sort()) {'name': name, 'entrypoint': flavors[name]},
+    ];
     final others = [
       for (final family in stack.keys.toList()..sort())
         if (stack[family]!.option == otherOption) {'family': family, 'name': stack[family]!.params['name']},
@@ -163,6 +180,7 @@ class Profile {
       'project': project,
       'policy': policy,
       'paths': paths,
+      'build': {'flavors': buildFlavors, 'has_flavors': buildFlavors.isNotEmpty},
     };
   }
 }
