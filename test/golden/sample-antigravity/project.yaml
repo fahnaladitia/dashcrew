@@ -1,0 +1,15 @@
+# Synthetic profile: all three agents, and the none option of every library family.
+toolkit: 1
+agents: [claude-code, codex, antigravity]
+stack:
+  state: none
+  di: none
+  router: none
+  network: none
+  storage: none
+  test: none
+  analytics: none
+  tracker: clickup
+  qa: semantics-identifier
+project:
+  base_branches: [main]
