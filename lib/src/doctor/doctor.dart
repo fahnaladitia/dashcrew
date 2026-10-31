@@ -12,6 +12,7 @@ import '../guard/guard.dart';
 import '../profile/profile.dart';
 import '../render/renderer.dart';
 import '../sync/sync.dart';
+import '../version.dart';
 
 enum CheckStatus { ok, warn, fail, skip }
 
@@ -74,6 +75,7 @@ class Doctor {
       profile,
       projectPacks,
       lockCheck,
+      _version(lock),
       _drift(lockedFiles),
       _stale(lockedFiles, profileOk: profile.status == CheckStatus.ok),
       _guardPolicy(),
@@ -286,6 +288,24 @@ class Doctor {
       return (const DoctorCheck(id, CheckStatus.fail, '${Sync.lockPath} has an unknown schema; run dashcrew sync --force'), null);
     }
     return (const DoctorCheck(id, CheckStatus.ok, '${Sync.lockPath} schema 1'), lock);
+  }
+
+  /// Teammates on different dashcrew versions rewrite each other's generated files.
+  DoctorCheck _version(Map<String, Object?>? lock) {
+    const id = 'version';
+    if (lock == null) return const DoctorCheck(id, CheckStatus.skip, 'needs the lock');
+    final written = lock['dashcrew_version'] as String?;
+    if (written == null) {
+      return const DoctorCheck(id, CheckStatus.warn, 'the lock has no dashcrew version; run dashcrew sync to record $dashcrewVersion');
+    }
+    final order = compareVersions(written, dashcrewVersion);
+    if (order > 0) {
+      return DoctorCheck(id, CheckStatus.warn, 'the lock was written by dashcrew $written, this is $dashcrewVersion; update dashcrew to $written');
+    }
+    if (order < 0) {
+      return DoctorCheck(id, CheckStatus.warn, 'the lock was written by dashcrew $written; run dashcrew sync to move it to $dashcrewVersion');
+    }
+    return const DoctorCheck(id, CheckStatus.ok, 'lock written by this dashcrew ($dashcrewVersion)');
   }
 
   DoctorCheck _drift(Map<String, String>? lockedFiles) {

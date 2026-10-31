@@ -1,5 +1,6 @@
 {
   "schema": 1,
+  "dashcrew_version": "0.0.1",
   "files": {
     ".agents/skills/audit/SKILL.md": "f44d30fd35705f7e5e2f9adcf1ffed3bedfa99322444859200dd15ce5cbdb5c8",
     ".agents/skills/branching/SKILL.md": "41e62ba1c94ad6ef8d59dfda52246f5b56bb7de19c1593305d179a58f89955d2",

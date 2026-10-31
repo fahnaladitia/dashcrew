@@ -9,6 +9,7 @@ import '../catalog/catalog.dart';
 import '../guard/compile.dart';
 import '../profile/profile.dart';
 import '../render/renderer.dart';
+import '../version.dart';
 import 'project_files.dart';
 
 /// Sync refused to run; [message] names the files or settings involved.
@@ -51,6 +52,11 @@ class Sync {
     final warnings = <String>[];
     final (:files, :packs, :adapters) = _render(adopt: adopt, warnings: warnings);
     final lock = _readLock();
+    final lockVersion = lock['dashcrew_version'] as String?;
+    if (lockVersion != null && compareVersions(lockVersion, dashcrewVersion) > 0 && !force) {
+      throw SyncException('$lockPath was written by dashcrew $lockVersion, and this is $dashcrewVersion. '
+          'Update dashcrew, or rerun with --force to rewrite it with $dashcrewVersion.');
+    }
     final lockedFiles = (lock['files'] as Map?)?.cast<String, String>() ?? {};
 
     final conflicts = <String>[];
@@ -97,6 +103,7 @@ class Sync {
 
     final newLock = {
       'schema': 1,
+      'dashcrew_version': dashcrewVersion,
       'files': {for (final path in files.keys.toList()..sort()) path: fileHash(path, files[path]!)},
       'packs': packs,
       'mcp_servers': {for (final agent in nowOwnedMcp.keys.toList()..sort()) agent: nowOwnedMcp[agent]},

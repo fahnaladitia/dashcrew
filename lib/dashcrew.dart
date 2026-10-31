@@ -15,5 +15,6 @@ export 'src/init/init.dart';
 export 'src/profile/profile.dart';
 export 'src/render/renderer.dart';
 export 'src/sync/sync.dart';
+export 'src/version.dart';
 export 'src/worktree/watch.dart';
 export 'src/worktree/worktree.dart';

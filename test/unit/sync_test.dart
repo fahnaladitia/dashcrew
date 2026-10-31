@@ -267,6 +267,46 @@ project: { local_packages: [core] }
     expect(sync().written, isEmpty);
   });
 
+  group('dashcrew version in the lock', () {
+    Map<String, Object?> lock() => jsonDecode(read('.ai/lock.json')) as Map<String, Object?>;
+    void setLockVersion(String? version) {
+      final current = lock();
+      if (version == null) {
+        current.remove('dashcrew_version');
+      } else {
+        current['dashcrew_version'] = version;
+      }
+      write('.ai/lock.json', jsonEncode(current));
+    }
+
+    test('sync records the version that wrote the lock', () {
+      sync();
+
+      expect(lock()['dashcrew_version'], dashcrewVersion);
+    });
+
+    test('a lock from a newer dashcrew stops sync until --force', () {
+      sync();
+      setLockVersion('999.0.0');
+
+      expect(sync, throwsA(isA<SyncException>().having((e) => e.message, 'message', contains('999.0.0'))));
+
+      sync(force: true);
+      expect(lock()['dashcrew_version'], dashcrewVersion);
+    });
+
+    test('a lock from an older dashcrew, or with no version, is upgraded', () {
+      sync();
+      setLockVersion('0.0.0');
+      sync();
+      expect(lock()['dashcrew_version'], dashcrewVersion);
+
+      setLockVersion(null);
+      sync();
+      expect(lock()['dashcrew_version'], dashcrewVersion);
+    });
+  });
+
   group('project packs', () {
     void writeArchitecturePack() {
       write('.ai/packs/architecture/clean/pack.yaml', 'description: clean\nparams: { domain_dir: lib/domain }\n');

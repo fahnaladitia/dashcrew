@@ -1,5 +1,6 @@
 {
   "schema": 1,
+  "dashcrew_version": "0.0.1",
   "files": {
     ".agents/agents/dart-tdd-guide.md": "35d8e56af0f5999a47752513ba8b7df73034e1ea114036393ec277ba48cb024d",
     ".agents/agents/flutter-architect.md": "4c2b8024640c1a7a983cde90bb26e7e6aba161a434ef5c9e6141a29030314bde",

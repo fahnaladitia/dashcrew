@@ -1,5 +1,6 @@
 {
   "schema": 1,
+  "dashcrew_version": "0.0.1",
   "files": {
     ".ai/guard.json": "c9abd9ddf8e9e07feb1260b4a9ec0f3e0aa6e0687b5163325ef127671cce72b0",
     ".claude/agents/dart-tdd-guide.md": "e7e99a2d6f44a49b5d9d0208def5334e1f458e9bef28e4519c33c5be3a89f96c",

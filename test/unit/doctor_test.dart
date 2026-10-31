@@ -198,6 +198,36 @@ stack:
     expect(checks['stale']!.status, CheckStatus.skip);
   });
 
+  group('version', () {
+    void setLockVersion(String? version) {
+      final lock = jsonDecode(read('.ai/lock.json')) as Map<String, Object?>;
+      if (version == null) {
+        lock.remove('dashcrew_version');
+      } else {
+        lock['dashcrew_version'] = version;
+      }
+      write('.ai/lock.json', jsonEncode(lock));
+    }
+
+    test('ok right after sync', () async {
+      sync();
+
+      expect((await doctor())['version']!.status, CheckStatus.ok);
+    });
+
+    test('warns for a newer, older or missing lock version', () async {
+      sync();
+      for (final (version, hint) in [('999.0.0', 'update dashcrew'), ('0.0.0', 'dashcrew sync'), (null, 'dashcrew sync')]) {
+        setLockVersion(version);
+
+        final check = (await doctor())['version']!;
+
+        expect(check.status, CheckStatus.warn, reason: '$version');
+        expect(check.detail, contains(hint), reason: '$version');
+      }
+    });
+  });
+
   group('project-packs', () {
     test('no project packs is ok', () async {
       sync();
