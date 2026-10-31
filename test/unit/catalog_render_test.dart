@@ -213,6 +213,21 @@ project:
     expect(target(off, 'workflow/plan'), isNot(contains('dashcrew gate')));
   });
 
+  test('with policy.plan_gate the PR template and description end with the plan and closing lines', () {
+    String target(String yaml, String name) => render(yaml).singleWhere((t) => t.target == name).content;
+    const off = 'toolkit: 1\nagents: [claude-code]\n';
+    const on = 'toolkit: 1\nagents: [claude-code]\npolicy: { plan_gate: true }\n';
+
+    final template = target(on, 'pr_template').trimRight().split('\n');
+    expect(template.sublist(template.length - 2), ['Plan: #<issue>', 'Closes #<issue>']);
+    expect(template.indexOf('## Notes / not done'), lessThan(template.length - 2));
+    expect(target(on, 'skill/pr-description'), allOf(contains('`Plan: #<n>`'), contains('`Closes #<n>`')));
+
+    expect(target(off, 'pr_template'), isNot(contains('Plan:')));
+    expect(target(off, 'pr_template'), isNot(contains('Closes')));
+    expect(target(off, 'skill/pr-description'), isNot(contains('Closes')));
+  });
+
   test('sample full stack stays under the AGENTS.md size limit with every policy flipped', () {
     final targets = render('''
 toolkit: 1

@@ -19,7 +19,7 @@ Each branch has exactly one PR description file. Write it at step 7 from the dif
 - Write it in language `{{language.pr}}` (ISO 639-1 code), with technical terms kept in English (merge, endpoint, payload, state, widget).
 - Updating merges into the existing sections. Never append a "Round 2" block, and never rewrite history that is still true.
 - Every section stays even when empty: write "None", so a reviewer can see the question was asked.
-- The file ends at the last section. No generated-by footer.
+- The file ends at the last section{{#policy.plan_gate}}, followed only by the plan lines below{{/policy.plan_gate}}. No generated-by footer.
 
 ## Sections, in this order
 

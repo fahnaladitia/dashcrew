@@ -242,6 +242,7 @@ Two human gates, enforced instead of only described. GitHub is the only infrastr
 1. Set `ci: { github: true, dashcrew_ref: <commit or tag> }` and run `dashcrew sync`. Commit `.github/workflows/dashcrew.yml`.
 2. In the repository settings, add a branch protection rule (or ruleset) for your base branches that requires the status check `check` from the `dashcrew check` workflow.
 3. Every pull request then needs: a current toolkit, every heading of the PR template, and, when its body says `Plan: #<n>`, an approved plan issue. Failures show as annotations on the PR.
+4. With `policy.plan_gate`, the PR template and the agent's PR description end with `Plan: #<n>` and `Closes #<n>`. The second line makes GitHub close the plan issue when the PR merges into the default branch; a PR into another base leaves it open, to close by hand.
 
 The guard keeps the agent from posting approvals, but on GitHub an agent and its user share one token: this prevents mistakes, not deliberate misuse.
 
