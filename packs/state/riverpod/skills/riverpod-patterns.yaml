@@ -1,0 +1,2 @@
+description: Riverpod 3 patterns for this project - choosing a provider type, families, rebuild scope, side effects, disposal and tests.
+when_to_use: When adding or changing a provider, a Notifier or AsyncNotifier, or a widget that watches one.

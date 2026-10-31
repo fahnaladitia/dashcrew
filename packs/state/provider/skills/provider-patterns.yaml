@@ -1,0 +1,2 @@
+description: provider patterns for this project - ChangeNotifier model shape, dependencies between providers, rebuild scope, disposal and tests.
+when_to_use: When adding or changing a ChangeNotifier model, a provider in the tree, or a widget that watches one.

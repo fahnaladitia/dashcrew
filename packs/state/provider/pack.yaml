@@ -1,0 +1,3 @@
+description: provider package with ChangeNotifier models created in create and read through context.watch, read and select.
+params:
+  feature_dir: lib/features/<feature>/

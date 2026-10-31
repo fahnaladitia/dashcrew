@@ -1,0 +1,2 @@
+description: No state management library; widgets keep state with setState, ValueNotifier and ChangeNotifier from Flutter.
+params: {}

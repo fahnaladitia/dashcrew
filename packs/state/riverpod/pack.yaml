@@ -1,0 +1,4 @@
+description: Riverpod 3 state with Notifier and AsyncNotifier classes, read through ref, under one ProviderScope.
+params:
+  feature_dir: lib/features/<feature>/
+  codegen: false

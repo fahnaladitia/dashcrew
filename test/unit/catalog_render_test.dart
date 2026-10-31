@@ -75,6 +75,39 @@ project:
     expect(targets.singleWhere((t) => t.target == 'agents_md').content, isNot(contains('## Build and run')));
   });
 
+  group('state packs', () {
+    String agentsMd(String stack) =>
+        render('toolkit: 1\nagents: [claude-code]\nstack: { $stack }\n').singleWhere((t) => t.target == 'agents_md').content;
+    Set<String> targetsOf(String stack) => render('toolkit: 1\nagents: [claude-code]\nstack: { $stack }\n').map((t) => t.target).toSet();
+
+    test('riverpod renders its rules and patterns skill, hand-written providers by default', () {
+      final rules = agentsMd('state: riverpod');
+
+      expect(rules, contains('## State: Riverpod'));
+      expect(rules, contains('`ref.mounted`'));
+      expect(rules, contains('declared by hand'));
+      expect(rules, isNot(contains('@riverpod')));
+      expect(targetsOf('state: riverpod'), containsAll(['skill/riverpod-patterns', 'workflow/tdd']));
+    });
+
+    test('riverpod with codegen asks for generated providers', () {
+      final rules = agentsMd('state: { use: riverpod, codegen: true }');
+
+      expect(rules, contains('`@riverpod`'));
+      expect(rules, isNot(contains('declared by hand')));
+    });
+
+    test('provider renders its rules and patterns skill', () {
+      expect(agentsMd('state: provider'), contains('## State: provider'));
+      expect(targetsOf('state: provider'), contains('skill/provider-patterns'));
+    });
+
+    test('none keeps state in Flutter and adds no skill', () {
+      expect(agentsMd('state: none'), contains('## State: Flutter only'));
+      expect(targetsOf('state: none').where((t) => t.endsWith('-patterns')), isEmpty);
+    });
+  });
+
   test('sample full stack stays under the AGENTS.md size limit with every policy flipped', () {
     final targets = render('''
 toolkit: 1
