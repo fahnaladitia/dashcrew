@@ -2,6 +2,8 @@
 library;
 
 export 'src/adapters/adapter.dart';
+export 'src/adapters/claude_code.dart';
+export 'src/adapters/codex.dart';
 export 'src/catalog/catalog.dart';
 export 'src/doctor/doctor.dart';
 export 'src/guard/compile.dart';

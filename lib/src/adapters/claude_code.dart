@@ -52,33 +52,15 @@ class ClaudeCodeAdapter extends Adapter {
     required Map<String, String> lockedFiles,
     List<String>? warnings,
   }) {
-    final renderer = Renderer(catalog);
-    final packSkills = {for (final pack in renderer.selectedPacks(profile)) ...pack.skills};
     final files = <String, String>{};
-
-    for (final target in targets) {
-      final slash = target.target.indexOf('/');
-      if (slash < 0) continue;
-      final kind = target.target.substring(0, slash);
-      final name = target.target.substring(slash + 1);
-
-      switch (kind) {
-        case 'role':
-          final role = catalog.roles[name];
-          if (role == null || !Renderer.whenMatches(role.when, context)) continue;
-          files['.claude/agents/$name.md'] = _agent(role, target.content);
-        case 'skill':
-          final meta = catalog.skills[name] ?? packSkills[name];
-          if (meta == null) {
-            warnings?.add('skill $name skipped: no selected pack defines skills/$name.yaml');
-            continue;
-          }
-          files['.claude/skills/$name/SKILL.md'] = _skill(name, meta, target.content);
-        case 'workflow':
-          final meta = catalog.workflows[name];
-          if (meta == null) throw StateError('workflow/$name has no meta.yaml');
-          files['.claude/skills/$name/SKILL.md'] = _skill(name, meta, target.content);
-      }
+    for (final target in targets.where((t) => t.target.startsWith('role/'))) {
+      final name = target.target.substring('role/'.length);
+      final role = catalog.roles[name];
+      if (role == null || !Renderer.whenMatches(role.when, context)) continue;
+      files['.claude/agents/$name.md'] = _agent(role, target.content);
+    }
+    for (final doc in skillDocs(catalog, profile, targets, warnings)) {
+      files['.claude/skills/${doc.name}/SKILL.md'] = _skill(doc.name, doc.meta, doc.body);
     }
 
     final claudeMd = _project.file('CLAUDE.md');

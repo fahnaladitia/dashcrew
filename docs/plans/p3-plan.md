@@ -142,3 +142,4 @@ Proposed: A0 -> A1 -> ... -> A8, then B1 -> B4. A7 fixes the neutral wording bef
 
 - A0 waits: the Codex CLI is not installed yet on the maintainer's machine.
 - A1 done. `Adapter` (`files`, `merge`) and `adapterFor` in `lib/src/adapters/adapter.dart`; `ClaudeCodeAdapter` owns `CLAUDE.md`, `.claude/settings.json` and `.mcp.json`; `ProjectFiles` holds the shared write-if-changed. Lock `mcp_servers` is keyed by agent. Doctor's agent checks move in A6.
+- A2 done. `CodexAdapter` writes `.agents/skills/<name>/SKILL.md` (front matter `name`, `description`; `Use when:` appended; `Arguments:` as the first body line). Skill and workflow selection is shared with Claude Code through `skillDocs`. The full sample stack uses 4,779 of the 8,000-character skill list budget (26 skills). `adapterFor('codex')` stays refused until the guard (A4) and MCP (A5) are in, so `sync` never writes a Codex toolkit without its guard.
