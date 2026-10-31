@@ -13,7 +13,8 @@ Future<void> main(List<String> arguments) async {
     ..addCommand(InitCommand())
     ..addCommand(SyncCommand())
     ..addCommand(DoctorCommand())
-    ..addCommand(WorktreeCommand());
+    ..addCommand(WorktreeCommand())
+    ..addCommand(GuardCommand());
   try {
     exitCode = await runner.run(arguments) ?? 0;
   } on UsageException catch (error) {
@@ -26,6 +27,9 @@ Future<void> main(List<String> arguments) async {
     stderr.writeln(error.message);
     exitCode = 1;
   } on WorktreeException catch (error) {
+    stderr.writeln(error.message);
+    exitCode = 1;
+  } on GuardInstallException catch (error) {
     stderr.writeln(error.message);
     exitCode = 1;
   }
@@ -264,6 +268,40 @@ class _WorktreeWatch extends _WorktreeSubcommand {
       worktrees: worktrees,
       stateDir: (argResults!['state-dir'] as String?) ?? p.join(worktrees.gitDir, 'dashcrew-watch'),
     ).run(argResults!.rest, once: argResults!['once'] as bool, interval: Duration(seconds: interval), out: stdout.writeln);
+    return 0;
+  }
+}
+
+class GuardCommand extends Command<int> {
+  GuardCommand() {
+    addSubcommand(_GuardInstall());
+  }
+
+  @override
+  String get name => 'guard';
+
+  @override
+  String get description => 'The compiled guard every project on this machine shares.';
+}
+
+class _GuardInstall extends Command<int> {
+  _GuardInstall() {
+    argParser
+      ..addOption('expect', help: 'Refuse unless this dashcrew builds the guard with this source hash (the lock\'s guard_source).')
+      ..addFlag('force', help: 'Compile again even when installed.', negatable: false);
+  }
+
+  @override
+  String get name => 'install';
+
+  @override
+  String get description => 'Compile the guard once into \$DASHCREW_HOME (default ~/.dashcrew) and print its path.';
+
+  @override
+  int run() {
+    final result = GuardInstaller(packageRoot: dashcrewPackageRoot())
+        .install(expect: argResults!['expect'] as String?, force: argResults!['force'] as bool);
+    stdout.writeln(result.path);
     return 0;
   }
 }

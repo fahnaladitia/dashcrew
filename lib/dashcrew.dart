@@ -14,6 +14,7 @@ export 'src/init/detect.dart';
 export 'src/init/init.dart';
 export 'src/profile/profile.dart';
 export 'src/render/renderer.dart';
+export 'src/sync/guard_install.dart';
 export 'src/sync/sync.dart';
 export 'src/version.dart';
 export 'src/worktree/watch.dart';
