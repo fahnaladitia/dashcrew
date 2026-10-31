@@ -34,5 +34,6 @@
   "local_packages": [
     "core",
     "analytics_facade"
-  ]
+  ],
+  "plan_gate": false
 }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'gate_state.dart';
 import 'shell.dart';
 
 /// Kind of tool call the guard sees.
@@ -151,6 +152,7 @@ class GuardPolicy {
     required this.roleCapability,
     required this.forbiddenImports,
     required this.localPackages,
+    this.planGate = false,
   });
 
   factory GuardPolicy.fromJson(Map<String, Object?> json) => GuardPolicy(
@@ -160,6 +162,7 @@ class GuardPolicy {
         roleCapability: (json['role_capability'] as Map).cast<String, String>(),
         forbiddenImports: (json['forbidden_imports'] as List).cast<String>(),
         localPackages: (json['local_packages'] as List).cast<String>(),
+        planGate: json['plan_gate'] as bool? ?? false,
       );
 
   static const schema = 1;
@@ -172,6 +175,9 @@ class GuardPolicy {
   final List<String> forbiddenImports;
   final List<String> localPackages;
 
+  /// App code and tests stay closed on a branch whose plan issue is not approved yet.
+  final bool planGate;
+
   Map<String, Object?> toJson() => {
         'schema': schema,
         'blocked_git': blockedGit.toList()..sort(),
@@ -180,6 +186,7 @@ class GuardPolicy {
         'role_capability': Map.fromEntries(roleCapability.entries.toList()..sort((a, b) => a.key.compareTo(b.key))),
         'forbidden_imports': forbiddenImports,
         'local_packages': localPackages,
+        'plan_gate': planGate,
       };
 }
 
@@ -199,22 +206,23 @@ final _assignment = RegExp(r'^[A-Za-z_][A-Za-z0-9_]*=');
 }
 
 /// Blocks when any of [events] is blocked, with the first reason.
-GuardDecision evaluateAll(List<GuardEvent> events, GuardPolicy policy) {
+GuardDecision evaluateAll(List<GuardEvent> events, GuardPolicy policy, {PlanGateState? gate}) {
   for (final event in events) {
-    final decision = evaluate(event, policy);
+    final decision = evaluate(event, policy, gate: gate);
     if (decision.blocked) return decision;
   }
   return const GuardDecision.allow();
 }
 
 /// Allows or blocks one tool call under [policy].
-GuardDecision evaluate(GuardEvent event, GuardPolicy policy) {
+/// [gate] is the checked-out branch's plan gate; it matters only with [GuardPolicy.planGate].
+GuardDecision evaluate(GuardEvent event, GuardPolicy policy, {PlanGateState? gate}) {
   switch (event.kind) {
     case ToolKind.shell:
       return _evaluateShell(event.command ?? '', policy);
     case ToolKind.write:
     case ToolKind.edit:
-      return _evaluateWrite(event, policy);
+      return _evaluateWrite(event, policy, gate);
     case ToolKind.other:
       return const GuardDecision.allow();
   }
@@ -226,6 +234,9 @@ GuardDecision _evaluateShell(String script, GuardPolicy policy) {
     if (argv.isEmpty) continue;
     final program = argv.first.split('/').last;
 
+    if (program == 'gh' && argv.any((word) => word.contains('/approve'))) {
+      return const GuardDecision.block("Approvals are the user's, on GitHub. Run dashcrew gate status and stop.");
+    }
     if (program == 'git') {
       final sub = _gitSubcommand(argv);
       if (sub != null && policy.blockedGit.contains(sub)) {
@@ -265,9 +276,14 @@ String? _gitSubcommand(List<String> argv) {
   return null;
 }
 
-GuardDecision _evaluateWrite(GuardEvent event, GuardPolicy policy) {
+GuardDecision _evaluateWrite(GuardEvent event, GuardPolicy policy, PlanGateState? gate) {
   final path = (event.filePath ?? '').replaceAll(r'\', '/');
   final capability = policy.roleCapability[event.role];
+
+  if (policy.planGate && gate != null && gate.plan == 'pending' && _isAppCode(path, policy.localPackages)) {
+    return GuardDecision.block('The plan for ${gate.branch} is not approved yet (issue #${gate.issue}). '
+        'Wait for the user to comment /approve plan, then run dashcrew gate status.');
+  }
 
   if (capability == 'read') {
     return GuardDecision.block('${event.role} is read-only. Return your findings instead of writing files.');
@@ -291,6 +307,13 @@ GuardDecision _evaluateWrite(GuardEvent event, GuardPolicy policy) {
     }
   }
   return const GuardDecision.allow();
+}
+
+/// App `lib/` or `test/`, outside local packages.
+bool _isAppCode(String path, List<String> localPackages) {
+  if (_isAppLib(path, localPackages)) return true;
+  if (!path.contains('/test/') && !path.startsWith('test/')) return false;
+  return !localPackages.any((package) => path.contains('/$package/test/') || path.startsWith('$package/test/'));
 }
 
 bool _isAppLib(String path, List<String> localPackages) {

@@ -29,5 +29,6 @@
     "worktree-monitor": "read"
   },
   "forbidden_imports": [],
-  "local_packages": []
+  "local_packages": [],
+  "plan_gate": false
 }

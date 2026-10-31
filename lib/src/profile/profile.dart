@@ -48,6 +48,7 @@ class Profile {
     'dartdoc_max_lines': 3,
     'tier_gates': true,
     'terse_prompts': false,
+    'plan_gate': false,
   };
 
   static const _pathDefaults = <String, Object?>{

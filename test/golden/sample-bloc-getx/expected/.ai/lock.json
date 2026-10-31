@@ -2,8 +2,8 @@
   "schema": 1,
   "dashcrew_version": "0.0.1",
   "files": {
-    ".ai/bin/guard": "01ec7653d8e8d56d4090f2c8a6edebca519f48ce7071b51f81f9af4c4210c95c",
-    ".ai/guard.json": "c9abd9ddf8e9e07feb1260b4a9ec0f3e0aa6e0687b5163325ef127671cce72b0",
+    ".ai/bin/guard": "744d6553c317ea4f37ec7002a78596e124cbbfb479d52f8592da8127a26837d9",
+    ".ai/guard.json": "ac4836ca7b7104dc663a70e0fc9c153ad864afa470924cfd8b8eb1f63ea61063",
     ".claude/agents/dart-tdd-guide.md": "e7e99a2d6f44a49b5d9d0208def5334e1f458e9bef28e4519c33c5be3a89f96c",
     ".claude/agents/flutter-architect.md": "da24c77b26a1d1a45954fdf8e8ce782092fb84547893493b5c321ba537fd22f3",
     ".claude/agents/flutter-build-error-resolver.md": "57f1ee86937eae1bd6c4287b0d46bed17f8d76e643306e40c487cfd7d6be1747",
@@ -60,5 +60,5 @@
       "dart-mcp-server"
     ]
   },
-  "guard_source": "8e0822e571526e549abeae5da087a949ee6084859e978a24d7c112dcccce4f0a"
+  "guard_source": "63438a1fd77f5588936f3cafcfadb0684d71b260472020d22f00f2fe4ccac3a0"
 }

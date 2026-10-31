@@ -299,6 +299,51 @@ void main() {
     });
   });
 
+  group('plan gate', () {
+    GuardPolicy gated() => GuardPolicy.fromJson({...policy().toJson(), 'plan_gate': true});
+    const pending = (branch: 'feat/orders', plan: 'pending', issue: 42);
+    const approved = (branch: 'feat/orders', plan: 'approved', issue: 42);
+
+    test('blocks app code and tests while the plan is pending', () {
+      final lib = evaluate(write('/repo/lib/feature/a.dart'), gated(), gate: pending);
+      expect(lib.blocked, isTrue);
+      expect(lib.reason, allOf(contains('#42'), contains('dashcrew gate status')));
+      expect(evaluate(write('/repo/test/a_test.dart'), gated(), gate: pending).blocked, isTrue);
+    });
+
+    test('allows once approved, outside app code, without an issue, or with the gate off', () {
+      expect(evaluate(write('/repo/lib/a.dart'), gated(), gate: approved).blocked, isFalse);
+      expect(evaluate(write('/repo/.ai/plans/orders/plan.md'), gated(), gate: pending).blocked, isFalse);
+      expect(evaluate(write('/repo/lib/a.dart'), gated()).blocked, isFalse);
+      expect(evaluate(write('/repo/lib/a.dart'), policy(), gate: pending).blocked, isFalse);
+      expect(evaluate(write('/repo/core/lib/a.dart'), gated(), gate: pending).blocked, isFalse);
+    });
+
+    test('policy json without plan_gate reads as off', () {
+      final json = policy().toJson()..remove('plan_gate');
+      expect(GuardPolicy.fromJson(json).planGate, isFalse);
+    });
+  });
+
+  group('approvals are the user\'s', () {
+    for (final command in [
+      'gh issue comment 42 --body "/approve plan"',
+      "gh api repos/a/b/issues/42/comments -f body='/approve plan'",
+      'rtk gh pr comment 3 --body "/approve plan"',
+    ]) {
+      test('blocks $command', () {
+        final decision = evaluate(shell(command), policy());
+        expect(decision.blocked, isTrue);
+        expect(decision.reason, contains('dashcrew gate status'));
+      });
+    }
+
+    test('reading issues and mentioning approve elsewhere is fine', () {
+      expect(evaluate(shell('gh issue view 42'), policy()).blocked, isFalse);
+      expect(evaluate(shell('echo "/approve plan"'), policy()).blocked, isFalse);
+    });
+  });
+
   test('policy survives a json round trip', () {
     final original = policy();
     final copy = GuardPolicy.fromJson(original.toJson());

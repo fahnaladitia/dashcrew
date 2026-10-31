@@ -31,5 +31,6 @@
   "forbidden_imports": [
     "package:firebase_analytics"
   ],
-  "local_packages": []
+  "local_packages": [],
+  "plan_gate": false
 }

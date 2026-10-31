@@ -202,6 +202,17 @@ project:
     });
   });
 
+  test('plan gate instructions render only with policy.plan_gate', () {
+    String target(String yaml, String name) => render(yaml).singleWhere((t) => t.target == name).content;
+    const off = 'toolkit: 1\nagents: [claude-code]\n';
+    const on = 'toolkit: 1\nagents: [claude-code]\npolicy: { plan_gate: true }\n';
+
+    expect(target(on, 'agents_md'), contains('dashcrew gate submit plan'));
+    expect(target(on, 'workflow/plan'), contains('dashcrew gate submit plan'));
+    expect(target(off, 'agents_md'), isNot(contains('dashcrew gate')));
+    expect(target(off, 'workflow/plan'), isNot(contains('dashcrew gate')));
+  });
+
   test('sample full stack stays under the AGENTS.md size limit with every policy flipped', () {
     final targets = render('''
 toolkit: 1

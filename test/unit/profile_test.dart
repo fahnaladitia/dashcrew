@@ -17,6 +17,7 @@ void main() {
     expect(profile.language['dartdoc'], 'en');
     expect(profile.policy['agent_commit'], false);
     expect(profile.policy['dartdoc_max_lines'], 3);
+    expect(profile.policy['plan_gate'], false);
     expect(profile.paths['plans'], '.ai/plans');
     expect(profile.stack, isEmpty);
   });

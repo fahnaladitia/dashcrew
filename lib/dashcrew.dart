@@ -9,6 +9,7 @@ export 'src/catalog/catalog.dart';
 export 'src/doctor/doctor.dart';
 export 'src/gate/gate.dart';
 export 'src/guard/compile.dart';
+export 'src/guard/gate_state.dart';
 export 'src/guard/guard.dart';
 export 'src/guard/shell.dart';
 export 'src/init/detect.dart';
