@@ -56,7 +56,7 @@ class CodexAdapter extends Adapter {
       files['.codex/agents/$name.toml'] = _role(role, target.content);
     }
     for (final doc in skillDocs(catalog, profile, targets, warnings)) {
-      files['.agents/skills/${doc.name}/SKILL.md'] = _skill(doc.name, doc.meta, doc.body);
+      files['.agents/skills/${doc.name}/SKILL.md'] = agentsSkillFile(doc.name, doc.meta, doc.body);
     }
     return files;
   }
@@ -165,12 +165,5 @@ class CodexAdapter extends Adapter {
   static String tomlMultiline(String text) {
     final escaped = text.replaceAll(r'\', r'\\').replaceAll('"""', r'""\"');
     return '"""\n$escaped"""';
-  }
-
-  /// Codex front matter holds `name` and `description` only; the trigger and argument hint move into them.
-  String _skill(String name, DocMeta meta, String body) {
-    final description = meta.whenToUse == null ? meta.description : '${meta.description} Use when: ${meta.whenToUse}';
-    final arguments = meta.argumentHint == null ? '' : 'Arguments: `${meta.argumentHint}`\n\n';
-    return '---\nname: $name\ndescription: ${jsonEncode(description)}\n---\n\n$arguments$body';
   }
 }

@@ -2,6 +2,7 @@
 library;
 
 export 'src/adapters/adapter.dart';
+export 'src/adapters/antigravity.dart';
 export 'src/adapters/claude_code.dart';
 export 'src/adapters/codex.dart';
 export 'src/catalog/catalog.dart';

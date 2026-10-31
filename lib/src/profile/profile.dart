@@ -33,7 +33,7 @@ class Profile {
     required this.paths,
   });
 
-  static const supportedAgents = {'claude-code', 'codex'};
+  static const supportedAgents = {'claude-code', 'codex', 'antigravity'};
 
   /// Option valid for every family: a library with no pack, named by the required `name` param.
   static const otherOption = 'other';

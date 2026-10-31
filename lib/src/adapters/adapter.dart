@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../catalog/catalog.dart';
 import '../profile/profile.dart';
 import '../render/renderer.dart';
@@ -55,6 +57,14 @@ List<SkillDoc> skillDocs(Catalog catalog, Profile profile, List<RenderedTarget> 
     }
   }
   return docs;
+}
+
+/// `.agents/skills/<name>/SKILL.md`, the format Codex and Antigravity both read: front matter `name` and
+/// `description` only, so the trigger joins the description and the argument hint opens the body.
+String agentsSkillFile(String name, DocMeta meta, String body) {
+  final description = meta.whenToUse == null ? meta.description : '${meta.description} Use when: ${meta.whenToUse}';
+  final arguments = meta.argumentHint == null ? '' : 'Arguments: `${meta.argumentHint}`\n\n';
+  return '---\nname: $name\ndescription: ${jsonEncode(description)}\n---\n\n$arguments$body';
 }
 
 /// Adapter for [agent]; throws [SyncException] for an agent that has none yet.
