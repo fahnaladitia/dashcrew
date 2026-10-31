@@ -4,11 +4,12 @@ import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as p;
 
-import '../adapters/claude_code.dart';
+import '../adapters/adapter.dart';
 import '../catalog/catalog.dart';
 import '../guard/compile.dart';
 import '../profile/profile.dart';
 import '../render/renderer.dart';
+import 'project_files.dart';
 
 /// Sync refused to run; [message] names the files or settings involved.
 class SyncException implements Exception {
@@ -45,11 +46,10 @@ class Sync {
   static const projectBegin = '<!-- dashcrew:project:begin -->';
   static const projectEnd = '<!-- dashcrew:project:end -->';
   static const lockPath = '.ai/lock.json';
-  static const supportedAgents = {'claude-code'};
 
   SyncResult run({bool force = false, bool adopt = false}) {
     final warnings = <String>[];
-    final (:files, :packs) = _render(adopt: adopt, warnings: warnings);
+    final (:files, :packs, :adapters) = _render(adopt: adopt, warnings: warnings);
     final lock = _readLock();
     final lockedFiles = (lock['files'] as Map?)?.cast<String, String>() ?? {};
 
@@ -83,10 +83,13 @@ class Sync {
       }
     }
 
-    if (_mergeSettings()) written.add('.claude/settings.json');
-    final ownedMcp = ((lock['mcp_servers'] as List?) ?? const []).cast<String>().toSet();
-    final mcpResult = _mergeMcp(ownedMcp, warnings);
-    if (mcpResult.changed) written.add('.mcp.json');
+    final ownedMcp = _ownedMcp(lock);
+    final nowOwnedMcp = <String, List<String>>{};
+    for (final adapter in adapters) {
+      final merged = adapter.merge(ownedMcp[adapter.agent] ?? const {}, warnings);
+      written.addAll(merged.written);
+      nowOwnedMcp[adapter.agent] = merged.ownedMcp.toList()..sort();
+    }
     if (_ensureGitignore()) written.add('.gitignore');
 
     var guardHash = lock['guard_source'] as String?;
@@ -96,7 +99,7 @@ class Sync {
       'schema': 1,
       'files': {for (final path in files.keys.toList()..sort()) path: fileHash(path, files[path]!)},
       'packs': packs,
-      'mcp_servers': mcpResult.owned.toList()..sort(),
+      'mcp_servers': {for (final agent in nowOwnedMcp.keys.toList()..sort()) agent: nowOwnedMcp[agent]},
       'guard_source': ?guardHash,
     };
     _writeIfChanged(lockPath, '${const JsonEncoder.withIndent('  ').convert(newLock)}\n');
@@ -110,8 +113,19 @@ class Sync {
   Map<String, String> render({bool adopt = false, List<String>? warnings}) =>
       _render(adopt: adopt, warnings: warnings).files;
 
+  /// MCP servers each agent's adapter wrote before; a lock that keeps a plain list predates Codex and means Claude Code.
+  static Map<String, Set<String>> _ownedMcp(Map<String, Object?> lock) {
+    final owned = lock['mcp_servers'];
+    if (owned is List) return {'claude-code': owned.cast<String>().toSet()};
+    if (owned is Map) return {for (final MapEntry(:key, :value) in owned.entries) key as String: (value as List).cast<String>().toSet()};
+    return {};
+  }
+
   /// Files plus `family/option -> builtin|project` for every rendered pack, as the lock records them.
-  ({Map<String, String> files, Map<String, String> packs}) _render({required bool adopt, List<String>? warnings}) {
+  ({Map<String, String> files, Map<String, String> packs, List<Adapter> adapters}) _render({
+    required bool adopt,
+    List<String>? warnings,
+  }) {
     final Catalog catalog;
     try {
       catalog = this.catalog.withProjectPacks(projectDir);
@@ -119,10 +133,7 @@ class Sync {
       throw SyncException('Project pack: $error');
     }
     final profile = _profile(catalog);
-    final unsupported = profile.agents.where((a) => !supportedAgents.contains(a)).toList();
-    if (unsupported.isNotEmpty) {
-      throw SyncException('Agent adapter not available yet: ${unsupported.join(', ')}. Supported: ${supportedAgents.join(', ')}.');
-    }
+    final adapters = [for (final agent in profile.agents) adapterFor(agent, catalog, projectDir)];
 
     final renderer = Renderer(catalog);
     final targets = renderer.render(profile);
@@ -136,15 +147,10 @@ class Sync {
     final files = <String, String>{
       'AGENTS.md': _agentsMd(targets, adopt: adopt),
       '.ai/guard.json': '${const JsonEncoder.withIndent('  ').convert(compileGuardPolicy(profile, catalog).toJson())}\n',
-      ...ClaudeCodeAdapter(catalog).files(profile, targets, context, warnings: warnings),
+      for (final adapter in adapters)
+        ...adapter.files(profile, targets, context, lockedFiles: lockedFiles, warnings: warnings),
     };
-    final claudeMd = _file('CLAUDE.md');
-    if (!claudeMd.existsSync() || lockedFiles.containsKey('CLAUDE.md')) {
-      files['CLAUDE.md'] = '@AGENTS.md\n';
-    } else if (!claudeMd.readAsStringSync().contains('@AGENTS.md')) {
-      warnings?.add('CLAUDE.md does not import AGENTS.md; add a line "@AGENTS.md" so Claude Code loads the rules.');
-    }
-    return (files: files, packs: packs);
+    return (files: files, packs: packs, adapters: adapters);
   }
 
   Profile _profile(Catalog catalog) {
@@ -157,7 +163,7 @@ class Sync {
     }
   }
 
-  File _file(String relative) => File(p.join(projectDir, relative));
+  File _file(String relative) => ProjectFiles(projectDir).file(relative);
 
   Map<String, Object?> _readLock() {
     final file = _file(lockPath);
@@ -165,13 +171,7 @@ class Sync {
     return jsonDecode(file.readAsStringSync()) as Map<String, Object?>;
   }
 
-  bool _writeIfChanged(String relative, String content) {
-    final file = _file(relative);
-    if (file.existsSync() && file.readAsStringSync() == content) return false;
-    file.parent.createSync(recursive: true);
-    file.writeAsStringSync(content);
-    return true;
-  }
+  bool _writeIfChanged(String relative, String content) => ProjectFiles(projectDir).writeIfChanged(relative, content);
 
   /// Hash stored in the lock for one generated file.
   /// AGENTS.md is hashed without the project block, so editing that block never counts as a hand edit.
@@ -205,44 +205,6 @@ class Sync {
     final rules = targets.where((t) => t.target == 'agents_md').map((t) => t.content).join();
     if (projectBlock.isEmpty) projectBlock = '\n';
     return '$generatedMarker\n\n${rules.trimRight()}\n\n$projectBegin$projectBlock$projectEnd\n';
-  }
-
-  bool _mergeSettings() {
-    final file = _file('.claude/settings.json');
-    final settings = file.existsSync() ? jsonDecode(file.readAsStringSync()) as Map<String, Object?> : <String, Object?>{};
-    final hooks = (settings['hooks'] as Map?)?.cast<String, Object?>() ?? <String, Object?>{};
-    final preToolUse = [...(hooks['PreToolUse'] as List?) ?? const []];
-
-    final ours = ClaudeCodeAdapter.guardHook;
-    final index = preToolUse.indexWhere((entry) => jsonEncode(entry).contains('.ai/bin/guard'));
-    if (index >= 0) {
-      preToolUse[index] = ours;
-    } else {
-      preToolUse.add(ours);
-    }
-    hooks['PreToolUse'] = preToolUse;
-    settings['hooks'] = hooks;
-    return _writeIfChanged('.claude/settings.json', '${const JsonEncoder.withIndent('  ').convert(settings)}\n');
-  }
-
-  ({bool changed, Set<String> owned}) _mergeMcp(Set<String> owned, List<String> warnings) {
-    final file = _file('.mcp.json');
-    final config = file.existsSync() ? jsonDecode(file.readAsStringSync()) as Map<String, Object?> : <String, Object?>{};
-    final servers = (config['mcpServers'] as Map?)?.cast<String, Object?>() ?? <String, Object?>{};
-    final nowOwned = {...owned};
-
-    ClaudeCodeAdapter.mcpServers.forEach((name, server) {
-      final existing = servers[name];
-      if (existing == null || owned.contains(name)) {
-        servers[name] = server;
-        nowOwned.add(name);
-      } else if (jsonEncode(existing) != jsonEncode(server)) {
-        warnings.add('.mcp.json already defines "$name" differently; left as is.');
-      }
-    });
-    config['mcpServers'] = servers;
-    final changed = _writeIfChanged('.mcp.json', '${const JsonEncoder.withIndent('  ').convert(config)}\n');
-    return (changed: changed, owned: nowOwned);
   }
 
   bool _ensureGitignore() {

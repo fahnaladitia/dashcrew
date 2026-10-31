@@ -3,13 +3,19 @@ import 'dart:convert';
 import '../catalog/catalog.dart';
 import '../profile/profile.dart';
 import '../render/renderer.dart';
+import '../sync/project_files.dart';
+import 'adapter.dart';
 
-/// Claude Code layout: `.claude/agents/<role>.md`, `.claude/skills/<name>/SKILL.md` (skills and workflows).
-/// AGENTS.md, CLAUDE.md, settings and MCP are written by sync because they merge with project files.
-class ClaudeCodeAdapter {
-  const ClaudeCodeAdapter(this.catalog);
+/// Claude Code layout: `.claude/agents/<role>.md`, `.claude/skills/<name>/SKILL.md` (skills and workflows), `CLAUDE.md`.
+/// `.claude/settings.json` and `.mcp.json` are merged, never replaced.
+class ClaudeCodeAdapter extends Adapter {
+  ClaudeCodeAdapter(this.catalog, {required String projectDir}) : _project = ProjectFiles(projectDir);
 
   final Catalog catalog;
+  final ProjectFiles _project;
+
+  @override
+  String get agent => 'claude-code';
 
   static const guardMatcher = 'Bash|Write|Edit|MultiEdit|NotebookEdit';
   static const guardCommand = r'"$CLAUDE_PROJECT_DIR/.ai/bin/guard" "$CLAUDE_PROJECT_DIR/.ai/guard.json"';
@@ -36,11 +42,16 @@ class ClaudeCodeAdapter {
   };
   static const _models = {'high': 'opus', 'standard': 'sonnet'};
 
-  /// Relative path -> content for every agent and skill file of this profile.
   /// A skill no selected pack describes is skipped with a warning (its owner was replaced by a project pack).
   /// Throws [StateError] when a rendered workflow has no description in the catalog.
-  Map<String, String> files(Profile profile, List<RenderedTarget> targets, Map<String, Object?> context,
-      {List<String>? warnings}) {
+  @override
+  Map<String, String> files(
+    Profile profile,
+    List<RenderedTarget> targets,
+    Map<String, Object?> context, {
+    required Map<String, String> lockedFiles,
+    List<String>? warnings,
+  }) {
     final renderer = Renderer(catalog);
     final packSkills = {for (final pack in renderer.selectedPacks(profile)) ...pack.skills};
     final files = <String, String>{};
@@ -69,7 +80,60 @@ class ClaudeCodeAdapter {
           files['.claude/skills/$name/SKILL.md'] = _skill(name, meta, target.content);
       }
     }
+
+    final claudeMd = _project.file('CLAUDE.md');
+    if (!claudeMd.existsSync() || lockedFiles.containsKey('CLAUDE.md')) {
+      files['CLAUDE.md'] = '@AGENTS.md\n';
+    } else if (!claudeMd.readAsStringSync().contains('@AGENTS.md')) {
+      warnings?.add('CLAUDE.md does not import AGENTS.md; add a line "@AGENTS.md" so Claude Code loads the rules.');
+    }
     return files;
+  }
+
+  @override
+  ({List<String> written, Set<String> ownedMcp}) merge(Set<String> ownedMcp, List<String> warnings) {
+    final written = <String>[];
+    if (_mergeSettings()) written.add('.claude/settings.json');
+    final mcp = _mergeMcp(ownedMcp, warnings);
+    if (mcp.changed) written.add('.mcp.json');
+    return (written: written, ownedMcp: mcp.owned);
+  }
+
+  bool _mergeSettings() {
+    final file = _project.file('.claude/settings.json');
+    final settings = file.existsSync() ? jsonDecode(file.readAsStringSync()) as Map<String, Object?> : <String, Object?>{};
+    final hooks = (settings['hooks'] as Map?)?.cast<String, Object?>() ?? <String, Object?>{};
+    final preToolUse = [...(hooks['PreToolUse'] as List?) ?? const []];
+
+    final index = preToolUse.indexWhere((entry) => jsonEncode(entry).contains('.ai/bin/guard'));
+    if (index >= 0) {
+      preToolUse[index] = guardHook;
+    } else {
+      preToolUse.add(guardHook);
+    }
+    hooks['PreToolUse'] = preToolUse;
+    settings['hooks'] = hooks;
+    return _project.writeIfChanged('.claude/settings.json', '${const JsonEncoder.withIndent('  ').convert(settings)}\n');
+  }
+
+  ({bool changed, Set<String> owned}) _mergeMcp(Set<String> owned, List<String> warnings) {
+    final file = _project.file('.mcp.json');
+    final config = file.existsSync() ? jsonDecode(file.readAsStringSync()) as Map<String, Object?> : <String, Object?>{};
+    final servers = (config['mcpServers'] as Map?)?.cast<String, Object?>() ?? <String, Object?>{};
+    final nowOwned = {...owned};
+
+    mcpServers.forEach((name, server) {
+      final existing = servers[name];
+      if (existing == null || owned.contains(name)) {
+        servers[name] = server;
+        nowOwned.add(name);
+      } else if (jsonEncode(existing) != jsonEncode(server)) {
+        warnings.add('.mcp.json already defines "$name" differently; left as is.');
+      }
+    });
+    config['mcpServers'] = servers;
+    final changed = _project.writeIfChanged('.mcp.json', '${const JsonEncoder.withIndent('  ').convert(config)}\n');
+    return (changed: changed, owned: nowOwned);
   }
 
   String _agent(RoleMeta role, String body) {

@@ -47,7 +47,9 @@
     "di/get_it": "builtin",
     "state/bloc": "project"
   },
-  "mcp_servers": [
-    "dart-mcp-server"
-  ]
+  "mcp_servers": {
+    "claude-code": [
+      "dart-mcp-server"
+    ]
+  }
 }

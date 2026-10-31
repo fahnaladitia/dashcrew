@@ -1,6 +1,7 @@
 /// Library entry point for dashcrew: profile, catalog and renderer.
 library;
 
+export 'src/adapters/adapter.dart';
 export 'src/catalog/catalog.dart';
 export 'src/doctor/doctor.dart';
 export 'src/guard/compile.dart';

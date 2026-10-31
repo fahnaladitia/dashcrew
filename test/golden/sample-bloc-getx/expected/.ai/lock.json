@@ -52,7 +52,9 @@
     "storage/hive": "builtin",
     "test/manual-fakes": "builtin"
   },
-  "mcp_servers": [
-    "dart-mcp-server"
-  ]
+  "mcp_servers": {
+    "claude-code": [
+      "dart-mcp-server"
+    ]
+  }
 }

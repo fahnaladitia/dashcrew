@@ -111,6 +111,40 @@ project: { local_packages: [core] }
     expect(read('.mcp.json'), contains('"graph"'));
   });
 
+  test('the lock records owned mcp servers per agent', () {
+    sync();
+
+    final lock = jsonDecode(read('.ai/lock.json')) as Map<String, Object?>;
+    expect(lock['mcp_servers'], {
+      'claude-code': ['dart-mcp-server'],
+    });
+  });
+
+  test('a lock with the old mcp_servers list is read as claude code ownership', () {
+    sync();
+    final lock = jsonDecode(read('.ai/lock.json')) as Map<String, Object?>;
+    lock['mcp_servers'] = ['dart-mcp-server'];
+    write('.ai/lock.json', jsonEncode(lock));
+    write('.mcp.json', jsonEncode({
+      'mcpServers': {
+        'dart-mcp-server': {'command': 'old'},
+      },
+    }));
+
+    final result = sync();
+
+    expect(result.warnings, isEmpty);
+    expect(read('.mcp.json'), isNot(contains('"old"')));
+    expect((jsonDecode(read('.ai/lock.json')) as Map)['mcp_servers'], {
+      'claude-code': ['dart-mcp-server'],
+    });
+  });
+
+  test('adapterFor names the supported agents and rejects the others', () {
+    expect(adapterFor('claude-code', catalog, project.path).agent, 'claude-code');
+    expect(() => adapterFor('codex', catalog, project.path), throwsA(isA<SyncException>()));
+  });
+
   test('hand-edited generated file blocks sync until --force', () {
     sync();
     write('.claude/skills/plan/SKILL.md', 'edited by hand\n');
