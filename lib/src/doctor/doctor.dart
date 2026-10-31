@@ -367,7 +367,10 @@ class Doctor {
   Future<DoctorCheck> _guardBinary(Map<String, Object?>? lock) async {
     const id = 'guard-binary';
     final binary = _file('.ai/bin/guard');
-    if (!binary.existsSync()) return const DoctorCheck(id, CheckStatus.fail, '.ai/bin/guard missing; run dashcrew sync');
+    if (!binary.existsSync()) {
+      return const DoctorCheck(id, CheckStatus.fail,
+          '.ai/bin/guard missing: no guard rule applies on this machine until dashcrew sync compiles it (it is per machine, never committed)');
+    }
 
     final int exitCode;
     try {

@@ -70,6 +70,7 @@ stack:
 
     expect(checks['guard-binary']!.status, CheckStatus.fail);
     expect(checks['guard-binary']!.detail, contains('missing'));
+    expect(checks['guard-binary']!.detail, contains('no guard rule applies on this machine'));
   });
 
   test('generated file edited by hand fails drift', () async {
