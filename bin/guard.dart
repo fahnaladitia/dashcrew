@@ -19,7 +19,7 @@ Future<void> main(List<String> arguments) async {
     if (!policyFile.existsSync()) exit(0);
     final policy = GuardPolicy.fromJson(jsonDecode(policyFile.readAsStringSync()) as Map<String, Object?>);
 
-    final decision = evaluate(GuardEvent.fromHook(input), policy);
+    final decision = evaluateAll(GuardEvent.allFromHook(input), policy);
     if (decision.blocked) {
       stderr.writeln('[dashcrew guard] ${decision.reason}');
       exit(2);

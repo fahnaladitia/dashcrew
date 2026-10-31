@@ -145,6 +145,74 @@ void main() {
     });
   });
 
+  group('codex apply_patch', () {
+    List<GuardEvent> patch(String text) => GuardEvent.allFromHook({
+          'tool_name': 'apply_patch',
+          'tool_input': {'command': text},
+        });
+
+    bool blocked(String text) => evaluateAll(patch(text), policy()).blocked;
+
+    test('one event per file, with added lines as content', () {
+      final events = patch('''
+*** Begin Patch
+*** Add File: test/a_test.dart
++void main() {}
+*** Update File: lib/b.dart
+@@
+-old()
++fresh()
+*** Delete File: lib/c.dart
+*** End Patch
+''');
+
+      expect(events.map((e) => e.filePath), ['test/a_test.dart', 'lib/b.dart', 'lib/c.dart']);
+      expect(events.map((e) => e.kind), [ToolKind.write, ToolKind.edit, ToolKind.edit]);
+      expect(events[1].content, 'fresh()');
+    });
+
+    test('a forbidden import in the second file blocks the patch', () {
+      expect(blocked('''
+*** Begin Patch
+*** Update File: test/a_test.dart
++import 'package:vendor_sdk/vendor_sdk.dart';
+*** Update File: lib/feature/b.dart
++import 'package:vendor_sdk/vendor_sdk.dart';
+*** End Patch
+'''), isTrue);
+    });
+
+    test('removing a forbidden import is allowed', () {
+      expect(blocked('''
+*** Begin Patch
+*** Update File: lib/feature/b.dart
+-import 'package:vendor_sdk/vendor_sdk.dart';
++import 'package:app/analytics.dart';
+*** End Patch
+'''), isFalse);
+    });
+
+    test('a move into lib is checked at its new path', () {
+      expect(blocked('''
+*** Begin Patch
+*** Update File: test/x.dart
+*** Move to: lib/x.dart
++import 'package:vendor_sdk/vendor_sdk.dart';
+*** End Patch
+'''), isTrue);
+    });
+
+    test('codex Bash input is one shell event', () {
+      final events = GuardEvent.allFromHook({
+        'tool_name': 'Bash',
+        'tool_input': {'command': 'git push'},
+      });
+
+      expect(events.single.kind, ToolKind.shell);
+      expect(evaluateAll(events, policy()).blocked, isTrue);
+    });
+  });
+
   test('policy survives a json round trip', () {
     final original = policy();
     final copy = GuardPolicy.fromJson(original.toJson());

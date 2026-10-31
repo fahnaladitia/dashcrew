@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:dashcrew/dashcrew.dart';
@@ -73,5 +74,48 @@ stack:
 
   test('skill list size counts name and description of each skill', () {
     expect(CodexAdapter.skillListChars(['---\nname: ab\ndescription: "cde"\n---\n\nbody\n']), 5);
+  });
+
+  group('guard hook in .codex/hooks.json', () {
+    String hooksPath() => '${project.path}/.codex/hooks.json';
+    ({List<String> written, Set<String> ownedMcp}) merge() =>
+        CodexAdapter(catalog, projectDir: project.path).merge(const {}, <String>[]);
+
+    test('is added next to the user hooks and written once', () {
+      File(hooksPath())
+        ..parent.createSync(recursive: true)
+        ..writeAsStringSync(jsonEncode({
+          'hooks': {
+            'PreToolUse': [
+              {'matcher': 'Bash', 'hooks': [{'type': 'command', 'command': 'other-hook'}]},
+            ],
+            'PostToolUse': [
+              {'hooks': [{'type': 'command', 'command': 'notify'}]},
+            ],
+          },
+        }));
+
+      expect(merge().written, contains('.codex/hooks.json'));
+      expect(merge().written, isNot(contains('.codex/hooks.json')));
+
+      final hooks = jsonDecode(File(hooksPath()).readAsStringSync()) as Map<String, Object?>;
+      final preToolUse = ((hooks['hooks'] as Map)['PreToolUse'] as List).cast<Map>();
+      expect(preToolUse, hasLength(2));
+      expect(jsonEncode(preToolUse.last), contains('.ai/bin/guard'));
+      expect(preToolUse.last['matcher'], CodexAdapter.guardMatcher);
+      expect(jsonEncode(hooks), contains('notify'));
+    });
+
+    test('an edited dashcrew entry is replaced, not duplicated', () {
+      merge();
+      final text = File(hooksPath()).readAsStringSync().replaceFirst('"timeout": 30', '"timeout": 5');
+      File(hooksPath()).writeAsStringSync(text);
+
+      merge();
+
+      final hooks = File(hooksPath()).readAsStringSync();
+      expect('.ai/bin/guard'.allMatches(hooks), hasLength(1));
+      expect(hooks, contains('"timeout": 30'));
+    });
   });
 }

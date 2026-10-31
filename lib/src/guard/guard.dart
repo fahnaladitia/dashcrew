@@ -38,11 +38,46 @@ class GuardEvent {
       );
     }
     if (tool == 'apply_patch') {
-      final patch = (input['input'] ?? input['patch'] ?? input['command'])?.toString() ?? '';
-      final path = RegExp(r'^\*\*\* (?:Update|Add) File: (.+)$', multiLine: true).firstMatch(patch)?.group(1);
-      return GuardEvent(kind: ToolKind.edit, filePath: path, content: patch, role: role);
+      final events = allFromHook(json);
+      return events.isEmpty ? GuardEvent(kind: ToolKind.edit, role: role) : events.first;
     }
     return GuardEvent(kind: ToolKind.other, role: role);
+  }
+
+  /// Every event in one hook call: a Codex `apply_patch` gives one per file, any other tool one.
+  /// A patch file's content is its added lines only; a moved file is checked at its new path.
+  static List<GuardEvent> allFromHook(Map<String, Object?> json) {
+    if (json['tool_name'] != 'apply_patch') return [GuardEvent.fromHook(json)];
+    final input = json['tool_input'] is Map ? (json['tool_input'] as Map).cast<String, Object?>() : <String, Object?>{};
+    final patch = (input['command'] ?? input['input'] ?? input['patch'])?.toString() ?? '';
+    final role = json['agent_type'] as String?;
+    final header = RegExp(r'^\*\*\* (Add|Update|Delete) File: (.+)$');
+    final moveTo = RegExp(r'^\*\*\* Move to: (.+)$');
+
+    final events = <GuardEvent>[];
+    String? path;
+    ToolKind? kind;
+    final added = <String>[];
+    void flush() {
+      if (path != null) events.add(GuardEvent(kind: kind!, filePath: path, content: added.join('\n'), role: role));
+      added.clear();
+    }
+
+    for (final line in patch.split('\n')) {
+      final file = header.firstMatch(line);
+      final move = moveTo.firstMatch(line);
+      if (file != null) {
+        flush();
+        kind = file.group(1) == 'Add' ? ToolKind.write : ToolKind.edit;
+        path = file.group(2)!.trim();
+      } else if (move != null) {
+        path = move.group(1)!.trim();
+      } else if (line.startsWith('+') && path != null) {
+        added.add(line.substring(1));
+      }
+    }
+    flush();
+    return events;
   }
 
   static const _shellTools = {'Bash', 'shell', 'local_shell', 'exec_command', 'container.exec'};
@@ -122,6 +157,15 @@ class GuardPolicy {
 const _wrappers = {'sudo', 'env', 'command', 'nohup', 'time', 'rtk', 'fvm'};
 const _gitOptionsWithValue = {'-C', '-c', '--git-dir', '--work-tree', '--namespace', '--exec-path', '--config-env'};
 final _assignment = RegExp(r'^[A-Za-z_][A-Za-z0-9_]*=');
+
+/// Blocks when any of [events] is blocked, with the first reason.
+GuardDecision evaluateAll(List<GuardEvent> events, GuardPolicy policy) {
+  for (final event in events) {
+    final decision = evaluate(event, policy);
+    if (decision.blocked) return decision;
+  }
+  return const GuardDecision.allow();
+}
 
 /// Allows or blocks one tool call under [policy].
 GuardDecision evaluate(GuardEvent event, GuardPolicy policy) {
