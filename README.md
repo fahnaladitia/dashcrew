@@ -20,14 +20,14 @@ core/ + packs/ (shipped)   --+
 .ai/packs/ (your project)  --+-->  dashcrew sync  -->  AGENTS.md         read by every agent
 .ai/project.yaml           --+                         per-agent files   skills, roles, hooks, MCP
                                                        .ai/guard.json    one policy for every agent
-                                                       .ai/bin/guard     compiled per machine
+                                                       .ai/bin/guard     committed shim -> one guard per machine
                                                        .ai/lock.json     hashes, versions, owned entries
 ```
 
 - **Rules** go into one `AGENTS.md`. Your own rules live in its project block, which `sync` never rewrites.
 - **Workflows** (`plan`, `tdd`, `verify`, ...) and **skills** become each agent's skill format.
 - **Roles** (planner, engineer, reviewer, ...) become each agent's subagent format, with a capability: `read`, `write-plans` or `write-code`.
-- **The guard** is one compiled binary that every agent's pre-tool hook calls. It reads the policy in `.ai/guard.json` and blocks the commands and writes listed in [Guard](#guard).
+- **The guard** is one compiled binary per machine, shared by every project, that every agent's pre-tool hook reaches through the committed shim `.ai/bin/guard`. It reads the policy in `.ai/guard.json` and blocks the commands and writes listed in [Guard](#guard).
 - `doctor` checks the result against the lock without writing anything.
 
 ## Install
@@ -135,9 +135,18 @@ Writes only `.ai/project.yaml`.
 | `-p, --project` | `.` | project root holding `.ai/project.yaml` |
 | `--force` | off | overwrite generated files edited by hand, or a lock written by a newer dashcrew |
 | `--adopt` | off | keep an existing, hand-written AGENTS.md as the project block |
-| `--[no-]compile-guard` | on | compile `.ai/bin/guard` when the guard sources changed |
+| `--[no-]compile-guard` | on | install the shared guard for this dashcrew when it is missing (see [Guard](#guard)) |
 
 Running it twice writes nothing the second time. Files it stops generating are deleted.
+
+### `dashcrew guard install`
+
+| Flag | Default | |
+|---|---|---|
+| `--expect <hash>` | none | refuse unless this dashcrew builds the guard the project expects (the lock's `guard_source`) |
+| `--force` | off | compile again even when installed |
+
+Compiles the guard once into `${DASHCREW_HOME:-~/.dashcrew}/guard/<hash>/guard` and prints its path. `sync` and the shim run it for you.
 
 ### `dashcrew doctor`
 
@@ -146,11 +155,11 @@ Running it twice writes nothing the second time. Files it stops generating are d
 | Group | Checks |
 |---|---|
 | Profile and lock | `profile`, `project-packs`, `lock`, `version`, `drift` (generated files edited by hand), `stale` (output differs from the current profile and catalog) |
-| Guard | `guard-policy`, `guard-binary` (runs it on a `git push` event and expects a block) |
+| Guard | `guard-policy`, `guard-binary` (the shim, the installed guard for the locked hash, and a `git push` event through the shim) |
 | Claude Code | `hook`, `claude-md`, `mcp`, `skills` |
 | Codex | `codex-hook`, `codex-mcp`, `codex-skills-budget`, `codex-trust` |
 | Antigravity | `antigravity-hook`, `antigravity-mcp`, `antigravity-roles` |
-| Project | `agents-md-size`, `gitignore` |
+| Project | `agents-md-size`, `gitignore` (warns while `.ai/bin/` is ignored) |
 
 Agent checks run only for the agents in the profile.
 
@@ -178,7 +187,7 @@ Every subcommand takes `-p, --project`, any folder inside the repository.
 | Guard hook | `.claude/settings.json` | `.codex/hooks.json` | `.agents/hooks.json`, key `dashcrew-guard` |
 | MCP (`dart-mcp-server`) | `.mcp.json` | `.codex/config.toml`, between `# dashcrew:begin` and `# dashcrew:end` | `.agents/mcp_config.json` |
 
-Settings, hooks and MCP files are merged: your own entries stay, and an MCP server you defined differently is left alone with a warning. Every agent also gets `.ai/guard.json`, `.ai/lock.json` and, in `.gitignore`, `.ai/bin/`.
+Settings, hooks and MCP files are merged: your own entries stay, and an MCP server you defined differently is left alone with a warning. Every agent also gets `.ai/guard.json`, `.ai/lock.json` and the guard shim `.ai/bin/guard`.
 
 ## Guard
 
@@ -191,6 +200,8 @@ Each agent's pre-tool hook sends the tool call to `.ai/bin/guard`, which blocks:
 
 Claude Code and Codex get exit code 2 with the reason on stderr; Antigravity gets `{"decision": "deny", "reason": ...}` on stdout. The guard fails open: a missing or broken guard never stops work, and `doctor` reports it.
 
+**Where it runs.** `.ai/bin/guard` is a short `sh` script that `sync` writes and you commit. It runs `${DASHCREW_HOME:-~/.dashcrew}/guard/<hash>/guard`, compiled once per machine for the guard source in the lock and shared by every project. When that binary is missing and `dashcrew` is on `PATH`, the shim installs it first (about 2 s, once per machine and guard version); otherwise it prints `not installed on this machine: run dashcrew sync` and lets the call through. A teammate whose dashcrew builds a different guard gets an error instead of a wrong guard. The shim adds about 3 ms per tool call (about 15 ms in total on the maintainer's machine). The shim needs a POSIX shell, so Windows is not supported yet.
+
 ## Using dashcrew in a team
 
 Teammates may use different agents in the same repository. They share one
@@ -200,16 +211,16 @@ them in the format it reads.
 ### Set up once
 
 1. List every agent the team uses: `agents: [claude-code, codex, antigravity]`.
-2. Run `dashcrew sync` and commit everything it wrote, except `.ai/bin/` (already in `.gitignore`):
-   `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.codex/`, `.agents/`, `.mcp.json`, and `.ai/` (`project.yaml`, `lock.json`, `guard.json`, `packs/`).
+2. Run `dashcrew sync` and commit everything it wrote:
+   `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.codex/`, `.agents/`, `.mcp.json`, and `.ai/` (`project.yaml`, `lock.json`, `guard.json`, `bin/guard`, `packs/`).
    Teammates then get the toolkit on pull, and `dashcrew doctor` compares their checkout with the committed lock.
 
 ### Each teammate
 
 - Install the same dashcrew as everyone else (same `--git-ref`).
-- Run `dashcrew sync` once after cloning. It compiles the guard into `.ai/bin/`, which is per machine.
-  Until then no guard rule applies: a hook whose command is missing does not block.
-- Run `dashcrew doctor`.
+- Nothing else to run after cloning: the first agent tool call installs this machine's guard through the committed shim (about 2 s, once).
+  Without dashcrew on `PATH` no guard rule applies, and the shim says so on every call.
+- Run `dashcrew doctor` to confirm.
 - Codex users: trust the project when Codex asks, then approve the dashcrew hook in `/hooks`. Codex ignores a project's `.codex/` until both are done.
 
 ### Day to day
@@ -238,7 +249,9 @@ dashcrew keeps AGENTS.md under the smallest cut of the selected agents, and `doc
 | `AGENTS.md exists and was not written by dashcrew` | `dashcrew sync --adopt` keeps your file as the project block |
 | `Files changed outside dashcrew` | move the change to its source (profile, project pack, project block), then `dashcrew sync --force` |
 | `.ai/lock.json was written by dashcrew X` | install that dashcrew (or the team's pinned ref) |
-| `guard-binary`: `.ai/bin/guard missing` | `dashcrew sync` compiles it |
+| `guard-binary`: `not installed on this machine` | `dashcrew sync`, or `dashcrew guard install` |
+| `guard install`: `This project expects guard X` | install the dashcrew ref the team uses, then `dashcrew sync` |
+| `gitignore`: `.ai/bin/ is in .gitignore` | remove that line so the shim is committed |
 | `codex-trust`: `project not trusted` | trust the project when Codex asks, then approve the hook in `/hooks` |
 | `skill <name> skipped` | a project pack replaced the pack that defined it; add `skills/<name>.yaml` to your pack |
 

@@ -74,7 +74,7 @@ class SyncCommand extends Command<int> {
       ..addOption('project', abbr: 'p', help: 'Project root holding .ai/project.yaml.', defaultsTo: '.')
       ..addFlag('force', help: 'Overwrite generated files that were edited by hand.', negatable: false)
       ..addFlag('adopt', help: 'Keep an existing AGENTS.md as the project block.', negatable: false)
-      ..addFlag('compile-guard', help: 'Compile .ai/bin/guard when its sources changed.', defaultsTo: true);
+      ..addFlag('compile-guard', help: 'Install the shared guard for this dashcrew when it is missing.', defaultsTo: true);
   }
 
   @override
