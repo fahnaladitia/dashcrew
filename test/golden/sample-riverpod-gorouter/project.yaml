@@ -1,0 +1,15 @@
+# Synthetic profile: the most used pub.dev option of most library families.
+toolkit: 1
+agents: [claude-code]
+stack:
+  state: { use: riverpod, codegen: true }
+  di: riverpod
+  router: go_router
+  network: http
+  storage: shared_preferences
+  test: mocktail
+  analytics: firebase
+  qa: semantics-identifier
+project:
+  flavors: { dev: lib/main_dev.dart }
+  base_branches: [main]
