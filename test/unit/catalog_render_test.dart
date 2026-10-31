@@ -108,6 +108,77 @@ project:
     });
   });
 
+  final headings = {
+    'di: riverpod': '## Dependency injection: Riverpod',
+    'di: provider': '## Dependency injection: provider',
+    'di: none': '## Dependency injection: constructor parameters',
+    'router: go_router': '## Navigation: go_router',
+    'router: auto_route': '## Navigation: auto_route',
+    'router: none': '## Navigation: Navigator',
+    'network: http': '## Network: http',
+    'network: retrofit': '## Network: Retrofit',
+    'network: none': '## Network: no HTTP package',
+    'storage: shared_preferences': '## Local storage: shared_preferences',
+    'storage: sqflite': '## Local storage: sqflite',
+    'test: mocktail': '## Tests: mocktail',
+    'test: mockito': '## Tests: mockito',
+    'test: none': '## Tests: no mocking convention',
+    'analytics: firebase': '## Analytics: Firebase',
+    'analytics: mixpanel': '## Analytics: Mixpanel',
+  };
+  headings.forEach((stack, heading) {
+    test('$stack renders "$heading"', () {
+      final agentsMd = render('toolkit: 1\nagents: [claude-code]\nstack: { $stack }\n').singleWhere((t) => t.target == 'agents_md');
+
+      expect(agentsMd.content, contains(heading));
+    });
+  });
+
+  test('get_it with injectable switches registration to annotations', () {
+    String rules(String di) =>
+        render('toolkit: 1\nagents: [claude-code]\nstack: { di: $di }\n').singleWhere((t) => t.target == 'agents_md').content;
+
+    expect(rules('{ use: get_it, injectable: true }'), contains('`@lazySingleton`'));
+    expect(rules('{ use: get_it, injectable: true }'), isNot(contains('Register every new dependency')));
+    expect(rules('get_it'), contains('Register every new dependency'));
+  });
+
+  test('di riverpod with a different state library says how state holders get dependencies', () {
+    String rules(String stack) =>
+        render('toolkit: 1\nagents: [claude-code]\nstack: { $stack }\n').singleWhere((t) => t.target == 'agents_md').content;
+
+    expect(rules('di: riverpod, state: bloc'), contains('`ConsumerWidget`'));
+    expect(rules('di: riverpod, state: riverpod'), isNot(contains('State is not Riverpod')));
+  });
+
+  test('mocktail with bloc adds blocTest to the tdd workflow; manual fakes do not', () {
+    String tdd(String stack) =>
+        render('toolkit: 1\nagents: [claude-code]\nstack: { $stack }\n').singleWhere((t) => t.target == 'workflow/tdd').content;
+
+    expect(tdd('state: bloc, test: mocktail'), contains('blocTest'));
+    expect(tdd('state: bloc, test: manual-fakes'), isNot(contains('blocTest')));
+  });
+
+  test('the largest option of every family together stays under the AGENTS.md size limit', () {
+    final families = catalog.knownOptions();
+    final largest = <String, String>{};
+    for (final family in families.keys) {
+      var bytes = -1;
+      for (final option in families[family]!) {
+        final size = agentsMdBytes(render('toolkit: 1\nagents: [claude-code]\nstack: { $family: $option }\n'));
+        if (size > bytes) {
+          bytes = size;
+          largest[family] = option;
+        }
+      }
+    }
+    final stack = largest.entries.map((e) => '${e.key}: ${e.value}').join(', ');
+
+    final targets = render('toolkit: 1\nagents: [claude-code]\nstack: { $stack }\n');
+
+    expect(agentsMdBytes(targets), lessThan(32 * 1024), reason: stack);
+  });
+
   test('sample full stack stays under the AGENTS.md size limit with every policy flipped', () {
     final targets = render('''
 toolkit: 1

@@ -1,0 +1,2 @@
+description: No DI package; dependencies are passed through constructors from one composition root.
+params: {}

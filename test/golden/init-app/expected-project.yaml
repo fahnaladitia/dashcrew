@@ -4,10 +4,10 @@ agents: [claude-code]
 stack:
   analytics: posthog
   di: get_it
-  router: { use: other, name: go_router }
+  router: go_router
   state: bloc
   storage: hive
-  test: { use: other, name: mocktail }
+  test: mocktail
 project:
   flavors:
     dev: lib/main_dev.dart

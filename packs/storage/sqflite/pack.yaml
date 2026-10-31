@@ -1,0 +1,3 @@
+description: sqflite SQLite database, opened once by one database class, with versioned migrations.
+params:
+  owner_class: AppDatabase

@@ -7,6 +7,10 @@ import '../catalog/catalog.dart';
 import '../profile/profile.dart';
 import 'detect.dart';
 
+typedef _Choice = ({String option, String? name, Map<String, Object?> params});
+
+_Choice _choiceOf(StackCandidate candidate) => (option: candidate.option, name: candidate.name, params: candidate.params);
+
 /// Writes `.ai/project.yaml` from what [detect] finds, confirmed per family unless `yes`.
 /// Writes nothing else; `dashcrew sync` renders the toolkit afterwards.
 class Init {
@@ -52,15 +56,15 @@ class Init {
     if (detection.localPackages.isNotEmpty) out('  local packages: ${detection.localPackages.join(', ')} (path dependencies)');
     if (detection.baseBranches.isNotEmpty) out('  base branches: ${detection.baseBranches.join(', ')} (remote branches)');
 
-    final choices = <String, ({String option, String? name})>{};
+    final choices = <String, _Choice>{};
     for (final family in known.keys.toList()..sort()) {
       final proposed = candidates[family] ?? const <StackCandidate>[];
-      final ({String option, String? name})? choice;
+      final _Choice? choice;
       if (yes) {
         if (proposed.length > 1) {
           out('$family: skipped, ${proposed.length} candidates: ${proposed.map((c) => c.label).join(', ')}; set it in $profilePath');
         }
-        choice = proposed.length == 1 ? (option: proposed.single.option, name: proposed.single.name) : null;
+        choice = proposed.length == 1 ? _choiceOf(proposed.single) : null;
       } else {
         choice = _askFamily(family, known[family]!, proposed, ask, out);
       }
@@ -80,32 +84,36 @@ class Init {
     if (candidate.option == Profile.otherOption || options.contains(candidate.option)) return candidate;
     return StackCandidate(candidate.family, Profile.otherOption, candidate.packages.first)
       ..packages.addAll(candidate.packages)
+      ..params.addAll(candidate.params)
       ..evidence.addAll(candidate.evidence);
   }
 
-  ({String option, String? name})? _askFamily(
+  _Choice? _askFamily(
     String family,
     Set<String> options,
     List<StackCandidate> proposed,
     String? Function(String prompt) ask,
     void Function(String line) out,
   ) {
-    final fallback = proposed.length == 1 ? (option: proposed.single.option, name: proposed.single.name) : null;
+    final fallback = proposed.length == 1 ? _choiceOf(proposed.single) : null;
     final shown = proposed.isEmpty ? '-' : proposed.map((c) => c.label).join(' | ');
     while (true) {
       final answer = ask('$family [$shown]: ')?.trim();
       if (answer == null || answer.isEmpty) return fallback;
       if (answer == '-') return null;
-      if (options.contains(answer)) return (option: answer, name: null);
+      if (options.contains(answer)) {
+        final detected = proposed.where((c) => c.option == answer && c.name == null).firstOrNull;
+        return detected == null ? (option: answer, name: null, params: const {}) : _choiceOf(detected);
+      }
       final words = answer.split(RegExp(r'\s+'));
       if (words.length == 2 && words.first == Profile.otherOption && _packageName.hasMatch(words.last)) {
-        return (option: Profile.otherOption, name: words.last);
+        return (option: Profile.otherOption, name: words.last, params: const {});
       }
       out('  expected one of ${[...options.toList()..sort(), '${Profile.otherOption} <package>', '- (none)'].join(', ')}');
     }
   }
 
-  String _profileYaml(Map<String, ({String option, String? name})> choices, Detection detection) {
+  String _profileYaml(Map<String, _Choice> choices, Detection detection) {
     final yaml = StringBuffer()
       ..writeln('# Written by dashcrew init. Edit it, then run dashcrew sync.')
       ..writeln('toolkit: 1')
@@ -114,9 +122,11 @@ class Init {
       yaml.writeln('stack:');
       for (final family in choices.keys.toList()..sort()) {
         final choice = choices[family]!;
-        final value = choice.name == null
-            ? _scalar(choice.option)
-            : '{ use: ${_scalar(choice.option)}, name: ${_scalar(choice.name!)} }';
+        final fields = [
+          if (choice.name != null) 'name: ${_scalar(choice.name!)}',
+          for (final MapEntry(:key, :value) in choice.params.entries) '$key: ${value is String ? _scalar(value) : value}',
+        ];
+        final value = fields.isEmpty ? _scalar(choice.option) : '{ use: ${_scalar(choice.option)}, ${fields.join(', ')} }';
         yaml.writeln('  $family: $value');
       }
     }

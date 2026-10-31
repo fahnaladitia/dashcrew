@@ -1,0 +1,2 @@
+description: Riverpod providers as dependency injection, swapped through overrides for tests and environments.
+params: {}

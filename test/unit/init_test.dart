@@ -63,16 +63,16 @@ toolkit: 1
 agents: [claude-code]
 stack:
   di: get_it
-  router: { use: other, name: go_router }
+  router: go_router
   state: bloc
-  test: { use: other, name: mocktail }
+  test: mocktail
 project:
   flavors:
     dev: lib/main_dev.dart
   local_packages: [packages/core]
   base_branches: [main, develop]
 ''');
-    expect(result.output.join('\n'), contains('network: skipped, 2 candidates: dio, other http'));
+    expect(result.output.join('\n'), contains('network: skipped, 2 candidates: dio, http'));
     expect(result.output.last, 'next: dashcrew sync');
     Profile.parse(result.profile, knownOptions: catalog.knownOptions());
   });
@@ -95,7 +95,7 @@ project:
     expect(result.profile, contains('  state: bloc\n'));
     expect(result.profile, isNot(contains('  test:')));
     expect(result.output, contains('state [bloc]: '));
-    expect(result.output, contains('network [dio | other http]: '));
+    expect(result.output, contains('network [dio | http]: '));
     expect(result.output.join('\n'), contains('state: bloc (flutter_bloc in dependencies)'));
   });
 
@@ -108,6 +108,12 @@ project:
     expect(result.output.where((line) => line == 'state [bloc]: '), hasLength(3));
     expect(result.output.join('\n'), contains('expected one of'));
     expect(result.profile, contains('  state: bloc\n'));
+  });
+
+  test('detected params are written in the map form', () {
+    write('pubspec.yaml', 'name: app\ndependencies:\n  get_it: ^9.0.0\n  injectable: ^3.0.0\n');
+
+    expect(init().profile, contains('  di: { use: get_it, injectable: true }\n'));
   });
 
   test('refuses an existing profile without --force', () {

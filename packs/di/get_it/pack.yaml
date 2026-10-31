@@ -1,5 +1,6 @@
-description: get_it service locator with one manual registration file.
+description: get_it service locator, registered in one file at startup, by hand or through injectable.
 params:
   container_file: lib/injection_container.dart
   locator: getIt
   transitive_only: false
+  injectable: false

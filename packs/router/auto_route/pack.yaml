@@ -1,0 +1,3 @@
+description: auto_route generated, type-safe routing with guards and nested routers.
+params:
+  router_file: lib/app_router.dart

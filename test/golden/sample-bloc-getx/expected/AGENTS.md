@@ -191,6 +191,7 @@ Stop and re-read these rules when you catch yourself: editing a file you have no
 ## Dependency injection: get_it
 
 - Register every new dependency in `lib/injection_container.dart`. A new dependency left unregistered is a high-severity review finding.
+- App code registers everything once at startup and reads it with `getIt<T>()`; only tests register fakes, in `setUp`.
 - Never add, remove or re-version `get_it` in `pubspec.yaml` without asking.
 
 - Register every Bloc and Cubit with `getIt.registerFactory(() => OrderBloc())`; a local package registers in its own container.

@@ -1,0 +1,11 @@
+description: Mixpanel product analytics behind a local facade package, wired only on the user's decision.
+params:
+  package: analytics
+  facade: Analytics.instance
+  vendor_import: package:mixpanel_flutter
+  constants_file: analytics_constants.dart
+  catalog_doc: docs/analytics.md
+  tap_api: trackTap
+  event_api: trackEvent
+  screen_api: trackScreen
+  server_url: null

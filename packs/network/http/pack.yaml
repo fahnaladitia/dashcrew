@@ -1,0 +1,3 @@
+description: package:http with one configured Client, passed to repositories through constructors.
+params:
+  client_dir: lib/data/client/

@@ -1,0 +1,3 @@
+description: shared_preferences for small settings and flags, through SharedPreferencesAsync or SharedPreferencesWithCache.
+params:
+  owner_class: AppPreferences

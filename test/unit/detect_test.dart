@@ -28,23 +28,23 @@ void main() {
     'bloc': 'state: bloc',
     'get_it': 'di: get_it',
     'get': 'router: getx',
+    'go_router': 'router: go_router',
+    'auto_route': 'router: auto_route',
     'dio': 'network: dio',
     'hive': 'storage: hive',
     'hive_ce': 'storage: hive',
     'hive_flutter': 'storage: hive',
     'posthog_flutter': 'analytics: posthog',
-    'flutter_riverpod': 'state: riverpod',
-    'riverpod': 'state: riverpod',
-    'hooks_riverpod': 'state: riverpod',
-    'provider': 'state: provider',
     'mobx': 'state: other mobx',
-    'go_router': 'router: other go_router',
-    'auto_route': 'router: other auto_route',
-    'http': 'network: other http',
+    'http': 'network: http',
+    'retrofit': 'network: retrofit',
     'chopper': 'network: other chopper',
     'isar': 'storage: other isar',
     'drift': 'storage: other drift',
-    'sqflite': 'storage: other sqflite',
+    'sqflite': 'storage: sqflite',
+    'shared_preferences': 'storage: shared_preferences',
+    'firebase_analytics': 'analytics: firebase',
+    'mixpanel_flutter': 'analytics: mixpanel',
   };
   rows.forEach((package, expected) {
     test('$package detects $expected', () {
@@ -58,13 +58,31 @@ void main() {
   });
 
   for (final package in ['mocktail', 'mockito']) {
-    test('$package in dev_dependencies detects test: other $package', () {
+    test('$package in dev_dependencies detects test: $package', () {
       final detection = detectWith({}, devDependencies: {package: '^1.0.0'});
 
-      expect(detection.stack['test']!.single.label, 'other $package');
+      expect(detection.stack['test']!.single.label, package);
       expect(detection.stack['test']!.single.evidence, ['$package in dev_dependencies']);
     });
   }
+
+  for (final (package, option) in [('flutter_riverpod', 'riverpod'), ('riverpod', 'riverpod'), ('hooks_riverpod', 'riverpod'), ('provider', 'provider')]) {
+    test('$package fills state and di with $option', () {
+      final detection = detectWith({package: '^1.0.0'});
+
+      expect(detection.stack['state']!.single.label, option);
+      expect(detection.stack['di']!.single.label, option);
+    });
+  }
+
+  test('injectable selects get_it with the injectable param', () {
+    final detection = detectWith({'get_it': '^9.0.0', 'injectable': '^3.0.0'});
+
+    final candidate = detection.stack['di']!.single;
+    expect(candidate.option, 'get_it');
+    expect(candidate.params, {'injectable': true});
+    expect(candidate.evidence, ['get_it in dependencies', 'injectable in dependencies']);
+  });
 
   test('two packages of one library give one candidate with both as evidence', () {
     final detection = detectWith({'flutter_bloc': '^9.0.0', 'bloc': '^9.0.0'});
@@ -76,7 +94,7 @@ void main() {
   test('two libraries for one family give two candidates', () {
     final detection = detectWith({'dio': '^5.0.0', 'http': '^1.0.0'});
 
-    expect(detection.stack['network']!.map((c) => c.label), ['dio', 'other http']);
+    expect(detection.stack['network']!.map((c) => c.label), ['dio', 'http']);
   });
 
   test('unknown packages are ignored', () {

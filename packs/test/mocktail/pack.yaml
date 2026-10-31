@@ -1,0 +1,2 @@
+description: mocktail mocks without code generation, plus bloc_test when the state library is bloc.
+params: {}

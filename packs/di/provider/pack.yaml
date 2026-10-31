@@ -1,0 +1,2 @@
+description: provider package as dependency injection - repositories and services provided above the screens that use them.
+params: {}

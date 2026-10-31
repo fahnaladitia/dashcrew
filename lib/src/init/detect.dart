@@ -16,42 +16,49 @@ class InitException implements Exception {
   String toString() => message;
 }
 
-/// Stack choice implied by one dependency; [name] is set for `other`.
+/// Stack choice implied by one dependency; [name] is set for `other`, [params] for a pack setting it implies.
 class DetectionRule {
-  const DetectionRule(this.family, this.option, [this.name]);
+  const DetectionRule(this.family, this.option, {this.name, this.params = const {}});
 
   final String family;
   final String option;
   final String? name;
+  final Map<String, Object?> params;
 }
 
-/// Dependency name -> stack choice. Adding a library is one line here plus a test row.
-const detectionRules = <String, DetectionRule>{
-  'flutter_bloc': DetectionRule('state', 'bloc'),
-  'bloc': DetectionRule('state', 'bloc'),
-  'flutter_riverpod': DetectionRule('state', 'riverpod'),
-  'hooks_riverpod': DetectionRule('state', 'riverpod'),
-  'riverpod': DetectionRule('state', 'riverpod'),
-  'provider': DetectionRule('state', 'provider'),
-  'mobx': DetectionRule('state', Profile.otherOption, 'mobx'),
-  'flutter_mobx': DetectionRule('state', Profile.otherOption, 'mobx'),
-  'get_it': DetectionRule('di', 'get_it'),
-  'get': DetectionRule('router', 'getx'),
-  'go_router': DetectionRule('router', Profile.otherOption, 'go_router'),
-  'auto_route': DetectionRule('router', Profile.otherOption, 'auto_route'),
-  'dio': DetectionRule('network', 'dio'),
-  'http': DetectionRule('network', Profile.otherOption, 'http'),
-  'chopper': DetectionRule('network', Profile.otherOption, 'chopper'),
-  'hive': DetectionRule('storage', 'hive'),
-  'hive_ce': DetectionRule('storage', 'hive'),
-  'hive_flutter': DetectionRule('storage', 'hive'),
-  'hive_ce_flutter': DetectionRule('storage', 'hive'),
-  'isar': DetectionRule('storage', Profile.otherOption, 'isar'),
-  'drift': DetectionRule('storage', Profile.otherOption, 'drift'),
-  'sqflite': DetectionRule('storage', Profile.otherOption, 'sqflite'),
-  'posthog_flutter': DetectionRule('analytics', 'posthog'),
-  'mocktail': DetectionRule('test', Profile.otherOption, 'mocktail'),
-  'mockito': DetectionRule('test', Profile.otherOption, 'mockito'),
+/// Dependency name -> the stack choices it implies; one library may fill several families.
+/// Adding a library is one entry here plus a test row.
+const detectionRules = <String, List<DetectionRule>>{
+  'flutter_bloc': [DetectionRule('state', 'bloc')],
+  'bloc': [DetectionRule('state', 'bloc')],
+  'flutter_riverpod': [DetectionRule('state', 'riverpod'), DetectionRule('di', 'riverpod')],
+  'hooks_riverpod': [DetectionRule('state', 'riverpod'), DetectionRule('di', 'riverpod')],
+  'riverpod': [DetectionRule('state', 'riverpod'), DetectionRule('di', 'riverpod')],
+  'provider': [DetectionRule('state', 'provider'), DetectionRule('di', 'provider')],
+  'mobx': [DetectionRule('state', Profile.otherOption, name: 'mobx')],
+  'flutter_mobx': [DetectionRule('state', Profile.otherOption, name: 'mobx')],
+  'get_it': [DetectionRule('di', 'get_it')],
+  'injectable': [DetectionRule('di', 'get_it', params: {'injectable': true})],
+  'get': [DetectionRule('router', 'getx')],
+  'go_router': [DetectionRule('router', 'go_router')],
+  'auto_route': [DetectionRule('router', 'auto_route')],
+  'dio': [DetectionRule('network', 'dio')],
+  'http': [DetectionRule('network', 'http')],
+  'retrofit': [DetectionRule('network', 'retrofit')],
+  'chopper': [DetectionRule('network', Profile.otherOption, name: 'chopper')],
+  'hive': [DetectionRule('storage', 'hive')],
+  'hive_ce': [DetectionRule('storage', 'hive')],
+  'hive_flutter': [DetectionRule('storage', 'hive')],
+  'hive_ce_flutter': [DetectionRule('storage', 'hive')],
+  'shared_preferences': [DetectionRule('storage', 'shared_preferences')],
+  'sqflite': [DetectionRule('storage', 'sqflite')],
+  'isar': [DetectionRule('storage', Profile.otherOption, name: 'isar')],
+  'drift': [DetectionRule('storage', Profile.otherOption, name: 'drift')],
+  'posthog_flutter': [DetectionRule('analytics', 'posthog')],
+  'firebase_analytics': [DetectionRule('analytics', 'firebase')],
+  'mixpanel_flutter': [DetectionRule('analytics', 'mixpanel')],
+  'mocktail': [DetectionRule('test', 'mocktail')],
+  'mockito': [DetectionRule('test', 'mockito')],
 };
 
 /// Remote branches that `init` proposes as base branches, in this order.
@@ -64,6 +71,9 @@ class StackCandidate {
   final String family;
   final String option;
   final String? name;
+
+  /// Pack params the dependencies imply, such as `injectable: true` for get_it.
+  final Map<String, Object?> params = {};
 
   /// Dependency names behind this candidate, and the same with their pubspec section.
   final List<String> packages = [];
@@ -102,17 +112,18 @@ Detection detect(String projectDir, {required List<String> remoteBranches}) {
         final path = p.posix.normalize((source['path'] as String).replaceAll(r'\', '/'));
         if (!path.startsWith('..') && !p.posix.isAbsolute(path)) localPackages.add(path);
       }
-      final rule = detectionRules[name];
-      if (rule == null) continue;
-      final candidates = stack[rule.family] ??= [];
-      var candidate = candidates.where((c) => c.option == rule.option && c.name == rule.name).firstOrNull;
-      if (candidate == null) {
-        candidate = StackCandidate(rule.family, rule.option, rule.name);
-        candidates.add(candidate);
+      for (final rule in detectionRules[name] ?? const <DetectionRule>[]) {
+        final candidates = stack[rule.family] ??= [];
+        var candidate = candidates.where((c) => c.option == rule.option && c.name == rule.name).firstOrNull;
+        if (candidate == null) {
+          candidate = StackCandidate(rule.family, rule.option, rule.name);
+          candidates.add(candidate);
+        }
+        candidate
+          ..params.addAll(rule.params)
+          ..packages.add(name)
+          ..evidence.add('$name in $section');
       }
-      candidate
-        ..packages.add(name)
-        ..evidence.add('$name in $section');
     }
   }
 
