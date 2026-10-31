@@ -142,7 +142,8 @@ project: { local_packages: [core] }
 
   test('adapterFor names the supported agents and rejects the others', () {
     expect(adapterFor('claude-code', catalog, project.path).agent, 'claude-code');
-    expect(() => adapterFor('codex', catalog, project.path), throwsA(isA<SyncException>()));
+    expect(adapterFor('codex', catalog, project.path).agent, 'codex');
+    expect(() => adapterFor('cursor', catalog, project.path), throwsA(isA<SyncException>()));
   });
 
   test('hand-edited generated file blocks sync until --force', () {
@@ -205,10 +206,35 @@ project: { local_packages: [core] }
     expect(result.removed, contains('.claude/skills/bloc-patterns/SKILL.md'));
   });
 
-  test('codex is rejected until its adapter exists', () {
-    write('.ai/project.yaml', 'toolkit: 1\nagents: [codex]\n');
+  test('codex alone writes its toolkit and nothing for claude code', () {
+    write('.ai/project.yaml', 'toolkit: 1\nagents: [codex]\nstack: { analytics: posthog }\n');
 
-    expect(() => sync(), throwsA(isA<SyncException>()));
+    sync();
+
+    expect(exists('AGENTS.md'), isTrue);
+    expect(exists('.agents/skills/plan/SKILL.md'), isTrue);
+    expect(exists('.codex/agents/flutter-planner.toml'), isTrue);
+    expect(read('.codex/hooks.json'), contains('.ai/bin/guard'));
+    expect(read('.codex/config.toml'), contains('[mcp_servers.dart-mcp-server]'));
+    expect(exists('CLAUDE.md'), isFalse);
+    expect(exists('.claude/settings.json'), isFalse);
+    final lock = jsonDecode(read('.ai/lock.json')) as Map<String, Object?>;
+    expect(lock['mcp_servers'], {
+      'codex': ['dart-mcp-server'],
+    });
+    expect(sync().written, isEmpty);
+  });
+
+  test('both agents share AGENTS.md and the guard policy', () {
+    write('.ai/project.yaml', 'toolkit: 1\nagents: [claude-code, codex]\n');
+
+    sync();
+
+    expect(exists('.claude/skills/plan/SKILL.md'), isTrue);
+    expect(exists('.agents/skills/plan/SKILL.md'), isTrue);
+    expect(read('.claude/settings.json'), contains('.ai/bin/guard'));
+    expect(read('.codex/hooks.json'), contains('.ai/bin/guard'));
+    expect(sync().written, isEmpty);
   });
 
   group('project packs', () {

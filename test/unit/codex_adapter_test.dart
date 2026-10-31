@@ -43,7 +43,7 @@ stack:
     expect(plan, startsWith('---\nname: plan\ndescription: "Plan a change'));
     expect(plan, contains('\n---\n\nArguments: `<task description or confirmed step 0 prompt>`\n\n# plan'));
     expect(files.keys, contains('.agents/skills/bloc-patterns/SKILL.md'));
-    expect(files.keys.where((path) => !path.startsWith('.agents/skills/')), isEmpty);
+    expect(files.keys.where((path) => !path.startsWith('.agents/skills/') && !path.startsWith('.codex/agents/')), isEmpty);
   });
 
   test('when_to_use is folded into the description', () {
@@ -60,7 +60,7 @@ stack:
     String body(String skill) => skill.substring(skill.indexOf('\n---\n', 4) + 5);
 
     final codex = render(fullStack);
-    for (final path in codex.keys) {
+    for (final path in codex.keys.where((path) => path.startsWith('.agents/skills/'))) {
       final name = path.split('/')[2];
       expect(body(codex[path]!), endsWith(body(claude['.claude/skills/$name/SKILL.md']!)), reason: name);
     }
@@ -69,7 +69,9 @@ stack:
   test('the skill list of the full sample stack fits the codex budget', () {
     final files = render(fullStack);
 
-    expect(CodexAdapter.skillListChars(files.values), lessThan(CodexAdapter.skillListBudget));
+    final skills = files.entries.where((e) => e.key.startsWith('.agents/skills/')).map((e) => e.value);
+
+    expect(CodexAdapter.skillListChars(skills), lessThan(CodexAdapter.skillListBudget));
   });
 
   test('skill list size counts name and description of each skill', () {
@@ -172,6 +174,29 @@ args = ["mcp-server"]
       expect(config().readAsStringSync(), '[mcp_servers."dart-mcp-server"]\ncommand = "fvm"\n');
       expect(result.ownedMcp, isEmpty);
       expect(warnings.single, contains('dart-mcp-server'));
+    });
+  });
+  group('roles in .codex/agents', () {
+    test('one toml file per generated role, with effort and the role body', () {
+      final files = render(fullStack);
+
+      final planner = files['.codex/agents/flutter-planner.toml']!;
+      expect(planner, startsWith('name = "flutter-planner"\ndescription = "'));
+      expect(planner, contains('\nmodel_reasoning_effort = "high"\n'));
+      expect(planner, contains('\ndeveloper_instructions = """\n'));
+      expect(planner, endsWith('"""\n'));
+      expect(files.keys, contains('.codex/agents/design-refiner.toml'));
+    });
+
+    test('a role gated by an unselected pack is not generated', () {
+      final files = render('toolkit: 1\nagents: [codex]\n');
+
+      expect(files.keys, isNot(contains('.codex/agents/design-refiner.toml')));
+      expect(files.keys, contains('.codex/agents/flutter-engineer.toml'));
+    });
+
+    test('backslashes and triple quotes in a body are escaped', () {
+      expect(CodexAdapter.tomlMultiline(r'a \d """ b'), '"""\n' r'a \\d ""\" b' '"""');
     });
   });
 }

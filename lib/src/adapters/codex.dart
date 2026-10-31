@@ -6,7 +6,8 @@ import '../render/renderer.dart';
 import '../sync/project_files.dart';
 import 'adapter.dart';
 
-/// Codex layout: `.agents/skills/<name>/SKILL.md` for skills and workflows; the guard hook in `.codex/hooks.json`.
+/// Codex layout: `.agents/skills/<name>/SKILL.md` for skills and workflows, `.codex/agents/<role>.toml` for roles,
+/// the guard hook in `.codex/hooks.json` and MCP servers in a `.codex/config.toml` block.
 /// Codex reads AGENTS.md itself. Project `.codex/` files load only once the user trusts the project and its hooks.
 class CodexAdapter extends Adapter {
   const CodexAdapter(this.catalog, {required this.projectDir});
@@ -46,11 +47,19 @@ class CodexAdapter extends Adapter {
     Map<String, Object?> context, {
     required Map<String, String> lockedFiles,
     List<String>? warnings,
-  }) =>
-      {
-        for (final doc in skillDocs(catalog, profile, targets, warnings))
-          '.agents/skills/${doc.name}/SKILL.md': _skill(doc.name, doc.meta, doc.body),
-      };
+  }) {
+    final files = <String, String>{};
+    for (final target in targets.where((t) => t.target.startsWith('role/'))) {
+      final name = target.target.substring('role/'.length);
+      final role = catalog.roles[name];
+      if (role == null || !Renderer.whenMatches(role.when, context)) continue;
+      files['.codex/agents/$name.toml'] = _role(role, target.content);
+    }
+    for (final doc in skillDocs(catalog, profile, targets, warnings)) {
+      files['.agents/skills/${doc.name}/SKILL.md'] = _skill(doc.name, doc.meta, doc.body);
+    }
+    return files;
+  }
 
   @override
   ({List<String> written, Set<String> ownedMcp}) merge(Set<String> ownedMcp, List<String> warnings) {
@@ -140,6 +149,22 @@ class CodexAdapter extends Adapter {
       total += name.length + (description.startsWith('"') ? jsonDecode(description) as String : description).length;
     }
     return total;
+  }
+
+  /// Role file Codex reads from `.codex/agents/`; the role name is taken from `name`, not from the file name.
+  String _role(RoleMeta role, String body) {
+    final toml = StringBuffer()
+      ..writeln('name = ${jsonEncode(role.name)}')
+      ..writeln('description = ${jsonEncode(role.description)}');
+    if (role.effort != null) toml.writeln('model_reasoning_effort = ${jsonEncode(role.effort)}');
+    toml.writeln('developer_instructions = ${tomlMultiline(body)}');
+    return toml.toString();
+  }
+
+  /// [text] as a TOML multi-line basic string; backslashes and `"""` are escaped.
+  static String tomlMultiline(String text) {
+    final escaped = text.replaceAll(r'\', r'\\').replaceAll('"""', r'""\"');
+    return '"""\n$escaped"""';
   }
 
   /// Codex front matter holds `name` and `description` only; the trigger and argument hint move into them.

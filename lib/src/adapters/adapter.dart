@@ -3,6 +3,7 @@ import '../profile/profile.dart';
 import '../render/renderer.dart';
 import '../sync/sync.dart';
 import 'claude_code.dart';
+import 'codex.dart';
 
 /// What `sync` writes for one agent named in `project.yaml` `agents`; AGENTS.md and the guard policy are shared.
 abstract class Adapter {
@@ -59,8 +60,9 @@ List<SkillDoc> skillDocs(Catalog catalog, Profile profile, List<RenderedTarget> 
 /// Adapter for [agent]; throws [SyncException] for an agent that has none yet.
 Adapter adapterFor(String agent, Catalog catalog, String projectDir) => switch (agent) {
       'claude-code' => ClaudeCodeAdapter(catalog, projectDir: projectDir),
+      'codex' => CodexAdapter(catalog, projectDir: projectDir),
       _ => throw SyncException('Agent adapter not available yet: $agent. Supported: ${supportedAdapters.join(', ')}.'),
     };
 
 /// Agents [adapterFor] accepts.
-const supportedAdapters = {'claude-code'};
+const supportedAdapters = {'claude-code', 'codex'};

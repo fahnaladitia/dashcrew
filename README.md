@@ -3,8 +3,7 @@
 Agent-agnostic AI coding toolkit for Flutter projects.
 
 dashcrew keeps one neutral source of rules, roles, workflows and guards, and
-renders it for the AI coding agent your team uses (Claude Code first, Codex
-next). Your stack is chosen once, in `.ai/project.yaml`.
+renders it for the AI coding agents your team uses (Claude Code and Codex). Your stack is chosen once, in `.ai/project.yaml`.
 
 > Status: early development (P1). Not usable yet.
 
