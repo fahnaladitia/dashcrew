@@ -9,7 +9,9 @@ import '../catalog/catalog.dart';
 import '../guard/compile.dart';
 import '../profile/profile.dart';
 import '../render/renderer.dart';
+import '../package_root.dart';
 import '../version.dart';
+import 'guard_install.dart';
 import 'project_files.dart';
 
 /// Sync refused to run; [message] names the files or settings involved.
@@ -34,14 +36,20 @@ class SyncResult {
 /// Renders `.ai/project.yaml` into the agent files of one project.
 /// Generated files are tracked in `.ai/lock.json`; a file edited by hand stops the run unless forced.
 class Sync {
-  const Sync({required this.catalog, required this.projectDir, this.compileGuard = true, this.packageRoot});
+  const Sync({required this.catalog, required this.projectDir, this.compileGuard = true, this.packageRoot, this.guardHome});
 
   final Catalog catalog;
   final String projectDir;
   final bool compileGuard;
 
-  /// dashcrew package root, needed only to compile the guard.
+  /// dashcrew package root; defaults to the running dashcrew's.
   final String? packageRoot;
+
+  /// Where the shared guard is installed; defaults to `DASHCREW_HOME`, else `~/.dashcrew`.
+  final String? guardHome;
+
+  /// The committed hook entry; it runs the guard installed for this project's guard source.
+  static const guardShimPath = '.ai/bin/guard';
 
   static const generatedMarker = '<!-- dashcrew:generated - edit .ai/project.yaml or the project block, then run dashcrew sync -->';
   static const projectBegin = '<!-- dashcrew:project:begin -->';
@@ -60,6 +68,7 @@ class Sync {
     final lockedFiles = (lock['files'] as Map?)?.cast<String, String>() ?? {};
 
     final conflicts = <String>[];
+    _removeCompiledGuard();
     for (final path in {...files.keys, ...lockedFiles.keys}) {
       final file = _file(path);
       if (!file.existsSync()) continue;
@@ -96,10 +105,17 @@ class Sync {
       written.addAll(merged.written);
       nowOwnedMcp[adapter.agent] = merged.ownedMcp.toList()..sort();
     }
-    if (_ensureGitignore()) written.add('.gitignore');
+    Process.runSync('chmod', ['+x', _file(guardShimPath).path]);
+    if (_dropGuardIgnore()) written.add('.gitignore');
 
-    var guardHash = lock['guard_source'] as String?;
-    if (compileGuard) guardHash = _compileGuard(guardHash);
+    final guardHash = guardSourceHash(_root);
+    if (compileGuard) {
+      try {
+        GuardInstaller(packageRoot: _root, home: guardHome).install();
+      } on GuardInstallException catch (error) {
+        throw SyncException(error.message);
+      }
+    }
 
     final newLock = {
       'schema': 1,
@@ -107,7 +123,7 @@ class Sync {
       'files': {for (final path in files.keys.toList()..sort()) path: fileHash(path, files[path]!)},
       'packs': packs,
       'mcp_servers': {for (final agent in nowOwnedMcp.keys.toList()..sort()) agent: nowOwnedMcp[agent]},
-      'guard_source': ?guardHash,
+      'guard_source': guardHash,
     };
     _writeIfChanged(lockPath, '${const JsonEncoder.withIndent('  ').convert(newLock)}\n');
 
@@ -154,6 +170,7 @@ class Sync {
     final files = <String, String>{
       'AGENTS.md': _agentsMd(targets, adopt: adopt),
       '.ai/guard.json': '${const JsonEncoder.withIndent('  ').convert(compileGuardPolicy(profile, catalog).toJson())}\n',
+      guardShimPath: GuardInstaller.shim(guardSourceHash(_root)),
     };
     for (final adapter in adapters) {
       adapter.files(profile, targets, context, lockedFiles: lockedFiles, warnings: warnings).forEach((path, content) {
@@ -221,13 +238,27 @@ class Sync {
     return '$generatedMarker\n\n${rules.trimRight()}\n\n$projectBegin$projectBlock$projectEnd\n';
   }
 
-  bool _ensureGitignore() {
-    final file = _file('.gitignore');
-    final current = file.existsSync() ? file.readAsStringSync() : '';
-    if (current.split('\n').any((line) => line.trim() == '.ai/bin/')) return false;
-    final prefix = current.isEmpty || current.endsWith('\n') ? current : '$current\n';
-    return _writeIfChanged('.gitignore', '$prefix# dashcrew: compiled guard, per machine\n.ai/bin/\n');
+  String get _root => packageRoot ?? dashcrewPackageRoot();
+
+  /// A compiled guard from before the shim is binary, unreadable as text and never in the lock; it is dashcrew's own.
+  void _removeCompiledGuard() {
+    final file = _file(guardShimPath);
+    if (!file.existsSync()) return;
+    final head = file.openSync()..setPositionSync(0);
+    final bytes = head.readSync(2);
+    head.closeSync();
+    if (bytes.length < 2 || bytes[0] != 0x23 || bytes[1] != 0x21) file.deleteSync();
   }
+
+  /// Removes the `.ai/bin/` lines dashcrew once added: the shim there is meant to be committed.
+  bool _dropGuardIgnore() {
+    final file = _file('.gitignore');
+    if (!file.existsSync()) return false;
+    final current = file.readAsStringSync();
+    final next = current.replaceAll('# dashcrew: compiled guard, per machine\n.ai/bin/\n', '');
+    return next != current && _writeIfChanged('.gitignore', next);
+  }
+
 
   /// Hash of the guard sources in the dashcrew package; the lock keeps the one the binary was built from.
   static String guardSourceHash(String packageRoot) {
@@ -238,19 +269,5 @@ class Sync {
     return sha256.convert(utf8.encode(sources.map((s) => File(s).readAsStringSync()).join('\u0000'))).toString();
   }
 
-  /// Recompiles `.ai/bin/guard` when the guard sources changed or the binary is missing.
-  String _compileGuard(String? previousHash) {
-    final root = packageRoot;
-    if (root == null) throw SyncException('Cannot compile the guard: dashcrew package root unknown.');
-    final hash = guardSourceHash(root);
-    final binary = _file('.ai/bin/guard');
-    if (hash == previousHash && binary.existsSync()) return hash;
 
-    binary.parent.createSync(recursive: true);
-    final result = Process.runSync(
-        Platform.resolvedExecutable, ['compile', 'exe', p.join(root, 'bin', 'guard.dart'), '-o', binary.path],
-        workingDirectory: root);
-    if (result.exitCode != 0) throw SyncException('Guard compile failed:\n${result.stderr}');
-    return hash;
-  }
 }

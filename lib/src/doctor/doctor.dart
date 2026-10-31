@@ -11,6 +11,7 @@ import '../catalog/catalog.dart';
 import '../guard/guard.dart';
 import '../profile/profile.dart';
 import '../render/renderer.dart';
+import '../sync/guard_install.dart';
 import '../sync/sync.dart';
 import '../version.dart';
 
@@ -28,7 +29,14 @@ class DoctorCheck {
 /// Read-only health check of the toolkit `sync` wrote into one project.
 /// Never writes; `dashcrew sync` is the repair path for everything it reports.
 class Doctor {
-  const Doctor({required this.catalog, required this.projectDir, this.packageRoot, this.userSkillsDir, this.codexHome});
+  const Doctor({
+    required this.catalog,
+    required this.projectDir,
+    this.packageRoot,
+    this.userSkillsDir,
+    this.codexHome,
+    this.guardHome,
+  });
 
   final Catalog catalog;
   final String projectDir;
@@ -38,6 +46,9 @@ class Doctor {
 
   /// Where user-level skills live; defaults to `$CLAUDE_CONFIG_DIR/skills`, else `~/.claude/skills`.
   final String? userSkillsDir;
+
+  /// Where the shared guard is installed; defaults to `DASHCREW_HOME`, else `~/.dashcrew`.
+  final String? guardHome;
 
   /// Codex user config folder; defaults to `$CODEX_HOME`, else `~/.codex`.
   final String? codexHome;
@@ -62,6 +73,7 @@ class Doctor {
       packageRoot: packageRoot,
       userSkillsDir: userSkillsDir,
       codexHome: codexHome,
+      guardHome: guardHome,
     );
     return doctor._checks(doctor._projectPacks());
   }
@@ -363,18 +375,32 @@ class Doctor {
     }
   }
 
-  /// Runs the binary on a `git push` event, which every policy blocks; the guard fails open, so exit 0 means broken.
+  /// Runs the committed shim on a `git push` event, which every policy blocks; the guard fails open,
+  /// so anything but exit 2 means no guard rule applies on this machine.
   Future<DoctorCheck> _guardBinary(Map<String, Object?>? lock) async {
     const id = 'guard-binary';
-    final binary = _file('.ai/bin/guard');
-    if (!binary.existsSync()) {
-      return const DoctorCheck(id, CheckStatus.fail,
-          '.ai/bin/guard missing: no guard rule applies on this machine until dashcrew sync compiles it (it is per machine, never committed)');
+    final shim = _file(Sync.guardShimPath);
+    if (!shim.existsSync()) return const DoctorCheck(id, CheckStatus.fail, '.ai/bin/guard missing; run dashcrew sync');
+
+    final expected = lock?['guard_source'] as String?;
+    final home = guardHome ?? GuardInstaller.defaultHome(Platform.environment);
+    if (expected != null && home != null) {
+      final installed = GuardInstaller(packageRoot: packageRoot ?? '', home: home).binaryPath(expected);
+      if (!File(installed).existsSync()) {
+        return const DoctorCheck(id, CheckStatus.fail,
+            'the guard for this project is not installed on this machine, so no guard rule applies here yet: '
+            'run dashcrew sync (an agent tool call also installs it when dashcrew is on PATH)');
+      }
     }
 
     final int exitCode;
     try {
-      final process = await Process.start(binary.path, [_file('.ai/guard.json').path], workingDirectory: projectDir);
+      final process = await Process.start(
+        shim.path,
+        [_file('.ai/guard.json').path],
+        workingDirectory: projectDir,
+        environment: {'DASHCREW_HOME': ?home},
+      );
       process.stdout.drain<void>();
       process.stderr.drain<void>();
       process.stdin.write(jsonEncode({
@@ -383,7 +409,7 @@ class Doctor {
         'cwd': projectDir,
       }));
       await process.stdin.close();
-      exitCode = await process.exitCode.timeout(const Duration(seconds: 10), onTimeout: () {
+      exitCode = await process.exitCode.timeout(const Duration(seconds: 30), onTimeout: () {
         process.kill();
         return -1;
       });
@@ -391,15 +417,17 @@ class Doctor {
       return DoctorCheck(id, CheckStatus.fail, '.ai/bin/guard cannot run: ${error.message}; run dashcrew sync');
     }
     if (exitCode != 2) {
-      return DoctorCheck(id, CheckStatus.fail, '.ai/bin/guard did not block git push (exit $exitCode); check .ai/guard.json');
+      return DoctorCheck(id, CheckStatus.fail, '.ai/bin/guard did not block git push (exit $exitCode); run dashcrew sync');
     }
 
     final root = packageRoot;
-    if (root != null && lock?['guard_source'] != Sync.guardSourceHash(root)) {
-      return const DoctorCheck(id, CheckStatus.warn, 'built from older guard sources; run dashcrew sync');
+    if (root != null && expected != Sync.guardSourceHash(root)) {
+      return const DoctorCheck(id, CheckStatus.warn,
+          'this dashcrew builds a different guard than the project expects; install the dashcrew ref the team uses');
     }
     return const DoctorCheck(id, CheckStatus.ok, '.ai/bin/guard blocks git push');
   }
+
 
   DoctorCheck _hook() {
     const id = 'hook';
@@ -505,9 +533,11 @@ class Doctor {
   DoctorCheck _gitignore() {
     const id = 'gitignore';
     final file = _file('.gitignore');
-    final listed = file.existsSync() && file.readAsLinesSync().any((line) => line.trim() == '.ai/bin/');
-    if (listed) return const DoctorCheck(id, CheckStatus.ok, '.ai/bin/ ignored');
-    return const DoctorCheck(id, CheckStatus.warn, '.ai/bin/ not in .gitignore; the compiled guard is per machine');
+    final ignored = file.existsSync() && file.readAsLinesSync().any((line) => line.trim() == '.ai/bin/');
+    if (ignored) {
+      return const DoctorCheck(id, CheckStatus.warn, '.ai/bin/ is in .gitignore; remove it so the guard shim is committed');
+    }
+    return const DoctorCheck(id, CheckStatus.ok, '.ai/bin/guard is not ignored');
   }
 
   /// `$CODEX_HOME`, else `~/.codex`; null when no home directory is known.

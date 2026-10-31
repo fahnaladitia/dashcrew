@@ -27,6 +27,7 @@
     ".agents/skills/verify/SKILL.md": "338f4c1606ad8f1c4a4d9d37e28d4d2f2a84db964a2d578d63f7e50441992b8e",
     ".agents/skills/work-modes/SKILL.md": "c1f52dae2b4e5bbba53166af339034003ebf1607b57cb3500455635b57cc8df2",
     ".agents/skills/worktree/SKILL.md": "5d46542dcbf7830261b62d4375180b1eda026f335fe0c9057b2fb29e2eebcc2c",
+    ".ai/bin/guard": "01ec7653d8e8d56d4090f2c8a6edebca519f48ce7071b51f81f9af4c4210c95c",
     ".ai/guard.json": "7b215aeb82b80df8ebe7c37fe9dbf2e44b793d36c4120ecd83d1e01116322b8b",
     ".claude/agents/dart-tdd-guide.md": "403a3aa2f8cf05d20abaac82884b82ba3494ec9c2248938f14ba84841a31e1dc",
     ".claude/agents/flutter-architect.md": "471f6f30f97b68b14938a570a890f6e9bc35e2f14c29ecfe5c8598dae08de619",
@@ -98,5 +99,6 @@
     "codex": [
       "dart-mcp-server"
     ]
-  }
+  },
+  "guard_source": "8e0822e571526e549abeae5da087a949ee6084859e978a24d7c112dcccce4f0a"
 }

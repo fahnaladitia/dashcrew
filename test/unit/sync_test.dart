@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dashcrew/dashcrew.dart';
+import 'package:dashcrew/src/package_root.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
@@ -61,7 +62,7 @@ project: { local_packages: [core] }
     final mcp = jsonDecode(read('.mcp.json')) as Map<String, Object?>;
     expect((mcp['mcpServers'] as Map).keys, contains('dart-mcp-server'));
 
-    expect(read('.gitignore'), contains('.ai/bin/'));
+    expect(exists('.ai/bin/guard'), isTrue);
     expect(exists('.ai/lock.json'), isTrue);
   });
 
@@ -305,6 +306,48 @@ project: { local_packages: [core] }
       sync();
       expect(lock()['dashcrew_version'], dashcrewVersion);
     });
+  });
+
+  group('guard shim', () {
+    test('sync writes an executable shim for this dashcrew and locks it', () {
+      sync();
+
+      final hash = Sync.guardSourceHash(dashcrewPackageRoot());
+      expect(read('.ai/bin/guard'), GuardInstaller.shim(hash));
+      expect(File('${project.path}/.ai/bin/guard').statSync().mode & 0x49, 0x49);
+      final lock = jsonDecode(read('.ai/lock.json')) as Map<String, Object?>;
+      expect((lock['files'] as Map).keys, contains('.ai/bin/guard'));
+      expect(lock['guard_source'], hash);
+      expect(exists('.gitignore'), isFalse);
+    });
+
+    test('the .ai/bin/ ignore line dashcrew added is removed, other lines stay', () {
+      write('.gitignore', 'build/\n# dashcrew: compiled guard, per machine\n.ai/bin/\n.env\n');
+
+      sync();
+
+      expect(read('.gitignore'), 'build/\n.env\n');
+    });
+
+    test('a compiled guard left by an older dashcrew is replaced without --force', () {
+      File('${project.path}/.ai/bin/guard')
+        ..parent.createSync(recursive: true)
+        ..writeAsBytesSync([0x7f, 0x45, 0x4c, 0x46, 0x00, 0xff, 0xfe]);
+
+      sync();
+
+      expect(read('.ai/bin/guard'), startsWith('#!/bin/sh'));
+    });
+
+    test('compileGuard installs the guard into the guard home', () {
+      final home = Directory.systemTemp.createTempSync('dashcrew_sync_home_');
+      addTearDown(() => home.deleteSync(recursive: true));
+
+      Sync(catalog: catalog, projectDir: project.path, packageRoot: '.', guardHome: home.path).run();
+
+      final installed = GuardInstaller(packageRoot: '.', home: home.path).binaryPath();
+      expect(File(installed).existsSync(), isTrue);
+    }, timeout: const Timeout(Duration(minutes: 3)));
   });
 
   group('project packs', () {

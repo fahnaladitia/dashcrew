@@ -8,6 +8,7 @@ import 'package:test/test.dart';
 void main() {
   late Directory project;
   late Directory userSkills;
+  late Directory guardHome;
   final catalog = Catalog.load('.');
 
   String read(String relative) => File(p.join(project.path, relative)).readAsStringSync();
@@ -20,7 +21,7 @@ void main() {
   void delete(String relative) => File(p.join(project.path, relative)).deleteSync();
 
   void sync({bool compileGuard = false}) =>
-      Sync(catalog: catalog, projectDir: project.path, compileGuard: compileGuard, packageRoot: '.').run();
+      Sync(catalog: catalog, projectDir: project.path, compileGuard: compileGuard, packageRoot: '.', guardHome: guardHome.path).run();
 
   Future<Map<String, DoctorCheck>> doctor() async {
     final checks = await Doctor(
@@ -28,6 +29,7 @@ void main() {
       projectDir: project.path,
       packageRoot: '.',
       userSkillsDir: userSkills.path,
+      guardHome: guardHome.path,
     ).run();
     return {for (final check in checks) check.id: check};
   }
@@ -35,6 +37,7 @@ void main() {
   setUp(() {
     project = Directory.systemTemp.createTempSync('dashcrew_doctor_');
     userSkills = Directory.systemTemp.createTempSync('dashcrew_doctor_skills_');
+    guardHome = Directory.systemTemp.createTempSync('dashcrew_doctor_guard_');
     write('.ai/project.yaml', '''
 toolkit: 1
 agents: [claude-code]
@@ -46,6 +49,7 @@ stack:
   tearDown(() {
     project.deleteSync(recursive: true);
     userSkills.deleteSync(recursive: true);
+    guardHome.deleteSync(recursive: true);
   });
 
   test('fresh sync with a compiled guard passes every check', () async {
@@ -69,8 +73,8 @@ stack:
     final checks = await doctor();
 
     expect(checks['guard-binary']!.status, CheckStatus.fail);
-    expect(checks['guard-binary']!.detail, contains('missing'));
-    expect(checks['guard-binary']!.detail, contains('no guard rule applies on this machine'));
+    expect(checks['guard-binary']!.detail, contains('not installed on this machine'));
+    expect(checks['guard-binary']!.detail, contains('no guard rule applies here'));
   });
 
   test('generated file edited by hand fails drift', () async {
@@ -171,9 +175,9 @@ stack:
     expect(checks['skills']!.detail, isNot(contains('user-installed')));
   });
 
-  test('missing .ai/bin/ in .gitignore warns', () async {
+  test('.ai/bin/ still in .gitignore warns', () async {
     sync();
-    write('.gitignore', 'build/\n');
+    write('.gitignore', 'build/\n.ai/bin/\n');
 
     final checks = await doctor();
 

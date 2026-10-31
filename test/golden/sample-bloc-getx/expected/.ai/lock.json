@@ -2,6 +2,7 @@
   "schema": 1,
   "dashcrew_version": "0.0.1",
   "files": {
+    ".ai/bin/guard": "01ec7653d8e8d56d4090f2c8a6edebca519f48ce7071b51f81f9af4c4210c95c",
     ".ai/guard.json": "c9abd9ddf8e9e07feb1260b4a9ec0f3e0aa6e0687b5163325ef127671cce72b0",
     ".claude/agents/dart-tdd-guide.md": "e7e99a2d6f44a49b5d9d0208def5334e1f458e9bef28e4519c33c5be3a89f96c",
     ".claude/agents/flutter-architect.md": "da24c77b26a1d1a45954fdf8e8ce782092fb84547893493b5c321ba537fd22f3",
@@ -57,5 +58,6 @@
     "claude-code": [
       "dart-mcp-server"
     ]
-  }
+  },
+  "guard_source": "8e0822e571526e549abeae5da087a949ee6084859e978a24d7c112dcccce4f0a"
 }
