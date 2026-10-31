@@ -29,6 +29,13 @@ class CodexAdapter extends Adapter {
     ],
   };
 
+  /// MCP servers dashcrew keeps in its `.codex/config.toml` block.
+  static const mcpServers = <String, ({String command, List<String> args})>{
+    'dart-mcp-server': (command: 'dart', args: ['mcp-server']),
+  };
+  static const _blockBegin = '# dashcrew:begin';
+  static const _blockEnd = '# dashcrew:end';
+
   /// Characters Codex gives the initial skill list when it does not know the context window.
   static const skillListBudget = 8000;
 
@@ -49,7 +56,60 @@ class CodexAdapter extends Adapter {
   ({List<String> written, Set<String> ownedMcp}) merge(Set<String> ownedMcp, List<String> warnings) {
     final written = <String>[];
     if (_mergeHooks()) written.add('.codex/hooks.json');
-    return (written: written, ownedMcp: ownedMcp);
+    final mcp = _mergeMcp(warnings);
+    if (mcp.changed) written.add('.codex/config.toml');
+    return (written: written, ownedMcp: mcp.owned);
+  }
+
+  /// Rewrites only the text between `# dashcrew:begin` and `# dashcrew:end`, kept at the end of the file:
+  /// the block holds tables only, and TOML needs top-level keys before the first table.
+  ({bool changed, Set<String> owned}) _mergeMcp(List<String> warnings) {
+    final project = ProjectFiles(projectDir);
+    final file = project.file('.codex/config.toml');
+    final current = file.existsSync() ? file.readAsStringSync() : '';
+
+    var before = current;
+    var after = '';
+    final begin = RegExp('^${RegExp.escape(_blockBegin)}', multiLine: true).firstMatch(current);
+    final end = begin == null ? null : RegExp('^${RegExp.escape(_blockEnd)}.*\n?', multiLine: true).firstMatch(current.substring(begin.start));
+    if (begin != null && end != null) {
+      before = current.substring(0, begin.start);
+      after = current.substring(begin.start + end.end);
+    }
+
+    final owned = <String>{};
+    final tables = StringBuffer();
+    mcpServers.forEach((name, server) {
+      if (_definesServer('$before\n$after', name)) {
+        warnings.add('.codex/config.toml already defines "$name"; left as is.');
+        return;
+      }
+      owned.add(name);
+      tables
+        ..writeln('[mcp_servers.$name]')
+        ..writeln('command = ${jsonEncode(server.command)}')
+        ..writeln('args = ${jsonEncode(server.args)}');
+    });
+    final block = owned.isEmpty ? '' : '$_blockBegin - written by dashcrew sync; edit outside this block\n$tables$_blockEnd\n';
+
+    final String next;
+    if (begin != null && end != null) {
+      next = '$before$block$after';
+    } else if (block.isEmpty) {
+      next = current;
+    } else {
+      final separator = current.isEmpty ? '' : (current.endsWith('\n') ? '\n' : '\n\n');
+      next = '$current$separator$block';
+    }
+    if (next == current) return (changed: false, owned: owned);
+    return (changed: project.writeIfChanged('.codex/config.toml', next), owned: owned);
+  }
+
+  static bool _definesServer(String toml, String name) {
+    final key = '"?${RegExp.escape(name)}"?';
+    return RegExp('^\\s*\\[\\s*mcp_servers\\s*\\.\\s*$key\\s*\\]', multiLine: true).hasMatch(toml) ||
+        RegExp('^\\s*mcp_servers\\s*\\.\\s*$key\\s*[.=]', multiLine: true).hasMatch(toml) ||
+        RegExp('^\\s*$key\\s*=\\s*\\{', multiLine: true).hasMatch(toml);
   }
 
   bool _mergeHooks() {
