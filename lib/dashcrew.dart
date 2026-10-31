@@ -7,6 +7,7 @@ export 'src/adapters/claude_code.dart';
 export 'src/adapters/codex.dart';
 export 'src/catalog/catalog.dart';
 export 'src/doctor/doctor.dart';
+export 'src/gate/gate.dart';
 export 'src/guard/compile.dart';
 export 'src/guard/guard.dart';
 export 'src/guard/shell.dart';

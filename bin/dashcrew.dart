@@ -14,7 +14,8 @@ Future<void> main(List<String> arguments) async {
     ..addCommand(SyncCommand())
     ..addCommand(DoctorCommand())
     ..addCommand(WorktreeCommand())
-    ..addCommand(GuardCommand());
+    ..addCommand(GuardCommand())
+    ..addCommand(GateCommand());
   try {
     exitCode = await runner.run(arguments) ?? 0;
   } on UsageException catch (error) {
@@ -30,6 +31,9 @@ Future<void> main(List<String> arguments) async {
     stderr.writeln(error.message);
     exitCode = 1;
   } on GuardInstallException catch (error) {
+    stderr.writeln(error.message);
+    exitCode = 1;
+  } on GateException catch (error) {
     stderr.writeln(error.message);
     exitCode = 1;
   }
@@ -302,6 +306,76 @@ class _GuardInstall extends Command<int> {
     final result = GuardInstaller(packageRoot: dashcrewPackageRoot())
         .install(expect: argResults!['expect'] as String?, force: argResults!['force'] as bool);
     stdout.writeln(result.path);
+    return 0;
+  }
+}
+
+class GateCommand extends Command<int> {
+  GateCommand() {
+    addSubcommand(_GateSubmit());
+    addSubcommand(_GateStatus());
+  }
+
+  @override
+  String get name => 'gate';
+
+  @override
+  String get description => 'Human approval on the branch\'s GitHub issue. Approving happens on GitHub only.';
+}
+
+class _GateSubmit extends Command<int> {
+  _GateSubmit() {
+    argParser
+      ..addOption('project', abbr: 'p', help: 'Any folder inside the repository.', defaultsTo: '.')
+      ..addOption('file', help: 'The plan to post (required).')
+      ..addOption('issue', help: 'Issue number to use; defaults to the branch\'s linked issue, else a new one.');
+  }
+
+  @override
+  String get name => 'submit';
+
+  @override
+  String get invocation => 'dashcrew gate submit plan --file <plan.md> [--issue <n>]';
+
+  @override
+  String get description => 'Post the plan to the branch\'s GitHub issue, then stop and wait for /approve plan.';
+
+  @override
+  int run() {
+    final rest = argResults!.rest;
+    if (rest.length != 1 || rest.single != 'plan') usageException('The only gate is "plan": dashcrew gate submit plan --file <plan.md>.');
+    final file = argResults!['file'] as String?;
+    if (file == null) usageException('--file <plan.md> is required.');
+    final issueText = argResults!['issue'] as String?;
+    final issue = issueText == null ? null : int.tryParse(issueText);
+    if (issueText != null && issue == null) usageException('--issue must be a number.');
+    final result = Gates(projectDir: argResults!['project'] as String).submitPlan(file, issue: issue);
+    stdout
+      ..writeln('posted the plan to #${result.issue}: ${result.url}')
+      ..writeln('waiting for a comment whose first line is "/approve plan"; run dashcrew gate status after it');
+    return 0;
+  }
+}
+
+class _GateStatus extends Command<int> {
+  _GateStatus() {
+    argParser.addOption('project', abbr: 'p', help: 'Any folder inside the repository.', defaultsTo: '.');
+  }
+
+  @override
+  String get name => 'status';
+
+  @override
+  String get description => 'Read the branch\'s plan issue and record whether the latest plan is approved.';
+
+  @override
+  int run() {
+    final state = Gates(projectDir: argResults!['project'] as String).status();
+    stdout.writeln(switch (state.plan) {
+      'approved' => 'plan: approved (#${state.issue})',
+      'pending' => 'plan: pending (#${state.issue}); waiting for "/approve plan" after the latest plan',
+      _ => 'plan: no issue linked to this branch; dashcrew gate submit plan --file <plan.md> starts one',
+    });
     return 0;
   }
 }

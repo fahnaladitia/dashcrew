@@ -66,4 +66,18 @@ void main() {
 
     expect((await dashcrew(['remove', 'feat-a'])).exitCode, 0);
   });
+
+  test('dashcrew gate status without a linked issue, and submit without --file', () async {
+    final repo = Directory.systemTemp.createTempSync('dashcrew_cli_gate_');
+    addTearDown(() => repo.deleteSync(recursive: true));
+    Process.runSync('git', ['init', '-q', '-b', 'feat/x'], workingDirectory: repo.path);
+
+    final status = await Process.run(Platform.resolvedExecutable, ['run', 'bin/dashcrew.dart', 'gate', 'status', '--project', repo.path]);
+    expect(status.exitCode, 0, reason: '${status.stderr}');
+    expect(status.stdout, contains('plan: no issue linked'));
+
+    final submit = await Process.run(Platform.resolvedExecutable, ['run', 'bin/dashcrew.dart', 'gate', 'submit', 'plan', '--project', repo.path]);
+    expect(submit.exitCode, 64);
+    expect(submit.stderr, contains('file'));
+  });
 }
