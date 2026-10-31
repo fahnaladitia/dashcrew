@@ -32,7 +32,7 @@ void main() {
     git(root, ['init', '-q', '--bare', '-b', 'main', 'origin.git']);
     git(root, ['clone', '-q', p.join(root, 'origin.git'), 'app']);
     app = p.join(root, 'app');
-    write(p.join(app, '.gitignore'), 'AGENTS.md\nCLAUDE.md\n.claude/\n.ai/bin/\ndocs/plans/\n');
+    write(p.join(app, '.gitignore'), 'AGENTS.md\nCLAUDE.md\n.claude/\n.codex/\n.agents/\n.ai/bin/\ndocs/plans/\n');
     write(p.join(app, '.ai', 'project.yaml'), 'toolkit: 1\nagents: [claude-code]\npaths: { plans: docs/plans }\n');
     write(p.join(app, 'docs', 'readme.md'), 'docs\n');
     write(p.join(app, 'lib', 'a.dart'), 'void a() {}\n');
@@ -43,6 +43,8 @@ void main() {
     write(p.join(app, 'AGENTS.md'), 'rules\n');
     write(p.join(app, 'CLAUDE.md'), '@AGENTS.md\n');
     write(p.join(app, '.claude', 'settings.json'), '{}\n');
+    write(p.join(app, '.codex', 'hooks.json'), '{}\n');
+    write(p.join(app, '.agents', 'skills', 'plan', 'SKILL.md'), 'plan\n');
     write(p.join(app, '.ai', 'bin', 'guard'), 'binary\n');
     write(p.join(app, 'docs', 'plans', 'x', 'plan.md'), 'plan\n');
     output.clear();
@@ -60,7 +62,7 @@ void main() {
       expect(git(path, ['branch', '--show-current']), 'feat/orders');
       expect(Process.runSync('git', ['rev-parse', '--abbrev-ref', '@{u}'], workingDirectory: path).exitCode, isNot(0));
       expect(git(app, ['config', '--get', 'branch.feat/orders.dashcrew-base']), 'develop');
-      for (final linked in ['AGENTS.md', 'CLAUDE.md', '.claude', '.ai/bin', 'docs/plans']) {
+      for (final linked in ['AGENTS.md', 'CLAUDE.md', '.claude', '.codex', '.agents', '.ai/bin', 'docs/plans']) {
         expect(FileSystemEntity.isLinkSync(p.join(path, linked)), isTrue, reason: linked);
         expect(Link(p.join(path, linked)).targetSync(), p.join(app, linked));
       }

@@ -240,4 +240,73 @@ stack:
       expect(checks['drift']!.status, CheckStatus.ok);
     });
   });
+
+  group('codex', () {
+    late Directory codexHome;
+
+    Future<Map<String, DoctorCheck>> codexDoctor() async {
+      final checks = await Doctor(
+        catalog: catalog,
+        projectDir: project.path,
+        packageRoot: '.',
+        userSkillsDir: userSkills.path,
+        codexHome: codexHome.path,
+      ).run();
+      return {for (final check in checks) check.id: check};
+    }
+
+    void mergeCodex() => CodexAdapter(catalog, projectDir: project.path).merge(const {}, <String>[]);
+
+    setUp(() {
+      codexHome = Directory.systemTemp.createTempSync('dashcrew_doctor_codex_');
+      write('.ai/project.yaml', 'toolkit: 1\nagents: [codex]\n');
+    });
+    tearDown(() => codexHome.deleteSync(recursive: true));
+
+    test('only the checks of the selected agents run', () async {
+      final codexOnly = await codexDoctor();
+      expect(codexOnly.keys, containsAll(['codex-hook', 'codex-mcp', 'codex-skills-budget', 'codex-trust']));
+      expect(codexOnly.keys, isNot(contains('claude-md')));
+
+      write('.ai/project.yaml', 'toolkit: 1\nagents: [claude-code]\n');
+      final claudeOnly = await codexDoctor();
+      expect(claudeOnly.keys, contains('claude-md'));
+      expect(claudeOnly.keys, isNot(contains('codex-hook')));
+    });
+
+    test('hook and mcp fail or warn until merged, then pass', () async {
+      final before = await codexDoctor();
+      expect(before['codex-hook']!.status, CheckStatus.fail);
+      expect(before['codex-mcp']!.status, CheckStatus.warn);
+
+      mergeCodex();
+      final after = await codexDoctor();
+      expect(after['codex-hook']!.status, CheckStatus.ok);
+      expect(after['codex-mcp']!.status, CheckStatus.ok);
+    });
+
+    test('an mcp server the user defines is fine', () async {
+      write('.codex/config.toml', '[mcp_servers.dart-mcp-server]\ncommand = "fvm"\n');
+
+      final check = (await codexDoctor())['codex-mcp']!;
+
+      expect(check.status, CheckStatus.ok);
+      expect(check.detail, contains('user'));
+    });
+
+    test('a skill list over the budget warns', () async {
+      write('.agents/skills/small/SKILL.md', '---\nname: small\ndescription: "short"\n---\n');
+      expect((await codexDoctor())['codex-skills-budget']!.status, CheckStatus.ok);
+
+      write('.agents/skills/huge/SKILL.md', '---\nname: huge\ndescription: "${'x' * 8000}"\n---\n');
+      expect((await codexDoctor())['codex-skills-budget']!.status, CheckStatus.warn);
+    });
+
+    test('trust is read from the codex config of the user', () async {
+      expect((await codexDoctor())['codex-trust']!.status, CheckStatus.warn);
+
+      File('${codexHome.path}/config.toml').writeAsStringSync('model = "m"\n\n[projects."${project.path}"]\ntrust_level = "trusted"\n');
+      expect((await codexDoctor())['codex-trust']!.status, CheckStatus.ok);
+    });
+  });
 }

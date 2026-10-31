@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import '../adapters/claude_code.dart';
+import '../adapters/codex.dart';
 import '../catalog/catalog.dart';
 import '../guard/guard.dart';
 import '../profile/profile.dart';
@@ -25,7 +26,7 @@ class DoctorCheck {
 /// Read-only health check of the toolkit `sync` wrote into one project.
 /// Never writes; `dashcrew sync` is the repair path for everything it reports.
 class Doctor {
-  const Doctor({required this.catalog, required this.projectDir, this.packageRoot, this.userSkillsDir});
+  const Doctor({required this.catalog, required this.projectDir, this.packageRoot, this.userSkillsDir, this.codexHome});
 
   final Catalog catalog;
   final String projectDir;
@@ -35,6 +36,9 @@ class Doctor {
 
   /// Where user-level skills live; defaults to `$CLAUDE_CONFIG_DIR/skills`, else `~/.claude/skills`.
   final String? userSkillsDir;
+
+  /// Codex user config folder; defaults to `$CODEX_HOME`, else `~/.codex`.
+  final String? codexHome;
 
   static const agentsMdLimit = 32 * 1024;
   static final _skillReference = RegExp(r'`([a-z0-9][a-z0-9-]*)` skill|skill `([a-z0-9][a-z0-9-]*)`');
@@ -47,7 +51,13 @@ class Doctor {
     } on CatalogException catch (error) {
       return _checks(DoctorCheck('project-packs', CheckStatus.fail, error.toString()));
     }
-    final doctor = Doctor(catalog: overlaid, projectDir: projectDir, packageRoot: packageRoot, userSkillsDir: userSkillsDir);
+    final doctor = Doctor(
+      catalog: overlaid,
+      projectDir: projectDir,
+      packageRoot: packageRoot,
+      userSkillsDir: userSkillsDir,
+      codexHome: codexHome,
+    );
     return doctor._checks(doctor._projectPacks());
   }
 
@@ -55,6 +65,7 @@ class Doctor {
     final profile = _profileCheck();
     final (lockCheck, lock) = _lockCheck();
     final lockedFiles = (lock?['files'] as Map?)?.cast<String, String>();
+    final agents = _agents();
     return [
       profile,
       projectPacks,
@@ -63,16 +74,108 @@ class Doctor {
       _stale(lockedFiles, profileOk: profile.status == CheckStatus.ok),
       _guardPolicy(),
       await _guardBinary(lock),
-      _hook(),
-      _claudeMd(),
-      _mcp(),
-      _skills(lockedFiles),
+      if (agents.contains('claude-code')) ...[
+        _hook(),
+        _claudeMd(),
+        _mcp(),
+        _skills(lockedFiles),
+      ],
+      if (agents.contains('codex')) ...[
+        _codexHook(),
+        _codexMcp(),
+        _codexSkillsBudget(),
+        _codexTrust(),
+      ],
       _agentsMdSize(),
       _gitignore(),
     ];
   }
 
   File _file(String relative) => File(p.join(projectDir, relative));
+
+  /// Agents of the profile; Claude Code alone when the profile cannot be read, as before Codex support.
+  Set<String> _agents() {
+    try {
+      return Profile.parse(_file('.ai/project.yaml').readAsStringSync(), knownOptions: catalog.knownOptions()).agents.toSet();
+    } catch (_) {
+      return {'claude-code'};
+    }
+  }
+
+  DoctorCheck _codexHook() {
+    const id = 'codex-hook';
+    final file = _file('.codex/hooks.json');
+    if (!file.existsSync()) return const DoctorCheck(id, CheckStatus.fail, '.codex/hooks.json missing; run dashcrew sync');
+    final List<Object?> preToolUse;
+    try {
+      final config = jsonDecode(file.readAsStringSync()) as Map<String, Object?>;
+      preToolUse = ((config['hooks'] as Map?)?['PreToolUse'] as List?) ?? const [];
+    } catch (error) {
+      return DoctorCheck(id, CheckStatus.fail, '.codex/hooks.json invalid: $error');
+    }
+    if (preToolUse.any((entry) => jsonEncode(entry) == jsonEncode(CodexAdapter.guardHook))) {
+      return const DoctorCheck(id, CheckStatus.ok, 'PreToolUse guard hook present; Codex runs it once approved in /hooks');
+    }
+    final edited = preToolUse.any((entry) => jsonEncode(entry).contains('.ai/bin/guard'));
+    return DoctorCheck(id, CheckStatus.fail,
+        '${edited ? 'PreToolUse guard hook differs from what sync writes' : 'PreToolUse guard hook missing'}; run dashcrew sync');
+  }
+
+  DoctorCheck _codexMcp() {
+    const id = 'codex-mcp';
+    final file = _file('.codex/config.toml');
+    final toml = file.existsSync() ? file.readAsStringSync() : '';
+    final missing = [
+      for (final name in CodexAdapter.mcpServers.keys)
+        if (!CodexAdapter.definesMcpServer(toml, name)) name,
+    ];
+    if (missing.isNotEmpty) {
+      return DoctorCheck(id, CheckStatus.warn, '.codex/config.toml does not define ${missing.join(', ')}; run dashcrew sync');
+    }
+    final byUser = !toml.contains('# dashcrew:begin');
+    return DoctorCheck(id, CheckStatus.ok,
+        'defined: ${CodexAdapter.mcpServers.keys.join(', ')}${byUser ? ' (by the user, outside the dashcrew block)' : ''}');
+  }
+
+  DoctorCheck _codexSkillsBudget() {
+    const id = 'codex-skills-budget';
+    final dir = Directory(p.join(projectDir, '.agents', 'skills'));
+    final files = !dir.existsSync()
+        ? <File>[]
+        : [
+            for (final sub in dir.listSync().whereType<Directory>())
+              if (File(p.join(sub.path, 'SKILL.md')).existsSync()) File(p.join(sub.path, 'SKILL.md')),
+          ];
+    final size = CodexAdapter.skillListChars(files.map((f) => f.readAsStringSync()));
+    const budget = CodexAdapter.skillListBudget;
+    if (size > budget) {
+      return DoctorCheck(id, CheckStatus.warn, 'skill list is $size characters, over $budget; Codex may drop descriptions');
+    }
+    return DoctorCheck(id, CheckStatus.ok, '${files.length} skills, list $size of $budget characters');
+  }
+
+  static final _projectTable = RegExp(r'''^\s*\[projects\.(?:"([^"]+)"|'([^']+)')\]\s*$''', multiLine: true);
+  static final _trusted = RegExp(r'''^\s*trust_level\s*=\s*["']trusted["']''', multiLine: true);
+
+  /// Codex loads `.codex/` only for a trusted project; trust is set by Codex itself, never by dashcrew.
+  DoctorCheck _codexTrust() {
+    const id = 'codex-trust';
+    final home = codexHome ?? defaultCodexHome();
+    final config = home == null ? null : File(p.join(home, 'config.toml'));
+    final toml = config != null && config.existsSync() ? config.readAsStringSync() : '';
+    final trusted = <String>[];
+    for (final match in _projectTable.allMatches(toml)) {
+      final rest = toml.substring(match.end);
+      final next = RegExp(r'^\s*\[', multiLine: true).firstMatch(rest);
+      if (_trusted.hasMatch(next == null ? rest : rest.substring(0, next.start))) trusted.add(match.group(1) ?? match.group(2)!);
+    }
+    final here = {projectDir, if (Directory(projectDir).existsSync()) Directory(projectDir).resolveSymbolicLinksSync()};
+    if (trusted.any((path) => here.any((dir) => dir == path || p.isWithin(path, dir)))) {
+      return const DoctorCheck(id, CheckStatus.ok, 'project trusted in the Codex config');
+    }
+    return const DoctorCheck(id, CheckStatus.warn,
+        'project not trusted in the Codex config, so .codex/ is ignored; trust it when Codex asks, then approve the guard in /hooks');
+  }
 
   DoctorCheck _profileCheck() {
     const id = 'profile';
@@ -323,6 +426,15 @@ class Doctor {
     final listed = file.existsSync() && file.readAsLinesSync().any((line) => line.trim() == '.ai/bin/');
     if (listed) return const DoctorCheck(id, CheckStatus.ok, '.ai/bin/ ignored');
     return const DoctorCheck(id, CheckStatus.warn, '.ai/bin/ not in .gitignore; the compiled guard is per machine');
+  }
+
+  /// `$CODEX_HOME`, else `~/.codex`; null when no home directory is known.
+  static String? defaultCodexHome() {
+    final env = Platform.environment;
+    final codexHome = env['CODEX_HOME'];
+    if (codexHome != null && codexHome.isNotEmpty) return codexHome;
+    final home = env['HOME'] ?? env['USERPROFILE'];
+    return home == null ? null : p.join(home, '.codex');
   }
 
   /// `$CLAUDE_CONFIG_DIR/skills`, else `~/.claude/skills`; null when no home directory is known.

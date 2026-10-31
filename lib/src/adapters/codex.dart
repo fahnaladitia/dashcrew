@@ -80,7 +80,7 @@ class CodexAdapter extends Adapter {
     final owned = <String>{};
     final tables = StringBuffer();
     mcpServers.forEach((name, server) {
-      if (_definesServer('$before\n$after', name)) {
+      if (definesMcpServer('$before\n$after', name)) {
         warnings.add('.codex/config.toml already defines "$name"; left as is.');
         return;
       }
@@ -105,7 +105,8 @@ class CodexAdapter extends Adapter {
     return (changed: project.writeIfChanged('.codex/config.toml', next), owned: owned);
   }
 
-  static bool _definesServer(String toml, String name) {
+  /// True when [toml] defines MCP server [name] as a table, dotted key or inline table.
+  static bool definesMcpServer(String toml, String name) {
     final key = '"?${RegExp.escape(name)}"?';
     return RegExp('^\\s*\\[\\s*mcp_servers\\s*\\.\\s*$key\\s*\\]', multiLine: true).hasMatch(toml) ||
         RegExp('^\\s*mcp_servers\\s*\\.\\s*$key\\s*[.=]', multiLine: true).hasMatch(toml) ||

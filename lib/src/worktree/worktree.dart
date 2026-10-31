@@ -50,7 +50,7 @@ class Worktrees {
 
   String get worktreesDir => '$mainDir.worktrees';
 
-  static const _toolkitEntries = ['AGENTS.md', 'CLAUDE.md', '.claude', '.mcp.json', '.ai'];
+  static const _toolkitEntries = ['AGENTS.md', 'CLAUDE.md', '.claude', '.mcp.json', '.codex', '.agents', '.ai'];
 
   static String _commonGitDir(String projectDir) {
     final result = Process.runSync('git', ['rev-parse', '--path-format=absolute', '--git-common-dir'], workingDirectory: projectDir);
