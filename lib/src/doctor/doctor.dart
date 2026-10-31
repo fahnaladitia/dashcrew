@@ -36,6 +36,7 @@ class Doctor {
     this.userSkillsDir,
     this.codexHome,
     this.guardHome,
+    this.machineChecks = true,
   });
 
   final Catalog catalog;
@@ -46,6 +47,9 @@ class Doctor {
 
   /// Where user-level skills live; defaults to `$CLAUDE_CONFIG_DIR/skills`, else `~/.claude/skills`.
   final String? userSkillsDir;
+
+  /// False skips what depends on this machine or an agent (guard binary, hooks, MCP, skills, trust), as in CI.
+  final bool machineChecks;
 
   /// Where the shared guard is installed; defaults to `DASHCREW_HOME`, else `~/.dashcrew`.
   final String? guardHome;
@@ -74,6 +78,7 @@ class Doctor {
       userSkillsDir: userSkillsDir,
       codexHome: codexHome,
       guardHome: guardHome,
+      machineChecks: machineChecks,
     );
     return doctor._checks(doctor._projectPacks());
   }
@@ -91,20 +96,20 @@ class Doctor {
       _drift(lockedFiles),
       _stale(lockedFiles, profileOk: profile.status == CheckStatus.ok),
       _guardPolicy(),
-      await _guardBinary(lock),
-      if (agents.contains('claude-code')) ...[
+      if (machineChecks) await _guardBinary(lock),
+      if (machineChecks && agents.contains('claude-code')) ...[
         _hook(),
         _claudeMd(),
         _mcp(),
         _skills(lockedFiles),
       ],
-      if (agents.contains('codex')) ...[
+      if (machineChecks && agents.contains('codex')) ...[
         _codexHook(),
         _codexMcp(),
         _codexSkillsBudget(),
         _codexTrust(),
       ],
-      if (agents.contains('antigravity')) ...[
+      if (machineChecks && agents.contains('antigravity')) ...[
         _antigravityHook(),
         _antigravityMcp(),
         _antigravityRoles(),

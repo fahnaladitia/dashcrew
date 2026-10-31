@@ -80,4 +80,24 @@ void main() {
     expect(submit.exitCode, 64);
     expect(submit.stderr, contains('file'));
   });
+
+  test('dashcrew check fails a PR body that misses a section, and annotates it in GitHub Actions', () async {
+    final project = Directory.systemTemp.createTempSync('dashcrew_cli_check_');
+    addTearDown(() => project.deleteSync(recursive: true));
+    Directory('${project.path}/.ai').createSync();
+    File('${project.path}/.ai/project.yaml').writeAsStringSync('toolkit: 1\nagents: [claude-code]\n');
+    final sync = await Process.run(Platform.resolvedExecutable, ['run', 'bin/dashcrew.dart', 'sync', '--no-compile-guard', '--project', project.path]);
+    expect(sync.exitCode, 0, reason: '${sync.stderr}');
+    final body = File('${project.path}/body.md')..writeAsStringSync('## Summary\nx\n');
+
+    final result = await Process.run(
+      Platform.resolvedExecutable,
+      ['run', 'bin/dashcrew.dart', 'check', '--project', project.path, '--pr-body', body.path],
+      environment: {'GITHUB_ACTIONS': 'true'},
+    );
+
+    expect(result.exitCode, 1);
+    expect(result.stdout, contains('fail  pr-sections'));
+    expect(result.stdout, contains('::error title=dashcrew pr-sections::missing: ## Changes'));
+  });
 }

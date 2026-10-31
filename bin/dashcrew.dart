@@ -15,7 +15,8 @@ Future<void> main(List<String> arguments) async {
     ..addCommand(DoctorCommand())
     ..addCommand(WorktreeCommand())
     ..addCommand(GuardCommand())
-    ..addCommand(GateCommand());
+    ..addCommand(GateCommand())
+    ..addCommand(CheckCommand());
   try {
     exitCode = await runner.run(arguments) ?? 0;
   } on UsageException catch (error) {
@@ -377,5 +378,38 @@ class _GateStatus extends Command<int> {
       _ => 'plan: no issue linked to this branch; dashcrew gate submit plan --file <plan.md> starts one',
     });
     return 0;
+  }
+}
+
+class CheckCommand extends Command<int> {
+  CheckCommand() {
+    argParser
+      ..addOption('project', abbr: 'p', help: 'Project root holding .ai/project.yaml.', defaultsTo: '.')
+      ..addOption('pr-body', help: 'File holding the PR description; a pull_request workflow supplies it from the event.');
+  }
+
+  @override
+  String get name => 'check';
+
+  @override
+  String get description => 'Merge gate for a pull request: toolkit current, PR sections present, plan issue approved. Writes nothing.';
+
+  @override
+  Future<int> run() async {
+    final root = dashcrewPackageRoot();
+    final bodyFile = argResults!['pr-body'] as String?;
+    if (bodyFile != null && !File(bodyFile).existsSync()) usageException('--pr-body file $bodyFile not found.');
+    final checks = await PrCheck(
+      catalog: Catalog.load(root),
+      projectDir: Directory(argResults!['project'] as String).absolute.path,
+      packageRoot: root,
+    ).run(prBody: bodyFile == null ? null : File(bodyFile).readAsStringSync());
+
+    final annotate = Platform.environment['GITHUB_ACTIONS'] == 'true';
+    for (final check in checks) {
+      stdout.writeln('${check.status.name.padRight(6)}${check.id.padRight(16)}${check.detail}');
+      if (annotate && check.status == CheckStatus.fail) stdout.writeln('::error title=dashcrew ${check.id}::${check.detail}');
+    }
+    return checks.any((check) => check.status == CheckStatus.fail) ? 1 : 0;
   }
 }

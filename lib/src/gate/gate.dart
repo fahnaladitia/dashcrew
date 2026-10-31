@@ -70,21 +70,29 @@ class Gates {
       'api', 'repos/{owner}/{repo}/issues/$issue/comments', '--paginate',
       '--jq', '.[] | {body, author_association, created_at, login: .user.login}',
     ]);
-    final comments = [
-      for (final line in output.split('\n'))
-        if (line.trim().isNotEmpty) jsonDecode(line) as Map<String, Object?>,
-    ];
-    final lastPlan = comments.lastIndexWhere((c) => (c['body'] as String? ?? '').startsWith(planMarker));
-    String? approvedAt;
-    if (lastPlan >= 0) {
-      for (final c in comments.skip(lastPlan + 1)) {
-        final firstLine = (c['body'] as String? ?? '').split('\n').first.trim();
-        if (firstLine == _approval && _approvers.contains(c['author_association'])) approvedAt = c['created_at'] as String?;
-      }
-    }
+    final approvedAt = Gates.approvedAt(parseCommentLines(output));
     final state = (issue: issue, plan: approvedAt == null ? 'pending' : 'approved', at: approvedAt);
     _writeState(branch, state);
     return state;
+  }
+
+  /// One comment per line, as `gh api ... --jq` prints them.
+  static List<Map<String, Object?>> parseCommentLines(String output) => [
+        for (final line in output.split('\n'))
+          if (line.trim().isNotEmpty) jsonDecode(line) as Map<String, Object?>,
+      ];
+
+  /// When the latest plan in [comments] (oldest first) was approved: a comment whose first line is `/approve plan`,
+  /// after that plan, by an owner, member or collaborator. Null when it was not.
+  static String? approvedAt(List<Map<String, Object?>> comments) {
+    final lastPlan = comments.lastIndexWhere((c) => (c['body'] as String? ?? '').startsWith(planMarker));
+    if (lastPlan < 0) return null;
+    String? at;
+    for (final c in comments.skip(lastPlan + 1)) {
+      final firstLine = (c['body'] as String? ?? '').split('\n').first.trim();
+      if (firstLine == _approval && _approvers.contains(c['author_association'])) at = c['created_at'] as String?;
+    }
+    return at;
   }
 
   /// Last recorded state of [branch]; null when none was recorded.

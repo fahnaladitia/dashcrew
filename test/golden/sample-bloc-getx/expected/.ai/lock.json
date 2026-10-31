@@ -33,7 +33,7 @@
     ".claude/skills/orchestrate/SKILL.md": "b6204a4d8f9652956da5cbf8ab9df9ac6c54ce86c401589e9d2f22e8dd06e3c1",
     ".claude/skills/plan/SKILL.md": "fcdc64d493cb50246d74d178d10160bcca51fc934826d41696e4476e1d3182dc",
     ".claude/skills/pr-create/SKILL.md": "6e69caec5322eeeb446d4b1bfd0f818605cd780e8d08793026555d55cd177679",
-    ".claude/skills/pr-description/SKILL.md": "8bb9c42366905a16cdce32b760933814085d6cac6331f89b59ef656762d022e1",
+    ".claude/skills/pr-description/SKILL.md": "3e232e7ce82fb1950993236ef95512ce86f8643b468b66cf4e448cf719b8035b",
     ".claude/skills/prompt-polish/SKILL.md": "85ec5f1757f3229bdaae1e35cab9a43512b0707320c4e695f77a6c064ddcdd41",
     ".claude/skills/strategic-compact/SKILL.md": "2213879f8663dc723b2f3bab72a54a548ca3c919434d85ceb5c7fde837665474",
     ".claude/skills/tdd/SKILL.md": "867055c85e0e0745a9d2bc7f53760620a4aa775d6206793fe58c0c4fcb48e04c",
@@ -41,7 +41,7 @@
     ".claude/skills/verify/SKILL.md": "0cbecb6fc55a214014deba4eb403eaabf6ccd574ee6ffc60d7fb939aada5e868",
     ".claude/skills/work-modes/SKILL.md": "cb5d207f368eb77649ecb5efee882cfdd9a3f0a623c48642a402cf8d2922316d",
     ".claude/skills/worktree/SKILL.md": "b7c7d30d2131592b304a4e8d6704f372d9f40aa7ac2975d02002a7aca0ad3ee8",
-    ".github/pull_request_template.md": "63a2f286f7e6505077c7fa11e2544b3c3c94677ba1e45fe6bd1c1a01d71ff38a",
+    ".github/pull_request_template.md": "30e7b379fcfe1cabc74ab1e71b04b8259a1d7248b082c1bc96a0f7f1c4825af0",
     "AGENTS.md": "641278d131f6aeda9005df1b16393dab5d4b0475549966ae0bf5428f87453cfe",
     "CLAUDE.md": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49"
   },

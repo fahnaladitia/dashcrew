@@ -24,7 +24,7 @@ Each branch has exactly one PR description file. Write it at step 7 from the dif
 
 ## Sections, in this order
 
-Keep every heading exactly as in `.github/pull_request_template.md`, in English, even when the body is in another language.
+Keep every heading exactly as in `.github/pull_request_template.md`, in English, even when the body is in another language: `dashcrew check` fails a PR without one.
 
 - `# <type>: <short title>` - same style as the branch name.
 - `## Summary` - one paragraph: the problem solved and the end result.
