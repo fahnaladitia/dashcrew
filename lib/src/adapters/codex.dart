@@ -20,7 +20,7 @@ class CodexAdapter extends Adapter {
 
   static const guardMatcher = '^(Bash|apply_patch|Edit|Write)\$';
   static const guardCommand =
-      r'"\$(git rev-parse --show-toplevel)/.ai/bin/guard" "\$(git rev-parse --show-toplevel)/.ai/guard.json"';
+      r'"$(git rev-parse --show-toplevel)/.ai/bin/guard" "$(git rev-parse --show-toplevel)/.ai/guard.json"';
 
   /// PreToolUse entry `sync` keeps in `.codex/hooks.json`.
   static const guardHook = <String, Object?>{
