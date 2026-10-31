@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:dashcrew/dashcrew.dart';
@@ -51,5 +52,28 @@ void main() {
       expect(AntigravityAdapter.knownTools, containsAll(tools));
     }
     expect(AntigravityAdapter.toolsByCapability.keys, RoleMeta.capabilities);
+  });
+  group('guard hook in .agents/hooks.json', () {
+    File hooks() => File('${project.path}/.agents/hooks.json');
+    List<String> merge() => AntigravityAdapter(catalog, projectDir: project.path).merge(const {}, <String>[]).written;
+
+    test('is kept under its own key next to other hooks, and written once', () {
+      hooks()
+        ..parent.createSync(recursive: true)
+        ..writeAsStringSync(jsonEncode({
+          'my-linter-hook': {
+            'PostToolUse': [
+              {'matcher': '', 'hooks': [{'type': 'command', 'command': './lint.sh'}]},
+            ],
+          },
+        }));
+
+      expect(merge(), contains('.agents/hooks.json'));
+      expect(merge(), isNot(contains('.agents/hooks.json')));
+
+      final config = jsonDecode(hooks().readAsStringSync()) as Map<String, Object?>;
+      expect(config.keys, ['my-linter-hook', 'dashcrew-guard']);
+      expect(config['dashcrew-guard'], AntigravityAdapter.guardHook);
+    });
   });
 }

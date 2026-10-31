@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'shell.dart';
 
 /// Kind of tool call the guard sees.
@@ -47,6 +49,8 @@ class GuardEvent {
   /// Every event in one hook call: a Codex `apply_patch` gives one per file, any other tool one.
   /// A patch file's content is its added lines only; a moved file is checked at its new path.
   static List<GuardEvent> allFromHook(Map<String, Object?> json) {
+    final toolCall = json['toolCall'];
+    if (toolCall is Map) return _antigravity(toolCall);
     if (json['tool_name'] != 'apply_patch') return [GuardEvent.fromHook(json)];
     final input = json['tool_input'] is Map ? (json['tool_input'] as Map).cast<String, Object?>() : <String, Object?>{};
     final patch = (input['command'] ?? input['input'] ?? input['patch'])?.toString() ?? '';
@@ -78,6 +82,31 @@ class GuardEvent {
     }
     flush();
     return events;
+  }
+
+  /// Antigravity `toolCall` input: `run_command`, `write_to_file`, `replace_file_content`, `multi_replace_file_content`.
+  /// Its hooks carry no subagent identity, so the role stays null.
+  static List<GuardEvent> _antigravity(Map<Object?, Object?> toolCall) {
+    final args = toolCall['args'] is Map ? (toolCall['args'] as Map).cast<String, Object?>() : <String, Object?>{};
+    final path = args['TargetFile'] as String?;
+    switch (toolCall['name']) {
+      case 'run_command':
+        return [GuardEvent(kind: ToolKind.shell, command: args['CommandLine'] as String? ?? '')];
+      case 'write_to_file':
+        return [GuardEvent(kind: ToolKind.write, filePath: path, content: args['CodeContent'] as String?)];
+      case 'replace_file_content':
+        return [GuardEvent(kind: ToolKind.edit, filePath: path, content: args['ReplacementContent'] as String?)];
+      case 'multi_replace_file_content':
+        final chunks = args['ReplacementChunks'] is List ? args['ReplacementChunks'] as List : const [];
+        final replacements = [
+          for (final chunk in chunks.whereType<Map>())
+            for (final MapEntry(:key, :value) in chunk.entries)
+              if (key.toString().startsWith('Replacement') && value is String) value,
+        ];
+        return [GuardEvent(kind: ToolKind.edit, filePath: path, content: replacements.join('\n'))];
+      default:
+        return [const GuardEvent(kind: ToolKind.other)];
+    }
   }
 
   static const _shellTools = {'Bash', 'shell', 'local_shell', 'exec_command', 'container.exec'};
@@ -157,6 +186,17 @@ class GuardPolicy {
 const _wrappers = {'sudo', 'env', 'command', 'nohup', 'time', 'rtk', 'fvm'};
 const _gitOptionsWithValue = {'-C', '-c', '--git-dir', '--work-tree', '--namespace', '--exec-path', '--config-env'};
 final _assignment = RegExp(r'^[A-Za-z_][A-Za-z0-9_]*=');
+
+/// How the guard answers the agent that called it: Antigravity (`toolCall` input) reads a JSON decision on stdout;
+/// Claude Code and Codex read exit code 2 with the reason on stderr. An allowed call prints nothing.
+({int exitCode, String stdout, String stderr}) hookResponse(Map<String, Object?> input, GuardDecision decision) {
+  if (!decision.blocked) return (exitCode: 0, stdout: '', stderr: '');
+  final reason = '[dashcrew guard] ${decision.reason}';
+  if (input['toolCall'] is Map) {
+    return (exitCode: 0, stdout: jsonEncode({'decision': 'deny', 'reason': reason}), stderr: '');
+  }
+  return (exitCode: 2, stdout: '', stderr: reason);
+}
 
 /// Blocks when any of [events] is blocked, with the first reason.
 GuardDecision evaluateAll(List<GuardEvent> events, GuardPolicy policy) {

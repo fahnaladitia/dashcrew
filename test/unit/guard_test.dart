@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dashcrew/dashcrew.dart';
 import 'package:test/test.dart';
 
@@ -210,6 +212,90 @@ void main() {
 
       expect(events.single.kind, ToolKind.shell);
       expect(evaluateAll(events, policy()).blocked, isTrue);
+    });
+  });
+
+  group('antigravity toolCall input', () {
+    List<GuardEvent> events(String name, Map<String, Object?> args) => GuardEvent.allFromHook({
+          'conversationId': 'c1',
+          'workspacePaths': ['/repo'],
+          'toolCall': {'name': name, 'args': args},
+        });
+
+    bool blocked(String name, Map<String, Object?> args) => evaluateAll(events(name, args), policy()).blocked;
+
+    test('run_command is a shell event', () {
+      expect(events('run_command', {'CommandLine': 'git push', 'Cwd': '/repo'}).single.kind, ToolKind.shell);
+      expect(blocked('run_command', {'CommandLine': 'git push'}), isTrue);
+      expect(blocked('run_command', {'CommandLine': 'git status'}), isFalse);
+    });
+
+    test('write_to_file and replace_file_content carry the path and new text', () {
+      const import = "import 'package:vendor_sdk/vendor_sdk.dart';";
+      expect(blocked('write_to_file', {'TargetFile': 'lib/feature/a.dart', 'CodeContent': import}), isTrue);
+      expect(blocked('replace_file_content', {'TargetFile': 'lib/feature/a.dart', 'TargetContent': 'x', 'ReplacementContent': import}), isTrue);
+      expect(blocked('replace_file_content', {'TargetFile': 'lib/feature/a.dart', 'TargetContent': import, 'ReplacementContent': ''}), isFalse);
+      expect(events('write_to_file', {'TargetFile': 'a.dart', 'CodeContent': ''}).single.kind, ToolKind.write);
+    });
+
+    test('multi_replace_file_content checks only replacement text of every chunk', () {
+      const import = "import 'package:vendor_sdk/vendor_sdk.dart';";
+      expect(
+        blocked('multi_replace_file_content', {
+          'TargetFile': 'lib/feature/a.dart',
+          'ReplacementChunks': [
+            {'TargetContent': 'a', 'ReplacementContent': 'b'},
+            {'TargetContent': 'c', 'ReplacementContent': import},
+          ],
+        }),
+        isTrue,
+      );
+      expect(
+        blocked('multi_replace_file_content', {
+          'TargetFile': 'lib/feature/a.dart',
+          'ReplacementChunks': [
+            {'TargetContent': import, 'ReplacementContent': ''},
+          ],
+        }),
+        isFalse,
+      );
+    });
+
+    test('other tools and missing args are allowed', () {
+      expect(events('view_file', {'AbsolutePath': '/repo/a'}).single.kind, ToolKind.other);
+      expect(blocked('run_command', {}), isFalse);
+    });
+  });
+
+  group('hookResponse', () {
+    const block = GuardDecision.block('git push is reserved for the user. Ask them to run it.');
+
+    test('claude code and codex get exit 2 and the reason on stderr', () {
+      final response = hookResponse({'tool_name': 'Bash'}, block);
+
+      expect(response.exitCode, 2);
+      expect(response.stderr, '[dashcrew guard] git push is reserved for the user. Ask them to run it.');
+      expect(response.stdout, isEmpty);
+    });
+
+    test('antigravity gets a deny decision on stdout and exit 0', () {
+      final response = hookResponse({'toolCall': {'name': 'run_command'}}, block);
+
+      expect(response.exitCode, 0);
+      expect(jsonDecode(response.stdout), {
+        'decision': 'deny',
+        'reason': '[dashcrew guard] git push is reserved for the user. Ask them to run it.',
+      });
+    });
+
+    test('an allowed call prints nothing for every agent', () {
+      for (final input in [
+        {'tool_name': 'Bash'},
+        {'toolCall': {'name': 'run_command'}},
+      ]) {
+        final response = hookResponse(input, const GuardDecision.allow());
+        expect((response.exitCode, response.stdout, response.stderr), (0, '', ''));
+      }
     });
   });
 

@@ -3,6 +3,7 @@ import 'dart:convert';
 import '../catalog/catalog.dart';
 import '../profile/profile.dart';
 import '../render/renderer.dart';
+import '../sync/project_files.dart';
 import 'adapter.dart';
 
 /// Antigravity layout: `.agents/skills/<name>/SKILL.md` (shared with Codex) and `.agents/agents/<role>.md`.
@@ -40,6 +41,22 @@ class AntigravityAdapter extends Adapter {
     'generate_image',
   };
 
+  /// Key dashcrew owns in `.agents/hooks.json`; every other key belongs to the user or another tool.
+  static const guardKey = 'dashcrew-guard';
+
+  /// Antigravity hooks name the tool in `toolCall.name`; the command has no documented shell or working directory,
+  /// so it is a plain relative path like the docs' own example.
+  static const guardHook = <String, Object?>{
+    'PreToolUse': [
+      {
+        'matcher': '^(run_command|write_to_file|replace_file_content|multi_replace_file_content)\$',
+        'hooks': [
+          {'type': 'command', 'command': './.ai/bin/guard', 'timeout': 30},
+        ],
+      },
+    ],
+  };
+
   static const _readTools = ['view_file', 'list_dir', 'find_by_name', 'grep_search', 'run_command'];
 
   /// The `tools` allowlist per role capability: Antigravity enforces it, so a `read` role cannot edit.
@@ -72,8 +89,19 @@ class AntigravityAdapter extends Adapter {
   }
 
   @override
-  ({List<String> written, Set<String> ownedMcp}) merge(Set<String> ownedMcp, List<String> warnings) =>
-      (written: const [], ownedMcp: ownedMcp);
+  ({List<String> written, Set<String> ownedMcp}) merge(Set<String> ownedMcp, List<String> warnings) {
+    final written = <String>[];
+    if (_mergeHooks()) written.add('.agents/hooks.json');
+    return (written: written, ownedMcp: ownedMcp);
+  }
+
+  bool _mergeHooks() {
+    final project = ProjectFiles(projectDir);
+    final file = project.file('.agents/hooks.json');
+    final config = file.existsSync() ? jsonDecode(file.readAsStringSync()) as Map<String, Object?> : <String, Object?>{};
+    config[guardKey] = guardHook;
+    return project.writeIfChanged('.agents/hooks.json', '${const JsonEncoder.withIndent('  ').convert(config)}\n');
+  }
 
   String _role(RoleMeta role, String body) => '---\n'
       'name: ${role.name}\n'
