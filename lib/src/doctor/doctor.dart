@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
+import '../adapters/antigravity.dart';
 import '../adapters/claude_code.dart';
 import '../adapters/codex.dart';
 import '../catalog/catalog.dart';
@@ -41,6 +42,9 @@ class Doctor {
   final String? codexHome;
 
   static const agentsMdLimit = 32 * 1024;
+
+  /// AGENTS.md size the selected agents read in full: Antigravity cuts every rule file at 24,000 bytes.
+  static int agentsMdLimitFor(Set<String> agents) => agents.contains('antigravity') ? 24000 : agentsMdLimit;
   static final _skillReference = RegExp(r'`([a-z0-9][a-z0-9-]*)` skill|skill `([a-z0-9][a-z0-9-]*)`');
 
   /// Every check, with the project packs in `.ai/packs/` overlaid on [catalog] when they parse.
@@ -86,7 +90,12 @@ class Doctor {
         _codexSkillsBudget(),
         _codexTrust(),
       ],
-      _agentsMdSize(),
+      if (agents.contains('antigravity')) ...[
+        _antigravityHook(),
+        _antigravityMcp(),
+        _antigravityRoles(),
+      ],
+      _agentsMdSize(agentsMdLimitFor(agents)),
       _gitignore(),
     ];
   }
@@ -100,6 +109,56 @@ class Doctor {
     } catch (_) {
       return {'claude-code'};
     }
+  }
+
+  DoctorCheck _antigravityHook() {
+    const id = 'antigravity-hook';
+    final file = _file('.agents/hooks.json');
+    if (!file.existsSync()) return const DoctorCheck(id, CheckStatus.fail, '.agents/hooks.json missing; run dashcrew sync');
+    final Object? entry;
+    try {
+      entry = (jsonDecode(file.readAsStringSync()) as Map<String, Object?>)[AntigravityAdapter.guardKey];
+    } catch (error) {
+      return DoctorCheck(id, CheckStatus.fail, '.agents/hooks.json invalid: $error');
+    }
+    if (jsonEncode(entry) == jsonEncode(AntigravityAdapter.guardHook)) {
+      return const DoctorCheck(id, CheckStatus.ok, 'PreToolUse guard hook present under ${AntigravityAdapter.guardKey}');
+    }
+    return DoctorCheck(id, CheckStatus.fail,
+        '${entry == null ? 'guard hook missing' : 'guard hook differs from what sync writes'}; run dashcrew sync');
+  }
+
+  DoctorCheck _antigravityMcp() {
+    const id = 'antigravity-mcp';
+    final file = _file('.agents/mcp_config.json');
+    if (!file.existsSync()) return const DoctorCheck(id, CheckStatus.warn, '.agents/mcp_config.json missing; run dashcrew sync');
+    final Map servers;
+    try {
+      servers = ((jsonDecode(file.readAsStringSync()) as Map)['mcpServers'] as Map?) ?? const {};
+    } catch (error) {
+      return DoctorCheck(id, CheckStatus.warn, '.agents/mcp_config.json invalid: $error');
+    }
+    final missing = [for (final name in AntigravityAdapter.mcpServers.keys) if (!servers.containsKey(name)) name];
+    if (missing.isNotEmpty) return DoctorCheck(id, CheckStatus.warn, 'missing: ${missing.join(', ')}; run dashcrew sync');
+    return DoctorCheck(id, CheckStatus.ok, 'defined: ${AntigravityAdapter.mcpServers.keys.join(', ')}');
+  }
+
+  /// Antigravity may hang a subagent whose `tools` names an unknown tool.
+  DoctorCheck _antigravityRoles() {
+    const id = 'antigravity-roles';
+    final dir = Directory(p.join(projectDir, '.agents', 'agents'));
+    if (!dir.existsSync()) return const DoctorCheck(id, CheckStatus.fail, '.agents/agents missing; run dashcrew sync');
+    final unknown = <String>[];
+    var count = 0;
+    for (final file in dir.listSync().whereType<File>().where((f) => f.path.endsWith('.md'))) {
+      count++;
+      final tools = RegExp(r'^tools: \[(.*)\]$', multiLine: true).firstMatch(file.readAsStringSync())?.group(1) ?? '';
+      for (final tool in tools.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty)) {
+        if (!AntigravityAdapter.knownTools.contains(tool)) unknown.add('${p.basenameWithoutExtension(file.path)}: $tool');
+      }
+    }
+    if (unknown.isNotEmpty) return DoctorCheck(id, CheckStatus.fail, 'unknown tool names (the subagent may hang): ${unknown.join(', ')}');
+    return DoctorCheck(id, CheckStatus.ok, '$count roles, every tool name known');
   }
 
   DoctorCheck _codexHook() {
@@ -409,15 +468,15 @@ class Doctor {
     return DoctorCheck(id, CheckStatus.ok, '${referenced.length} referenced skills found');
   }
 
-  DoctorCheck _agentsMdSize() {
+  DoctorCheck _agentsMdSize(int limit) {
     const id = 'agents-md-size';
     final file = _file('AGENTS.md');
     if (!file.existsSync()) return const DoctorCheck(id, CheckStatus.skip, 'no AGENTS.md');
     final size = file.lengthSync();
-    if (size > agentsMdLimit) {
-      return DoctorCheck(id, CheckStatus.warn, 'AGENTS.md is $size bytes, over $agentsMdLimit; some agents truncate it');
+    if (size > limit) {
+      return DoctorCheck(id, CheckStatus.warn, 'AGENTS.md is $size bytes, over $limit; some agents truncate it');
     }
-    return DoctorCheck(id, CheckStatus.ok, 'AGENTS.md $size of $agentsMdLimit bytes');
+    return DoctorCheck(id, CheckStatus.ok, 'AGENTS.md $size of $limit bytes');
   }
 
   DoctorCheck _gitignore() {

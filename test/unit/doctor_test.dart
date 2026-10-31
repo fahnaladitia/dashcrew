@@ -309,4 +309,41 @@ stack:
       expect((await codexDoctor())['codex-trust']!.status, CheckStatus.ok);
     });
   });
+  group('antigravity', () {
+    setUp(() => write('.ai/project.yaml', 'toolkit: 1\nagents: [antigravity]\n'));
+
+    test('a fresh sync passes the antigravity checks', () async {
+      sync();
+
+      final checks = await doctor();
+
+      for (final id in ['antigravity-hook', 'antigravity-mcp', 'antigravity-roles']) {
+        expect(checks[id]!.status, CheckStatus.ok, reason: '$id: ${checks[id]!.detail}');
+      }
+      expect(checks.keys, isNot(contains('claude-md')));
+      expect(checks['agents-md-size']!.detail, contains('24000'));
+    });
+
+    test('a removed guard entry fails and an unknown role tool fails', () async {
+      sync();
+      write('.agents/hooks.json', '{}');
+      write('.agents/agents/flutter-planner.md', read('.agents/agents/flutter-planner.md').replaceFirst('view_file', 'view_files'));
+
+      final checks = await doctor();
+
+      expect(checks['antigravity-hook']!.status, CheckStatus.fail);
+      expect(checks['antigravity-roles']!.status, CheckStatus.fail);
+      expect(checks['antigravity-roles']!.detail, contains('view_files'));
+    });
+
+    test('AGENTS.md over 24000 bytes warns when antigravity is selected', () async {
+      sync();
+      write('AGENTS.md', read('AGENTS.md').replaceFirst(
+        '<!-- dashcrew:project:begin -->',
+        '<!-- dashcrew:project:begin -->\n${'x' * 9000}',
+      ));
+
+      expect((await doctor())['agents-md-size']!.status, CheckStatus.warn);
+    });
+  });
 }

@@ -176,7 +176,7 @@ project:
 
     final targets = render('toolkit: 1\nagents: [claude-code]\nstack: { $stack }\n');
 
-    expect(agentsMdBytes(targets), lessThan(32 * 1024), reason: stack);
+    expect(agentsMdBytes(targets), lessThan(Doctor.agentsMdLimitFor({'antigravity'})), reason: stack);
   });
 
   test('sample full stack stays under the AGENTS.md size limit with every policy flipped', () {
