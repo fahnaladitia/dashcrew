@@ -308,6 +308,29 @@ project: { local_packages: [core] }
     });
   });
 
+  group('pull request template', () {
+    test('sync writes the template with every required section', () {
+      sync();
+
+      final template = read('.github/pull_request_template.md');
+      expect(template, startsWith('<!-- dashcrew:generated'));
+      expect(template, contains('## Analytics'));
+      final lock = jsonDecode(read('.ai/lock.json')) as Map<String, Object?>;
+      expect((lock['files'] as Map).keys, contains('.github/pull_request_template.md'));
+    });
+
+    test('a template the team wrote is left alone with a warning', () {
+      write('.github/pull_request_template.md', '## Our own\n');
+
+      final result = sync();
+
+      expect(read('.github/pull_request_template.md'), '## Our own\n');
+      expect(result.warnings.join('\n'), contains('pull_request_template.md'));
+      final lock = jsonDecode(read('.ai/lock.json')) as Map<String, Object?>;
+      expect((lock['files'] as Map).keys, isNot(contains('.github/pull_request_template.md')));
+    });
+  });
+
   group('guard shim', () {
     test('sync writes an executable shim for this dashcrew and locks it', () {
       sync();

@@ -48,6 +48,9 @@ class Sync {
   /// Where the shared guard is installed; defaults to `DASHCREW_HOME`, else `~/.dashcrew`.
   final String? guardHome;
 
+  /// Required PR sections, rendered from the catalog; `dashcrew check` reads the same headings.
+  static const prTemplatePath = '.github/pull_request_template.md';
+
   /// The committed hook entry; it runs the guard installed for this project's guard source.
   static const guardShimPath = '.ai/bin/guard';
 
@@ -172,6 +175,18 @@ class Sync {
       '.ai/guard.json': '${const JsonEncoder.withIndent('  ').convert(compileGuardPolicy(profile, catalog).toJson())}\n',
       guardShimPath: GuardInstaller.shim(guardSourceHash(_root)),
     };
+    final prTemplate = targets.where((t) => t.target == 'pr_template').firstOrNull;
+    if (prTemplate != null) {
+      final existing = _file(prTemplatePath);
+      if (!existing.existsSync() ||
+          lockedFiles.containsKey(prTemplatePath) ||
+          existing.readAsStringSync().startsWith('<!-- dashcrew:generated')) {
+        files[prTemplatePath] = prTemplate.content;
+      } else {
+        warnings?.add('$prTemplatePath exists and was not written by dashcrew; left as is. '
+            'dashcrew check still requires the headings dashcrew would write.');
+      }
+    }
     for (final adapter in adapters) {
       adapter.files(profile, targets, context, lockedFiles: lockedFiles, warnings: warnings).forEach((path, content) {
         final other = files[path];

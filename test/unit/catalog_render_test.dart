@@ -179,6 +179,29 @@ project:
     expect(agentsMdBytes(targets), lessThan(Doctor.agentsMdLimitFor({'antigravity'})), reason: stack);
   });
 
+  group('pr template', () {
+    List<String> headings(String stack) => render('toolkit: 1\nagents: [claude-code]\nstack: { $stack }\n')
+        .singleWhere((t) => t.target == 'pr_template')
+        .content
+        .split('\n')
+        .where((line) => line.startsWith('## '))
+        .toList();
+
+    test('core sections only, notes last', () {
+      expect(headings(''), ['## Summary', '## Changes', '## Affected files', '## Testing', '## Notes / not done']);
+    });
+
+    test('qa and analytics packs add their sections before notes', () {
+      for (final analytics in ['posthog', 'firebase', 'mixpanel']) {
+        expect(
+          headings('qa: semantics-identifier, analytics: $analytics'),
+          ['## Summary', '## Changes', '## Affected files', '## Testing', '## QA Identifiers', '## Analytics', '## Notes / not done'],
+          reason: analytics,
+        );
+      }
+    });
+  });
+
   test('sample full stack stays under the AGENTS.md size limit with every policy flipped', () {
     final targets = render('''
 toolkit: 1
