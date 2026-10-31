@@ -147,9 +147,16 @@ class Sync {
     final files = <String, String>{
       'AGENTS.md': _agentsMd(targets, adopt: adopt),
       '.ai/guard.json': '${const JsonEncoder.withIndent('  ').convert(compileGuardPolicy(profile, catalog).toJson())}\n',
-      for (final adapter in adapters)
-        ...adapter.files(profile, targets, context, lockedFiles: lockedFiles, warnings: warnings),
     };
+    for (final adapter in adapters) {
+      adapter.files(profile, targets, context, lockedFiles: lockedFiles, warnings: warnings).forEach((path, content) {
+        final other = files[path];
+        if (other != null && other != content) {
+          throw StateError('$path is written by two adapters with different content (${adapter.agent})');
+        }
+        files[path] = content;
+      });
+    }
     return (files: files, packs: packs, adapters: adapters);
   }
 

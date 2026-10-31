@@ -6,7 +6,8 @@ import '../render/renderer.dart';
 import '../sync/project_files.dart';
 import 'adapter.dart';
 
-/// Antigravity layout: `.agents/skills/<name>/SKILL.md` (shared with Codex) and `.agents/agents/<role>.md`.
+/// Antigravity layout: `.agents/skills/<name>/SKILL.md` (shared with Codex), `.agents/agents/<role>.md`,
+/// the guard under its own key in `.agents/hooks.json` and MCP servers in `.agents/mcp_config.json`.
 /// Antigravity reads AGENTS.md itself; it cuts every rule file at 24,000 bytes.
 class AntigravityAdapter extends Adapter {
   const AntigravityAdapter(this.catalog, {required this.projectDir});
@@ -57,6 +58,14 @@ class AntigravityAdapter extends Adapter {
     ],
   };
 
+  /// MCP servers dashcrew keeps in `.agents/mcp_config.json`.
+  static const mcpServers = <String, Map<String, Object?>>{
+    'dart-mcp-server': {
+      'command': 'dart',
+      'args': ['mcp-server'],
+    },
+  };
+
   static const _readTools = ['view_file', 'list_dir', 'find_by_name', 'grep_search', 'run_command'];
 
   /// The `tools` allowlist per role capability: Antigravity enforces it, so a `read` role cannot edit.
@@ -92,7 +101,9 @@ class AntigravityAdapter extends Adapter {
   ({List<String> written, Set<String> ownedMcp}) merge(Set<String> ownedMcp, List<String> warnings) {
     final written = <String>[];
     if (_mergeHooks()) written.add('.agents/hooks.json');
-    return (written: written, ownedMcp: ownedMcp);
+    final mcp = mergeJsonMcpServers(ProjectFiles(projectDir), '.agents/mcp_config.json', mcpServers, ownedMcp, warnings);
+    if (mcp.changed) written.add('.agents/mcp_config.json');
+    return (written: written, ownedMcp: mcp.owned);
   }
 
   bool _mergeHooks() {

@@ -76,4 +76,44 @@ void main() {
       expect(config['dashcrew-guard'], AntigravityAdapter.guardHook);
     });
   });
+  group('mcp in .agents/mcp_config.json', () {
+    File config() => File('${project.path}/.agents/mcp_config.json');
+    ({List<String> written, Set<String> ownedMcp}) merge(Set<String> owned, List<String> warnings) =>
+        AntigravityAdapter(catalog, projectDir: project.path).merge(owned, warnings);
+
+    test('adds the dart server next to user servers', () {
+      config()
+        ..parent.createSync(recursive: true)
+        ..writeAsStringSync(jsonEncode({
+          'mcpServers': {
+            'graph': {'command': 'graph'},
+          },
+        }));
+
+      final result = merge(const {}, []);
+
+      final servers = (jsonDecode(config().readAsStringSync()) as Map)['mcpServers'] as Map;
+      expect(servers['graph'], {'command': 'graph'});
+      expect(servers['dart-mcp-server'], {'command': 'dart', 'args': ['mcp-server']});
+      expect(result.ownedMcp, {'dart-mcp-server'});
+      expect(merge(result.ownedMcp, []).written, isNot(contains('.agents/mcp_config.json')));
+    });
+
+    test('a server the user defined differently is left with a warning', () {
+      config()
+        ..parent.createSync(recursive: true)
+        ..writeAsStringSync(jsonEncode({
+          'mcpServers': {
+            'dart-mcp-server': {'command': 'fvm'},
+          },
+        }));
+      final warnings = <String>[];
+
+      final result = merge(const {}, warnings);
+
+      expect(result.ownedMcp, isEmpty);
+      expect(warnings.single, contains('.agents/mcp_config.json'));
+      expect(config().readAsStringSync(), contains('"fvm"'));
+    });
+  });
 }

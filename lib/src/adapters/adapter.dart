@@ -3,7 +3,9 @@ import 'dart:convert';
 import '../catalog/catalog.dart';
 import '../profile/profile.dart';
 import '../render/renderer.dart';
+import '../sync/project_files.dart';
 import '../sync/sync.dart';
+import 'antigravity.dart';
 import 'claude_code.dart';
 import 'codex.dart';
 
@@ -67,12 +69,41 @@ String agentsSkillFile(String name, DocMeta meta, String body) {
   return '---\nname: $name\ndescription: ${jsonEncode(description)}\n---\n\n$arguments$body';
 }
 
+/// Adds [servers] to the `mcpServers` map of the JSON file at [path], keeping every other entry.
+/// A server is replaced only when dashcrew [owned] it before; one the user defined differently stays, with a warning.
+({bool changed, Set<String> owned}) mergeJsonMcpServers(
+  ProjectFiles project,
+  String path,
+  Map<String, Map<String, Object?>> servers,
+  Set<String> owned,
+  List<String> warnings,
+) {
+  final file = project.file(path);
+  final config = file.existsSync() ? jsonDecode(file.readAsStringSync()) as Map<String, Object?> : <String, Object?>{};
+  final current = (config['mcpServers'] as Map?)?.cast<String, Object?>() ?? <String, Object?>{};
+  final nowOwned = {...owned};
+
+  servers.forEach((name, server) {
+    final existing = current[name];
+    if (existing == null || owned.contains(name)) {
+      current[name] = server;
+      nowOwned.add(name);
+    } else if (jsonEncode(existing) != jsonEncode(server)) {
+      warnings.add('$path already defines "$name" differently; left as is.');
+    }
+  });
+  config['mcpServers'] = current;
+  final changed = project.writeIfChanged(path, '${const JsonEncoder.withIndent('  ').convert(config)}\n');
+  return (changed: changed, owned: nowOwned);
+}
+
 /// Adapter for [agent]; throws [SyncException] for an agent that has none yet.
 Adapter adapterFor(String agent, Catalog catalog, String projectDir) => switch (agent) {
       'claude-code' => ClaudeCodeAdapter(catalog, projectDir: projectDir),
       'codex' => CodexAdapter(catalog, projectDir: projectDir),
+      'antigravity' => AntigravityAdapter(catalog, projectDir: projectDir),
       _ => throw SyncException('Agent adapter not available yet: $agent. Supported: ${supportedAdapters.join(', ')}.'),
     };
 
 /// Agents [adapterFor] accepts.
-const supportedAdapters = {'claude-code', 'codex'};
+const supportedAdapters = {'claude-code', 'codex', 'antigravity'};

@@ -98,25 +98,9 @@ class ClaudeCodeAdapter extends Adapter {
     return _project.writeIfChanged('.claude/settings.json', '${const JsonEncoder.withIndent('  ').convert(settings)}\n');
   }
 
-  ({bool changed, Set<String> owned}) _mergeMcp(Set<String> owned, List<String> warnings) {
-    final file = _project.file('.mcp.json');
-    final config = file.existsSync() ? jsonDecode(file.readAsStringSync()) as Map<String, Object?> : <String, Object?>{};
-    final servers = (config['mcpServers'] as Map?)?.cast<String, Object?>() ?? <String, Object?>{};
-    final nowOwned = {...owned};
+  ({bool changed, Set<String> owned}) _mergeMcp(Set<String> owned, List<String> warnings) =>
+      mergeJsonMcpServers(_project, '.mcp.json', mcpServers, owned, warnings);
 
-    mcpServers.forEach((name, server) {
-      final existing = servers[name];
-      if (existing == null || owned.contains(name)) {
-        servers[name] = server;
-        nowOwned.add(name);
-      } else if (jsonEncode(existing) != jsonEncode(server)) {
-        warnings.add('.mcp.json already defines "$name" differently; left as is.');
-      }
-    });
-    config['mcpServers'] = servers;
-    final changed = _project.writeIfChanged('.mcp.json', '${const JsonEncoder.withIndent('  ').convert(config)}\n');
-    return (changed: changed, owned: nowOwned);
-  }
 
   String _agent(RoleMeta role, String body) {
     final header = StringBuffer('---\n')

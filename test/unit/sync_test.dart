@@ -143,6 +143,7 @@ project: { local_packages: [core] }
   test('adapterFor names the supported agents and rejects the others', () {
     expect(adapterFor('claude-code', catalog, project.path).agent, 'claude-code');
     expect(adapterFor('codex', catalog, project.path).agent, 'codex');
+    expect(adapterFor('antigravity', catalog, project.path).agent, 'antigravity');
     expect(() => adapterFor('cursor', catalog, project.path), throwsA(isA<SyncException>()));
   });
 
@@ -222,6 +223,35 @@ project: { local_packages: [core] }
     expect(lock['mcp_servers'], {
       'codex': ['dart-mcp-server'],
     });
+    expect(sync().written, isEmpty);
+  });
+
+  test('antigravity alone writes its toolkit and nothing for the other agents', () {
+    write('.ai/project.yaml', 'toolkit: 1\nagents: [antigravity]\n');
+
+    sync();
+
+    expect(exists('.agents/skills/plan/SKILL.md'), isTrue);
+    expect(exists('.agents/agents/flutter-planner.md'), isTrue);
+    expect(read('.agents/hooks.json'), contains('dashcrew-guard'));
+    expect(read('.agents/mcp_config.json'), contains('dart-mcp-server'));
+    expect(exists('CLAUDE.md'), isFalse);
+    expect(exists('.codex/hooks.json'), isFalse);
+    final lock = jsonDecode(read('.ai/lock.json')) as Map<String, Object?>;
+    expect(lock['mcp_servers'], {
+      'antigravity': ['dart-mcp-server'],
+    });
+    expect(sync().written, isEmpty);
+  });
+
+  test('codex and antigravity share .agents/skills, written once', () {
+    write('.ai/project.yaml', 'toolkit: 1\nagents: [codex, antigravity]\n');
+
+    final result = sync();
+
+    expect(result.written.where((path) => path == '.agents/skills/plan/SKILL.md'), hasLength(1));
+    expect(exists('.codex/agents/flutter-planner.toml'), isTrue);
+    expect(exists('.agents/agents/flutter-planner.md'), isTrue);
     expect(sync().written, isEmpty);
   });
 
