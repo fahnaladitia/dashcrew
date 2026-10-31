@@ -1,0 +1,16 @@
+# Synthetic profile: both agents, and pack options no other fixture covers.
+toolkit: 1
+agents: [claude-code, codex]
+language: { dartdoc: en, pr: en, chat: en }
+stack:
+  state: provider
+  di: provider
+  router: auto_route
+  network: retrofit
+  storage: sqflite
+  test: mockito
+  analytics: { use: mixpanel, server_url: https://api-eu.mixpanel.com }
+  tracker: none
+  design: none
+project:
+  base_branches: [main, develop]

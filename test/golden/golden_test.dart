@@ -10,7 +10,7 @@ final update = Platform.environment['DASHCREW_UPDATE_GOLDENS'] == '1';
 void main() {
   final catalog = Catalog.load('.');
 
-  for (final fixture in ['sample-bloc-getx', 'sample-project-pack', 'sample-riverpod-gorouter']) {
+  for (final fixture in ['sample-bloc-getx', 'sample-project-pack', 'sample-riverpod-gorouter', 'sample-codex']) {
     group(fixture, () {
       final fixtureDir = p.join('test', 'golden', fixture);
       final expectedDir = p.join(fixtureDir, 'expected');
