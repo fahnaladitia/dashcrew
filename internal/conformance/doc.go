@@ -1,3 +1,3 @@
-// Package conformance checks the Go engine against the golden samples of the Dart engine in test/golden/.
+// Package conformance checks the generated output against the golden samples in test/golden/.
 // Its only content is the test.
 package conformance

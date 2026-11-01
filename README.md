@@ -44,7 +44,7 @@ go install github.com/fahnaladitia/dashcrew/cmd/dashcrew@latest
 
 `dashcrew --version` prints the version. A team pins one: `brew` installs the latest release, and `go install ...@v0.1.0` (or a commit) a fixed one. The guard shim needs dashcrew 0.1.0 or newer on `PATH`.
 
-**Deprecated, for one release:** `dart pub global activate --source git https://github.com/fahnaladitia/dashcrew` still installs the Dart engine, which renders the same files but has no `dashcrew guard`. The shim refuses every tool call while that one is first on `PATH`, and `doctor` says so; remove it with `dart pub global deactivate dashcrew`.
+Before 0.1.0, dashcrew was a Dart package installed with `dart pub global activate`. That install has no `dashcrew guard`, so the shim refuses every tool call while it is first on `PATH`, and `doctor` warns about it (see [Troubleshooting](#troubleshooting)).
 
 ## Quick start
 
@@ -202,7 +202,7 @@ The guard hook: reads one tool call as hook JSON on stdin and answers per agent 
 | Group | Checks |
 |---|---|
 | Profile and lock | `profile`, `project-packs`, `lock`, `version`, `drift` (generated files edited by hand), `stale` (output differs from the current profile and catalog) |
-| Guard | `guard-policy`, `guard-binary` (the shim; the `dashcrew` first on `PATH`, which fails when missing and warns when it is the Dart one or older than the lock's `guard_min_version`; then a `git push` event through the shim), `guard-log` (only when the guard logged malformed payloads since the last sync) |
+| Guard | `guard-policy`, `guard-binary` (the shim; the `dashcrew` first on `PATH`, which fails when missing and warns when it is an old Dart-installed one or older than the lock's `guard_min_version`; then a `git push` event through the shim), `guard-log` (only when the guard logged malformed payloads since the last sync) |
 | Claude Code | `hook`, `claude-md`, `mcp`, `skills` |
 | Codex | `codex-hook`, `codex-mcp`, `codex-skills-budget`, `codex-trust` |
 | Antigravity | `antigravity-hook`, `antigravity-mcp`, `antigravity-roles` |
@@ -261,7 +261,7 @@ Claude Code and Codex get exit code 2 with the reason on stderr; Antigravity get
 
 **Malformed payloads.** A hook payload the guard cannot read (not JSON, not UTF-8, a field of the wrong type) is let through, so a changed agent hook format never stops work. Each one is recorded in `<git common dir>/dashcrew/guard-malformed.log` (time, agent, reason; at most 64 KiB), and `doctor` warns with `guard-log` when it has entries since the last `sync`. A policy file that is missing or broken also lets calls through; `doctor` reports it with `guard-policy`.
 
-**Where it runs.** `.ai/bin/guard` is a short `sh` script that `sync` writes and you commit. It runs `dashcrew guard` from `PATH` with the hook's arguments and stdin. It fails closed: when `dashcrew` is missing, or older than the minimum version the lock records as `guard_min_version` (0.1.0, the first release with `dashcrew guard`), it refuses every tool call with a one-line reason and the install command. The Dart engine reports 0.0.1 and is refused the same way. A passed version check is cached in `~/.dashcrew/guard-ok` as the dashcrew path and the minimum; while both match and that dashcrew is not newer than the cache, the shim skips `dashcrew --version` and starts one process per tool call. On the maintainer's machine a call takes about 7 ms through macOS `/bin/sh` (about 5 ms through `dash`), against 3 ms for `dashcrew guard` alone and 15 ms for the compiled Dart guard it replaces. It needs a POSIX shell, so Windows is not supported yet. Older dashcrew versions compiled a guard into `~/.dashcrew/guard/`; nothing uses that folder any more, so you can delete it.
+**Where it runs.** `.ai/bin/guard` is a short `sh` script that `sync` writes and you commit. It runs `dashcrew guard` from `PATH` with the hook's arguments and stdin. It fails closed: when `dashcrew` is missing, or older than the minimum version the lock records as `guard_min_version` (0.1.0, the first release with `dashcrew guard`), it refuses every tool call with a one-line reason and the install command. An old Dart-installed dashcrew reports 0.0.1 and is refused the same way. A passed version check is cached in `~/.dashcrew/guard-ok` as the dashcrew path and the minimum; while both match and that dashcrew is not newer than the cache, the shim skips `dashcrew --version` and starts one process per tool call. On the maintainer's machine a call takes about 7 ms through macOS `/bin/sh` (about 5 ms through `dash`), against 3 ms for `dashcrew guard` alone. It needs a POSIX shell, so Windows is not supported yet. Older dashcrew versions compiled a guard into `~/.dashcrew/guard/`; nothing uses that folder any more, so you can delete it.
 
 ## Merge gate on GitHub
 
@@ -321,7 +321,7 @@ dashcrew keeps AGENTS.md under the smallest cut of the selected agents, and `doc
 | `.ai/lock.json was written by dashcrew X` | install that dashcrew (or the team's pinned ref) |
 | `[dashcrew guard] dashcrew is not on PATH, so this tool call is refused` | install dashcrew (see [Install](#install)); the agent's next tool call goes through |
 | `[dashcrew guard] the dashcrew on PATH is older than X` | install dashcrew X or newer; `doctor` names the `dashcrew` it found |
-| `guard-binary`: `is the Dart one` | install the Go build, then `dart pub global deactivate dashcrew` |
+| `guard-binary`: `is the Dart one` | an old Dart-installed dashcrew (from before 0.1.0) comes first on `PATH`: run `dart pub global deactivate dashcrew`, then install dashcrew (see [Install](#install)) |
 | `guard-log`: `the guard let N malformed payloads through` | update dashcrew if an agent changed its hook format; the log names the agent |
 | `dashcrew guard install was removed` | an old shim called it: run `dashcrew sync` to write the new `.ai/bin/guard` |
 | `plan_gate was removed in P4` | delete `policy.plan_gate` from `.ai/project.yaml`; see [Migrating to P4](#migrating-to-p4) |
@@ -342,18 +342,23 @@ P4 makes dashcrew skill-first. A project synced by an earlier dashcrew migrates 
 
 ## Development
 
+Requires Go 1.26 or later. The only dependency is `go.yaml.in/yaml/v3`.
+
 ```bash
 go vet ./...
-go test ./...
-DASHCREW_DART=$(command -v dart) go test ./cmd/dashcrew -run Parity   # the Go CLI against the Dart one
-dart analyze --fatal-infos
-dart test
-DASHCREW_UPDATE_GOLDENS=1 dart test test/golden   # rewrite golden fixtures, then review the diff
+go test ./...                              # or scoped: go test ./internal/<pkg>/...
+DASHCREW_UPDATE_GOLDENS=1 go test ./...    # rewrite the goldens below, then review the diff
 ```
 
-Both engines render byte-identical output until the Dart engine is removed; `internal/conformance` checks the Go engine against the same goldens. `test/golden/sample-migrate-p3/p3/` is a frozen pre-P4 output that the migration test syncs over; it is never rewritten.
+Goldens:
 
-CI runs the Go job and the Dart job (Dart 3.9.0 and stable). Releases are cut by pushing a `v*` tag: `.github/workflows/release.yaml` runs goreleaser (`.goreleaser.yaml`), which stamps the version, builds darwin, linux and windows for amd64 and arm64, publishes a GitHub Release and updates the Homebrew formula in `fahnaladitia/homebrew-tap`. Contributor rules for AI agents are in [AGENTS.md](AGENTS.md).
+- `test/golden/<sample>/expected/` and `test/golden/init-app/expected-project.yaml`: the generated files, checked byte for byte by `internal/conformance`.
+- `cmd/dashcrew/testdata/transcripts/`: stdout, stderr, exit code and file changes of every CLI call in the README, per case.
+- `internal/guard/testdata/corpus_outcomes.txt`: the guard's answer to every case of its 13,724-case corpus that it blocks.
+
+`test/golden/sample-migrate-p3/p3/` is a frozen pre-P4 output that the migration test syncs over; it is never rewritten. The output format (JSON layout, YAML scalars, Mustache rendering, help text) is the one the earlier Dart engine wrote, so a project sees no diff after upgrading.
+
+CI runs `go vet` and `go test` on every push. Releases are cut by pushing a `v*` tag: `.github/workflows/release.yaml` runs goreleaser (`.goreleaser.yaml`), which stamps the version, builds darwin, linux and windows for amd64 and arm64, publishes a GitHub Release and updates the Homebrew formula in `fahnaladitia/homebrew-tap`. Contributor rules for AI agents are in [AGENTS.md](AGENTS.md).
 
 ## License
 

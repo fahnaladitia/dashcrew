@@ -11,7 +11,8 @@ import (
 	"github.com/fahnaladitia/dashcrew/internal/sync"
 )
 
-// initApp runs `init --yes` on test/golden/init-app/input with the remote branches of test/golden/init_golden_test.dart.
+// initApp runs `init --yes` on test/golden/init-app/input with origin/HEAD, origin/develop and origin/main as
+// the remote branches.
 func initApp(t *testing.T) (*catalog.Catalog, string) {
 	t.Helper()
 	c, err := catalog.LoadEmbedded()
@@ -36,12 +37,19 @@ func TestInitAppWritesExpectedProjectYaml(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expected, err := os.ReadFile(filepath.Join(goldenDir(t), "init-app", "expected-project.yaml"))
+	expectedPath := filepath.Join(goldenDir(t), "init-app", "expected-project.yaml")
+	if update {
+		if err := os.WriteFile(expectedPath, actual, 0o644); err != nil {
+			t.Fatal(err)
+		}
+		return
+	}
+	expected, err := os.ReadFile(expectedPath)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if string(actual) != string(expected) {
-		t.Errorf("project.yaml differs from expected-project.yaml:\n%s", actual)
+		t.Errorf("project.yaml differs from expected-project.yaml (%s):\n%s", updateHint, actual)
 	}
 }
 

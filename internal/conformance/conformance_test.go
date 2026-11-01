@@ -25,6 +25,13 @@ var samples = []string{
 	"sample-project-platform",
 }
 
+// update rewrites the goldens from the current output instead of comparing:
+// `DASHCREW_UPDATE_GOLDENS=1 go test ./internal/conformance`, then review the diff.
+var update = os.Getenv("DASHCREW_UPDATE_GOLDENS") == "1"
+
+// updateHint is appended to a golden mismatch.
+const updateHint = "if the change is intended: DASHCREW_UPDATE_GOLDENS=1 go test ./internal/conformance, then review the diff"
+
 func goldenDir(t *testing.T) string {
 	t.Helper()
 	dir, err := filepath.Abs(filepath.Join("..", "..", "test", "golden"))
@@ -112,6 +119,13 @@ func TestGoldenSamplesAreByteIdentical(t *testing.T) {
 					delete(actual, path)
 				}
 			}
+			if update {
+				if err := os.RemoveAll(filepath.Join(fixture, "expected")); err != nil {
+					t.Fatal(err)
+				}
+				copyInto(t, actual, filepath.Join(fixture, "expected"))
+				return
+			}
 			expected := tree(t, filepath.Join(fixture, "expected"))
 
 			identical := 0
@@ -130,6 +144,9 @@ func TestGoldenSamplesAreByteIdentical(t *testing.T) {
 				if _, ok := expected[path]; !ok {
 					t.Errorf("not in expected/: %s", path)
 				}
+			}
+			if identical != len(expected) || len(actual) != len(expected) {
+				t.Log(updateHint)
 			}
 			t.Logf("%s: %d compared, %d identical", sample, len(expected), identical)
 

@@ -1,0 +1,165 @@
+# init without a platform
+
+=== step 1: dashcrew "init" "--yes"
+exit: 1
+stdout:
+| Detected in <root>/w:
+|   platform: none of flutter (pubspec.yaml)
+stderr:
+| No platform detected. Rerun without --yes to declare platform: other and its commands.
+files: (unchanged)
+
+=== step 2: dashcrew "init"
+stdin: "\nMakefile\n"
+exit: 1
+stdout:
+| Detected in <root>/w:
+|   platform: none of flutter (pubspec.yaml)
+| platform [other]: detect (files that identify the platform, space separated): commands.analyze: 
+(no final newline)
+stderr:
+| platform: other needs commands.analyze; rerun dashcrew init, or write platform_config in .ai/project.yaml by hand.
+files: (unchanged)
+
+=== step 3: dashcrew "init"
+stdin: "flutter\n"
+exit: 1
+stdout:
+| Detected in <root>/w:
+|   platform: none of flutter (pubspec.yaml)
+| platform [other]: 
+(no final newline)
+stderr:
+| No pubspec.yaml in <root>/w. Run dashcrew init in the Flutter project root.
+files: (unchanged)
+
+=== step 4: dashcrew "init"
+stdin: "nope\n\nMakefile  go.mod\nmake lint\n\nmake test\nmake one\nmake deps\nmake fmt\n"
+exit: 0
+stdout:
+| Detected in <root>/w:
+|   platform: none of flutter (pubspec.yaml)
+| platform [other]:   expected one of flutter, other
+| platform [other]: detect (files that identify the platform, space separated): commands.analyze: commands.test:   required
+| commands.test: commands.test_scoped: commands.deps: commands.format (empty for none): design [-]: tracker [-]: wrote .ai/project.yaml
+| next: dashcrew sync
+stderr: (empty)
+files:
++ w/.ai  dir
++ w/.ai/project.yaml  -rw-r--r-- sha256:474ae39e9313c026
+
+=== step 5: dashcrew "sync"
+exit: 0
+stdout:
+| wrote   AGENTS.md
+| wrote   .ai/guard.json
+| wrote   .ai/bin/guard
+| wrote   .github/pull_request_template.md
+| wrote   .claude/agents/explorer.md
+| wrote   .claude/agents/reviewer.md
+| wrote   .claude/skills/acceptance-criteria/SKILL.md
+| wrote   .claude/skills/branching/SKILL.md
+| wrote   .claude/skills/continuous-learning/SKILL.md
+| wrote   .claude/skills/data-layer-tdd/SKILL.md
+| wrote   .claude/skills/design-fidelity/SKILL.md
+| wrote   .claude/skills/documentation/SKILL.md
+| wrote   .claude/skills/feature-architecture/SKILL.md
+| wrote   .claude/skills/guardrails/SKILL.md
+| wrote   .claude/skills/pr-create/SKILL.md
+| wrote   .claude/skills/pr-description/SKILL.md
+| wrote   .claude/skills/prompt-polish/SKILL.md
+| wrote   .claude/skills/strategic-compact/SKILL.md
+| wrote   .claude/skills/verification-loop/SKILL.md
+| wrote   .claude/skills/work-modes/SKILL.md
+| wrote   .claude/skills/audit/SKILL.md
+| wrote   .claude/skills/build-fix/SKILL.md
+| wrote   .claude/skills/code-review/SKILL.md
+| wrote   .claude/skills/learn/SKILL.md
+| wrote   .claude/skills/plan/SKILL.md
+| wrote   .claude/skills/tdd/SKILL.md
+| wrote   .claude/skills/verify/SKILL.md
+| wrote   .claude/skills/worktree/SKILL.md
+| wrote   CLAUDE.md
+| wrote   .claude/settings.json
+| wrote   .mcp.json
+stderr: (empty)
+files:
++ w/.ai/bin  dir
++ w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
++ w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
++ w/.ai/lock.json  -rw-r--r-- sha256:f1a6971c7010cb26
++ w/.claude  dir
++ w/.claude/agents  dir
++ w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
++ w/.claude/agents/reviewer.md  -rw-r--r-- sha256:6083120a064a4fee
++ w/.claude/settings.json  -rw-r--r-- sha256:ab785cea7a7a2c39
++ w/.claude/skills  dir
++ w/.claude/skills/acceptance-criteria  dir
++ w/.claude/skills/acceptance-criteria/SKILL.md  -rw-r--r-- sha256:fb28738f06357c3f
++ w/.claude/skills/audit  dir
++ w/.claude/skills/audit/SKILL.md  -rw-r--r-- sha256:d023e455d1f28efd
++ w/.claude/skills/branching  dir
++ w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:8b93b9328ded4711
++ w/.claude/skills/build-fix  dir
++ w/.claude/skills/build-fix/SKILL.md  -rw-r--r-- sha256:8eee01f577e41fe6
++ w/.claude/skills/code-review  dir
++ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:4c551b884002a3f7
++ w/.claude/skills/continuous-learning  dir
++ w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:698f498fdff18b66
++ w/.claude/skills/data-layer-tdd  dir
++ w/.claude/skills/data-layer-tdd/SKILL.md  -rw-r--r-- sha256:09903afe1aefda59
++ w/.claude/skills/design-fidelity  dir
++ w/.claude/skills/design-fidelity/SKILL.md  -rw-r--r-- sha256:2659d95907aab02c
++ w/.claude/skills/documentation  dir
++ w/.claude/skills/documentation/SKILL.md  -rw-r--r-- sha256:bf01f4b77b5a48fa
++ w/.claude/skills/feature-architecture  dir
++ w/.claude/skills/feature-architecture/SKILL.md  -rw-r--r-- sha256:fca9f44796945dcc
++ w/.claude/skills/guardrails  dir
++ w/.claude/skills/guardrails/SKILL.md  -rw-r--r-- sha256:2a354bc4b4e91bd7
++ w/.claude/skills/learn  dir
++ w/.claude/skills/learn/SKILL.md  -rw-r--r-- sha256:f5d260c1d5735b9e
++ w/.claude/skills/plan  dir
++ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:cb1a7879fe7443fb
++ w/.claude/skills/pr-create  dir
++ w/.claude/skills/pr-create/SKILL.md  -rw-r--r-- sha256:e534b517a93d2650
++ w/.claude/skills/pr-description  dir
++ w/.claude/skills/pr-description/SKILL.md  -rw-r--r-- sha256:133f63d02ae6af02
++ w/.claude/skills/prompt-polish  dir
++ w/.claude/skills/prompt-polish/SKILL.md  -rw-r--r-- sha256:a15ce9881adfc5f6
++ w/.claude/skills/strategic-compact  dir
++ w/.claude/skills/strategic-compact/SKILL.md  -rw-r--r-- sha256:a866040ed09e6f37
++ w/.claude/skills/tdd  dir
++ w/.claude/skills/tdd/SKILL.md  -rw-r--r-- sha256:e0d094e34baa36a9
++ w/.claude/skills/verification-loop  dir
++ w/.claude/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:055cbb8370ce869e
++ w/.claude/skills/verify  dir
++ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:a66641de2df5486b
++ w/.claude/skills/work-modes  dir
++ w/.claude/skills/work-modes/SKILL.md  -rw-r--r-- sha256:42e7df44abe766f6
++ w/.claude/skills/worktree  dir
++ w/.claude/skills/worktree/SKILL.md  -rw-r--r-- sha256:abd52ad06d4bc2fa
++ w/.github  dir
++ w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
++ w/.mcp.json  -rw-r--r-- sha256:d8e397af03b5b032
++ w/AGENTS.md  -rw-r--r-- sha256:77325c8a57cc549c
++ w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
+
+=== step 6: dashcrew "doctor"
+exit: 1
+stdout:
+| ok    profile         .ai/project.yaml valid
+| ok    project-packs   no project packs in .ai/packs
+| ok    lock            .ai/lock.json schema 1
+| ok    version         lock written by this dashcrew (0.0.1)
+| ok    drift           29 generated files match the lock
+| ok    stale           output matches the current profile and catalog
+| ok    guard-policy    .ai/guard.json valid
+| fail  guard-binary    dashcrew is not on PATH, so .ai/bin/guard refuses every tool call: install dashcrew 0.1.0 or newer (brew install fahnaladitia/tap/dashcrew)
+| ok    hook            PreToolUse guard hook present
+| ok    claude-md       CLAUDE.md imports AGENTS.md
+| ok    mcp             defined: 
+| warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
+| ok    agents-md-size  AGENTS.md 14291 of 32768 bytes
+| ok    gitignore       .ai/bin/guard is not ignored
+stderr: (empty)
+files: (unchanged)

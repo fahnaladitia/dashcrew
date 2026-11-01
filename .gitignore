@@ -1,7 +1,2 @@
-# https://dart.dev/tools/private-files
-# Created by `dart pub`
-.dart_tool/
-pubspec.lock
-
 # goreleaser output
 dist/

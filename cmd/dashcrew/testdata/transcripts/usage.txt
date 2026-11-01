@@ -1,0 +1,1334 @@
+# usage
+
+=== step 1: dashcrew
+exit: 0
+stdout:
+| Agent-agnostic AI coding toolkit with Flutter built in.
+| 
+| Usage: dashcrew <command> [arguments]
+| 
+| Global options:
+| -h, --help       Print this usage information.
+|     --version    Print the dashcrew version.
+| 
+| Available commands:
+|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+| 
+| Run "dashcrew help <command>" for more information about a command.
+stderr: (empty)
+files: (unchanged)
+
+=== step 2: dashcrew "--help"
+exit: 0
+stdout:
+| Agent-agnostic AI coding toolkit with Flutter built in.
+| 
+| Usage: dashcrew <command> [arguments]
+| 
+| Global options:
+| -h, --help       Print this usage information.
+|     --version    Print the dashcrew version.
+| 
+| Available commands:
+|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+| 
+| Run "dashcrew help <command>" for more information about a command.
+stderr: (empty)
+files: (unchanged)
+
+=== step 3: dashcrew "-h"
+exit: 0
+stdout:
+| Agent-agnostic AI coding toolkit with Flutter built in.
+| 
+| Usage: dashcrew <command> [arguments]
+| 
+| Global options:
+| -h, --help       Print this usage information.
+|     --version    Print the dashcrew version.
+| 
+| Available commands:
+|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+| 
+| Run "dashcrew help <command>" for more information about a command.
+stderr: (empty)
+files: (unchanged)
+
+=== step 4: dashcrew "help"
+exit: 0
+stdout:
+| Agent-agnostic AI coding toolkit with Flutter built in.
+| 
+| Usage: dashcrew <command> [arguments]
+| 
+| Global options:
+| -h, --help       Print this usage information.
+|     --version    Print the dashcrew version.
+| 
+| Available commands:
+|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+| 
+| Run "dashcrew help <command>" for more information about a command.
+stderr: (empty)
+files: (unchanged)
+
+=== step 5: dashcrew "help" "help"
+exit: 0
+stdout:
+| Display help information for dashcrew.
+| 
+| Usage: dashcrew help [command]
+| -h, --help    Print this usage information.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 6: dashcrew "help" "init"
+exit: 0
+stdout:
+| Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+| 
+| Usage: dashcrew init [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root.
+|                  (defaults to ".")
+| -y, --yes        Write the detected profile without asking.
+|     --agents     Agents to render for.
+|                  [claude-code (default), codex, antigravity]
+|     --force      Replace an existing .ai/project.yaml.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 7: dashcrew "help" "sync"
+exit: 0
+stdout:
+| Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+| 
+| Usage: dashcrew sync [arguments]
+| -h, --help                  Print this usage information.
+| -p, --project               Project root holding .ai/project.yaml.
+|                             (defaults to ".")
+|     --force                 Overwrite generated files that were edited by hand.
+|     --adopt                 Keep an existing AGENTS.md as the project block.
+|     --[no-]compile-guard    Deprecated, does nothing: hooks run dashcrew guard from PATH.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 8: dashcrew "help" "doctor"
+exit: 0
+stdout:
+| Check that the generated toolkit is installed, untouched and current. Writes nothing.
+| 
+| Usage: dashcrew doctor [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml.
+|                  (defaults to ".")
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 9: dashcrew "help" "check"
+exit: 0
+stdout:
+| Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+| 
+| Usage: dashcrew check [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml.
+|                  (defaults to ".")
+|     --pr-body    File holding the PR description; a pull_request workflow supplies it from the event.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 10: dashcrew "help" "worktree"
+exit: 0
+stdout:
+| One worktree per parallel task. Never commits, pushes or deletes a branch.
+| 
+| Usage: dashcrew worktree <subcommand> [arguments]
+| -h, --help    Print this usage information.
+| 
+| Available subcommands:
+|   create   Create <branch> from <base> in <repo>.worktrees/<name>, with no upstream and the toolkit linked.
+|   link     Add missing toolkit links to a worktree and drop an upstream it should not have.
+|   list     Show each task worktree: branch, base, upstream, dirty lines, missing links.
+|   remove   Remove a clean worktree. The branch is kept.
+|   watch    Print one line per new event (commit, pushed, pr, base-moved, merge-tree, overlap) until done.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 11: dashcrew "help" "worktree" "create"
+exit: 0
+stdout:
+| Create <branch> from <base> in <repo>.worktrees/<name>, with no upstream and the toolkit linked.
+| 
+| Usage: dashcrew worktree create <branch> <base>
+| -h, --help        Print this usage information.
+| -p, --project     Any folder inside the repository.
+|                   (defaults to ".")
+|     --name        Folder name; defaults to the branch with / replaced by -.
+|     --[no-]pub    Run the platform's deps command (platform.commands.deps) in the new worktree.
+|                   (defaults to on)
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 12: dashcrew "help" "guard"
+exit: 0
+stdout:
+| Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+| Hooks run it through .ai/bin/guard. The policy is <policy>, else .ai/guard.json in the hook's working directory.
+| 
+| Usage: dashcrew guard [<policy>]
+| -h, --help    Print this usage information.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 13: dashcrew "help" "guard" "install"
+exit: 64
+stdout: (empty)
+stderr:
+| Command "dashcrew guard" does not expect a subcommand.
+| 
+| Usage: dashcrew guard [<policy>]
+| -h, --help    Print this usage information.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 14: dashcrew "--version"
+exit: 0
+stdout:
+| dashcrew 0.0.1
+stderr: (empty)
+files: (unchanged)
+
+=== step 15: dashcrew "--version" "sync"
+exit: 0
+stdout:
+| dashcrew 0.0.1
+stderr: (empty)
+files: (unchanged)
+
+=== step 16: dashcrew "sync" "--version"
+exit: 0
+stdout:
+| dashcrew 0.0.1
+stderr: (empty)
+files: (unchanged)
+
+=== step 17: dashcrew "help" "--version"
+exit: 0
+stdout:
+| dashcrew 0.0.1
+stderr: (empty)
+files: (unchanged)
+
+=== step 18: dashcrew "--version=1"
+exit: 64
+stdout: (empty)
+stderr:
+| Flag option "--version" should not be given a value.
+| 
+| Usage: dashcrew <command> [arguments]
+| 
+| Global options:
+| -h, --help       Print this usage information.
+|     --version    Print the dashcrew version.
+| 
+| Available commands:
+|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+| 
+| Run "dashcrew help <command>" for more information about a command.
+files: (unchanged)
+
+=== step 19: dashcrew "--no-version"
+exit: 64
+stdout: (empty)
+stderr:
+| Cannot negate option "--no-version".
+| 
+| Usage: dashcrew <command> [arguments]
+| 
+| Global options:
+| -h, --help       Print this usage information.
+|     --version    Print the dashcrew version.
+| 
+| Available commands:
+|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+| 
+| Run "dashcrew help <command>" for more information about a command.
+files: (unchanged)
+
+=== step 20: dashcrew "help" "nope"
+exit: 64
+stdout: (empty)
+stderr:
+| Could not find a command named "nope".
+| 
+| Usage: dashcrew <command> [arguments]
+| 
+| Global options:
+| -h, --help       Print this usage information.
+|     --version    Print the dashcrew version.
+| 
+| Available commands:
+|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+| 
+| Run "dashcrew help <command>" for more information about a command.
+files: (unchanged)
+
+=== step 21: dashcrew "help" "sync" "extra"
+exit: 64
+stdout: (empty)
+stderr:
+| Command "dashcrew sync" does not expect a subcommand.
+| 
+| Usage: dashcrew sync [arguments]
+| -h, --help                  Print this usage information.
+| -p, --project               Project root holding .ai/project.yaml.
+|                             (defaults to ".")
+|     --force                 Overwrite generated files that were edited by hand.
+|     --adopt                 Keep an existing AGENTS.md as the project block.
+|     --[no-]compile-guard    Deprecated, does nothing: hooks run dashcrew guard from PATH.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 22: dashcrew "help" "worktree" "nope"
+exit: 64
+stdout: (empty)
+stderr:
+| Could not find a subcommand named "nope" for "dashcrew worktree".
+| 
+| Usage: dashcrew worktree <subcommand> [arguments]
+| -h, --help    Print this usage information.
+| 
+| Available subcommands:
+|   create   Create <branch> from <base> in <repo>.worktrees/<name>, with no upstream and the toolkit linked.
+|   link     Add missing toolkit links to a worktree and drop an upstream it should not have.
+|   list     Show each task worktree: branch, base, upstream, dirty lines, missing links.
+|   remove   Remove a clean worktree. The branch is kept.
+|   watch    Print one line per new event (commit, pushed, pr, base-moved, merge-tree, overlap) until done.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 23: dashcrew "help" "-h"
+exit: 0
+stdout:
+| Display help information for dashcrew.
+| 
+| Usage: dashcrew help [command]
+| -h, --help    Print this usage information.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 24: dashcrew "init" "--help"
+exit: 0
+stdout:
+| Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+| 
+| Usage: dashcrew init [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root.
+|                  (defaults to ".")
+| -y, --yes        Write the detected profile without asking.
+|     --agents     Agents to render for.
+|                  [claude-code (default), codex, antigravity]
+|     --force      Replace an existing .ai/project.yaml.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 25: dashcrew "sync" "-h"
+exit: 0
+stdout:
+| Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+| 
+| Usage: dashcrew sync [arguments]
+| -h, --help                  Print this usage information.
+| -p, --project               Project root holding .ai/project.yaml.
+|                             (defaults to ".")
+|     --force                 Overwrite generated files that were edited by hand.
+|     --adopt                 Keep an existing AGENTS.md as the project block.
+|     --[no-]compile-guard    Deprecated, does nothing: hooks run dashcrew guard from PATH.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 26: dashcrew "doctor" "--help"
+exit: 0
+stdout:
+| Check that the generated toolkit is installed, untouched and current. Writes nothing.
+| 
+| Usage: dashcrew doctor [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml.
+|                  (defaults to ".")
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 27: dashcrew "check" "--help"
+exit: 0
+stdout:
+| Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+| 
+| Usage: dashcrew check [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml.
+|                  (defaults to ".")
+|     --pr-body    File holding the PR description; a pull_request workflow supplies it from the event.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 28: dashcrew "worktree" "--help"
+exit: 0
+stdout:
+| One worktree per parallel task. Never commits, pushes or deletes a branch.
+| 
+| Usage: dashcrew worktree <subcommand> [arguments]
+| -h, --help    Print this usage information.
+| 
+| Available subcommands:
+|   create   Create <branch> from <base> in <repo>.worktrees/<name>, with no upstream and the toolkit linked.
+|   link     Add missing toolkit links to a worktree and drop an upstream it should not have.
+|   list     Show each task worktree: branch, base, upstream, dirty lines, missing links.
+|   remove   Remove a clean worktree. The branch is kept.
+|   watch    Print one line per new event (commit, pushed, pr, base-moved, merge-tree, overlap) until done.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 29: dashcrew "worktree" "create" "--help"
+exit: 0
+stdout:
+| Create <branch> from <base> in <repo>.worktrees/<name>, with no upstream and the toolkit linked.
+| 
+| Usage: dashcrew worktree create <branch> <base>
+| -h, --help        Print this usage information.
+| -p, --project     Any folder inside the repository.
+|                   (defaults to ".")
+|     --name        Folder name; defaults to the branch with / replaced by -.
+|     --[no-]pub    Run the platform's deps command (platform.commands.deps) in the new worktree.
+|                   (defaults to on)
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 30: dashcrew "worktree" "list" "--help"
+exit: 0
+stdout:
+| Show each task worktree: branch, base, upstream, dirty lines, missing links.
+| 
+| Usage: dashcrew worktree list [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Any folder inside the repository.
+|                  (defaults to ".")
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 31: dashcrew "worktree" "link" "--help"
+exit: 0
+stdout:
+| Add missing toolkit links to a worktree and drop an upstream it should not have.
+| 
+| Usage: dashcrew worktree link <name>
+| -h, --help       Print this usage information.
+| -p, --project    Any folder inside the repository.
+|                  (defaults to ".")
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 32: dashcrew "worktree" "remove" "--help"
+exit: 0
+stdout:
+| Remove a clean worktree. The branch is kept.
+| 
+| Usage: dashcrew worktree remove <name>
+| -h, --help       Print this usage information.
+| -p, --project    Any folder inside the repository.
+|                  (defaults to ".")
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 33: dashcrew "worktree" "watch" "--help"
+exit: 0
+stdout:
+| Print one line per new event (commit, pushed, pr, base-moved, merge-tree, overlap) until done.
+| 
+| Usage: dashcrew worktree watch [<name>...]
+| -h, --help         Print this usage information.
+| -p, --project      Any folder inside the repository.
+|                    (defaults to ".")
+|     --once         Run one pass and exit.
+|     --state-dir    Where seen events are kept; defaults to <git dir>/dashcrew-watch.
+|     --interval     Seconds between passes.
+|                    (defaults to "60")
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 34: dashcrew "guard" "--help"
+exit: 0
+stdout:
+| Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+| Hooks run it through .ai/bin/guard. The policy is <policy>, else .ai/guard.json in the hook's working directory.
+| 
+| Usage: dashcrew guard [<policy>]
+| -h, --help    Print this usage information.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 35: dashcrew "guard" "-h"
+exit: 0
+stdout:
+| Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+| Hooks run it through .ai/bin/guard. The policy is <policy>, else .ai/guard.json in the hook's working directory.
+| 
+| Usage: dashcrew guard [<policy>]
+| -h, --help    Print this usage information.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 36: dashcrew "--help" "sync"
+exit: 0
+stdout:
+| Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+| 
+| Usage: dashcrew sync [arguments]
+| -h, --help                  Print this usage information.
+| -p, --project               Project root holding .ai/project.yaml.
+|                             (defaults to ".")
+|     --force                 Overwrite generated files that were edited by hand.
+|     --adopt                 Keep an existing AGENTS.md as the project block.
+|     --[no-]compile-guard    Deprecated, does nothing: hooks run dashcrew guard from PATH.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 37: dashcrew "-h" "worktree" "create"
+exit: 0
+stdout:
+| Create <branch> from <base> in <repo>.worktrees/<name>, with no upstream and the toolkit linked.
+| 
+| Usage: dashcrew worktree create <branch> <base>
+| -h, --help        Print this usage information.
+| -p, --project     Any folder inside the repository.
+|                   (defaults to ".")
+|     --name        Folder name; defaults to the branch with / replaced by -.
+|     --[no-]pub    Run the platform's deps command (platform.commands.deps) in the new worktree.
+|                   (defaults to on)
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 38: dashcrew "worktree" "-h" "create"
+exit: 0
+stdout:
+| One worktree per parallel task. Never commits, pushes or deletes a branch.
+| 
+| Usage: dashcrew worktree <subcommand> [arguments]
+| -h, --help    Print this usage information.
+| 
+| Available subcommands:
+|   create   Create <branch> from <base> in <repo>.worktrees/<name>, with no upstream and the toolkit linked.
+|   link     Add missing toolkit links to a worktree and drop an upstream it should not have.
+|   list     Show each task worktree: branch, base, upstream, dirty lines, missing links.
+|   remove   Remove a clean worktree. The branch is kept.
+|   watch    Print one line per new event (commit, pushed, pr, base-moved, merge-tree, overlap) until done.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 39: dashcrew "sync" "--help" "extra"
+exit: 0
+stdout:
+| Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+| 
+| Usage: dashcrew sync [arguments]
+| -h, --help                  Print this usage information.
+| -p, --project               Project root holding .ai/project.yaml.
+|                             (defaults to ".")
+|     --force                 Overwrite generated files that were edited by hand.
+|     --adopt                 Keep an existing AGENTS.md as the project block.
+|     --[no-]compile-guard    Deprecated, does nothing: hooks run dashcrew guard from PATH.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 40: dashcrew "nope"
+exit: 64
+stdout: (empty)
+stderr:
+| Could not find a command named "nope".
+| 
+| Usage: dashcrew <command> [arguments]
+| 
+| Global options:
+| -h, --help       Print this usage information.
+|     --version    Print the dashcrew version.
+| 
+| Available commands:
+|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+| 
+| Run "dashcrew help <command>" for more information about a command.
+files: (unchanged)
+
+=== step 41: dashcrew "snyc"
+exit: 64
+stdout: (empty)
+stderr:
+| Could not find a command named "snyc".
+| 
+| Did you mean one of these?
+|   sync
+| 
+| 
+| Usage: dashcrew <command> [arguments]
+| 
+| Global options:
+| -h, --help       Print this usage information.
+|     --version    Print the dashcrew version.
+| 
+| Available commands:
+|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+| 
+| Run "dashcrew help <command>" for more information about a command.
+files: (unchanged)
+
+=== step 42: dashcrew "worktre"
+exit: 64
+stdout: (empty)
+stderr:
+| Could not find a command named "worktre".
+| 
+| Did you mean one of these?
+|   worktree
+| 
+| 
+| Usage: dashcrew <command> [arguments]
+| 
+| Global options:
+| -h, --help       Print this usage information.
+|     --version    Print the dashcrew version.
+| 
+| Available commands:
+|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+| 
+| Run "dashcrew help <command>" for more information about a command.
+files: (unchanged)
+
+=== step 43: dashcrew "sink"
+exit: 64
+stdout: (empty)
+stderr:
+| Could not find a command named "sink".
+| 
+| Did you mean one of these?
+|   sync
+| 
+| 
+| Usage: dashcrew <command> [arguments]
+| 
+| Global options:
+| -h, --help       Print this usage information.
+|     --version    Print the dashcrew version.
+| 
+| Available commands:
+|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+| 
+| Run "dashcrew help <command>" for more information about a command.
+files: (unchanged)
+
+=== step 44: dashcrew "chek"
+exit: 64
+stdout: (empty)
+stderr:
+| Could not find a command named "chek".
+| 
+| Did you mean one of these?
+|   check
+| 
+| 
+| Usage: dashcrew <command> [arguments]
+| 
+| Global options:
+| -h, --help       Print this usage information.
+|     --version    Print the dashcrew version.
+| 
+| Available commands:
+|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+| 
+| Run "dashcrew help <command>" for more information about a command.
+files: (unchanged)
+
+=== step 45: dashcrew "worktree"
+exit: 64
+stdout: (empty)
+stderr:
+| Missing subcommand for "dashcrew worktree".
+| 
+| Usage: dashcrew worktree <subcommand> [arguments]
+| -h, --help    Print this usage information.
+| 
+| Available subcommands:
+|   create   Create <branch> from <base> in <repo>.worktrees/<name>, with no upstream and the toolkit linked.
+|   link     Add missing toolkit links to a worktree and drop an upstream it should not have.
+|   list     Show each task worktree: branch, base, upstream, dirty lines, missing links.
+|   remove   Remove a clean worktree. The branch is kept.
+|   watch    Print one line per new event (commit, pushed, pr, base-moved, merge-tree, overlap) until done.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 46: dashcrew "worktree" "nope"
+exit: 64
+stdout: (empty)
+stderr:
+| Could not find a subcommand named "nope" for "dashcrew worktree".
+| 
+| Usage: dashcrew worktree <subcommand> [arguments]
+| -h, --help    Print this usage information.
+| 
+| Available subcommands:
+|   create   Create <branch> from <base> in <repo>.worktrees/<name>, with no upstream and the toolkit linked.
+|   link     Add missing toolkit links to a worktree and drop an upstream it should not have.
+|   list     Show each task worktree: branch, base, upstream, dirty lines, missing links.
+|   remove   Remove a clean worktree. The branch is kept.
+|   watch    Print one line per new event (commit, pushed, pr, base-moved, merge-tree, overlap) until done.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 47: dashcrew "worktree" "craete"
+exit: 64
+stdout: (empty)
+stderr:
+| Could not find a subcommand named "craete" for "dashcrew worktree".
+| 
+| Did you mean one of these?
+|   create
+| 
+| 
+| Usage: dashcrew worktree <subcommand> [arguments]
+| -h, --help    Print this usage information.
+| 
+| Available subcommands:
+|   create   Create <branch> from <base> in <repo>.worktrees/<name>, with no upstream and the toolkit linked.
+|   link     Add missing toolkit links to a worktree and drop an upstream it should not have.
+|   list     Show each task worktree: branch, base, upstream, dirty lines, missing links.
+|   remove   Remove a clean worktree. The branch is kept.
+|   watch    Print one line per new event (commit, pushed, pr, base-moved, merge-tree, overlap) until done.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 48: dashcrew "sync" "--bogus"
+exit: 64
+stdout: (empty)
+stderr:
+| Could not find an option named "--bogus".
+| 
+| Usage: dashcrew sync [arguments]
+| -h, --help                  Print this usage information.
+| -p, --project               Project root holding .ai/project.yaml.
+|                             (defaults to ".")
+|     --force                 Overwrite generated files that were edited by hand.
+|     --adopt                 Keep an existing AGENTS.md as the project block.
+|     --[no-]compile-guard    Deprecated, does nothing: hooks run dashcrew guard from PATH.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 49: dashcrew "sync" "-x"
+exit: 64
+stdout: (empty)
+stderr:
+| Could not find an option or flag "-x".
+| 
+| Usage: dashcrew sync [arguments]
+| -h, --help                  Print this usage information.
+| -p, --project               Project root holding .ai/project.yaml.
+|                             (defaults to ".")
+|     --force                 Overwrite generated files that were edited by hand.
+|     --adopt                 Keep an existing AGENTS.md as the project block.
+|     --[no-]compile-guard    Deprecated, does nothing: hooks run dashcrew guard from PATH.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 50: dashcrew "sync" "-xy"
+exit: 64
+stdout: (empty)
+stderr:
+| Could not find an option with short name "-x".
+| 
+| Usage: dashcrew sync [arguments]
+| -h, --help                  Print this usage information.
+| -p, --project               Project root holding .ai/project.yaml.
+|                             (defaults to ".")
+|     --force                 Overwrite generated files that were edited by hand.
+|     --adopt                 Keep an existing AGENTS.md as the project block.
+|     --[no-]compile-guard    Deprecated, does nothing: hooks run dashcrew guard from PATH.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 51: dashcrew "init" "-yp"
+exit: 64
+stdout: (empty)
+stderr:
+| Option "-p" must be a flag to be in a collapsed "-".
+| 
+| Usage: dashcrew init [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root.
+|                  (defaults to ".")
+| -y, --yes        Write the detected profile without asking.
+|     --agents     Agents to render for.
+|                  [claude-code (default), codex, antigravity]
+|     --force      Replace an existing .ai/project.yaml.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 52: dashcrew "init" "-yz"
+exit: 64
+stdout: (empty)
+stderr:
+| Could not find an option with short name "-z".
+| 
+| Usage: dashcrew init [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root.
+|                  (defaults to ".")
+| -y, --yes        Write the detected profile without asking.
+|     --agents     Agents to render for.
+|                  [claude-code (default), codex, antigravity]
+|     --force      Replace an existing .ai/project.yaml.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 53: dashcrew "init" "-yfoo"
+exit: 64
+stdout: (empty)
+stderr:
+| Could not find an option with short name "-f".
+| 
+| Usage: dashcrew init [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root.
+|                  (defaults to ".")
+| -y, --yes        Write the detected profile without asking.
+|     --agents     Agents to render for.
+|                  [claude-code (default), codex, antigravity]
+|     --force      Replace an existing .ai/project.yaml.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 54: dashcrew "init" "--agents" "bogus"
+exit: 64
+stdout: (empty)
+stderr:
+| "bogus" is not an allowed value for option "--agents".
+| 
+| Usage: dashcrew init [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root.
+|                  (defaults to ".")
+| -y, --yes        Write the detected profile without asking.
+|     --agents     Agents to render for.
+|                  [claude-code (default), codex, antigravity]
+|     --force      Replace an existing .ai/project.yaml.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 55: dashcrew "init" "--agents" "codex,bogus"
+exit: 64
+stdout: (empty)
+stderr:
+| "bogus" is not an allowed value for option "--agents".
+| 
+| Usage: dashcrew init [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root.
+|                  (defaults to ".")
+| -y, --yes        Write the detected profile without asking.
+|     --agents     Agents to render for.
+|                  [claude-code (default), codex, antigravity]
+|     --force      Replace an existing .ai/project.yaml.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 56: dashcrew "init" "--agents"
+exit: 64
+stdout: (empty)
+stderr:
+| Missing argument for "--agents".
+| 
+| Usage: dashcrew init [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root.
+|                  (defaults to ".")
+| -y, --yes        Write the detected profile without asking.
+|     --agents     Agents to render for.
+|                  [claude-code (default), codex, antigravity]
+|     --force      Replace an existing .ai/project.yaml.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 57: dashcrew "init" "--no-yes"
+exit: 64
+stdout: (empty)
+stderr:
+| Cannot negate option "--no-yes".
+| 
+| Usage: dashcrew init [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root.
+|                  (defaults to ".")
+| -y, --yes        Write the detected profile without asking.
+|     --agents     Agents to render for.
+|                  [claude-code (default), codex, antigravity]
+|     --force      Replace an existing .ai/project.yaml.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 58: dashcrew "sync" "--no-project"
+exit: 64
+stdout: (empty)
+stderr:
+| Cannot negate non-flag option "--no-project".
+| 
+| Usage: dashcrew sync [arguments]
+| -h, --help                  Print this usage information.
+| -p, --project               Project root holding .ai/project.yaml.
+|                             (defaults to ".")
+|     --force                 Overwrite generated files that were edited by hand.
+|     --adopt                 Keep an existing AGENTS.md as the project block.
+|     --[no-]compile-guard    Deprecated, does nothing: hooks run dashcrew guard from PATH.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 59: dashcrew "sync" "--no-bogus"
+exit: 64
+stdout: (empty)
+stderr:
+| Could not find an option named "--no-bogus".
+| 
+| Usage: dashcrew sync [arguments]
+| -h, --help                  Print this usage information.
+| -p, --project               Project root holding .ai/project.yaml.
+|                             (defaults to ".")
+|     --force                 Overwrite generated files that were edited by hand.
+|     --adopt                 Keep an existing AGENTS.md as the project block.
+|     --[no-]compile-guard    Deprecated, does nothing: hooks run dashcrew guard from PATH.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 60: dashcrew "doctor" "-p"
+exit: 64
+stdout: (empty)
+stderr:
+| Missing argument for "-p".
+| 
+| Usage: dashcrew doctor [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml.
+|                  (defaults to ".")
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 61: dashcrew "sync" "--force=1"
+exit: 64
+stdout: (empty)
+stderr:
+| Flag option "--force" should not be given a value.
+| 
+| Usage: dashcrew sync [arguments]
+| -h, --help                  Print this usage information.
+| -p, --project               Project root holding .ai/project.yaml.
+|                             (defaults to ".")
+|     --force                 Overwrite generated files that were edited by hand.
+|     --adopt                 Keep an existing AGENTS.md as the project block.
+|     --[no-]compile-guard    Deprecated, does nothing: hooks run dashcrew guard from PATH.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 62: dashcrew "sync" "--help=1"
+exit: 64
+stdout: (empty)
+stderr:
+| Flag option "--help" should not be given a value.
+| 
+| Usage: dashcrew sync [arguments]
+| -h, --help                  Print this usage information.
+| -p, --project               Project root holding .ai/project.yaml.
+|                             (defaults to ".")
+|     --force                 Overwrite generated files that were edited by hand.
+|     --adopt                 Keep an existing AGENTS.md as the project block.
+|     --[no-]compile-guard    Deprecated, does nothing: hooks run dashcrew guard from PATH.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 63: dashcrew "--" "sync"
+exit: 64
+stdout: (empty)
+stderr:
+| Could not find a command named "sync".
+| 
+| Did you mean one of these?
+|   sync
+| 
+| 
+| Usage: dashcrew <command> [arguments]
+| 
+| Global options:
+| -h, --help       Print this usage information.
+|     --version    Print the dashcrew version.
+| 
+| Available commands:
+|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+| 
+| Run "dashcrew help <command>" for more information about a command.
+files: (unchanged)
+
+=== step 64: dashcrew "foo" "sync"
+exit: 64
+stdout: (empty)
+stderr:
+| Cannot specify arguments before a command.
+| 
+| Usage: dashcrew <command> [arguments]
+| 
+| Global options:
+| -h, --help       Print this usage information.
+|     --version    Print the dashcrew version.
+| 
+| Available commands:
+|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+| 
+| Run "dashcrew help <command>" for more information about a command.
+files: (unchanged)
+
+=== step 65: dashcrew "help" "--project" "x"
+exit: 64
+stdout: (empty)
+stderr:
+| Could not find an option named "--project".
+| 
+| Usage: dashcrew help [command]
+| -h, --help    Print this usage information.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 66: dashcrew "--project" "x"
+exit: 64
+stdout: (empty)
+stderr:
+| Could not find an option named "--project".
+| 
+| Usage: dashcrew <command> [arguments]
+| 
+| Global options:
+| -h, --help       Print this usage information.
+|     --version    Print the dashcrew version.
+| 
+| Available commands:
+|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+| 
+| Run "dashcrew help <command>" for more information about a command.
+files: (unchanged)
+
+=== step 67: dashcrew "---x"
+exit: 64
+stdout: (empty)
+stderr:
+| Could not find an option named "---x".
+| 
+| Usage: dashcrew <command> [arguments]
+| 
+| Global options:
+| -h, --help       Print this usage information.
+|     --version    Print the dashcrew version.
+| 
+| Available commands:
+|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+| 
+| Run "dashcrew help <command>" for more information about a command.
+files: (unchanged)
+
+=== step 68: dashcrew "--"
+exit: 0
+stdout:
+| Agent-agnostic AI coding toolkit with Flutter built in.
+| 
+| Usage: dashcrew <command> [arguments]
+| 
+| Global options:
+| -h, --help       Print this usage information.
+|     --version    Print the dashcrew version.
+| 
+| Available commands:
+|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+| 
+| Run "dashcrew help <command>" for more information about a command.
+stderr: (empty)
+files: (unchanged)
+
+=== step 69: dashcrew "-"
+exit: 64
+stdout: (empty)
+stderr:
+| Could not find a command named "-".
+| 
+| Usage: dashcrew <command> [arguments]
+| 
+| Global options:
+| -h, --help       Print this usage information.
+|     --version    Print the dashcrew version.
+| 
+| Available commands:
+|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+| 
+| Run "dashcrew help <command>" for more information about a command.
+files: (unchanged)
+
+=== step 70: dashcrew "worktree" "create"
+exit: 1
+stdout: (empty)
+stderr:
+| . is not inside a git repository.
+files: (unchanged)
+
+=== step 71: dashcrew "worktree" "create" "-p"
+exit: 64
+stdout: (empty)
+stderr:
+| Missing argument for "-p".
+| 
+| Usage: dashcrew worktree create <branch> <base>
+| -h, --help        Print this usage information.
+| -p, --project     Any folder inside the repository.
+|                   (defaults to ".")
+|     --name        Folder name; defaults to the branch with / replaced by -.
+|     --[no-]pub    Run the platform's deps command (platform.commands.deps) in the new worktree.
+|                   (defaults to on)
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 72: dashcrew "worktree" "list"
+exit: 1
+stdout: (empty)
+stderr:
+| . is not inside a git repository.
+files: (unchanged)
+
+=== step 73: dashcrew "worktree" "watch" "--interval" "0"
+exit: 1
+stdout: (empty)
+stderr:
+| . is not inside a git repository.
+files: (unchanged)
+
+=== step 74: dashcrew "check" "--pr-body"
+exit: 64
+stdout: (empty)
+stderr:
+| Missing argument for "--pr-body".
+| 
+| Usage: dashcrew check [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml.
+|                  (defaults to ".")
+|     --pr-body    File holding the PR description; a pull_request workflow supplies it from the event.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 75: dashcrew "check" "--pr-body" "missing.md"
+exit: 64
+stdout: (empty)
+stderr:
+| --pr-body file missing.md not found.
+| 
+| Usage: dashcrew check [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml.
+|                  (defaults to ".")
+|     --pr-body    File holding the PR description; a pull_request workflow supplies it from the event.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 76: dashcrew "check" "--pr-body" ""
+exit: 64
+stdout: (empty)
+stderr:
+| --pr-body file  not found.
+| 
+| Usage: dashcrew check [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml.
+|                  (defaults to ".")
+|     --pr-body    File holding the PR description; a pull_request workflow supplies it from the event.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 77: dashcrew "check" "--pr-body" "."
+exit: 64
+stdout: (empty)
+stderr:
+| --pr-body file . not found.
+| 
+| Usage: dashcrew check [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml.
+|                  (defaults to ".")
+|     --pr-body    File holding the PR description; a pull_request workflow supplies it from the event.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)

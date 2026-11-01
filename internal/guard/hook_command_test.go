@@ -10,7 +10,8 @@ import (
 	"github.com/fahnaladitia/dashcrew/internal/omap"
 )
 
-// dartHookCommandTests is the number of tests in test/unit/hook_command_test.dart, each a row of hookCommandCases.
+// dartHookCommandTests is the number of tests the Dart hook_command_test.dart had (removed at G8), each a row of
+// hookCommandCases.
 const dartHookCommandTests = 3
 
 // hookProject is a git repo whose `.ai/bin/guard` is a stub that records its arguments and blocks.

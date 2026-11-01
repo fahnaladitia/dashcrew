@@ -1,7 +1,7 @@
 package main
 
-// A port of the parts of Dart's `package:args` 2.7.0 (ArgParser, CommandRunner, HelpCommand) that bin/dashcrew.dart
-// uses, so parsing, help text, usage errors and exit codes match the Dart engine byte for byte. Usage is never
+// A port of the parts of Dart's `package:args` 2.7.0 (ArgParser, CommandRunner, HelpCommand) that the CLI uses,
+// so parsing, help text, usage errors and exit codes stay those of the Dart engine before 0.1.0, byte for byte. Usage is never
 // wrapped, as with `usageLineLength: null`.
 
 import (

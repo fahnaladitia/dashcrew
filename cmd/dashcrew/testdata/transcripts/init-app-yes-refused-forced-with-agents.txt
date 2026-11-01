@@ -1,0 +1,74 @@
+# init-app yes, refused, forced with agents
+
+=== step 1: dashcrew "init" "--yes"
+exit: 0
+stdout:
+| Detected in <root>/w:
+|   platform: flutter (pubspec.yaml)
+|   analytics: posthog (posthog_flutter in dependencies)
+|   di: get_it (get_it in dependencies)
+|   network: dio (dio in dependencies) | http (http in dependencies)
+|   router: go_router (go_router in dependencies)
+|   state: bloc (flutter_bloc in dependencies)
+|   storage: hive (hive_ce in dependencies, hive_ce_flutter in dependencies)
+|   test: mocktail (mocktail in dev_dependencies)
+|   flavors: dev, prod (lib/main_<flavor>.dart)
+|   local packages: packages/core (path dependencies)
+|   base branches: main, develop (remote branches)
+| network: skipped, 2 candidates: dio, http; set it in .ai/project.yaml
+| wrote .ai/project.yaml
+| next: dashcrew sync
+stderr: (empty)
+files:
++ w/.ai  dir
++ w/.ai/project.yaml  -rw-r--r-- sha256:163fdbbda1d97d25
+
+=== step 2: dashcrew "init" "--yes"
+exit: 1
+stdout: (empty)
+stderr:
+| .ai/project.yaml already exists. Rerun with --force to replace it.
+files: (unchanged)
+
+=== step 3: dashcrew "init" "-y" "--force" "--agents" "codex" "--agents" "antigravity"
+exit: 0
+stdout:
+| Detected in <root>/w:
+|   platform: flutter (pubspec.yaml)
+|   analytics: posthog (posthog_flutter in dependencies)
+|   di: get_it (get_it in dependencies)
+|   network: dio (dio in dependencies) | http (http in dependencies)
+|   router: go_router (go_router in dependencies)
+|   state: bloc (flutter_bloc in dependencies)
+|   storage: hive (hive_ce in dependencies, hive_ce_flutter in dependencies)
+|   test: mocktail (mocktail in dev_dependencies)
+|   flavors: dev, prod (lib/main_<flavor>.dart)
+|   local packages: packages/core (path dependencies)
+|   base branches: main, develop (remote branches)
+| network: skipped, 2 candidates: dio, http; set it in .ai/project.yaml
+| wrote .ai/project.yaml
+| next: dashcrew sync
+stderr: (empty)
+files:
+~ w/.ai/project.yaml  -rw-r--r-- sha256:a5689f7e76edf996
+
+=== step 4: dashcrew "init" "-y" "--force" "--agents=codex,antigravity"
+exit: 0
+stdout:
+| Detected in <root>/w:
+|   platform: flutter (pubspec.yaml)
+|   analytics: posthog (posthog_flutter in dependencies)
+|   di: get_it (get_it in dependencies)
+|   network: dio (dio in dependencies) | http (http in dependencies)
+|   router: go_router (go_router in dependencies)
+|   state: bloc (flutter_bloc in dependencies)
+|   storage: hive (hive_ce in dependencies, hive_ce_flutter in dependencies)
+|   test: mocktail (mocktail in dev_dependencies)
+|   flavors: dev, prod (lib/main_<flavor>.dart)
+|   local packages: packages/core (path dependencies)
+|   base branches: main, develop (remote branches)
+| network: skipped, 2 candidates: dio, http; set it in .ai/project.yaml
+| wrote .ai/project.yaml
+| next: dashcrew sync
+stderr: (empty)
+files: (unchanged)

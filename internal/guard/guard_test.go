@@ -10,8 +10,8 @@ import (
 	"github.com/fahnaladitia/dashcrew/internal/omap"
 )
 
-// dartGuardTests is the number of tests in test/unit/guard_test.dart. Every one of them is a row of guardCases,
-// named after the Dart test.
+// dartGuardTests is the number of tests the Dart guard_test.dart had (removed at G8). Every one of them is a row
+// of guardCases, named after the Dart test.
 const dartGuardTests = 58
 
 func testPolicy(agentCommit, formatter bool) Policy {

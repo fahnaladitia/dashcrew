@@ -1,0 +1,269 @@
+# worktree create, list, link, remove
+
+=== step 1: dashcrew "worktree" "list"
+exit: 0
+stdout:
+| no task worktrees
+stderr: (empty)
+files: (unchanged)
+
+=== step 2: dashcrew "worktree" "create" "feat/a" "origin/develop" "--no-pub"
+exit: 0
+stdout:
+| path: <root>/w.worktrees/feat-a
+| branch: feat/a (base develop)
+| upstream: none
+| status: ## feat/a
+| links: AGENTS.md, CLAUDE.md, .claude, .codex, .agents, .ai/bin, docs/plans
+| deps: skipped
+stderr: (empty)
+files:
++ w.worktrees  dir
++ w.worktrees/feat-a  dir
++ w.worktrees/feat-a/.agents  link -> <root>/w/.agents
++ w.worktrees/feat-a/.ai  dir
++ w.worktrees/feat-a/.ai/bin  link -> <root>/w/.ai/bin
++ w.worktrees/feat-a/.ai/project.yaml  -rw-r--r-- sha256:60467b7adc1c2092
++ w.worktrees/feat-a/.claude  link -> <root>/w/.claude
++ w.worktrees/feat-a/.codex  link -> <root>/w/.codex
++ w.worktrees/feat-a/.git  -rw-r--r-- sha256:fd7e23d5ab8c46fb
++ w.worktrees/feat-a/.gitignore  -rw-r--r-- sha256:fc30db455a55e1f5
++ w.worktrees/feat-a/AGENTS.md  link -> <root>/w/AGENTS.md
++ w.worktrees/feat-a/CLAUDE.md  link -> <root>/w/CLAUDE.md
++ w.worktrees/feat-a/Makefile  -rw-r--r-- sha256:f6b1e6c5b5bb4bd3
++ w.worktrees/feat-a/docs  dir
++ w.worktrees/feat-a/docs/plans  link -> <root>/w/docs/plans
++ w.worktrees/feat-a/docs/readme.md  -rw-r--r-- sha256:0dab0d00b42ecf3a
++ w.worktrees/feat-a/lib  dir
++ w.worktrees/feat-a/lib/a.dart  -rw-r--r-- sha256:6f1071e614d30954
+~ w/.git/config
+    + "[branch \"feat/a\"]"
+    + "\tdashcrew-base = develop"
+~ w/.git/info/exclude
+    + "/AGENTS.md"
+    + "/CLAUDE.md"
+    + "/.claude"
+    + "/.codex"
+    + "/.agents"
+    + "/.ai/bin"
+    + "/docs/plans"
+
+=== step 3: dashcrew "worktree" "list"
+exit: 0
+stdout:
+| feat-a  feat/a  base develop  upstream -  dirty 0  links ok
+stderr: (empty)
+files: (unchanged)
+
+=== step 4: dashcrew "worktree" "create" "feat/b" "main" "--name" "b-dir"
+exit: 0
+stdout:
+| path: <root>/w.worktrees/b-dir
+| branch: feat/b (base main)
+| upstream: none
+| status: ## feat/b
+| links: AGENTS.md, CLAUDE.md, .claude, .codex, .agents, .ai/bin, docs/plans
+| deps: skipped (no pubspec.yaml)
+stderr: (empty)
+files:
++ w.worktrees/b-dir  dir
++ w.worktrees/b-dir/.agents  link -> <root>/w/.agents
++ w.worktrees/b-dir/.ai  dir
++ w.worktrees/b-dir/.ai/bin  link -> <root>/w/.ai/bin
++ w.worktrees/b-dir/.ai/project.yaml  -rw-r--r-- sha256:60467b7adc1c2092
++ w.worktrees/b-dir/.claude  link -> <root>/w/.claude
++ w.worktrees/b-dir/.codex  link -> <root>/w/.codex
++ w.worktrees/b-dir/.git  -rw-r--r-- sha256:9df916c593e50fe4
++ w.worktrees/b-dir/.gitignore  -rw-r--r-- sha256:fc30db455a55e1f5
++ w.worktrees/b-dir/AGENTS.md  link -> <root>/w/AGENTS.md
++ w.worktrees/b-dir/CLAUDE.md  link -> <root>/w/CLAUDE.md
++ w.worktrees/b-dir/Makefile  -rw-r--r-- sha256:f6b1e6c5b5bb4bd3
++ w.worktrees/b-dir/docs  dir
++ w.worktrees/b-dir/docs/plans  link -> <root>/w/docs/plans
++ w.worktrees/b-dir/docs/readme.md  -rw-r--r-- sha256:0dab0d00b42ecf3a
++ w.worktrees/b-dir/lib  dir
++ w.worktrees/b-dir/lib/a.dart  -rw-r--r-- sha256:6f1071e614d30954
+~ w/.git/config
+    + "[branch \"feat/b\"]"
+    + "\tdashcrew-base = main"
+
+=== step 5: dashcrew "worktree" "create" "feat/a" "main" "--no-pub"
+exit: 1
+stdout: (empty)
+stderr:
+| Branch feat/a already exists.
+files: (unchanged)
+
+=== step 6: dashcrew "worktree" "create" "feat/c" "main" "--no-pub" "--name" "b-dir"
+exit: 1
+stdout: (empty)
+stderr:
+| Folder <root>/w.worktrees/b-dir already exists.
+files: (unchanged)
+
+=== step 7: dashcrew "worktree" "create" "bad..name" "main"
+exit: 1
+stdout: (empty)
+stderr:
+| "bad..name" is not a valid branch name.
+files: (unchanged)
+
+=== step 8: dashcrew "worktree" "create" "feat/c" "origin/nope"
+exit: 1
+stdout: (empty)
+stderr:
+| Base origin/nope not found. Fetch it or name an existing branch.
+files: (unchanged)
+
+=== step 9: dashcrew "worktree" "create" "feat/c"
+exit: 64
+stdout: (empty)
+stderr:
+| Missing <base>.
+| 
+| Usage: dashcrew worktree create <branch> <base>
+| -h, --help        Print this usage information.
+| -p, --project     Any folder inside the repository.
+|                   (defaults to ".")
+|     --name        Folder name; defaults to the branch with / replaced by -.
+|     --[no-]pub    Run the platform's deps command (platform.commands.deps) in the new worktree.
+|                   (defaults to on)
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 10: dashcrew "worktree" "create" "feat/c" "main" "-p" "w.worktrees/feat-a" "--no-pub"
+dir: .
+exit: 0
+stdout:
+| path: <root>/w.worktrees/feat-c
+| branch: feat/c (base main)
+| upstream: none
+| status: ## feat/c
+| links: AGENTS.md, CLAUDE.md, .claude, .codex, .agents, .ai/bin, docs/plans
+| deps: skipped
+stderr: (empty)
+files:
++ w.worktrees/feat-c  dir
++ w.worktrees/feat-c/.agents  link -> <root>/w/.agents
++ w.worktrees/feat-c/.ai  dir
++ w.worktrees/feat-c/.ai/bin  link -> <root>/w/.ai/bin
++ w.worktrees/feat-c/.ai/project.yaml  -rw-r--r-- sha256:60467b7adc1c2092
++ w.worktrees/feat-c/.claude  link -> <root>/w/.claude
++ w.worktrees/feat-c/.codex  link -> <root>/w/.codex
++ w.worktrees/feat-c/.git  -rw-r--r-- sha256:6b7e02b2515e3a55
++ w.worktrees/feat-c/.gitignore  -rw-r--r-- sha256:fc30db455a55e1f5
++ w.worktrees/feat-c/AGENTS.md  link -> <root>/w/AGENTS.md
++ w.worktrees/feat-c/CLAUDE.md  link -> <root>/w/CLAUDE.md
++ w.worktrees/feat-c/Makefile  -rw-r--r-- sha256:f6b1e6c5b5bb4bd3
++ w.worktrees/feat-c/docs  dir
++ w.worktrees/feat-c/docs/plans  link -> <root>/w/docs/plans
++ w.worktrees/feat-c/docs/readme.md  -rw-r--r-- sha256:0dab0d00b42ecf3a
++ w.worktrees/feat-c/lib  dir
++ w.worktrees/feat-c/lib/a.dart  -rw-r--r-- sha256:6f1071e614d30954
+~ w/.git/config
+    + "[branch \"feat/c\"]"
+    + "\tdashcrew-base = main"
+
+=== step 11: dashcrew "worktree" "list" "-p" "lib"
+(after the case's setup for this step)
+exit: 0
+stdout:
+| b-dir  feat/b  base main  upstream origin/main  dirty 0  links ok
+| feat-a  feat/a  base develop  upstream -  dirty 1  missing links: CLAUDE.md
+| feat-c  feat/c  base main  upstream -  dirty 0  links ok
+stderr: (empty)
+files: (unchanged)
+
+=== step 12: dashcrew "worktree" "link" "feat-a"
+exit: 0
+stdout:
+| linked: CLAUDE.md
+stderr: (empty)
+files:
++ w.worktrees/feat-a/CLAUDE.md  link -> <root>/w/CLAUDE.md
+
+=== step 13: dashcrew "worktree" "link" "b-dir"
+exit: 0
+stdout:
+| upstream removed: a new branch tracks nothing until its first push
+| links: up to date
+stderr: (empty)
+files:
+~ w/.git/config
+    - "\tremote = origin"
+    - "\tmerge = refs/heads/main"
+
+=== step 14: dashcrew "worktree" "link" "feat-a"
+exit: 0
+stdout:
+| links: up to date
+stderr: (empty)
+files: (unchanged)
+
+=== step 15: dashcrew "worktree" "link"
+exit: 64
+stdout: (empty)
+stderr:
+| Missing <name>.
+| 
+| Usage: dashcrew worktree link <name>
+| -h, --help       Print this usage information.
+| -p, --project    Any folder inside the repository.
+|                  (defaults to ".")
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 16: dashcrew "worktree" "link" "nope"
+exit: 1
+stdout: (empty)
+stderr:
+| No worktree named nope in <root>/w.worktrees.
+files: (unchanged)
+
+=== step 17: dashcrew "worktree" "remove" "feat-a"
+exit: 1
+stdout: (empty)
+stderr:
+| feat-a has uncommitted changes (1 lines). Commit or discard them first.
+files: (unchanged)
+
+=== step 18: dashcrew "worktree" "remove" "b-dir"
+exit: 0
+stdout:
+| removed: <root>/w.worktrees/b-dir (branch kept)
+stderr: (empty)
+files:
+- w.worktrees/b-dir
+- w.worktrees/b-dir/.agents
+- w.worktrees/b-dir/.ai
+- w.worktrees/b-dir/.ai/bin
+- w.worktrees/b-dir/.ai/project.yaml
+- w.worktrees/b-dir/.claude
+- w.worktrees/b-dir/.codex
+- w.worktrees/b-dir/.git
+- w.worktrees/b-dir/.gitignore
+- w.worktrees/b-dir/AGENTS.md
+- w.worktrees/b-dir/CLAUDE.md
+- w.worktrees/b-dir/Makefile
+- w.worktrees/b-dir/docs
+- w.worktrees/b-dir/docs/plans
+- w.worktrees/b-dir/docs/readme.md
+- w.worktrees/b-dir/lib
+- w.worktrees/b-dir/lib/a.dart
+
+=== step 19: dashcrew "worktree" "remove" "nope"
+exit: 1
+stdout: (empty)
+stderr:
+| No worktree named nope in <root>/w.worktrees.
+files: (unchanged)
+
+=== step 20: dashcrew "worktree" "list"
+exit: 0
+stdout:
+| feat-a  feat/a  base develop  upstream -  dirty 1  links ok
+| feat-c  feat/c  base main  upstream -  dirty 0  links ok
+stderr: (empty)
+files: (unchanged)

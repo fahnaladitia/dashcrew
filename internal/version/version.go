@@ -13,7 +13,7 @@ import (
 var Version = ""
 
 // Unstamped is the version of a build that carries none, such as a test or a `go build -buildvcs=false`.
-// It equals `pubspec.yaml`, so the goldens and the Dart engine record the same value.
+// The goldens record it, and an old Dart-installed dashcrew reports it too, so the shim refuses that one.
 const Unstamped = "0.0.1"
 
 // GuardMinimum is the oldest dashcrew whose `dashcrew guard` the shim accepts: the first release with the Go guard.

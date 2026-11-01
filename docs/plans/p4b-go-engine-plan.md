@@ -198,3 +198,19 @@ G7 prepared (nothing published).
   3. Commit and push to `main`.
   4. Run `git tag v0.1.0 && git push origin v0.1.0`.
   5. Run `brew install fahnaladitia/tap/dashcrew && dashcrew --version`.
+
+G8 done, before the first release (user decision).
+- Final run against Dart before deletion:
+  - CLI parity: 21 cases and 243 calls, green.
+  - Guard differential: 13,724 cases; 1,746 blocked by Go only, all listed; 0 cases where Dart blocks and Go allows.
+- Test accounting: 417 Dart tests. 410 mapped, 5 ported now (`platform_terms`, `codex_toml` and 3 `cli_test` cases), 2 dropped (the Dart `guard` stub refusal, and the version matching `pubspec.yaml`).
+- Deleted: `lib/`, `bin/`, `pubspec.*`, `analysis_options.yaml`, `test/unit`, the Dart golden tests, `parity_test.go`, `differential_test.go`, the Dart shell oracle, and the Dart CI job.
+- Replacements for the Dart comparisons:
+  - `TestCLITranscripts`: 243 calls recorded from Go right after parity passed (`cmd/dashcrew/testdata/transcripts/`).
+  - `TestCorpusOutcomesMatchTheRecord`: `internal/guard/testdata/corpus_outcomes.txt`, which matched Dart on all 4,590 cases Dart blocks.
+  - `corpus_new_blocks.txt` is still checked.
+  - `DASHCREW_UPDATE_GOLDENS=1` rewrites the goldens, the transcripts and the corpus record.
+- Kept: the Dart-format helpers (`dartjson`, the mustache port, `yamlutil` scalar rules), because they define the output format. Also kept: two `.dart` inputs of the `init-app` golden, `mustache/testdata/dart_cases.json`, and doctor's warning about an old Dart install.
+- AGENTS.md, README, CHANGELOG and `.gitignore` updated for Go. `go test`: 744 pass, 1 opt-in skip (latency).
+
+P4b is complete in code. Left: publish v0.1.0 (user), then prove it on the user's machine with the P4 live run.

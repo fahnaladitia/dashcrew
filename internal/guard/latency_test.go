@@ -35,7 +35,7 @@ func percentile(sorted []time.Duration, p float64) time.Duration {
 }
 
 // TestGuardLatency times 1,000 `dashcrew guard` processes for one typical call and requires a median under
-// 10 ms; with DASHCREW_DART_GUARD it times the Dart guard too. Set DASHCREW_GUARD_LATENCY=1 to run it.
+// 10 ms. Set DASHCREW_GUARD_LATENCY=1 to run it.
 func TestGuardLatency(t *testing.T) {
 	if os.Getenv("DASHCREW_GUARD_LATENCY") == "" {
 		t.Skip("set DASHCREW_GUARD_LATENCY=1 to time 1,000 guard processes")
@@ -44,10 +44,6 @@ func TestGuardLatency(t *testing.T) {
 	f := newCorpusFolders(t)
 	goTimes := latencies(t, f, calls, buildDashcrew(t), "guard")
 	t.Logf("dashcrew guard: %d calls, median %v, p95 %v", calls, percentile(goTimes, 0.5), percentile(goTimes, 0.95))
-	if dart := os.Getenv("DASHCREW_DART_GUARD"); dart != "" {
-		dartTimes := latencies(t, f, calls, dart)
-		t.Logf("Dart AOT guard: %d calls, median %v, p95 %v", calls, percentile(dartTimes, 0.5), percentile(dartTimes, 0.95))
-	}
 	if median := percentile(goTimes, 0.5); median >= 10*time.Millisecond {
 		t.Errorf("median %v, want under 10ms", median)
 	}

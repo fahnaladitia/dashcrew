@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -14,8 +13,8 @@ import (
 	"github.com/fahnaladitia/dashcrew/internal/dartjson"
 )
 
-// G4b: what the Go guard blocks beyond the Dart guard. Every Go-only block of the differential corpus must be a
-// row of newBlocks or a line of testdata/corpus_new_blocks.txt (see TestGuardBlocksASupersetOfDart).
+// G4b: what the Go guard blocks beyond the Dart guard. Every Go-only block of the differential corpus (run against
+// the Dart guard until G8) is a row of newBlocks or a line of testdata/corpus_new_blocks.txt.
 
 // newBlock is a shell command the Dart guard allows and the Go guard blocks, with the gap it closes (the "Known
 // gaps" of the G4 plan) and a fragment of the expected reason.
@@ -523,8 +522,8 @@ func newBlockKey(stdin string) string {
 	return stdin
 }
 
-// TestCorpusNewBlocksAreBlockedWithTheirReason checks every recorded line in process, so the file cannot drift
-// while the differential test is skipped.
+// TestCorpusNewBlocksAreBlockedWithTheirReason checks every recorded line in process: the guard must keep
+// blocking each one with its reason.
 func TestCorpusNewBlocksAreBlockedWithTheirReason(t *testing.T) {
 	f := newCorpusFolders(t)
 	recorded := readCorpusNewBlocks(t)
@@ -549,41 +548,6 @@ func TestCorpusNewBlocksAreBlockedWithTheirReason(t *testing.T) {
 		}
 	}
 	t.Logf("%d recorded corpus new blocks", len(recorded))
-}
-
-// goOnlyBlocks reports the Go-only blocks of the differential corpus that are in neither table, as lines to add
-// to testdata/corpus_new_blocks.txt after review.
-func goOnlyBlocks(t *testing.T, cases []corpusCase, goOut []outcome) (missing []string) {
-	t.Helper()
-	known := map[string]bool{}
-	for _, row := range newBlocks {
-		known[row.command] = true
-	}
-	for _, b := range readCorpusNewBlocks(t) {
-		known[b.policy+"\t"+b.key] = true
-	}
-	add := map[string]bool{}
-	for i, c := range cases {
-		key := newBlockKey(c.stdin)
-		policy := ""
-		if len(c.args) > 0 {
-			policy = strings.TrimSuffix(strings.TrimPrefix(c.args[0], "{policies}/"), ".json")
-		}
-		if known[key] || known[policy+"\t"+key] {
-			continue
-		}
-		reason := goOut[i].stderr
-		if object := hookObject(goOut[i].stdout); object != nil {
-			reason, _ = object.Value("reason").(string)
-		}
-		reason = strings.TrimSpace(strings.TrimPrefix(reason, "[dashcrew guard] "))
-		add[corpusNewBlock{policy, reason, key}.String()] = true
-	}
-	for line := range add {
-		missing = append(missing, line)
-	}
-	sort.Strings(missing)
-	return missing
 }
 
 // FuzzEvaluateShell checks that the Go shell rules never panic, are deterministic, and block every script the

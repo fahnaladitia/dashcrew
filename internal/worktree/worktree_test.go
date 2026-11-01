@@ -13,7 +13,7 @@ import (
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
 )
 
-// fixture is test/unit/worktree_test.dart's setUp: an origin, a clone with main and develop pushed, and the
+// fixture is an origin, a clone with main and develop pushed, and the
 // git-ignored toolkit written in the main checkout.
 type fixture struct {
 	root, app string

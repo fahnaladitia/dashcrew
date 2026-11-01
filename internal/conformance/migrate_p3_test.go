@@ -17,7 +17,7 @@ import (
 
 // sample-migrate-p3/p3/ is the output of the last pre-P4 dashcrew (three agents, plan gate on, storage and design
 // packs), plus files the team wrote: a plan with handoffs, project memory and an AGENTS.md project block.
-// It is frozen: never regenerate it. These are the assertions of test/golden/migrate_p3_test.dart.
+// It is frozen: never regenerate it.
 
 var p3Roles = []string{
 	"dart-tdd-guide", "design-refiner", "flutter-architect", "flutter-build-error-resolver", "flutter-code-reviewer",

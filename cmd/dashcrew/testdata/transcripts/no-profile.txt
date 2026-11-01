@@ -1,0 +1,58 @@
+# no profile
+
+=== step 1: dashcrew "sync"
+exit: 1
+stdout: (empty)
+stderr:
+| No .ai/project.yaml in <root>/w/.. Run dashcrew init first.
+files: (unchanged)
+
+=== step 2: dashcrew "doctor"
+exit: 1
+stdout:
+| fail  profile         .ai/project.yaml missing; run dashcrew init
+| ok    project-packs   no project packs in .ai/packs
+| fail  lock            .ai/lock.json missing; run dashcrew sync
+| skip  version         needs the lock
+| skip  drift           needs the lock
+| skip  stale           needs a valid profile and the lock
+| fail  guard-policy    .ai/guard.json missing; run dashcrew sync
+| fail  guard-binary    .ai/bin/guard missing; run dashcrew sync
+| fail  hook            .claude/settings.json missing; run dashcrew sync
+| fail  claude-md       CLAUDE.md missing; run dashcrew sync
+| warn  mcp             .mcp.json missing; run dashcrew sync
+| skip  skills          needs the lock
+| skip  agents-md-size  no AGENTS.md
+| ok    gitignore       .ai/bin/guard is not ignored
+stderr: (empty)
+files: (unchanged)
+
+=== step 3: dashcrew "check"
+exit: 1
+stdout:
+| fail  profile         .ai/project.yaml missing; run dashcrew init
+| ok    project-packs   no project packs in .ai/packs
+| fail  lock            .ai/lock.json missing; run dashcrew sync
+| skip  version         needs the lock
+| skip  drift           needs the lock
+| skip  stale           needs a valid profile and the lock
+| fail  guard-policy    .ai/guard.json missing; run dashcrew sync
+| skip  agents-md-size  no AGENTS.md
+| ok    gitignore       .ai/bin/guard is not ignored
+| fail  pr-sections     .github/pull_request_template.md missing; run dashcrew sync
+stderr: (empty)
+files: (unchanged)
+
+=== step 4: dashcrew "worktree" "list"
+exit: 1
+stdout: (empty)
+stderr:
+| . is not inside a git repository.
+files: (unchanged)
+
+=== step 5: dashcrew "worktree" "create" "feat/a" "main"
+exit: 1
+stdout: (empty)
+stderr:
+| . is not inside a git repository.
+files: (unchanged)

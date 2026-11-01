@@ -1,0 +1,170 @@
+# worktree deps through the platform command
+
+=== step 1: dashcrew "worktree" "create" "feat/a" "main"
+exit: 0
+stdout:
+| path: <root>/w.worktrees/feat-a
+| branch: feat/a (base main)
+| upstream: none
+| status: ## feat/a
+| links: AGENTS.md, CLAUDE.md, .claude, .codex, .agents, .ai/bin
+| deps: ok (touch deps-ran)
+stderr: (empty)
+files:
++ w.worktrees  dir
++ w.worktrees/feat-a  dir
++ w.worktrees/feat-a/.agents  link -> <root>/w/.agents
++ w.worktrees/feat-a/.ai  dir
++ w.worktrees/feat-a/.ai/bin  link -> <root>/w/.ai/bin
++ w.worktrees/feat-a/.ai/project.yaml  -rw-r--r-- sha256:8a5dc8a316cd1722
++ w.worktrees/feat-a/.claude  link -> <root>/w/.claude
++ w.worktrees/feat-a/.codex  link -> <root>/w/.codex
++ w.worktrees/feat-a/.git  -rw-r--r-- sha256:fd7e23d5ab8c46fb
++ w.worktrees/feat-a/.gitignore  -rw-r--r-- sha256:fc30db455a55e1f5
++ w.worktrees/feat-a/AGENTS.md  link -> <root>/w/AGENTS.md
++ w.worktrees/feat-a/CLAUDE.md  link -> <root>/w/CLAUDE.md
++ w.worktrees/feat-a/Makefile  -rw-r--r-- sha256:f6b1e6c5b5bb4bd3
++ w.worktrees/feat-a/deps-ran  -rw-r--r-- sha256:e3b0c44298fc1c14
++ w.worktrees/feat-a/docs  dir
++ w.worktrees/feat-a/docs/readme.md  -rw-r--r-- sha256:0dab0d00b42ecf3a
++ w.worktrees/feat-a/lib  dir
++ w.worktrees/feat-a/lib/a.dart  -rw-r--r-- sha256:6f1071e614d30954
+~ w/.git/config
+    + "[branch \"feat/a\"]"
+    + "\tdashcrew-base = main"
+~ w/.git/info/exclude
+    + "/AGENTS.md"
+    + "/CLAUDE.md"
+    + "/.claude"
+    + "/.codex"
+    + "/.agents"
+    + "/.ai/bin"
+
+=== step 2: dashcrew "worktree" "create" "feat/b" "main" "--pub"
+(after the case's setup for this step)
+exit: 0
+stdout:
+| path: <root>/w.worktrees/feat-b
+| branch: feat/b (base main)
+| upstream: none
+| status: ## feat/b
+| links: AGENTS.md, CLAUDE.md, .claude, .codex, .agents, .ai/bin
+| deps: failed (exit 3); rerun: cd <root>/w.worktrees/feat-b && exit 3
+stderr: (empty)
+files:
++ w.worktrees/feat-b  dir
++ w.worktrees/feat-b/.agents  link -> <root>/w/.agents
++ w.worktrees/feat-b/.ai  dir
++ w.worktrees/feat-b/.ai/bin  link -> <root>/w/.ai/bin
++ w.worktrees/feat-b/.ai/project.yaml  -rw-r--r-- sha256:8a5dc8a316cd1722
++ w.worktrees/feat-b/.claude  link -> <root>/w/.claude
++ w.worktrees/feat-b/.codex  link -> <root>/w/.codex
++ w.worktrees/feat-b/.git  -rw-r--r-- sha256:dae2576238caba93
++ w.worktrees/feat-b/.gitignore  -rw-r--r-- sha256:fc30db455a55e1f5
++ w.worktrees/feat-b/AGENTS.md  link -> <root>/w/AGENTS.md
++ w.worktrees/feat-b/CLAUDE.md  link -> <root>/w/CLAUDE.md
++ w.worktrees/feat-b/Makefile  -rw-r--r-- sha256:f6b1e6c5b5bb4bd3
++ w.worktrees/feat-b/docs  dir
++ w.worktrees/feat-b/docs/readme.md  -rw-r--r-- sha256:0dab0d00b42ecf3a
++ w.worktrees/feat-b/lib  dir
++ w.worktrees/feat-b/lib/a.dart  -rw-r--r-- sha256:6f1071e614d30954
+~ w/.git/config
+    + "[branch \"feat/b\"]"
+    + "\tdashcrew-base = main"
+
+=== step 3: dashcrew "worktree" "create" "feat/c" "main"
+(after the case's setup for this step)
+exit: 0
+stdout:
+| path: <root>/w.worktrees/feat-c
+| branch: feat/c (base main)
+| upstream: none
+| status: ## feat/c
+| links: AGENTS.md, CLAUDE.md, .claude, .codex, .agents, .ai/bin
+| deps: skipped (.ai/project.yaml: project.yaml stack.state: expected one of bloc, none, provider, riverpod, other)
+stderr: (empty)
+files:
++ w.worktrees/feat-c  dir
++ w.worktrees/feat-c/.agents  link -> <root>/w/.agents
++ w.worktrees/feat-c/.ai  dir
++ w.worktrees/feat-c/.ai/bin  link -> <root>/w/.ai/bin
++ w.worktrees/feat-c/.ai/project.yaml  -rw-r--r-- sha256:8a5dc8a316cd1722
++ w.worktrees/feat-c/.claude  link -> <root>/w/.claude
++ w.worktrees/feat-c/.codex  link -> <root>/w/.codex
++ w.worktrees/feat-c/.git  -rw-r--r-- sha256:6b7e02b2515e3a55
++ w.worktrees/feat-c/.gitignore  -rw-r--r-- sha256:fc30db455a55e1f5
++ w.worktrees/feat-c/AGENTS.md  link -> <root>/w/AGENTS.md
++ w.worktrees/feat-c/CLAUDE.md  link -> <root>/w/CLAUDE.md
++ w.worktrees/feat-c/Makefile  -rw-r--r-- sha256:f6b1e6c5b5bb4bd3
++ w.worktrees/feat-c/docs  dir
++ w.worktrees/feat-c/docs/readme.md  -rw-r--r-- sha256:0dab0d00b42ecf3a
++ w.worktrees/feat-c/lib  dir
++ w.worktrees/feat-c/lib/a.dart  -rw-r--r-- sha256:6f1071e614d30954
+~ w/.git/config
+    + "[branch \"feat/c\"]"
+    + "\tdashcrew-base = main"
+
+=== step 4: dashcrew "worktree" "create" "feat/d" "main"
+(after the case's setup for this step)
+exit: 0
+stdout:
+| path: <root>/w.worktrees/feat-d
+| branch: feat/d (base main)
+| upstream: none
+| status: ## feat/d
+| links: AGENTS.md, CLAUDE.md, .claude, .codex, .agents, .ai/bin
+| deps: skipped (no go.mod)
+stderr: (empty)
+files:
++ w.worktrees/feat-d  dir
++ w.worktrees/feat-d/.agents  link -> <root>/w/.agents
++ w.worktrees/feat-d/.ai  dir
++ w.worktrees/feat-d/.ai/bin  link -> <root>/w/.ai/bin
++ w.worktrees/feat-d/.ai/project.yaml  -rw-r--r-- sha256:8a5dc8a316cd1722
++ w.worktrees/feat-d/.claude  link -> <root>/w/.claude
++ w.worktrees/feat-d/.codex  link -> <root>/w/.codex
++ w.worktrees/feat-d/.git  -rw-r--r-- sha256:afefbd710e948183
++ w.worktrees/feat-d/.gitignore  -rw-r--r-- sha256:fc30db455a55e1f5
++ w.worktrees/feat-d/AGENTS.md  link -> <root>/w/AGENTS.md
++ w.worktrees/feat-d/CLAUDE.md  link -> <root>/w/CLAUDE.md
++ w.worktrees/feat-d/Makefile  -rw-r--r-- sha256:f6b1e6c5b5bb4bd3
++ w.worktrees/feat-d/docs  dir
++ w.worktrees/feat-d/docs/readme.md  -rw-r--r-- sha256:0dab0d00b42ecf3a
++ w.worktrees/feat-d/lib  dir
++ w.worktrees/feat-d/lib/a.dart  -rw-r--r-- sha256:6f1071e614d30954
+~ w/.git/config
+    + "[branch \"feat/d\"]"
+    + "\tdashcrew-base = main"
+
+=== step 5: dashcrew "worktree" "create" "feat/e" "main"
+(after the case's setup for this step)
+exit: 0
+stdout:
+| path: <root>/w.worktrees/feat-e
+| branch: feat/e (base main)
+| upstream: none
+| status: ## feat/e
+| links: AGENTS.md, CLAUDE.md, .claude, .codex, .agents, .ai/bin
+| deps: failed (exit 127); rerun: cd <root>/w.worktrees/feat-e && flutter pub get
+stderr: (empty)
+files:
++ w.worktrees/feat-e  dir
++ w.worktrees/feat-e/.agents  link -> <root>/w/.agents
++ w.worktrees/feat-e/.ai  dir
++ w.worktrees/feat-e/.ai/bin  link -> <root>/w/.ai/bin
++ w.worktrees/feat-e/.ai/project.yaml  -rw-r--r-- sha256:8a5dc8a316cd1722
++ w.worktrees/feat-e/.claude  link -> <root>/w/.claude
++ w.worktrees/feat-e/.codex  link -> <root>/w/.codex
++ w.worktrees/feat-e/.git  -rw-r--r-- sha256:d914183ef8abc8a8
++ w.worktrees/feat-e/.gitignore  -rw-r--r-- sha256:fc30db455a55e1f5
++ w.worktrees/feat-e/AGENTS.md  link -> <root>/w/AGENTS.md
++ w.worktrees/feat-e/CLAUDE.md  link -> <root>/w/CLAUDE.md
++ w.worktrees/feat-e/Makefile  -rw-r--r-- sha256:f6b1e6c5b5bb4bd3
++ w.worktrees/feat-e/docs  dir
++ w.worktrees/feat-e/docs/readme.md  -rw-r--r-- sha256:0dab0d00b42ecf3a
++ w.worktrees/feat-e/lib  dir
++ w.worktrees/feat-e/lib/a.dart  -rw-r--r-- sha256:6f1071e614d30954
++ w.worktrees/feat-e/pubspec.yaml  -rw-r--r-- sha256:5959c4b68af1551c
+~ w/.git/config
+    + "[branch \"feat/e\"]"
+    + "\tdashcrew-base = main"

@@ -1,22 +1,6 @@
 package version
 
-import (
-	"os"
-	"path/filepath"
-	"regexp"
-	"testing"
-)
-
-func TestVersionMatchesPubspec(t *testing.T) {
-	pubspec, err := os.ReadFile(filepath.Join("..", "..", "pubspec.yaml"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	match := regexp.MustCompile(`(?m)^version: (\S+)$`).FindStringSubmatch(string(pubspec))
-	if match == nil || match[1] != Unstamped {
-		t.Errorf("pubspec %v, Unstamped %s", match, Unstamped)
-	}
-}
+import "testing"
 
 func TestCurrentIsUnstampedInTestsSoTheGoldensStayFixed(t *testing.T) {
 	if Version != "" || Current() != Unstamped {

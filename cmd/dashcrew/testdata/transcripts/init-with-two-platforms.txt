@@ -1,0 +1,52 @@
+# init with two platforms
+
+=== step 1: dashcrew "init" "-y"
+exit: 1
+stdout:
+| Detected in <root>/w:
+|   platform: flutter (pubspec.yaml)
+|   platform: go (go.mod)
+stderr:
+| 2 platforms detected: flutter, go. Rerun without --yes and pick one.
+files: (unchanged)
+
+=== step 2: dashcrew "init"
+exit: 1
+stdout:
+| Detected in <root>/w:
+|   platform: flutter (pubspec.yaml)
+|   platform: go (go.mod)
+| platform [flutter | go]: 
+(no final newline)
+stderr:
+| Several platforms detected (flutter, go); pick one.
+files: (unchanged)
+
+=== step 3: dashcrew "init"
+stdin: "\ngo\n"
+exit: 0
+stdout:
+| Detected in <root>/w:
+|   platform: flutter (pubspec.yaml)
+|   platform: go (go.mod)
+| platform [flutter | go]:   expected one of flutter, go, other
+| platform [flutter | go]: design [-]: router [-]: tracker [-]: wrote .ai/project.yaml
+| next: dashcrew sync
+stderr: (empty)
+files:
++ w/.ai/project.yaml  -rw-r--r-- sha256:5244cc15ba8441a3
+
+=== step 4: dashcrew "init" "--force"
+stdin: "flutter\n"
+exit: 0
+stdout:
+| Detected in <root>/w:
+|   platform: flutter (pubspec.yaml)
+|   platform: go (go.mod)
+| platform [flutter | go]:   network: dio (dio in dependencies) | http (http in dependencies)
+|   state: bloc (flutter_bloc in dependencies)
+| analytics [-]: design [-]: di [-]: network [dio | http]: qa [-]: router [-]: state [bloc]: storage [-]: test [-]: tracker [-]: wrote .ai/project.yaml
+| next: dashcrew sync
+stderr: (empty)
+files:
+~ w/.ai/project.yaml  -rw-r--r-- sha256:eff2037262f6842c

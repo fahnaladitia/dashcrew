@@ -1,0 +1,276 @@
+# migrate p3
+
+=== step 1: dashcrew "doctor"
+exit: 1
+stdout:
+| warn  profile         plan_gate was removed in P4; delete it from .ai/project.yaml
+| ok    project-packs   no project packs in .ai/packs
+| ok    lock            .ai/lock.json schema 1
+| ok    version         lock written by this dashcrew (0.0.1)
+| ok    drift           92 generated files match the lock
+| warn  stale           97 files would change (.agents/agents/dart-tdd-guide.md, .agents/agents/design-refiner.md, .agents/agents/explorer.md, .agents/agents/flutter-architect.md, .agents/agents/flutter-build-error-resolver.md, ...); run dashcrew sync
+| ok    guard-policy    .ai/guard.json valid
+| fail  guard-binary    dashcrew is not on PATH, so .ai/bin/guard refuses every tool call: install dashcrew 0.1.0 or newer (brew install fahnaladitia/tap/dashcrew)
+| ok    hook            PreToolUse guard hook present
+| ok    claude-md       CLAUDE.md imports AGENTS.md
+| ok    mcp             defined: dart-mcp-server
+| warn  skills          not found locally (install, or ignore if a plugin provides them): flutter-development, idea-refine, managing-hive-storage
+| ok    codex-hook      PreToolUse guard hook present; Codex runs it once approved in /hooks
+| ok    codex-mcp       defined: dart-mcp-server
+| ok    codex-skills-budget24 skills, list 4312 of 8000 characters
+| warn  codex-trust     project not trusted in the Codex config, so .codex/ is ignored; trust it when Codex asks, then approve the guard in /hooks
+| ok    antigravity-hookPreToolUse guard hook present under dashcrew-guard
+| ok    antigravity-mcp defined: dart-mcp-server
+| ok    antigravity-roles13 roles, every tool name known
+| ok    agents-md-size  AGENTS.md 17029 of 24000 bytes
+| ok    gitignore       .ai/bin/guard is not ignored
+| info  handoff-rosters .ai/plans/todo-filter/handoff/00-roster.md left from the pre-P4 team flow; nothing reads them now, delete them when done
+stderr: (empty)
+files: (unchanged)
+
+=== step 2: dashcrew "sync"
+exit: 0
+stdout:
+| wrote   AGENTS.md
+| wrote   .ai/guard.json
+| wrote   .ai/bin/guard
+| wrote   .github/pull_request_template.md
+| wrote   .claude/agents/explorer.md
+| wrote   .claude/agents/reviewer.md
+| wrote   .claude/skills/acceptance-criteria/SKILL.md
+| wrote   .claude/skills/branching/SKILL.md
+| wrote   .claude/skills/continuous-learning/SKILL.md
+| wrote   .claude/skills/data-layer-tdd/SKILL.md
+| wrote   .claude/skills/design-fidelity/SKILL.md
+| wrote   .claude/skills/feature-architecture/SKILL.md
+| wrote   .claude/skills/figma-design/SKILL.md
+| wrote   .claude/skills/hive-storage/SKILL.md
+| wrote   .claude/skills/mobile-security/SKILL.md
+| wrote   .claude/skills/pr-create/SKILL.md
+| wrote   .claude/skills/pr-description/SKILL.md
+| wrote   .claude/skills/prompt-polish/SKILL.md
+| wrote   .claude/skills/strategic-compact/SKILL.md
+| wrote   .claude/skills/verification-loop/SKILL.md
+| wrote   .claude/skills/work-modes/SKILL.md
+| wrote   .claude/skills/audit/SKILL.md
+| wrote   .claude/skills/build-fix/SKILL.md
+| wrote   .claude/skills/code-review/SKILL.md
+| wrote   .claude/skills/plan/SKILL.md
+| wrote   .claude/skills/tdd/SKILL.md
+| wrote   .claude/skills/verify/SKILL.md
+| wrote   .claude/skills/worktree/SKILL.md
+| wrote   .codex/agents/explorer.toml
+| wrote   .codex/agents/reviewer.toml
+| wrote   .agents/skills/acceptance-criteria/SKILL.md
+| wrote   .agents/skills/branching/SKILL.md
+| wrote   .agents/skills/continuous-learning/SKILL.md
+| wrote   .agents/skills/data-layer-tdd/SKILL.md
+| wrote   .agents/skills/design-fidelity/SKILL.md
+| wrote   .agents/skills/feature-architecture/SKILL.md
+| wrote   .agents/skills/figma-design/SKILL.md
+| wrote   .agents/skills/hive-storage/SKILL.md
+| wrote   .agents/skills/mobile-security/SKILL.md
+| wrote   .agents/skills/pr-create/SKILL.md
+| wrote   .agents/skills/pr-description/SKILL.md
+| wrote   .agents/skills/prompt-polish/SKILL.md
+| wrote   .agents/skills/strategic-compact/SKILL.md
+| wrote   .agents/skills/verification-loop/SKILL.md
+| wrote   .agents/skills/work-modes/SKILL.md
+| wrote   .agents/skills/audit/SKILL.md
+| wrote   .agents/skills/build-fix/SKILL.md
+| wrote   .agents/skills/code-review/SKILL.md
+| wrote   .agents/skills/plan/SKILL.md
+| wrote   .agents/skills/tdd/SKILL.md
+| wrote   .agents/skills/verify/SKILL.md
+| wrote   .agents/skills/worktree/SKILL.md
+| wrote   .agents/agents/explorer.md
+| wrote   .agents/agents/reviewer.md
+| removed .agents/agents/dart-tdd-guide.md
+| removed .agents/agents/design-refiner.md
+| removed .agents/agents/flutter-architect.md
+| removed .agents/agents/flutter-build-error-resolver.md
+| removed .agents/agents/flutter-code-reviewer.md
+| removed .agents/agents/flutter-engineer.md
+| removed .agents/agents/flutter-planner.md
+| removed .agents/agents/flutter-security-reviewer.md
+| removed .agents/agents/local-storage-engineer.md
+| removed .agents/agents/product-manager.md
+| removed .agents/agents/qa-engineer.md
+| removed .agents/agents/tech-lead.md
+| removed .agents/agents/worktree-monitor.md
+| removed .agents/skills/checkpoint/SKILL.md
+| removed .agents/skills/orchestrate/SKILL.md
+| removed .claude/agents/dart-tdd-guide.md
+| removed .claude/agents/design-refiner.md
+| removed .claude/agents/flutter-architect.md
+| removed .claude/agents/flutter-build-error-resolver.md
+| removed .claude/agents/flutter-code-reviewer.md
+| removed .claude/agents/flutter-engineer.md
+| removed .claude/agents/flutter-planner.md
+| removed .claude/agents/flutter-security-reviewer.md
+| removed .claude/agents/local-storage-engineer.md
+| removed .claude/agents/product-manager.md
+| removed .claude/agents/qa-engineer.md
+| removed .claude/agents/tech-lead.md
+| removed .claude/agents/worktree-monitor.md
+| removed .claude/skills/checkpoint/SKILL.md
+| removed .claude/skills/orchestrate/SKILL.md
+| removed .codex/agents/dart-tdd-guide.toml
+| removed .codex/agents/design-refiner.toml
+| removed .codex/agents/flutter-architect.toml
+| removed .codex/agents/flutter-build-error-resolver.toml
+| removed .codex/agents/flutter-code-reviewer.toml
+| removed .codex/agents/flutter-engineer.toml
+| removed .codex/agents/flutter-planner.toml
+| removed .codex/agents/flutter-security-reviewer.toml
+| removed .codex/agents/local-storage-engineer.toml
+| removed .codex/agents/product-manager.toml
+| removed .codex/agents/qa-engineer.toml
+| removed .codex/agents/tech-lead.toml
+| removed .codex/agents/worktree-monitor.toml
+| note: Migrated to P4: the roles were removed (only reviewer and explorer remain), the plan gate and dashcrew gate were removed, and orchestrate team is now the default chain with skills picked at step 0. Plans, handoffs and project memory are untouched. See "Migrating to P4" in the dashcrew README.
+stderr:
+| warning: plan_gate was removed in P4; delete it from .ai/project.yaml
+files:
+- w/.agents/agents/dart-tdd-guide.md
+- w/.agents/agents/design-refiner.md
++ w/.agents/agents/explorer.md  -rw-r--r-- sha256:22beb633c8b9f5c3
+- w/.agents/agents/flutter-architect.md
+- w/.agents/agents/flutter-build-error-resolver.md
+- w/.agents/agents/flutter-code-reviewer.md
+- w/.agents/agents/flutter-engineer.md
+- w/.agents/agents/flutter-planner.md
+- w/.agents/agents/flutter-security-reviewer.md
+- w/.agents/agents/local-storage-engineer.md
+- w/.agents/agents/product-manager.md
+- w/.agents/agents/qa-engineer.md
++ w/.agents/agents/reviewer.md  -rw-r--r-- sha256:19961d2490230172
+- w/.agents/agents/tech-lead.md
+- w/.agents/agents/worktree-monitor.md
++ w/.agents/skills/acceptance-criteria  dir
++ w/.agents/skills/acceptance-criteria/SKILL.md  -rw-r--r-- sha256:efe8d2bd85968ed1
+~ w/.agents/skills/audit/SKILL.md  -rw-r--r-- sha256:7de1ab3a91f1f88b
+~ w/.agents/skills/branching/SKILL.md  -rw-r--r-- sha256:7975aaf2b2c3367c
+~ w/.agents/skills/build-fix/SKILL.md  -rw-r--r-- sha256:875dfa07def54fe2
+- w/.agents/skills/checkpoint/SKILL.md
+~ w/.agents/skills/code-review/SKILL.md  -rw-r--r-- sha256:59fbaf9c51a0e6bc
+~ w/.agents/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:8e75f35233aaf6c4
+~ w/.agents/skills/data-layer-tdd/SKILL.md  -rw-r--r-- sha256:b05e453a7d2a9d54
+~ w/.agents/skills/design-fidelity/SKILL.md  -rw-r--r-- sha256:9abbb4c8c13a9e88
++ w/.agents/skills/feature-architecture  dir
++ w/.agents/skills/feature-architecture/SKILL.md  -rw-r--r-- sha256:90b00b6bd740a888
++ w/.agents/skills/figma-design  dir
++ w/.agents/skills/figma-design/SKILL.md  -rw-r--r-- sha256:e6cc0ff684e67452
++ w/.agents/skills/hive-storage  dir
++ w/.agents/skills/hive-storage/SKILL.md  -rw-r--r-- sha256:5a48937e18c2f0c8
+~ w/.agents/skills/mobile-security/SKILL.md  -rw-r--r-- sha256:eac82c26b4557b97
+- w/.agents/skills/orchestrate/SKILL.md
+~ w/.agents/skills/plan/SKILL.md  -rw-r--r-- sha256:b3570d07fc10a5cb
+~ w/.agents/skills/pr-create/SKILL.md  -rw-r--r-- sha256:88b181afa8381177
+~ w/.agents/skills/pr-description/SKILL.md  -rw-r--r-- sha256:7f02b7f17b8ea8e8
+~ w/.agents/skills/prompt-polish/SKILL.md  -rw-r--r-- sha256:b602889385833272
+~ w/.agents/skills/strategic-compact/SKILL.md  -rw-r--r-- sha256:ef4f497b22288e0c
+~ w/.agents/skills/tdd/SKILL.md  -rw-r--r-- sha256:a63bee10a2e579b7
+~ w/.agents/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:487563193e58e790
+~ w/.agents/skills/verify/SKILL.md  -rw-r--r-- sha256:58da6ebd514c0e30
+~ w/.agents/skills/work-modes/SKILL.md  -rw-r--r-- sha256:cca07dc711f2e958
+~ w/.agents/skills/worktree/SKILL.md  -rw-r--r-- sha256:05e374e3165f3e56
+~ w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
+~ w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
+~ w/.ai/lock.json  -rw-r--r-- sha256:aa60e6070e09defb
+- w/.claude/agents/dart-tdd-guide.md
+- w/.claude/agents/design-refiner.md
++ w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
+- w/.claude/agents/flutter-architect.md
+- w/.claude/agents/flutter-build-error-resolver.md
+- w/.claude/agents/flutter-code-reviewer.md
+- w/.claude/agents/flutter-engineer.md
+- w/.claude/agents/flutter-planner.md
+- w/.claude/agents/flutter-security-reviewer.md
+- w/.claude/agents/local-storage-engineer.md
+- w/.claude/agents/product-manager.md
+- w/.claude/agents/qa-engineer.md
++ w/.claude/agents/reviewer.md  -rw-r--r-- sha256:6083120a064a4fee
+- w/.claude/agents/tech-lead.md
+- w/.claude/agents/worktree-monitor.md
++ w/.claude/skills/acceptance-criteria  dir
++ w/.claude/skills/acceptance-criteria/SKILL.md  -rw-r--r-- sha256:9514f49c5427aa3e
+~ w/.claude/skills/audit/SKILL.md  -rw-r--r-- sha256:f1d546184756c826
+~ w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:8b93b9328ded4711
+~ w/.claude/skills/build-fix/SKILL.md  -rw-r--r-- sha256:43296f00548ded28
+- w/.claude/skills/checkpoint/SKILL.md
+~ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:feda66879450b2c8
+~ w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:698f498fdff18b66
+~ w/.claude/skills/data-layer-tdd/SKILL.md  -rw-r--r-- sha256:eb183dbb402be1e3
+~ w/.claude/skills/design-fidelity/SKILL.md  -rw-r--r-- sha256:2659d95907aab02c
++ w/.claude/skills/feature-architecture  dir
++ w/.claude/skills/feature-architecture/SKILL.md  -rw-r--r-- sha256:014b086955367837
++ w/.claude/skills/figma-design  dir
++ w/.claude/skills/figma-design/SKILL.md  -rw-r--r-- sha256:982f7709f00f9ada
++ w/.claude/skills/hive-storage  dir
++ w/.claude/skills/hive-storage/SKILL.md  -rw-r--r-- sha256:8ee250e8d1b8d201
+~ w/.claude/skills/mobile-security/SKILL.md  -rw-r--r-- sha256:1bc29e41680bd49b
+- w/.claude/skills/orchestrate/SKILL.md
+~ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:5a7e03bc5575260a
+~ w/.claude/skills/pr-create/SKILL.md  -rw-r--r-- sha256:e534b517a93d2650
+~ w/.claude/skills/pr-description/SKILL.md  -rw-r--r-- sha256:7992498f4157debe
+~ w/.claude/skills/prompt-polish/SKILL.md  -rw-r--r-- sha256:46401e1e54b520e2
+~ w/.claude/skills/strategic-compact/SKILL.md  -rw-r--r-- sha256:a866040ed09e6f37
+~ w/.claude/skills/tdd/SKILL.md  -rw-r--r-- sha256:caf317ee9e4fe00d
+~ w/.claude/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:d54707cb287e4465
+~ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:4cc495071bb3d384
+~ w/.claude/skills/work-modes/SKILL.md  -rw-r--r-- sha256:42e7df44abe766f6
+~ w/.claude/skills/worktree/SKILL.md  -rw-r--r-- sha256:5ec38c7fbd7746bb
+- w/.codex/agents/dart-tdd-guide.toml
+- w/.codex/agents/design-refiner.toml
++ w/.codex/agents/explorer.toml  -rw-r--r-- sha256:b45965989f03244c
+- w/.codex/agents/flutter-architect.toml
+- w/.codex/agents/flutter-build-error-resolver.toml
+- w/.codex/agents/flutter-code-reviewer.toml
+- w/.codex/agents/flutter-engineer.toml
+- w/.codex/agents/flutter-planner.toml
+- w/.codex/agents/flutter-security-reviewer.toml
+- w/.codex/agents/local-storage-engineer.toml
+- w/.codex/agents/product-manager.toml
+- w/.codex/agents/qa-engineer.toml
++ w/.codex/agents/reviewer.toml  -rw-r--r-- sha256:ea588ab99f8c93a4
+- w/.codex/agents/tech-lead.toml
+- w/.codex/agents/worktree-monitor.toml
+~ w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
+~ w/AGENTS.md  -rw-r--r-- sha256:73b718decc934a4e
+
+=== step 3: dashcrew "sync"
+exit: 0
+stdout:
+| up to date
+stderr:
+| warning: plan_gate was removed in P4; delete it from .ai/project.yaml
+files: (unchanged)
+
+=== step 4: dashcrew "doctor"
+exit: 1
+stdout:
+| warn  profile         plan_gate was removed in P4; delete it from .ai/project.yaml
+| ok    project-packs   no project packs in .ai/packs
+| ok    lock            .ai/lock.json schema 1
+| ok    version         lock written by this dashcrew (0.0.1)
+| ok    drift           63 generated files match the lock
+| ok    stale           output matches the current profile and catalog
+| ok    guard-policy    .ai/guard.json valid
+| fail  guard-binary    dashcrew is not on PATH, so .ai/bin/guard refuses every tool call: install dashcrew 0.1.0 or newer (brew install fahnaladitia/tap/dashcrew)
+| ok    hook            PreToolUse guard hook present
+| ok    claude-md       CLAUDE.md imports AGENTS.md
+| ok    mcp             defined: dart-mcp-server
+| warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine, managing-hive-storage
+| ok    codex-hook      PreToolUse guard hook present; Codex runs it once approved in /hooks
+| ok    codex-mcp       defined: dart-mcp-server
+| ok    codex-skills-budget26 skills, list 4839 of 8000 characters
+| warn  codex-trust     project not trusted in the Codex config, so .codex/ is ignored; trust it when Codex asks, then approve the guard in /hooks
+| ok    antigravity-hookPreToolUse guard hook present under dashcrew-guard
+| ok    antigravity-mcp defined: dart-mcp-server
+| ok    antigravity-roles2 roles, every tool name known
+| ok    agents-md-size  AGENTS.md 17648 of 24000 bytes
+| ok    gitignore       .ai/bin/guard is not ignored
+| info  handoff-rosters .ai/plans/todo-filter/handoff/00-roster.md left from the pre-P4 team flow; nothing reads them now, delete them when done
+stderr: (empty)
+files: (unchanged)

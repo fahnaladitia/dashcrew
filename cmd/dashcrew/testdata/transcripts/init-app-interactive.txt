@@ -1,0 +1,70 @@
+# init-app interactive
+
+=== step 1: dashcrew "init"
+stdin: "\n\n\ndio\n-\nnope\nother chopper\n\n\n\n\n\n\n\n\n"
+exit: 0
+stdout:
+| Detected in <root>/w:
+|   platform: flutter (pubspec.yaml)
+| platform [flutter]:   analytics: posthog (posthog_flutter in dependencies)
+|   di: get_it (get_it in dependencies)
+|   network: dio (dio in dependencies) | http (http in dependencies)
+|   router: go_router (go_router in dependencies)
+|   state: bloc (flutter_bloc in dependencies)
+|   storage: hive (hive_ce in dependencies, hive_ce_flutter in dependencies)
+|   test: mocktail (mocktail in dev_dependencies)
+|   flavors: dev, prod (lib/main_<flavor>.dart)
+|   local packages: packages/core (path dependencies)
+|   base branches: main, develop (remote branches)
+| analytics [posthog]: design [-]: di [get_it]:   expected one of get_it, none, provider, riverpod, other <package>, - (none)
+| di [get_it]: network [dio | http]:   expected one of dio, http, none, retrofit, other <package>, - (none)
+| network [dio | http]: qa [-]: router [go_router]: state [bloc]: storage [hive]: test [mocktail]: tracker [-]: wrote .ai/project.yaml
+| next: dashcrew sync
+stderr: (empty)
+files:
++ w/.ai  dir
++ w/.ai/project.yaml  -rw-r--r-- sha256:63fa1eef9092cd4b
+
+=== step 2: dashcrew "init" "--force"
+stdin: "go\n\r\nflutter\r\n"
+exit: 0
+stdout:
+| Detected in <root>/w:
+|   platform: flutter (pubspec.yaml)
+| platform [flutter]:   expected one of flutter, other
+| platform [flutter]:   analytics: posthog (posthog_flutter in dependencies)
+|   di: get_it (get_it in dependencies)
+|   network: dio (dio in dependencies) | http (http in dependencies)
+|   router: go_router (go_router in dependencies)
+|   state: bloc (flutter_bloc in dependencies)
+|   storage: hive (hive_ce in dependencies, hive_ce_flutter in dependencies)
+|   test: mocktail (mocktail in dev_dependencies)
+|   flavors: dev, prod (lib/main_<flavor>.dart)
+|   local packages: packages/core (path dependencies)
+|   base branches: main, develop (remote branches)
+| analytics [posthog]:   expected one of firebase, mixpanel, none, posthog, other <package>, - (none)
+| analytics [posthog]: design [-]: di [get_it]: network [dio | http]: qa [-]: router [go_router]: state [bloc]: storage [hive]: test [mocktail]: tracker [-]: wrote .ai/project.yaml
+| next: dashcrew sync
+stderr: (empty)
+files:
+~ w/.ai/project.yaml  -rw-r--r-- sha256:163fdbbda1d97d25
+
+=== step 3: dashcrew "init" "--force"
+exit: 0
+stdout:
+| Detected in <root>/w:
+|   platform: flutter (pubspec.yaml)
+| platform [flutter]:   analytics: posthog (posthog_flutter in dependencies)
+|   di: get_it (get_it in dependencies)
+|   network: dio (dio in dependencies) | http (http in dependencies)
+|   router: go_router (go_router in dependencies)
+|   state: bloc (flutter_bloc in dependencies)
+|   storage: hive (hive_ce in dependencies, hive_ce_flutter in dependencies)
+|   test: mocktail (mocktail in dev_dependencies)
+|   flavors: dev, prod (lib/main_<flavor>.dart)
+|   local packages: packages/core (path dependencies)
+|   base branches: main, develop (remote branches)
+| analytics [posthog]: design [-]: di [get_it]: network [dio | http]: qa [-]: router [go_router]: state [bloc]: storage [hive]: test [mocktail]: tracker [-]: wrote .ai/project.yaml
+| next: dashcrew sync
+stderr: (empty)
+files: (unchanged)

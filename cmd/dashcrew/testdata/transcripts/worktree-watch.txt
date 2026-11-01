@@ -1,0 +1,227 @@
+# worktree watch
+
+=== step 1: dashcrew "worktree" "watch" "--once"
+exit: 0
+stdout: (empty)
+stderr: (empty)
+files:
++ w/.git/dashcrew-watch/state.json
+    + "{"
+    + "  \"watched\": [],"
+    + "  \"bases\": {},"
+    + "  \"branches\": {},"
+    + "  \"overlaps\": {}"
+    + "}"
+
+=== step 2: dashcrew "worktree" "create" "feat/a" "origin/main" "--no-pub"
+exit: 0
+stdout:
+| path: <root>/w.worktrees/feat-a
+| branch: feat/a (base main)
+| upstream: none
+| status: ## feat/a
+| links: AGENTS.md, CLAUDE.md, .claude, .codex, .agents, .ai/bin, docs/plans
+| deps: skipped
+stderr: (empty)
+files:
++ w.worktrees  dir
++ w.worktrees/feat-a  dir
++ w.worktrees/feat-a/.agents  link -> <root>/w/.agents
++ w.worktrees/feat-a/.ai  dir
++ w.worktrees/feat-a/.ai/bin  link -> <root>/w/.ai/bin
++ w.worktrees/feat-a/.ai/project.yaml  -rw-r--r-- sha256:60467b7adc1c2092
++ w.worktrees/feat-a/.claude  link -> <root>/w/.claude
++ w.worktrees/feat-a/.codex  link -> <root>/w/.codex
++ w.worktrees/feat-a/.git  -rw-r--r-- sha256:fd7e23d5ab8c46fb
++ w.worktrees/feat-a/.gitignore  -rw-r--r-- sha256:fc30db455a55e1f5
++ w.worktrees/feat-a/AGENTS.md  link -> <root>/w/AGENTS.md
++ w.worktrees/feat-a/CLAUDE.md  link -> <root>/w/CLAUDE.md
++ w.worktrees/feat-a/Makefile  -rw-r--r-- sha256:f6b1e6c5b5bb4bd3
++ w.worktrees/feat-a/docs  dir
++ w.worktrees/feat-a/docs/plans  link -> <root>/w/docs/plans
++ w.worktrees/feat-a/docs/readme.md  -rw-r--r-- sha256:0dab0d00b42ecf3a
++ w.worktrees/feat-a/lib  dir
++ w.worktrees/feat-a/lib/a.dart  -rw-r--r-- sha256:6f1071e614d30954
+~ w/.git/config
+    + "[branch \"feat/a\"]"
+    + "\tdashcrew-base = main"
+~ w/.git/info/exclude
+    + "/AGENTS.md"
+    + "/CLAUDE.md"
+    + "/.claude"
+    + "/.codex"
+    + "/.agents"
+    + "/.ai/bin"
+    + "/docs/plans"
+
+=== step 3: dashcrew "worktree" "create" "feat/b" "main" "--no-pub"
+exit: 0
+stdout:
+| path: <root>/w.worktrees/feat-b
+| branch: feat/b (base main)
+| upstream: none
+| status: ## feat/b
+| links: AGENTS.md, CLAUDE.md, .claude, .codex, .agents, .ai/bin, docs/plans
+| deps: skipped
+stderr: (empty)
+files:
++ w.worktrees/feat-b  dir
++ w.worktrees/feat-b/.agents  link -> <root>/w/.agents
++ w.worktrees/feat-b/.ai  dir
++ w.worktrees/feat-b/.ai/bin  link -> <root>/w/.ai/bin
++ w.worktrees/feat-b/.ai/project.yaml  -rw-r--r-- sha256:60467b7adc1c2092
++ w.worktrees/feat-b/.claude  link -> <root>/w/.claude
++ w.worktrees/feat-b/.codex  link -> <root>/w/.codex
++ w.worktrees/feat-b/.git  -rw-r--r-- sha256:dae2576238caba93
++ w.worktrees/feat-b/.gitignore  -rw-r--r-- sha256:fc30db455a55e1f5
++ w.worktrees/feat-b/AGENTS.md  link -> <root>/w/AGENTS.md
++ w.worktrees/feat-b/CLAUDE.md  link -> <root>/w/CLAUDE.md
++ w.worktrees/feat-b/Makefile  -rw-r--r-- sha256:f6b1e6c5b5bb4bd3
++ w.worktrees/feat-b/docs  dir
++ w.worktrees/feat-b/docs/plans  link -> <root>/w/docs/plans
++ w.worktrees/feat-b/docs/readme.md  -rw-r--r-- sha256:0dab0d00b42ecf3a
++ w.worktrees/feat-b/lib  dir
++ w.worktrees/feat-b/lib/a.dart  -rw-r--r-- sha256:6f1071e614d30954
+~ w/.git/config
+    + "[branch \"feat/b\"]"
+    + "\tdashcrew-base = main"
+
+=== step 4: dashcrew "worktree" "watch" "--once"
+exit: 0
+stdout: (empty)
+stderr: (empty)
+files:
+~ w/.git/dashcrew-watch/state.json
+    - "  \"watched\": [],"
+    - "  \"bases\": {},"
+    - "  \"branches\": {},"
+    - "  \"overlaps\": {}"
+    + "  \"watched\": ["
+    + "    \"feat-a\","
+    + "    \"feat-b\""
+    + "  ],"
+    + "  \"bases\": {"
+    + "    \"main\": \"60510b70929e8eef7be6b218d535848021a97847\""
+    + "  },"
+    + "  \"branches\": {"
+    + "    \"feat/a\": {"
+    + "      \"ahead\": 0,"
+    + "      \"pushed\": null,"
+    + "      \"pr\": null"
+    + "    },"
+    + "    \"feat/b\": {"
+    + "      \"ahead\": 0,"
+    + "      \"pushed\": null,"
+    + "      \"pr\": null"
+    + "    }"
+    + "  },"
+    + "  \"overlaps\": {"
+    + "    \"feat/a + feat/b\": []"
+    + "  }"
+
+=== step 5: dashcrew "worktree" "watch" "--once" "feat-x"
+exit: 1
+stdout: (empty)
+stderr:
+| No worktree named feat-x.
+files: (unchanged)
+
+=== step 6: dashcrew "worktree" "watch" "--interval" "abc" "--once"
+exit: 64
+stdout: (empty)
+stderr:
+| --interval must be a positive number of seconds.
+| 
+| Usage: dashcrew worktree watch [<name>...]
+| -h, --help         Print this usage information.
+| -p, --project      Any folder inside the repository.
+|                    (defaults to ".")
+|     --once         Run one pass and exit.
+|     --state-dir    Where seen events are kept; defaults to <git dir>/dashcrew-watch.
+|     --interval     Seconds between passes.
+|                    (defaults to "60")
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 7: dashcrew "worktree" "watch" "--once" "--interval" " 0x10 "
+(after the case's setup for this step)
+exit: 0
+stdout:
+| commit feat/a: first commit, 1 ahead of origin/main
+stderr: (empty)
+files:
+~ w/.git/dashcrew-watch/state.json
+    - "      \"ahead\": 0,"
+    + "      \"ahead\": 1,"
+
+=== step 8: dashcrew "worktree" "watch" "--once" "feat-a"
+(after the case's setup for this step)
+exit: 0
+stdout:
+| pushed feat/a: 80f5852
+stderr: (empty)
+files:
+~ w/.git/dashcrew-watch/state.json
+    - "      \"pushed\": null,"
+    + "      \"pushed\": \"80f585255d09ce086386d16de6094c3fbf96dbdc\","
+
+=== step 9: dashcrew "worktree" "watch" "--once"
+(after the case's setup for this step)
+exit: 0
+stdout:
+| overlap feat/a + feat/b: lib/a.dart
+stderr: (empty)
+files:
+~ w/.git/dashcrew-watch/state.json
+    - "    \"feat/a + feat/b\": []"
+    + "    \"feat/a + feat/b\": ["
+    + "      \"lib/a.dart\""
+    + "    ]"
+
+=== step 10: dashcrew "worktree" "watch" "--once" "--state-dir" "../state"
+(after the case's setup for this step)
+exit: 0
+stdout:
+| commit feat/a: first commit, 1 ahead of origin/main
+| pushed feat/a: 80f5852
+| overlap feat/a + feat/b: lib/a.dart
+stderr: (empty)
+files:
++ state  dir
++ state/state.json  -rw-r--r-- sha256:b9b005e7e167fa0b
+
+=== step 11: dashcrew "worktree" "watch" "--once"
+(after the case's setup for this step)
+exit: 0
+stdout:
+| base-moved origin/main: 60510b7..ea554ab
+| merge-tree feat/a vs origin/main: CONFLICT lib/a.dart
+| merge-tree feat/b vs origin/main: CLEAN
+stderr: (empty)
+files:
+~ w/.git/dashcrew-watch/state.json
+    - "    \"main\": \"60510b70929e8eef7be6b218d535848021a97847\""
+    - "      \"ahead\": 1,"
+    + "    \"main\": \"ea554ab96e3b3a67d66dc5ce21669a6e8153319a\""
+    + "      \"ahead\": 2,"
+
+=== step 12: dashcrew "worktree" "watch" "--once" "feat-a" "feat-b"
+(after the case's setup for this step)
+exit: 0
+stdout: (empty)
+stderr: (empty)
+files:
+~ w/.git/dashcrew-watch/state.json
+    - "    \"feat/a + feat/b\": ["
+    - "      \"lib/a.dart\""
+    - "    ]"
+    + "    \"feat/a + feat/b\": []"
+
+=== step 13: dashcrew "worktree" "watch" "--once"
+(after the case's setup for this step)
+exit: 0
+stdout:
+| done: 2 worktrees merged or removed
+stderr: (empty)
+files: (unchanged)

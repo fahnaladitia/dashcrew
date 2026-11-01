@@ -1,0 +1,25 @@
+# init with a project platform
+
+=== step 1: dashcrew "init" "--yes" "--agents" "codex"
+exit: 0
+stdout:
+| Detected in <root>/w:
+|   platform: go (go.mod)
+| wrote .ai/project.yaml
+| next: dashcrew sync
+stderr: (empty)
+files:
++ w/.ai/project.yaml  -rw-r--r-- sha256:92c85e4451c61620
+
+=== step 2: dashcrew "init" "--force"
+stdin: "\nchi\n\n\n"
+exit: 0
+stdout:
+| Detected in <root>/w:
+|   platform: go (go.mod)
+| platform [go]: design [-]:   expected one of figma, none, other <package>, - (none)
+| design [-]: router [-]: tracker [-]: wrote .ai/project.yaml
+| next: dashcrew sync
+stderr: (empty)
+files:
+~ w/.ai/project.yaml  -rw-r--r-- sha256:5244cc15ba8441a3

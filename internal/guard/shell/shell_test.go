@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// dartShellTests is the number of tests in test/unit/shell_test.dart.
+// dartShellTests is the number of tests the Dart shell_test.dart had (removed at G8).
 // Every one of them is a row of shellCases.
 const dartShellTests = 9
 

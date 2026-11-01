@@ -1,5 +1,5 @@
-// Command dashcrew is the Go engine, with the commands, flags, help text and exit codes of bin/dashcrew.dart.
-// `dashcrew guard` is the guard hook that `.ai/bin/guard` runs; the Dart engine has no guard and refuses it.
+// Command dashcrew renders the AI toolkit of a project from `.ai/project.yaml` and checks it.
+// `dashcrew guard` is the guard hook that `.ai/bin/guard` runs.
 package main
 
 import (
