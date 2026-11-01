@@ -11,7 +11,6 @@ import '../catalog/catalog.dart';
 import '../guard/guard.dart';
 import '../profile/profile.dart';
 import '../render/renderer.dart';
-import '../sync/guard_install.dart';
 import '../sync/sync.dart';
 import '../version.dart';
 
@@ -33,18 +32,15 @@ class Doctor {
   const Doctor({
     required this.catalog,
     required this.projectDir,
-    this.packageRoot,
     this.userSkillsDir,
     this.codexHome,
-    this.guardHome,
+    this.pathEnv,
+    this.home,
     this.machineChecks = true,
   });
 
   final Catalog catalog;
   final String projectDir;
-
-  /// dashcrew package root; without it the guard staleness check is skipped.
-  final String? packageRoot;
 
   /// Where user-level skills live; defaults to `$CLAUDE_CONFIG_DIR/skills`, else `~/.claude/skills`.
   final String? userSkillsDir;
@@ -52,8 +48,11 @@ class Doctor {
   /// False skips what depends on this machine or an agent (guard binary, hooks, MCP, skills, trust), as in CI.
   final bool machineChecks;
 
-  /// Where the shared guard is installed; defaults to `DASHCREW_HOME`, else `~/.dashcrew`.
-  final String? guardHome;
+  /// PATH searched for the dashcrew the shim runs, and the shim's PATH; defaults to this process's.
+  final String? pathEnv;
+
+  /// The shim's HOME, where it caches a passed version check; defaults to this process's.
+  final String? home;
 
   /// Codex user config folder; defaults to `$CODEX_HOME`, else `~/.codex`.
   final String? codexHome;
@@ -78,10 +77,10 @@ class Doctor {
     final doctor = Doctor(
       catalog: overlaid,
       projectDir: projectDir,
-      packageRoot: packageRoot,
       userSkillsDir: userSkillsDir,
       codexHome: codexHome,
-      guardHome: guardHome,
+      pathEnv: pathEnv,
+      home: home,
       machineChecks: machineChecks,
     );
     return doctor._checks(doctor._projectPacks());
@@ -370,7 +369,7 @@ class Doctor {
     if (lockedFiles == null || !profileOk) return const DoctorCheck(id, CheckStatus.skip, 'needs a valid profile and the lock');
     final Map<String, String> expected;
     try {
-      expected = Sync(catalog: catalog, projectDir: projectDir, compileGuard: false).render();
+      expected = Sync(catalog: catalog, projectDir: projectDir).render();
     } on SyncException catch (error) {
       return DoctorCheck(id, CheckStatus.fail, error.message);
     } on RenderException catch (error) {
@@ -397,22 +396,31 @@ class Doctor {
     }
   }
 
-  /// Runs the committed shim on a `git push` event, which every policy blocks; the guard fails open,
-  /// so anything but exit 2 means no guard rule applies on this machine.
+  /// Checks that the shim can run `dashcrew guard`: dashcrew on PATH ([pathEnv]), the Go build and not older than the
+  /// lock's `guard_min_version`, then the shim blocks a `git push` event, which every policy blocks.
+  /// The shim refuses every tool call without such a dashcrew, so a missing one fails and an old one warns.
   Future<DoctorCheck> _guardBinary(Map<String, Object?>? lock) async {
     const id = 'guard-binary';
     final shim = _file(Sync.guardShimPath);
     if (!shim.existsSync()) return const DoctorCheck(id, CheckStatus.fail, '.ai/bin/guard missing; run dashcrew sync');
 
-    final expected = lock?['guard_source'] as String?;
-    final home = guardHome ?? GuardInstaller.defaultHome(Platform.environment);
-    if (expected != null && home != null) {
-      final installed = GuardInstaller(packageRoot: packageRoot ?? '', home: home).binaryPath(expected);
-      if (!File(installed).existsSync()) {
-        return const DoctorCheck(id, CheckStatus.fail,
-            'the guard for this project is not installed on this machine, so no guard rule applies here yet: '
-            'run dashcrew sync (an agent tool call also installs it when dashcrew is on PATH)');
-      }
+    final minimum = lock?['guard_min_version'] is String ? lock!['guard_min_version'] as String : guardMinimumVersion;
+    final path = pathEnv ?? Platform.environment['PATH'] ?? '';
+    final install = 'install dashcrew $minimum or newer (brew install fahnaladitia/tap/dashcrew)';
+    final found = _lookPath('dashcrew', path);
+    if (found == null) {
+      return DoctorCheck(id, CheckStatus.fail, 'dashcrew is not on PATH, so .ai/bin/guard refuses every tool call: $install');
+    }
+    if (_isDartLauncher(found)) {
+      return DoctorCheck(id, CheckStatus.warn,
+          'the dashcrew first on PATH ($found) is the Dart one, so .ai/bin/guard refuses every tool call: $install, '
+          'then dart pub global deactivate dashcrew');
+    }
+    final reported = await _reportedVersion(found, path);
+    if (!isSemanticVersion(reported) || compareVersions(reported, minimum) < 0) {
+      final described = isSemanticVersion(reported) ? 'is $reported' : 'reports no version';
+      return DoctorCheck(id, CheckStatus.warn,
+          'the dashcrew first on PATH ($found) $described, older than $minimum, so .ai/bin/guard refuses every tool call: $install');
     }
 
     final int exitCode;
@@ -421,7 +429,7 @@ class Doctor {
         shim.path,
         [_file('.ai/guard.json').path],
         workingDirectory: projectDir,
-        environment: {'DASHCREW_HOME': ?home},
+        environment: {'PATH': path, 'HOME': ?home},
       );
       process.stdout.drain<void>();
       process.stderr.drain<void>();
@@ -441,15 +449,51 @@ class Doctor {
     if (exitCode != 2) {
       return DoctorCheck(id, CheckStatus.fail, '.ai/bin/guard did not block git push (exit $exitCode); run dashcrew sync');
     }
-
-    final root = packageRoot;
-    if (root != null && expected != Sync.guardSourceHash(root)) {
-      return const DoctorCheck(id, CheckStatus.warn,
-          'this dashcrew builds a different guard than the project expects; install the dashcrew ref the team uses');
-    }
     return const DoctorCheck(id, CheckStatus.ok, '.ai/bin/guard blocks git push');
   }
 
+  /// First executable regular file named [name] in the folders of [path]; an empty folder is the working directory.
+  static String? _lookPath(String name, String path) {
+    for (var dir in path.split(Platform.isWindows ? ';' : ':')) {
+      if (dir.isEmpty) dir = '.';
+      final candidate = p.join(dir, name);
+      final stat = FileStat.statSync(candidate);
+      if (stat.type == FileSystemEntityType.file && stat.mode & 0x49 != 0) return candidate;
+    }
+    return null;
+  }
+
+  /// True for the script `dart pub global activate` writes into the pub cache.
+  static bool _isDartLauncher(String path) {
+    try {
+      final file = File(path).openSync();
+      final head = file.readSync(4096);
+      file.closeSync();
+      final text = utf8.decode(head, allowMalformed: true);
+      return text.startsWith('#!') && text.contains('pub global run dashcrew');
+    } on FileSystemException {
+      return false;
+    }
+  }
+
+  /// Last word `<path> --version` prints, as the shim reads it; empty after 10 seconds or when it fails.
+  static Future<String> _reportedVersion(String path, String pathEnv) async {
+    try {
+      final process = await Process.start(path, ['--version'], environment: {'PATH': pathEnv});
+      process.stdin.close();
+      process.stderr.drain<void>();
+      final out = process.stdout.transform(utf8.decoder).join();
+      final code = await process.exitCode.timeout(const Duration(seconds: 10), onTimeout: () {
+        process.kill();
+        return -1;
+      });
+      if (code != 0) return '';
+      final words = (await out).trim().split(RegExp(r'\s+'));
+      return words.last;
+    } on ProcessException {
+      return '';
+    }
+  }
 
   DoctorCheck _hook() {
     const id = 'hook';

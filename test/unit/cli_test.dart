@@ -67,6 +67,35 @@ void main() {
     expect((await dashcrew(['remove', 'feat-a'])).exitCode, 0);
   });
 
+  test('dashcrew --version prints the version the guard shim reads', () async {
+    final result = await Process.run(Platform.resolvedExecutable, ['run', 'bin/dashcrew.dart', '--version']);
+
+    expect(result.exitCode, 0);
+    expect(result.stdout, 'dashcrew 0.0.1\n');
+  });
+
+  test('sync accepts --compile-guard as a deprecated no-op with a notice', () async {
+    final project = Directory.systemTemp.createTempSync('dashcrew_cli_sync_');
+    addTearDown(() => project.deleteSync(recursive: true));
+    Directory('${project.path}/.ai').createSync();
+    File('${project.path}/.ai/project.yaml').writeAsStringSync('toolkit: 1\nagents: [claude-code]\n');
+
+    for (final flag in ['--compile-guard', '--no-compile-guard']) {
+      final result = await Process.run(Platform.resolvedExecutable, ['run', 'bin/dashcrew.dart', 'sync', flag, '--project', project.path]);
+
+      expect(result.exitCode, 0, reason: '${result.stderr}');
+      expect(result.stderr, 'note: --compile-guard is deprecated and does nothing: hooks run dashcrew guard from PATH.\n');
+    }
+  });
+
+  test('dashcrew guard refuses the call: the Dart engine has no guard', () async {
+    final result = await Process.run(Platform.resolvedExecutable, ['run', 'bin/dashcrew.dart', 'guard', 'policy.json']);
+
+    expect(result.exitCode, 2);
+    expect(result.stderr, contains('[dashcrew guard] this dashcrew is the Dart engine, which has no guard'));
+    expect(result.stderr, contains('Install dashcrew 0.1.0 or newer'));
+  });
+
   test('dashcrew gate is no longer a command', () async {
     final result = await Process.run(Platform.resolvedExecutable, ['run', 'bin/dashcrew.dart', 'gate', 'status']);
     expect(result.exitCode, 64);
@@ -78,7 +107,7 @@ void main() {
     addTearDown(() => project.deleteSync(recursive: true));
     Directory('${project.path}/.ai').createSync();
     File('${project.path}/.ai/project.yaml').writeAsStringSync('toolkit: 1\nagents: [claude-code]\n');
-    final sync = await Process.run(Platform.resolvedExecutable, ['run', 'bin/dashcrew.dart', 'sync', '--no-compile-guard', '--project', project.path]);
+    final sync = await Process.run(Platform.resolvedExecutable, ['run', 'bin/dashcrew.dart', 'sync', '--project', project.path]);
     expect(sync.exitCode, 0, reason: '${sync.stderr}');
     final body = File('${project.path}/body.md')..writeAsStringSync('## Summary\nx\n');
 

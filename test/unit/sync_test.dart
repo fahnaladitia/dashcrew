@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dashcrew/dashcrew.dart';
-import 'package:dashcrew/src/package_root.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 import 'package:yaml/yaml.dart';
@@ -20,7 +19,7 @@ void main() {
   }
 
   SyncResult sync({bool force = false, bool adopt = false}) =>
-      Sync(catalog: catalog, projectDir: project.path, compileGuard: false).run(force: force, adopt: adopt);
+      Sync(catalog: catalog, projectDir: project.path).run(force: force, adopt: adopt);
 
   setUp(() {
     project = Directory.systemTemp.createTempSync('dashcrew_sync_');
@@ -442,8 +441,8 @@ project: { local_packages: [core] }
       expect((workflow['on'] as YamlMap).keys, ['pull_request']);
       final steps = ((workflow['jobs'] as YamlMap)['check'] as YamlMap)['steps'] as YamlList;
       final runs = [for (final step in steps) (step as YamlMap)['run']].whereType<String>().toList();
-      expect(runs, contains(contains('--git-ref 0123abc')));
-      expect(runs.last, 'dart pub global run dashcrew check');
+      expect(runs, ['go install github.com/fahnaladitia/dashcrew/cmd/dashcrew@0123abc', 'dashcrew check']);
+      expect(read(path), contains('uses: actions/setup-go@'));
       expect(read(path), isNot(contains('GITHUB_TOKEN')));
       expect((workflow['permissions'] as YamlMap).keys, ['contents', 'pull-requests']);
       expect(((jsonDecode(read('.ai/lock.json')) as Map)['files'] as Map).keys, contains(path));
@@ -474,15 +473,15 @@ project: { local_packages: [core] }
   });
 
   group('guard shim', () {
-    test('sync writes an executable shim for this dashcrew and locks it', () {
+    test('sync writes an executable shim for the guard minimum and locks it', () {
       sync();
 
-      final hash = Sync.guardSourceHash(dashcrewPackageRoot());
-      expect(read('.ai/bin/guard'), GuardInstaller.shim(hash));
+      expect(read('.ai/bin/guard'), guardShim(guardMinimumVersion));
       expect(File('${project.path}/.ai/bin/guard').statSync().mode & 0x49, 0x49);
       final lock = jsonDecode(read('.ai/lock.json')) as Map<String, Object?>;
       expect((lock['files'] as Map).keys, contains('.ai/bin/guard'));
-      expect(lock['guard_source'], hash);
+      expect(lock['guard_min_version'], guardMinimumVersion);
+      expect(lock.containsKey('guard_source'), isFalse);
       expect(exists('.gitignore'), isFalse);
     });
 
@@ -503,16 +502,6 @@ project: { local_packages: [core] }
 
       expect(read('.ai/bin/guard'), startsWith('#!/bin/sh'));
     });
-
-    test('compileGuard installs the guard into the guard home', () {
-      final home = Directory.systemTemp.createTempSync('dashcrew_sync_home_');
-      addTearDown(() => home.deleteSync(recursive: true));
-
-      Sync(catalog: catalog, projectDir: project.path, packageRoot: '.', guardHome: home.path).run();
-
-      final installed = GuardInstaller(packageRoot: '.', home: home.path).binaryPath();
-      expect(File(installed).existsSync(), isTrue);
-    }, timeout: const Timeout(Duration(minutes: 3)));
   });
 
   group('project packs', () {

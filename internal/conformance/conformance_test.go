@@ -10,7 +10,6 @@ import (
 
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
 	"github.com/fahnaladitia/dashcrew/internal/doctor"
-	"github.com/fahnaladitia/dashcrew/internal/guard"
 	"github.com/fahnaladitia/dashcrew/internal/sync"
 )
 
@@ -142,11 +141,7 @@ func TestGoldenSamplesAreByteIdentical(t *testing.T) {
 				t.Errorf("second sync wrote %v, removed %v", again.Written, again.Removed)
 			}
 
-			hash, err := guard.SourceHash()
-			if err != nil {
-				t.Fatal(err)
-			}
-			for _, check := range (doctor.Doctor{Catalog: c, ProjectDir: project, GuardSource: hash, GuardHome: t.TempDir(), MachineChecks: true}).Run() {
+			for _, check := range (doctor.Doctor{Catalog: c, ProjectDir: project, PathEnv: t.TempDir(), MachineChecks: true}).Run() {
 				if check.Status == doctor.Fail && check.ID != "guard-binary" {
 					t.Errorf("doctor %s: %s", check.ID, check.Detail)
 				}

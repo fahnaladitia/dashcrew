@@ -7,7 +7,6 @@ import (
 
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
 	"github.com/fahnaladitia/dashcrew/internal/doctor"
-	"github.com/fahnaladitia/dashcrew/internal/guard"
 	"github.com/fahnaladitia/dashcrew/internal/initproject"
 	"github.com/fahnaladitia/dashcrew/internal/sync"
 )
@@ -46,17 +45,13 @@ func TestInitAppWritesExpectedProjectYaml(t *testing.T) {
 	}
 }
 
-func TestInitAppProfileSyncsAndPassesDoctorBesidesTheUncompiledGuard(t *testing.T) {
+func TestInitAppProfileSyncsAndPassesDoctorBesidesTheMissingDashcrew(t *testing.T) {
 	c, project := initApp(t)
 	if _, err := (sync.Sync{Catalog: c, ProjectDir: project}).Run(false, false); err != nil {
 		t.Fatal(err)
 	}
-	hash, err := guard.SourceHash()
-	if err != nil {
-		t.Fatal(err)
-	}
 
-	for _, check := range (doctor.Doctor{Catalog: c, ProjectDir: project, GuardSource: hash, GuardHome: t.TempDir(), MachineChecks: true}).Run() {
+	for _, check := range (doctor.Doctor{Catalog: c, ProjectDir: project, PathEnv: t.TempDir(), MachineChecks: true}).Run() {
 		if check.Status == doctor.Fail && check.ID != "guard-binary" {
 			t.Errorf("doctor %s: %s", check.ID, check.Detail)
 		}

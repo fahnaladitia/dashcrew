@@ -41,10 +41,10 @@ void main() {
         reason: 'if intended: DASHCREW_UPDATE_GOLDENS=1 dart test test/golden, then review the diff');
   });
 
-  test('the written profile syncs and passes doctor besides the uncompiled guard', () async {
-    Sync(catalog: catalog, projectDir: project.path, compileGuard: false).run();
+  test('the written profile syncs and passes doctor besides the missing dashcrew', () async {
+    Sync(catalog: catalog, projectDir: project.path).run();
 
-    final checks = await Doctor(catalog: catalog, projectDir: project.path, packageRoot: '.').run();
+    final checks = await Doctor(catalog: catalog, projectDir: project.path, pathEnv: '').run();
 
     final failures = [
       for (final check in checks)

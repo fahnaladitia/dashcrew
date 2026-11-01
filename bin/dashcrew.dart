@@ -1,15 +1,29 @@
 import 'dart:io';
 
+import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 import 'package:path/path.dart' as p;
 import 'package:dashcrew/dashcrew.dart';
 import 'package:dashcrew/src/package_root.dart';
 
+/// The runner with a global `--version`, answered before any command runs.
+class DashcrewRunner extends CommandRunner<int> {
+  DashcrewRunner() : super('dashcrew', 'Agent-agnostic AI coding toolkit with Flutter built in.') {
+    argParser.addFlag('version', negatable: false, help: 'Print the dashcrew version.');
+  }
+
+  @override
+  Future<int?> runCommand(ArgResults topLevelResults) async {
+    if (topLevelResults['version'] as bool) {
+      stdout.writeln('dashcrew $dashcrewVersion');
+      return 0;
+    }
+    return super.runCommand(topLevelResults);
+  }
+}
+
 Future<void> main(List<String> arguments) async {
-  final runner = CommandRunner<int>(
-    'dashcrew',
-    'Agent-agnostic AI coding toolkit with Flutter built in.',
-  )
+  final runner = DashcrewRunner()
     ..addCommand(InitCommand())
     ..addCommand(SyncCommand())
     ..addCommand(DoctorCommand())
@@ -28,9 +42,6 @@ Future<void> main(List<String> arguments) async {
     stderr.writeln(error.message);
     exitCode = 1;
   } on WorktreeException catch (error) {
-    stderr.writeln(error.message);
-    exitCode = 1;
-  } on GuardInstallException catch (error) {
     stderr.writeln(error.message);
     exitCode = 1;
   }
@@ -75,7 +86,7 @@ class SyncCommand extends Command<int> {
       ..addOption('project', abbr: 'p', help: 'Project root holding .ai/project.yaml.', defaultsTo: '.')
       ..addFlag('force', help: 'Overwrite generated files that were edited by hand.', negatable: false)
       ..addFlag('adopt', help: 'Keep an existing AGENTS.md as the project block.', negatable: false)
-      ..addFlag('compile-guard', help: 'Install the shared guard for this dashcrew when it is missing.', defaultsTo: true);
+      ..addFlag('compile-guard', help: 'Deprecated, does nothing: hooks run dashcrew guard from PATH.');
   }
 
   @override
@@ -87,12 +98,12 @@ class SyncCommand extends Command<int> {
   @override
   int run() {
     final args = argResults!;
-    final root = dashcrewPackageRoot();
+    if (args.wasParsed('compile-guard')) {
+      stderr.writeln('note: --compile-guard is deprecated and does nothing: hooks run dashcrew guard from PATH.');
+    }
     final result = Sync(
-      catalog: Catalog.load(root),
+      catalog: Catalog.load(dashcrewPackageRoot()),
       projectDir: Directory(args['project'] as String).absolute.path,
-      compileGuard: args['compile-guard'] as bool,
-      packageRoot: root,
     ).run(force: args['force'] as bool, adopt: args['adopt'] as bool);
 
     for (final path in result.written) {
@@ -125,11 +136,9 @@ class DoctorCommand extends Command<int> {
 
   @override
   Future<int> run() async {
-    final root = dashcrewPackageRoot();
     final checks = await Doctor(
-      catalog: Catalog.load(root),
+      catalog: Catalog.load(dashcrewPackageRoot()),
       projectDir: Directory(argResults!['project'] as String).absolute.path,
-      packageRoot: root,
     ).run();
 
     for (final check in checks) {
@@ -276,37 +285,24 @@ class _WorktreeWatch extends _WorktreeSubcommand {
   }
 }
 
+/// `dashcrew guard` is the Go engine's guard hook. This engine has none: it refuses the tool call, as the shim does.
 class GuardCommand extends Command<int> {
-  GuardCommand() {
-    addSubcommand(_GuardInstall());
-  }
-
   @override
   String get name => 'guard';
 
   @override
-  String get description => 'The compiled guard every project on this machine shares.';
-}
-
-class _GuardInstall extends Command<int> {
-  _GuardInstall() {
-    argParser
-      ..addOption('expect', help: 'Refuse unless this dashcrew builds the guard with this source hash (the lock\'s guard_source).')
-      ..addFlag('force', help: 'Compile again even when installed.', negatable: false);
-  }
+  String get invocation => 'dashcrew guard [<policy>]';
 
   @override
-  String get name => 'install';
-
-  @override
-  String get description => 'Compile the guard once into \$DASHCREW_HOME (default ~/.dashcrew) and print its path.';
+  String get description => 'Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.\n'
+      "Hooks run it through .ai/bin/guard. The policy is <policy>, else .ai/guard.json in the hook's working directory.";
 
   @override
   int run() {
-    final result = GuardInstaller(packageRoot: dashcrewPackageRoot())
-        .install(expect: argResults!['expect'] as String?, force: argResults!['force'] as bool);
-    stdout.writeln(result.path);
-    return 0;
+    stderr.writeln('[dashcrew guard] this dashcrew is the Dart engine, which has no guard, so this tool call is refused. '
+        'Install dashcrew $guardMinimumVersion or newer (brew install fahnaladitia/tap/dashcrew, '
+        'or go install github.com/fahnaladitia/dashcrew/cmd/dashcrew@latest) and retry.');
+    return 2;
   }
 }
 
@@ -325,13 +321,11 @@ class CheckCommand extends Command<int> {
 
   @override
   Future<int> run() async {
-    final root = dashcrewPackageRoot();
     final bodyFile = argResults!['pr-body'] as String?;
     if (bodyFile != null && !File(bodyFile).existsSync()) usageException('--pr-body file $bodyFile not found.');
     final checks = await PrCheck(
-      catalog: Catalog.load(root),
+      catalog: Catalog.load(dashcrewPackageRoot()),
       projectDir: Directory(argResults!['project'] as String).absolute.path,
-      packageRoot: root,
     ).run(prBody: bodyFile == null ? null : File(bodyFile).readAsStringSync());
 
     final annotate = Platform.environment['GITHUB_ACTIONS'] == 'true';

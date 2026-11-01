@@ -1,7 +1,5 @@
-// Command dashcrew is the Go engine during the port from Dart, with the commands, flags, help text and exit codes
-// of bin/dashcrew.dart. Three behaviours differ until the release that switches the shim (G7): `dashcrew guard`
-// without `install` is the guard hook, `guard install` exits 64, and `--compile-guard` installs nothing, because
-// sync still writes the shim and policy of the Dart guard.
+// Command dashcrew is the Go engine, with the commands, flags, help text and exit codes of bin/dashcrew.dart.
+// `dashcrew guard` is the guard hook that `.ai/bin/guard` runs; the Dart engine has no guard and refuses it.
 package main
 
 import (
@@ -22,6 +20,7 @@ import (
 	"github.com/fahnaladitia/dashcrew/internal/initproject"
 	"github.com/fahnaladitia/dashcrew/internal/profile"
 	"github.com/fahnaladitia/dashcrew/internal/sync"
+	"github.com/fahnaladitia/dashcrew/internal/version"
 	"github.com/fahnaladitia/dashcrew/internal/worktree"
 )
 
@@ -56,6 +55,10 @@ func (c cliIO) out(line string) { fmt.Fprintln(c.stdout, line) }
 
 // run is the CLI: exit 0 on success, 1 when a check fails or a command is refused, 64 on a usage error.
 func run(args []string, stdout, stderr io.Writer, env map[string]string) int {
+	if len(args) > 1 && args[0] == "guard" && args[1] == "install" {
+		fmt.Fprintln(stderr, guardInstallRemoved)
+		return 64
+	}
 	if isGuardHook(args) {
 		return guard.Run(args[1:], stdin, stdout, stderr, guard.ProcessEnv)
 	}
@@ -76,12 +79,19 @@ func run(args []string, stdout, stderr io.Writer, env map[string]string) int {
 	return code
 }
 
-// isGuardHook is `dashcrew guard [<policy>]`: anything after guard but install and help belongs to the hook.
+// guardInstallRemoved answers `guard install`, which a shim from before the switch to `dashcrew guard` still calls.
+const guardInstallRemoved = "dashcrew guard install was removed: hooks run dashcrew guard from PATH. " +
+	"Run dashcrew sync to update .ai/bin/guard."
+
+// compileGuardNotice is printed when `sync` gets `--[no-]compile-guard`, a flag kept so old scripts still run.
+const compileGuardNotice = "note: --compile-guard is deprecated and does nothing: hooks run dashcrew guard from PATH."
+
+// isGuardHook is `dashcrew guard [<policy>]`: anything after guard but help belongs to the hook.
 func isGuardHook(args []string) bool {
 	if len(args) == 0 || args[0] != "guard" {
 		return false
 	}
-	return len(args) == 1 || (args[1] != "install" && args[1] != "--help" && args[1] != "-h")
+	return len(args) == 1 || (args[1] != "--help" && args[1] != "-h")
 }
 
 func ptr(value string) *string { return &value }
@@ -103,6 +113,8 @@ func absolute(path string) (string, error) {
 
 func newRoot(cli cliIO) *command {
 	root := newCommand(executableName, "Agent-agnostic AI coding toolkit with Flutter built in.")
+	root.flag("version", "", "Print the dashcrew version.", false, false)
+	root.versionLine = executableName + " " + version.Current()
 	root.add(newHelpCommand(root, cli.stdout)).
 		add(initCommand(cli)).
 		add(syncCommand(cli)).
@@ -151,9 +163,11 @@ func syncCommand(cli cliIO) *command {
 	c.option("project", "p", "Project root holding .ai/project.yaml.", ptr("."))
 	c.flag("force", "", "Overwrite generated files that were edited by hand.", false, false)
 	c.flag("adopt", "", "Keep an existing AGENTS.md as the project block.", false, false)
-	// Accepted and ignored: the Go engine installs no guard until the shim calls `dashcrew guard` (G7).
-	c.flag("compile-guard", "", "Install the shared guard for this dashcrew when it is missing.", true, true)
+	c.flag("compile-guard", "", "Deprecated, does nothing: hooks run dashcrew guard from PATH.", false, true)
 	c.run = func(r *results) (int, error) {
+		if r.wasParsed("compile-guard") {
+			fmt.Fprintln(cli.stderr, compileGuardNotice)
+		}
 		projectDir, err := absolute(*r.option("project"))
 		if err != nil {
 			return 0, err
@@ -166,6 +180,8 @@ func syncCommand(cli cliIO) *command {
 		if err != nil {
 			return 0, err
 		}
+		// Go only (G4b): doctor's guard-log check counts malformed payloads from here on. Best effort.
+		_ = guard.MarkSynced(projectDir, time.Now())
 		for _, path := range result.Written {
 			cli.out("wrote   " + path)
 		}
@@ -214,11 +230,7 @@ func doctorCommand(cli cliIO) *command {
 		if err != nil {
 			return 0, err
 		}
-		hash, err := guard.SourceHash()
-		if err != nil {
-			return 0, err
-		}
-		checks := doctor.Doctor{Catalog: cat, ProjectDir: projectDir, GuardSource: hash, MachineChecks: true}.Run()
+		checks := doctor.Doctor{Catalog: cat, ProjectDir: projectDir, MachineChecks: true}.Run()
 		return printChecks(cli.stdout, checks, false), nil
 	}
 	return c
@@ -250,11 +262,7 @@ func checkCommand(cli cliIO) *command {
 		if err != nil {
 			return 0, err
 		}
-		hash, err := guard.SourceHash()
-		if err != nil {
-			return 0, err
-		}
-		checks, err := check.PrCheck{Catalog: cat, ProjectDir: projectDir, GuardSource: hash, Environment: cli.env}.Run(body)
+		checks, err := check.PrCheck{Catalog: cat, ProjectDir: projectDir, Environment: cli.env}.Run(body)
 		if err != nil {
 			return 0, err
 		}
@@ -402,16 +410,14 @@ func dartTryParseInt(text string) (int64, bool) {
 	return value, err == nil
 }
 
-// guardCommand is the Dart `guard` branch, kept for its help text and the flags of `install`. Running install exits
-// 64 until G7; `dashcrew guard` without install is the hook (see isGuardHook).
+// guardCommand holds the help text of `dashcrew guard`; running it is the hook (see isGuardHook), so the parser only
+// reaches it for `--help` and `help guard`.
 func guardCommand() *command {
-	c := newCommand("guard", "The compiled guard every project on this machine shares.")
-	install := newCommand("install", "Compile the guard once into $DASHCREW_HOME (default ~/.dashcrew) and print its path.")
-	install.option("expect", "", "Refuse unless this dashcrew builds the guard with this source hash (the lock's guard_source).", nil)
-	install.flag("force", "", "Compile again even when installed.", false, false)
-	install.run = func(*results) (int, error) {
-		return 0, &exitError{64, "dashcrew guard install is served by the Dart engine until the shim calls dashcrew guard."}
+	c := newCommand("guard", "Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.\n"+
+		"Hooks run it through .ai/bin/guard. The policy is <policy>, else .ai/guard.json in the hook's working directory.")
+	c.invocation = "dashcrew guard [<policy>]"
+	c.run = func(r *results) (int, error) {
+		return guard.Run(r.rest, stdin, os.Stdout, os.Stderr, guard.ProcessEnv), nil
 	}
-	c.add(install)
 	return c
 }

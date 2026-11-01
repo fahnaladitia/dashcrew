@@ -403,7 +403,67 @@ func guardCorpus() []corpusCase {
 		payloads := shellPayloads(script, corpusRoles[random.Intn(len(corpusRoles))])
 		add(fmt.Sprintf("random %d", i), payloads[random.Intn(len(payloads))], policy([]string{"default", "relaxed"}[random.Intn(2)]))
 	}
+
+	// G4b, appended so the cases above stay as they were: the new-blocks, still-allowed and indirection tables on
+	// every agent and both policies, every seed under the forms the Go guard now unwraps, and the patch new blocks.
+	for i, command := range hardeningSeeds() {
+		for j, payload := range shellPayloads(command, "") {
+			add(fmt.Sprintf("hardening %d/%d", i, j), payload, policy("default"))
+			add(fmt.Sprintf("hardening %d/%d relaxed", i, j), payload, policy("relaxed"))
+		}
+	}
+	for i, seed := range seedCommands() {
+		for m, mutate := range hardeningMutations {
+			payloads := shellPayloads(mutate(seed), "")
+			add(fmt.Sprintf("hardening mutation %d of seed %d", m, i), payloads[(i+m)%len(payloads)], policy("default"))
+		}
+	}
+	for i, row := range newPatchBlocks {
+		add(fmt.Sprintf("hardening patch %d", i), patchHookAs(row.patch, row.role), policy("default"))
+		add(fmt.Sprintf("hardening patch %d relaxed", i), patchHookAs(row.patch, row.role), policy("relaxed"))
+	}
 	return cases
+}
+
+// hardeningSeeds are the shell commands of the G4b tables.
+func hardeningSeeds() []string {
+	var seeds []string
+	for _, row := range newBlocks {
+		seeds = append(seeds, row.command)
+	}
+	seeds = append(seeds, stillAllowed...)
+	return append(seeds, indirection...)
+}
+
+// hardeningMutations wrap one command in the forms G4b unwraps.
+var hardeningMutations = []func(string) string{
+	func(c string) string { return "sudo -E -- " + c },
+	func(c string) string { return "/usr/bin/sudo -u root " + c },
+	func(c string) string { return "/usr/bin/env -i " + c },
+	func(c string) string { return "env -u HOME FOO=1 " + c },
+	func(c string) string { return "nice -n 5 " + c },
+	func(c string) string { return "ionice -c 3 " + c },
+	func(c string) string { return "timeout -s KILL 5 " + c },
+	func(c string) string { return "exec " + c },
+	func(c string) string { return "command -p " + c },
+	func(c string) string { return "builtin " + c },
+	func(c string) string { return "nohup -- " + c },
+	func(c string) string { return "xargs -0 -n1 " + c },
+	func(c string) string { return "find . -exec " + c + ` \;` },
+	func(c string) string { return "rtk proxy " + c },
+	func(c string) string { return "! " + c },
+	func(c string) string { return "while " + c + "; do :; done" },
+	func(c string) string { return "until " + c + "; do :; done" },
+	func(c string) string { return "if :; then :; else " + c + "; fi" },
+	func(c string) string { return "time -p " + c },
+	func(c string) string { return "bash -ec '" + c + "'" },
+	func(c string) string { return "dash -c '" + c + "'" },
+	func(c string) string { return `zsh -lc "` + c + `"` },
+	func(c string) string { return `eval "` + c + `"` },
+	func(c string) string { return `bash <<< "` + c + `"` },
+	func(c string) string { return "sudo bash <<'EOF'\n" + c + "\nEOF" },
+	func(c string) string { return "sh -c \"sh -c '" + c + "'\"" },
+	func(c string) string { return strings.ReplaceAll(c, " ", " \\\n  ") },
 }
 
 // hookObject decodes a corpus payload for in-process checks; nil when it is not a JSON object.

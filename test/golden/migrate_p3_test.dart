@@ -35,7 +35,7 @@ void main() {
   late Map<String, String> before;
   late SyncResult result;
 
-  Sync sync(Directory dir) => Sync(catalog: catalog, projectDir: dir.path, compileGuard: false);
+  Sync sync(Directory dir) => Sync(catalog: catalog, projectDir: dir.path);
 
   setUp(() {
     project = Directory.systemTemp.createTempSync('dashcrew_migrate_');

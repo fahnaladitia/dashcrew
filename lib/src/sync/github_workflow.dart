@@ -17,9 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dart-lang/setup-dart@v1
+      - uses: actions/setup-go@v5
         with:
-          sdk: stable
-      - run: dart pub global activate --source git https://github.com/fahnaladitia/dashcrew --git-ref $dashcrewRef
-      - run: dart pub global run dashcrew check
+          go-version: stable
+          cache: false
+      - run: go install github.com/fahnaladitia/dashcrew/cmd/dashcrew@$dashcrewRef
+      - run: dashcrew check
 ''';

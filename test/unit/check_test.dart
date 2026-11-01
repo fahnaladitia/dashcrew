@@ -15,7 +15,7 @@ void main() {
 
   void sync(String policy) {
     write('.ai/project.yaml', 'toolkit: 1\nagents: [claude-code]\nstack: { qa: semantics-identifier, analytics: posthog }\n$policy');
-    Sync(catalog: catalog, projectDir: project.path, compileGuard: false).run(force: true);
+    Sync(catalog: catalog, projectDir: project.path).run(force: true);
   }
 
   Future<Map<String, DoctorCheck>> check({String? body, Map<String, String> environment = const {}}) async {

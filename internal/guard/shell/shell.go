@@ -14,6 +14,20 @@ func Commands(script string) [][]string {
 	return s.scan()
 }
 
+// Expanded is Commands as the shell would split it, which the Dart scanner does not: a backslash-newline joins
+// two lines instead of ending a word, and a here-string (`<<<`) on a line that runs a shell is parsed as commands,
+// as a heredoc body is. Go only (G4b); Commands stays the Dart scanner's twin.
+func Expanded(script string) [][]string {
+	s := &scanner{source: script, expanded: true}
+	return s.scan()
+}
+
+// nested is the commands of body, scanned the way s is.
+func (s *scanner) nested(body string) [][]string {
+	inner := &scanner{source: body, expanded: s.expanded}
+	return inner.scan()
+}
+
 var shellReceivers = map[string]bool{"sh": true, "bash": true, "zsh": true, "dash": true, "ksh": true, "ssh": true, "eval": true, "source": true, ".": true}
 
 type heredoc struct {
@@ -31,6 +45,9 @@ type scanner struct {
 	inWord        bool
 	pending       []heredoc
 	lineStart     int
+	// expanded is set by Expanded; hereStrings are the here-string words of the current line.
+	expanded    bool
+	hereStrings []string
 }
 
 func lastSegment(word string) string {
@@ -44,16 +61,10 @@ func (s *scanner) scan() [][]string {
 		switch {
 		case c == '\n':
 			s.endCommand()
-			feedsShell := false
-			for _, argv := range s.commands[s.lineStart:] {
-				for _, w := range argv {
-					if shellReceivers[lastSegment(w)] {
-						feedsShell = true
-					}
-				}
-			}
+			feedsShell := s.lineFeedsShell()
 			s.pos++
 			s.skipHeredocBodies(feedsShell)
+			s.parseHereStrings(feedsShell)
 			s.lineStart = len(s.commands)
 		case c == ' ' || c == '\t':
 			s.endWord()
@@ -73,6 +84,8 @@ func (s *scanner) scan() [][]string {
 			}
 		case c == '<' || c == '>':
 			s.redirect()
+		case c == '\\' && s.expanded && s.peek(1) == '\n':
+			s.pos += 2
 		case c == '\\':
 			s.inWord = true
 			if s.pos+1 < len(src) && src[s.pos+1] != '\n' {
@@ -100,7 +113,32 @@ func (s *scanner) scan() [][]string {
 		}
 	}
 	s.endCommand()
+	if s.expanded {
+		s.parseHereStrings(s.lineFeedsShell())
+	}
 	return append(s.commands, s.substitutions...)
+}
+
+// lineFeedsShell is true when a command of the current line names a shell receiver.
+func (s *scanner) lineFeedsShell() bool {
+	for _, argv := range s.commands[s.lineStart:] {
+		for _, w := range argv {
+			if shellReceivers[lastSegment(w)] {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// parseHereStrings scans the line's here-strings as commands when the line runs a shell, then forgets them.
+func (s *scanner) parseHereStrings(parse bool) {
+	if parse {
+		for _, text := range s.hereStrings {
+			s.substitutions = append(s.substitutions, s.nested(text)...)
+		}
+	}
+	s.hereStrings = nil
 }
 
 // indexFrom is the index of c in src at or after from, else len(src).
@@ -144,6 +182,8 @@ func (s *scanner) doubleQuoted() {
 	for s.pos < len(src) && src[s.pos] != '"' {
 		c := src[s.pos]
 		switch {
+		case c == '\\' && s.expanded && s.peek(1) == '\n':
+			s.pos += 2
 		case c == '\\' && s.pos+1 < len(src):
 			s.word.WriteByte(src[s.pos+1])
 			s.pos += 2
@@ -193,7 +233,7 @@ func (s *scanner) substitution(start int, closer byte) {
 	if start <= len(src) {
 		body = src[start:end]
 	}
-	s.substitutions = append(s.substitutions, Commands(body)...)
+	s.substitutions = append(s.substitutions, s.nested(body)...)
 	s.word.WriteString("<subst>")
 	s.pos = i + 1
 }
@@ -223,7 +263,9 @@ func (s *scanner) redirect() {
 
 	if strings.HasPrefix(src[s.pos:], "<<<") {
 		s.pos += 3
-		s.readTargetWord()
+		if word := s.readTargetWord(); s.expanded {
+			s.hereStrings = append(s.hereStrings, word)
+		}
 		return
 	}
 	if strings.HasPrefix(src[s.pos:], "<<") {
@@ -265,6 +307,8 @@ func (s *scanner) readTargetWord() string {
 			stop := indexFrom(src, c, s.pos+1)
 			b.WriteString(src[s.pos+1 : stop])
 			s.pos = stop + 1
+		case c == '\\' && s.expanded && s.peek(1) == '\n':
+			s.pos += 2
 		case c == '\\' && s.pos+1 < len(src):
 			b.WriteByte(src[s.pos+1])
 			s.pos += 2
@@ -294,7 +338,7 @@ func (s *scanner) skipHeredocBodies(parse bool) {
 			body = append(body, line)
 		}
 		if parse {
-			s.substitutions = append(s.substitutions, Commands(strings.Join(body, "\n"))...)
+			s.substitutions = append(s.substitutions, s.nested(strings.Join(body, "\n"))...)
 		}
 	}
 	s.pending = nil

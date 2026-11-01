@@ -37,6 +37,8 @@ type command struct {
 	commands   []*command
 	parent     *command
 	run        func(r *results) (int, error)
+	// versionLine is printed for the root's `--version`, before any command runs.
+	versionLine string
 }
 
 func newCommand(name, description string) *command {
@@ -257,6 +259,12 @@ func (r *results) flag(name string) bool {
 		return value
 	}
 	return r.grammar.byName(name).defaultFlag
+}
+
+// wasParsed is true when the arguments named the option, as Dart's `ArgResults.wasParsed`.
+func (r *results) wasParsed(name string) bool {
+	_, ok := r.values[name]
+	return ok
 }
 
 func (r *results) option(name string) *string {
@@ -654,6 +662,10 @@ func runCommand(root *command, args []string, stdout, stderr io.Writer) (int, er
 			cmd = cmd.sub(name)
 		}
 		return 0, &usageError{cmd, parseErr.message}
+	}
+	if root.versionLine != "" && top.flag("version") {
+		fmt.Fprintln(stdout, root.versionLine)
+		return 0, nil
 	}
 	current := top
 	var cmd *command

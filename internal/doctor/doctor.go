@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -65,15 +66,14 @@ func AgentsMdLimitFor(agents map[string]bool) int {
 type Doctor struct {
 	Catalog    *catalog.Catalog
 	ProjectDir string
-	// GuardSource is the guard source hash this dashcrew builds (guard.SourceHash); empty skips the check that
-	// the project expects the same guard.
-	GuardSource string
 	// UserSkillsDir is where user-level skills live; empty means `$CLAUDE_CONFIG_DIR/skills`, else `~/.claude/skills`.
 	UserSkillsDir string
 	// CodexHome is the Codex user config folder; empty means `$CODEX_HOME`, else `~/.codex`.
 	CodexHome string
-	// GuardHome is where the shared guard is installed; empty means `DASHCREW_HOME`, else `~/.dashcrew`.
-	GuardHome string
+	// PathEnv is the PATH searched for the dashcrew the shim runs, and the shim's PATH; empty means this process's.
+	PathEnv string
+	// Home is the shim's HOME, where it caches a passed version check; empty means this process's.
+	Home string
 	// MachineChecks runs what depends on this machine or an agent (guard binary, hooks, MCP, skills, trust);
 	// off in CI.
 	MachineChecks bool
@@ -130,6 +130,9 @@ func (d Doctor) checks(projectPacks Check) []Check {
 	}
 	if d.MachineChecks {
 		checks = append(checks, d.guardBinary(lock))
+		if guardLog, ok := d.guardLog(); ok {
+			checks = append(checks, guardLog)
+		}
 		if agents["claude-code"] {
 			checks = append(checks, d.hook(), d.claudeMd(), d.mcp(), d.skills(lockedFiles))
 		}
@@ -556,15 +559,16 @@ func (d Doctor) version(lock *omap.Map[any]) Check {
 	}
 	written, ok := lock.Value("dashcrew_version").(string)
 	if !ok {
-		return Check{id, Warn, "the lock has no dashcrew version; run dashcrew sync to record " + version.Version}
+		return Check{id, Warn, "the lock has no dashcrew version; run dashcrew sync to record " + version.Current()}
 	}
-	switch order := version.Compare(written, version.Version); {
+	current := version.Current()
+	switch order := version.Compare(written, current); {
 	case order > 0:
-		return Check{id, Warn, "the lock was written by dashcrew " + written + ", this is " + version.Version + "; update dashcrew to " + written}
+		return Check{id, Warn, "the lock was written by dashcrew " + written + ", this is " + current + "; update dashcrew to " + written}
 	case order < 0:
-		return Check{id, Warn, "the lock was written by dashcrew " + written + "; run dashcrew sync to move it to " + version.Version}
+		return Check{id, Warn, "the lock was written by dashcrew " + written + "; run dashcrew sync to move it to " + version.Current()}
 	}
-	return Check{id, OK, "lock written by this dashcrew (" + version.Version + ")"}
+	return Check{id, OK, "lock written by this dashcrew (" + version.Current() + ")"}
 }
 
 func (d Doctor) drift(lockedFiles *omap.Map[string]) Check {
@@ -650,52 +654,124 @@ func (d Doctor) guardPolicy() Check {
 	return Check{id, OK, ".ai/guard.json valid"}
 }
 
-// guardBinary runs the committed shim on a `git push` event, which every policy blocks; the guard fails open,
-// so anything but exit 2 means no guard rule applies on this machine.
+// guardBinary checks that the shim can run `dashcrew guard`: dashcrew on PATH (PathEnv), the Go build and not
+// older than the lock's `guard_min_version`, then the shim blocks a `git push` event, which every policy blocks.
+// The shim refuses every tool call without such a dashcrew, so a missing one fails and an old one warns.
 func (d Doctor) guardBinary(lock *omap.Map[any]) Check {
 	const id = "guard-binary"
 	shim := d.path(guard.ShimPath)
 	if !isFile(shim) {
 		return Check{id, Fail, ".ai/bin/guard missing; run dashcrew sync"}
 	}
-	var expected *string
+	minimum := version.GuardMinimum
 	if lock != nil {
-		if hash, ok := lock.Value("guard_source").(string); ok {
-			expected = &hash
+		if recorded, ok := lock.Value("guard_min_version").(string); ok {
+			minimum = recorded
 		}
 	}
-	home, hasHome := d.GuardHome, d.GuardHome != ""
-	if !hasHome {
-		home, hasHome = guard.DefaultHome(environment())
+	pathEnv := d.PathEnv
+	if pathEnv == "" {
+		pathEnv = os.Getenv("PATH")
 	}
-	if expected != nil && hasHome && !isFile(guard.BinaryPath(home, *expected)) {
-		return Check{id, Fail, "the guard for this project is not installed on this machine, so no guard rule applies here yet: " +
-			"run dashcrew sync (an agent tool call also installs it when dashcrew is on PATH)"}
+	install := "install dashcrew " + minimum + " or newer (brew install fahnaladitia/tap/dashcrew)"
+	found, ok := lookPath("dashcrew", pathEnv)
+	if !ok {
+		return Check{id, Fail, "dashcrew is not on PATH, so .ai/bin/guard refuses every tool call: " + install}
+	}
+	if isDartLauncher(found) {
+		return Check{id, Warn, "the dashcrew first on PATH (" + found + ") is the Dart one, so .ai/bin/guard refuses every tool call: " +
+			install + ", then dart pub global deactivate dashcrew"}
+	}
+	if reported := reportedVersion(found, pathEnv); !version.IsSemantic(reported) || version.Compare(reported, minimum) < 0 {
+		described := "reports no version"
+		if version.IsSemantic(reported) {
+			described = "is " + reported
+		}
+		return Check{id, Warn, "the dashcrew first on PATH (" + found + ") " + described + ", older than " + minimum +
+			", so .ai/bin/guard refuses every tool call: " + install}
 	}
 
-	exitCode, err := runShim(shim, d.path(sync.GuardPolicyPath), d.ProjectDir, home, hasHome)
+	exitCode, err := runShim(shim, d.path(sync.GuardPolicyPath), d.ProjectDir, pathEnv, d.Home)
 	if err != nil {
 		return Check{id, Fail, ".ai/bin/guard cannot run: " + err.Error() + "; run dashcrew sync"}
 	}
 	if exitCode != 2 {
 		return Check{id, Fail, fmt.Sprintf(".ai/bin/guard did not block git push (exit %d); run dashcrew sync", exitCode)}
 	}
-	if d.GuardSource != "" && (expected == nil || *expected != d.GuardSource) {
-		return Check{id, Warn, "this dashcrew builds a different guard than the project expects; install the dashcrew ref the team uses"}
-	}
 	return Check{id, OK, ".ai/bin/guard blocks git push"}
+}
+
+// lookPath is the first executable regular file named name in the folders of pathEnv; an empty folder is the
+// working directory, as for `sh`.
+func lookPath(name, pathEnv string) (string, bool) {
+	for _, dir := range filepath.SplitList(pathEnv) {
+		if dir == "" {
+			dir = "."
+		}
+		candidate := filepath.Join(dir, name)
+		if info, err := os.Stat(candidate); err == nil && !info.IsDir() && info.Mode()&0o111 != 0 {
+			return candidate, true
+		}
+	}
+	return "", false
+}
+
+// isDartLauncher is true for the script `dart pub global activate` writes into the pub cache.
+func isDartLauncher(path string) bool {
+	file, err := os.Open(path)
+	if err != nil {
+		return false
+	}
+	defer file.Close()
+	head := make([]byte, 4096)
+	n, _ := io.ReadFull(file, head)
+	text := string(head[:n])
+	return strings.HasPrefix(text, "#!") && strings.Contains(text, "pub global run dashcrew")
+}
+
+// reportedVersion is the last word `<path> --version` prints, as the shim reads it; empty after 10 seconds or
+// when it fails.
+func reportedVersion(path, pathEnv string) string {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, path, "--version")
+	cmd.Env = append(os.Environ(), "PATH="+pathEnv)
+	out, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+	words := strings.Fields(string(out))
+	if len(words) == 0 {
+		return ""
+	}
+	return words[len(words)-1]
+}
+
+// guardLog warns when the guard let malformed hook payloads through since the last sync (G4b, Go only): the
+// guard read less than the agent sent, so a rule may not have applied. False when there is none.
+func (d Doctor) guardLog() (Check, bool) {
+	count, path := guard.MalformedSinceSync(d.ProjectDir)
+	if count == 0 {
+		return Check{}, false
+	}
+	payloads := "payloads"
+	if count == 1 {
+		payloads = "payload"
+	}
+	return Check{"guard-log", Warn, fmt.Sprintf("the guard let %d malformed %s through since the last sync, logged in %s; "+
+		"update dashcrew if an agent changed its hook format", count, payloads, path)}, true
 }
 
 // runShim feeds the shim a `git push` hook event and returns its exit code; -1 after 30 seconds.
 // An error means the shim could not be started.
-func runShim(shim, policy, projectDir, home string, hasHome bool) (int, error) {
+func runShim(shim, policy, projectDir, pathEnv, home string) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, shim, policy)
 	cmd.Dir = projectDir
-	cmd.Env = os.Environ()
-	if hasHome {
-		cmd.Env = append(cmd.Env, "DASHCREW_HOME="+home)
+	cmd.Env = append(os.Environ(), "PATH="+pathEnv)
+	if home != "" {
+		cmd.Env = append(cmd.Env, "HOME="+home)
 	}
 	event, _ := dartjson.Encode(omap.Of[any]("tool_name", "Bash", "tool_input", omap.Of[any]("command", "git push"), "cwd", projectDir))
 	cmd.Stdin = strings.NewReader(event)

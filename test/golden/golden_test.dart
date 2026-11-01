@@ -24,7 +24,7 @@ void main() {
       final expectedDir = p.join(fixtureDir, 'expected');
       late Directory project;
 
-      Sync sync() => Sync(catalog: catalog, projectDir: project.path, compileGuard: false);
+      Sync sync() => Sync(catalog: catalog, projectDir: project.path);
 
       setUp(() {
         project = Directory.systemTemp.createTempSync('dashcrew_golden_');
@@ -69,8 +69,8 @@ void main() {
         expect(result.removed, isEmpty);
       });
 
-      test('doctor finds no failure besides the uncompiled guard', () async {
-        final checks = await Doctor(catalog: catalog, projectDir: project.path, packageRoot: '.').run();
+      test('doctor finds no failure besides the missing dashcrew', () async {
+        final checks = await Doctor(catalog: catalog, projectDir: project.path, pathEnv: '').run();
 
         final failures = [
           for (final check in checks)

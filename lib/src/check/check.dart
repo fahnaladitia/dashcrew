@@ -11,20 +11,18 @@ class PrCheck {
   PrCheck({
     required this.catalog,
     required this.projectDir,
-    this.packageRoot,
     Map<String, String>? environment,
   }) : environment = environment ?? Platform.environment;
 
   final Catalog catalog;
   final String projectDir;
-  final String? packageRoot;
 
   /// `GITHUB_EVENT_PATH` supplies the PR body in CI.
   final Map<String, String> environment;
 
   /// [prBody] wins; otherwise the body of the pull request event in CI; without either the PR checks are skipped.
   Future<List<DoctorCheck>> run({String? prBody}) async {
-    final toolkit = await Doctor(catalog: catalog, projectDir: projectDir, packageRoot: packageRoot, machineChecks: false).run();
+    final toolkit = await Doctor(catalog: catalog, projectDir: projectDir, machineChecks: false).run();
     final body = prBody ?? _eventBody();
     return [...toolkit, _sections(body)];
   }

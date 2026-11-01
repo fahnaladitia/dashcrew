@@ -3,14 +3,17 @@ package doctor
 import (
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	stdsync "sync"
 	"testing"
+	"time"
 
 	"github.com/fahnaladitia/dashcrew/internal/adapters"
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
 	"github.com/fahnaladitia/dashcrew/internal/guard"
 	"github.com/fahnaladitia/dashcrew/internal/sync"
+	"github.com/fahnaladitia/dashcrew/internal/version"
 )
 
 var (
@@ -22,7 +25,8 @@ type fixture struct {
 	t          *testing.T
 	project    string
 	userSkills string
-	guardHome  string
+	bin        string
+	home       string
 	codexHome  string
 }
 
@@ -34,7 +38,7 @@ func setup(t *testing.T, profile string) *fixture {
 			t.Fatal(err)
 		}
 	})
-	f := &fixture{t: t, project: t.TempDir(), userSkills: t.TempDir(), guardHome: t.TempDir(), codexHome: t.TempDir()}
+	f := &fixture{t: t, project: t.TempDir(), userSkills: t.TempDir(), bin: t.TempDir(), home: t.TempDir(), codexHome: t.TempDir()}
 	f.write(".ai/project.yaml", profile)
 	return f
 }
@@ -79,20 +83,26 @@ func (f *fixture) sync() {
 	}
 }
 
-func sourceHash(t *testing.T) string {
-	t.Helper()
-	hash, err := guard.SourceHash()
-	if err != nil {
-		t.Fatal(err)
-	}
-	return hash
+// pathEnv is the doctor's PATH: the fixture's bin folder, then the system tools the stand-ins use.
+func (f *fixture) pathEnv() string {
+	return f.bin + string(os.PathListSeparator) + "/usr/bin" + string(os.PathListSeparator) + "/bin"
 }
 
-// installGuard puts a stand-in for the compiled guard where the shim looks: it blocks every call with exit 2.
-func (f *fixture) installGuard() {
+// installDashcrew puts a stand-in dashcrew on the fixture's PATH: `--version` prints `dashcrew <version>`, and
+// `guard` reads the hook event and exits with guardExit.
+func (f *fixture) installDashcrew(version string, guardExit int) {
 	f.t.Helper()
-	path := guard.BinaryPath(f.guardHome, sourceHash(f.t))
-	writeFile(f.t, path, "#!/bin/sh\ncat >/dev/null\nexit 2\n")
+	f.writeBin("#!/bin/sh\nif [ \"$1\" = --version ]; then echo dashcrew " + version + "; exit 0; fi\n" +
+		"if [ \"$1\" = guard ]; then cat >/dev/null; exit " + strconv.Itoa(guardExit) + "; fi\nexit 64\n")
+}
+
+// installGuard is the Go dashcrew at the guard minimum, whose guard blocks the doctor's git push.
+func (f *fixture) installGuard() { f.installDashcrew(version.GuardMinimum, 2) }
+
+func (f *fixture) writeBin(script string) {
+	f.t.Helper()
+	path := filepath.Join(f.bin, "dashcrew")
+	writeFile(f.t, path, script)
 	if err := os.Chmod(path, 0o755); err != nil {
 		f.t.Fatal(err)
 	}
@@ -103,9 +113,9 @@ func (f *fixture) doctor() map[string]Check {
 	return byID(Doctor{
 		Catalog:       shippedCatalog,
 		ProjectDir:    f.project,
-		GuardSource:   sourceHash(f.t),
 		UserSkillsDir: f.userSkills,
-		GuardHome:     f.guardHome,
+		PathEnv:       f.pathEnv(),
+		Home:          f.home,
 		CodexHome:     f.codexHome,
 		MachineChecks: true,
 	}.Run())
@@ -168,34 +178,63 @@ func TestAFreshSyncWithAnInstalledGuardPassesEveryCheck(t *testing.T) {
 }
 
 func TestGuardBinary(t *testing.T) {
-	t.Run("not installed fails", func(t *testing.T) {
+	t.Run("no dashcrew on PATH fails", func(t *testing.T) {
 		f := setup(t, blocProfile)
 		f.sync()
 
-		expect(t, f.doctor(), "guard-binary", Fail, "not installed on this machine", "no guard rule applies here")
+		expect(t, f.doctor(), "guard-binary", Fail, "dashcrew is not on PATH, so .ai/bin/guard refuses every tool call",
+			"install dashcrew 0.1.0 or newer (brew install fahnaladitia/tap/dashcrew)")
+	})
+
+	t.Run("the Dart dashcrew first on PATH warns", func(t *testing.T) {
+		f := setup(t, blocProfile)
+		f.sync()
+		f.writeBin("#!/usr/bin/env sh\n# This file was created by pub v3.9.0.\n# Package: dashcrew\n" +
+			"dart pub global run dashcrew:dashcrew \"$@\"\n")
+
+		expect(t, f.doctor(), "guard-binary", Warn, "("+filepath.Join(f.bin, "dashcrew")+") is the Dart one",
+			"refuses every tool call", "dart pub global deactivate dashcrew")
+	})
+
+	t.Run("a dashcrew older than the minimum warns", func(t *testing.T) {
+		f := setup(t, blocProfile)
+		f.sync()
+		f.installDashcrew("0.0.1", 2)
+
+		expect(t, f.doctor(), "guard-binary", Warn, ") is 0.0.1, older than 0.1.0, so .ai/bin/guard refuses every tool call")
+	})
+
+	t.Run("a dashcrew without a version warns", func(t *testing.T) {
+		f := setup(t, blocProfile)
+		f.sync()
+		f.writeBin("#!/bin/sh\necho 'Could not find an option named \"version\".' >&2\nexit 64\n")
+
+		expect(t, f.doctor(), "guard-binary", Warn, ") reports no version, older than 0.1.0")
+	})
+
+	t.Run("the minimum comes from the lock", func(t *testing.T) {
+		f := setup(t, blocProfile)
+		f.sync()
+		f.installGuard()
+		f.write(sync.LockPath, strings.Replace(f.read(sync.LockPath), `"guard_min_version": "0.1.0"`, `"guard_min_version": "0.5.0"`, 1))
+
+		expect(t, f.doctor(), "guard-binary", Warn, "is 0.1.0, older than 0.5.0", "install dashcrew 0.5.0 or newer")
 	})
 
 	t.Run("a guard that does not block fails", func(t *testing.T) {
 		f := setup(t, blocProfile)
 		f.sync()
-		path := guard.BinaryPath(f.guardHome, sourceHash(t))
-		writeFile(t, path, "#!/bin/sh\ncat >/dev/null\nexit 0\n")
-		if err := os.Chmod(path, 0o755); err != nil {
-			t.Fatal(err)
-		}
+		f.installDashcrew("0.2.0", 0)
 
 		expect(t, f.doctor(), "guard-binary", Fail, "did not block git push (exit 0)")
 	})
 
-	t.Run("a project that expects another guard warns", func(t *testing.T) {
+	t.Run("a new enough dashcrew whose guard blocks passes", func(t *testing.T) {
 		f := setup(t, blocProfile)
 		f.sync()
-		f.installGuard()
+		f.installDashcrew("0.1.1-0.20261101062238-4b1065d35c59", 2)
 
-		checks := byID(Doctor{Catalog: shippedCatalog, ProjectDir: f.project, GuardSource: strings.Repeat("0", 64),
-			UserSkillsDir: f.userSkills, GuardHome: f.guardHome, MachineChecks: true}.Run())
-
-		expect(t, checks, "guard-binary", Warn, "different guard")
+		expect(t, f.doctor(), "guard-binary", OK, ".ai/bin/guard blocks git push")
 	})
 
 	t.Run("a missing shim fails", func(t *testing.T) {
@@ -492,8 +531,8 @@ func TestProjectPacks(t *testing.T) {
 
 func TestCodex(t *testing.T) {
 	codexDoctor := func(f *fixture) map[string]Check {
-		return byID(Doctor{Catalog: shippedCatalog, ProjectDir: f.project, GuardSource: sourceHash(f.t), UserSkillsDir: f.userSkills,
-			CodexHome: f.codexHome, GuardHome: f.guardHome, MachineChecks: true}.Run())
+		return byID(Doctor{Catalog: shippedCatalog, ProjectDir: f.project, UserSkillsDir: f.userSkills,
+			CodexHome: f.codexHome, PathEnv: f.pathEnv(), Home: f.home, MachineChecks: true}.Run())
 	}
 	mergeCodex := func(f *fixture) {
 		if _, err := adapters.NewCodex(shippedCatalog, f.project, "flutter").Merge(map[string]bool{}, &[]string{}); err != nil {
@@ -622,6 +661,41 @@ func TestWithoutMachineChecksOnlyTheProjectChecksRun(t *testing.T) {
 	}
 	if got := strings.Join(ids, " "); got != "profile project-packs lock version drift stale guard-policy agents-md-size gitignore" {
 		t.Errorf("checks %s", got)
+	}
+}
+
+func TestGuardLogWarnsOnMalformedPayloadsSinceTheLastSync(t *testing.T) {
+	f := setup(t, blocProfile)
+	f.sync()
+	f.installGuard()
+	if _, ok := f.doctor()["guard-log"]; ok {
+		t.Error("guard-log outside a repository")
+	}
+	common := filepath.Join(f.project, ".git")
+	if err := os.MkdirAll(common, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := f.doctor()["guard-log"]; ok {
+		t.Error("guard-log without a log")
+	}
+
+	log := filepath.Join(common, "dashcrew", guard.MalformedLogName)
+	writeFile(t, log, "2026-11-01T10:00:00Z\tcodex\tinput is not JSON\n2026-11-01T11:00:00Z\tclaude-code\tinput is not JSON\n")
+	expect(t, f.doctor(), "guard-log", Warn, "let 2 malformed payloads through since the last sync", "logged in "+log)
+
+	if err := guard.MarkSynced(f.project, time.Date(2026, 11, 1, 10, 30, 0, 0, time.UTC)); err != nil {
+		t.Fatal(err)
+	}
+	expect(t, f.doctor(), "guard-log", Warn, "let 1 malformed payload through")
+	if _, ok := byID(Doctor{Catalog: shippedCatalog, ProjectDir: f.project}.Run())["guard-log"]; ok {
+		t.Error("guard-log without machine checks")
+	}
+
+	if err := guard.MarkSynced(f.project, time.Date(2026, 11, 2, 0, 0, 0, 0, time.UTC)); err != nil {
+		t.Fatal(err)
+	}
+	if check, ok := f.doctor()["guard-log"]; ok {
+		t.Errorf("guard-log after a later sync: %+v", check)
 	}
 }
 

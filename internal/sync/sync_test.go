@@ -503,7 +503,7 @@ func TestDashcrewVersionInTheLock(t *testing.T) {
 	t.Run("sync records the version that wrote the lock", func(t *testing.T) {
 		s, project := newProject(t, defaultProfile)
 		run(t, s, false, false)
-		if got := lock(t, project).Value("dashcrew_version"); got != version.Version {
+		if got := lock(t, project).Value("dashcrew_version"); got != version.Current() {
 			t.Errorf("version %v", got)
 		}
 	})
@@ -516,7 +516,7 @@ func TestDashcrewVersionInTheLock(t *testing.T) {
 		mustFail(t, s, "999.0.0")
 
 		run(t, s, true, false)
-		if got := lock(t, project).Value("dashcrew_version"); got != version.Version {
+		if got := lock(t, project).Value("dashcrew_version"); got != version.Current() {
 			t.Errorf("version %v", got)
 		}
 	})
@@ -527,7 +527,7 @@ func TestDashcrewVersionInTheLock(t *testing.T) {
 		for _, value := range []any{"0.0.0", nil} {
 			setLockVersion(t, project, value)
 			run(t, s, false, false)
-			if got := lock(t, project).Value("dashcrew_version"); got != version.Version {
+			if got := lock(t, project).Value("dashcrew_version"); got != version.Current() {
 				t.Errorf("from %v: version %v", value, got)
 			}
 		}
@@ -653,8 +653,11 @@ func TestGithubWorkflow(t *testing.T) {
 				runs = append(runs, command)
 			}
 		}
-		if !strings.Contains(strings.Join(runs, "\n"), "--git-ref 0123abc") || runs[len(runs)-1] != "dart pub global run dashcrew check" {
+		if !reflect.DeepEqual(runs, []string{"go install github.com/fahnaladitia/dashcrew/cmd/dashcrew@0123abc", "dashcrew check"}) {
 			t.Errorf("runs %v", runs)
+		}
+		if !strings.Contains(text, "uses: actions/setup-go@") {
+			t.Error("no setup-go step")
 		}
 		if strings.Contains(text, "GITHUB_TOKEN") {
 			t.Error("token in workflow")
@@ -697,22 +700,18 @@ func TestGithubWorkflow(t *testing.T) {
 }
 
 func TestGuardShim(t *testing.T) {
-	t.Run("sync writes an executable shim for this dashcrew and locks it", func(t *testing.T) {
+	t.Run("sync writes an executable shim for the guard minimum and locks it", func(t *testing.T) {
 		s, project := newProject(t, defaultProfile)
 		run(t, s, false, false)
 
-		hash, err := guard.SourceHash()
-		if err != nil {
-			t.Fatal(err)
-		}
-		if read(t, project, guard.ShimPath) != guard.Shim(hash) {
+		if read(t, project, guard.ShimPath) != guard.Shim(version.GuardMinimum) {
 			t.Error("shim content")
 		}
 		info, err := os.Stat(filepath.Join(project, ".ai", "bin", "guard"))
 		if err != nil || info.Mode().Perm()&0o111 != 0o111 {
 			t.Errorf("shim mode %v, %v", info, err)
 		}
-		if !slices.Contains(lockedPaths(t, project), guard.ShimPath) || lock(t, project).Value("guard_source") != hash {
+		if !slices.Contains(lockedPaths(t, project), guard.ShimPath) || lock(t, project).Value("guard_min_version") != version.GuardMinimum {
 			t.Error("shim not locked")
 		}
 		if exists(project, ".gitignore") {

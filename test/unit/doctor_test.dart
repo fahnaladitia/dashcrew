@@ -8,7 +8,8 @@ import 'package:test/test.dart';
 void main() {
   late Directory project;
   late Directory userSkills;
-  late Directory guardHome;
+  late Directory bin;
+  late Directory home;
   final catalog = Catalog.load('.');
 
   String read(String relative) => File(p.join(project.path, relative)).readAsStringSync();
@@ -20,16 +21,28 @@ void main() {
 
   void delete(String relative) => File(p.join(project.path, relative)).deleteSync();
 
-  void sync({bool compileGuard = false}) =>
-      Sync(catalog: catalog, projectDir: project.path, compileGuard: compileGuard, packageRoot: '.', guardHome: guardHome.path).run();
+  void sync() => Sync(catalog: catalog, projectDir: project.path).run();
+
+  /// The doctor's PATH: the stand-in folder, then the system tools the stand-ins use.
+  String pathEnv() => '${bin.path}:/usr/bin:/bin';
+
+  void writeBin(String script) {
+    final file = File(p.join(bin.path, 'dashcrew'))..writeAsStringSync(script);
+    Process.runSync('chmod', ['+x', file.path]);
+  }
+
+  /// A stand-in dashcrew: `--version` prints `dashcrew <version>`, `guard` reads the event and exits with [guardExit].
+  void installDashcrew(String version, int guardExit) => writeBin('#!/bin/sh\n'
+      'if [ "\$1" = --version ]; then echo dashcrew $version; exit 0; fi\n'
+      'if [ "\$1" = guard ]; then cat >/dev/null; exit $guardExit; fi\nexit 64\n');
 
   Future<Map<String, DoctorCheck>> doctor() async {
     final checks = await Doctor(
       catalog: catalog,
       projectDir: project.path,
-      packageRoot: '.',
       userSkillsDir: userSkills.path,
-      guardHome: guardHome.path,
+      pathEnv: pathEnv(),
+      home: home.path,
     ).run();
     return {for (final check in checks) check.id: check};
   }
@@ -37,7 +50,8 @@ void main() {
   setUp(() {
     project = Directory.systemTemp.createTempSync('dashcrew_doctor_');
     userSkills = Directory.systemTemp.createTempSync('dashcrew_doctor_skills_');
-    guardHome = Directory.systemTemp.createTempSync('dashcrew_doctor_guard_');
+    bin = Directory.systemTemp.createTempSync('dashcrew_doctor_bin_');
+    home = Directory.systemTemp.createTempSync('dashcrew_doctor_home_');
     write('.ai/project.yaml', '''
 toolkit: 1
 agents: [claude-code]
@@ -49,11 +63,13 @@ stack:
   tearDown(() {
     project.deleteSync(recursive: true);
     userSkills.deleteSync(recursive: true);
-    guardHome.deleteSync(recursive: true);
+    bin.deleteSync(recursive: true);
+    home.deleteSync(recursive: true);
   });
 
-  test('fresh sync with a compiled guard passes every check', () async {
-    sync(compileGuard: true);
+  test('fresh sync with dashcrew on PATH passes every check', () async {
+    sync();
+    installDashcrew(guardMinimumVersion, 2);
 
     final checks = await doctor();
 
@@ -67,14 +83,92 @@ stack:
     expect(checks.keys, containsAll(['profile', 'lock', 'drift', 'stale', 'guard-policy', 'guard-binary', 'hook']));
   }, timeout: const Timeout(Duration(minutes: 2)));
 
-  test('guard not compiled fails guard-binary', () async {
-    sync();
+  group('guard-binary', () {
+    Future<DoctorCheck> guardBinary() async => (await doctor())['guard-binary']!;
 
-    final checks = await doctor();
+    test('no dashcrew on PATH fails', () async {
+      sync();
 
-    expect(checks['guard-binary']!.status, CheckStatus.fail);
-    expect(checks['guard-binary']!.detail, contains('not installed on this machine'));
-    expect(checks['guard-binary']!.detail, contains('no guard rule applies here'));
+      final check = await guardBinary();
+
+      expect(check.status, CheckStatus.fail);
+      expect(check.detail, contains('dashcrew is not on PATH, so .ai/bin/guard refuses every tool call'));
+      expect(check.detail, contains('install dashcrew 0.1.0 or newer (brew install fahnaladitia/tap/dashcrew)'));
+    });
+
+    test('the Dart dashcrew first on PATH warns', () async {
+      sync();
+      writeBin('#!/usr/bin/env sh\n# This file was created by pub v3.9.0.\n# Package: dashcrew\n'
+          'dart pub global run dashcrew:dashcrew "\$@"\n');
+
+      final check = await guardBinary();
+
+      expect(check.status, CheckStatus.warn);
+      expect(check.detail, contains('(${p.join(bin.path, 'dashcrew')}) is the Dart one'));
+      expect(check.detail, contains('dart pub global deactivate dashcrew'));
+    });
+
+    test('a dashcrew older than the minimum warns', () async {
+      sync();
+      installDashcrew('0.0.1', 2);
+
+      final check = await guardBinary();
+
+      expect(check.status, CheckStatus.warn);
+      expect(check.detail, contains(') is 0.0.1, older than 0.1.0, so .ai/bin/guard refuses every tool call'));
+    });
+
+    test('a dashcrew without a version warns', () async {
+      sync();
+      writeBin('#!/bin/sh\necho \'Could not find an option named "version".\' >&2\nexit 64\n');
+
+      final check = await guardBinary();
+
+      expect(check.status, CheckStatus.warn);
+      expect(check.detail, contains(') reports no version, older than 0.1.0'));
+    });
+
+    test('the minimum comes from the lock', () async {
+      sync();
+      installDashcrew(guardMinimumVersion, 2);
+      write('.ai/lock.json', read('.ai/lock.json').replaceFirst('"guard_min_version": "0.1.0"', '"guard_min_version": "0.5.0"'));
+
+      final check = await guardBinary();
+
+      expect(check.status, CheckStatus.warn);
+      expect(check.detail, contains('is 0.1.0, older than 0.5.0'));
+      expect(check.detail, contains('install dashcrew 0.5.0 or newer'));
+    });
+
+    test('a guard that does not block fails', () async {
+      sync();
+      installDashcrew('0.2.0', 0);
+
+      final check = await guardBinary();
+
+      expect(check.status, CheckStatus.fail);
+      expect(check.detail, contains('did not block git push (exit 0)'));
+    });
+
+    test('a new enough dashcrew whose guard blocks passes', () async {
+      sync();
+      installDashcrew('0.1.1-0.20261101062238-4b1065d35c59', 2);
+
+      final check = await guardBinary();
+
+      expect(check.status, CheckStatus.ok, reason: check.detail);
+    });
+
+    test('a missing shim fails', () async {
+      sync();
+      installDashcrew(guardMinimumVersion, 2);
+      delete('.ai/bin/guard');
+
+      final check = await guardBinary();
+
+      expect(check.status, CheckStatus.fail);
+      expect(check.detail, contains('.ai/bin/guard missing'));
+    });
   });
 
   test('generated file edited by hand fails drift', () async {
@@ -330,9 +424,10 @@ stack:
       final checks = await Doctor(
         catalog: catalog,
         projectDir: project.path,
-        packageRoot: '.',
         userSkillsDir: userSkills.path,
         codexHome: codexHome.path,
+        pathEnv: pathEnv(),
+        home: home.path,
       ).run();
       return {for (final check in checks) check.id: check};
     }

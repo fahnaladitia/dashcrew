@@ -30,7 +30,7 @@ func TestSyncWritesTheToolkitThenReportsUpToDate(t *testing.T) {
 	project := t.TempDir()
 	writeFile(t, filepath.Join(project, ".ai", "project.yaml"), "toolkit: 1\nagents: [claude-code]\n")
 
-	code, stdout, stderr := dashcrew(t, nil, "sync", "--no-compile-guard", "--project", project)
+	code, stdout, stderr := dashcrew(t, nil, "sync", "--project", project)
 	if code != 0 || !strings.HasPrefix(stdout, "wrote   AGENTS.md\nwrote   .ai/guard.json\nwrote   .ai/bin/guard\n") {
 		t.Fatalf("exit %d, stdout %q, stderr %q", code, stdout, stderr)
 	}
@@ -91,7 +91,7 @@ func TestDoctorExitsOneOnAProjectThatWasNeverSynced(t *testing.T) {
 func TestCheckFailsAPrBodyThatMissesASectionAndAnnotatesItInGithubActions(t *testing.T) {
 	project := t.TempDir()
 	writeFile(t, filepath.Join(project, ".ai", "project.yaml"), "toolkit: 1\nagents: [claude-code]\n")
-	if code, _, stderr := dashcrew(t, nil, "sync", "--no-compile-guard", "--project", project); code != 0 {
+	if code, _, stderr := dashcrew(t, nil, "sync", "--project", project); code != 0 {
 		t.Fatalf("sync: %s", stderr)
 	}
 	body := filepath.Join(project, "body.md")
@@ -156,7 +156,38 @@ func TestGuardBlocksThroughTheSyncedPolicyAndRefusesInstall(t *testing.T) {
 		t.Errorf("exit %d, stdout %q, stderr %q", code, stdout, stderr)
 	}
 
-	if code, _, stderr := dashcrew(t, nil, "guard", "install", "--expect", "x"); code != 64 || !strings.Contains(stderr, "Dart engine") {
+	if code, _, stderr := dashcrew(t, nil, "guard", "install", "--expect", "x"); code != 64 ||
+		stderr != "dashcrew guard install was removed: hooks run dashcrew guard from PATH. Run dashcrew sync to update .ai/bin/guard.\n" {
 		t.Errorf("install: exit %d, stderr %q", code, stderr)
+	}
+}
+
+func TestVersionPrintsTheLineTheShimReads(t *testing.T) {
+	for _, args := range [][]string{{"--version"}, {"--version", "sync"}, {"sync", "--version"}} {
+		if code, stdout, stderr := dashcrew(t, nil, args...); code != 0 || stdout != "dashcrew 0.0.1\n" || stderr != "" {
+			t.Errorf("%v: exit %d, stdout %q, stderr %q", args, code, stdout, stderr)
+		}
+	}
+	if code, _, _ := dashcrew(t, nil, "--version=1"); code != 64 {
+		t.Errorf("--version=1: exit %d", code)
+	}
+}
+
+func TestCompileGuardIsADeprecatedNoOpWithANotice(t *testing.T) {
+	project := t.TempDir()
+	writeFile(t, filepath.Join(project, ".ai", "project.yaml"), "toolkit: 1\nagents: [claude-code]\n")
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	for _, flag := range []string{"--compile-guard", "--no-compile-guard"} {
+		if code, _, stderr := dashcrew(t, nil, "sync", flag, "-p", project); code != 0 || stderr != compileGuardNotice+"\n" {
+			t.Errorf("%s: exit %d, stderr %q", flag, code, stderr)
+		}
+	}
+	if code, _, stderr := dashcrew(t, nil, "sync", "-p", project); code != 0 || stderr != "" {
+		t.Errorf("without the flag: exit %d, stderr %q", code, stderr)
+	}
+	if entries, _ := os.ReadDir(home); len(entries) != 0 {
+		t.Errorf("sync wrote into HOME: %v", entries)
 	}
 }

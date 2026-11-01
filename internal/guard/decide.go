@@ -132,7 +132,7 @@ func EvaluateAll(events []Event, p Policy) (Decision, error) {
 func Evaluate(event Event, p Policy) (Decision, error) {
 	switch event.Kind {
 	case Shell:
-		return evaluateShell(event.Command, p), nil
+		return evaluateShell(event.Command, event.Argv, p), nil
 	case Write, Edit:
 		return evaluateWrite(event, p)
 	}
@@ -145,31 +145,54 @@ var (
 	assignment          = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*=`)
 )
 
-func evaluateShell(script string, p Policy) Decision {
-	for _, raw := range shell.Commands(script) {
-		argv := stripPrefixes(raw)
-		if len(argv) == 0 {
-			continue
-		}
-		program := argv[0][strings.LastIndexByte(argv[0], '/')+1:]
+// evaluateShell checks script with the Dart rules, then, to block what they miss, after unwrapping shells,
+// keywords and wrappers (G4b). argv is the command when the agent sent an argv list instead of a script.
+func evaluateShell(script string, argv []string, p Policy) Decision {
+	if decision := evaluateShellAsDart(script, p); decision.Blocked {
+		return decision
+	}
+	if decision := evaluateNested(script, p, 0); decision.Blocked {
+		return decision
+	}
+	if argv != nil {
+		return evaluateUnwrapped(argv, p, 0)
+	}
+	return Allow()
+}
 
-		if program == "gh" {
-			for _, word := range argv {
-				if strings.Contains(word, "/approve") {
-					return Block("Approvals are the user's, on GitHub. Ask the user to approve, then stop.")
-				}
+// evaluateShellAsDart is the Dart guard's shell check.
+func evaluateShellAsDart(script string, p Policy) Decision {
+	for _, raw := range shell.Commands(script) {
+		if decision := checkCommand(stripPrefixes(raw), p); decision.Blocked {
+			return decision
+		}
+	}
+	return Allow()
+}
+
+// checkCommand applies the shell rules to one command whose wrappers are already stripped.
+func checkCommand(argv []string, p Policy) Decision {
+	if len(argv) == 0 {
+		return Allow()
+	}
+	program := argv[0][strings.LastIndexByte(argv[0], '/')+1:]
+
+	if program == "gh" {
+		for _, word := range argv {
+			if strings.Contains(word, "/approve") {
+				return Block("Approvals are the user's, on GitHub. Ask the user to approve, then stop.")
 			}
 		}
-		if program == "git" {
-			if sub, ok := gitSubcommand(argv); ok && p.BlockedGit[sub] {
-				return Block("git " + sub + " is reserved for the user. Ask them to run it.")
-			}
+	}
+	if program == "git" {
+		if sub, ok := gitSubcommand(argv); ok && p.BlockedGit[sub] {
+			return Block("git " + sub + " is reserved for the user. Ask them to run it.")
 		}
-		if p.BlockFormatters && len(argv) > 1 {
-			sub := argv[1]
-			if (program == "dart" && (sub == "format" || sub == "fix")) || (program == "flutter" && sub == "format") {
-				return Block(program + " " + sub + " rewrites untouched lines. Fix only the lines your task needs.")
-			}
+	}
+	if p.BlockFormatters && len(argv) > 1 {
+		sub := argv[1]
+		if (program == "dart" && (sub == "format" || sub == "fix")) || (program == "flutter" && sub == "format") {
+			return Block(program + " " + sub + " rewrites untouched lines. Fix only the lines your task needs.")
 		}
 	}
 	return Allow()

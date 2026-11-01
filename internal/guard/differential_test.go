@@ -133,9 +133,10 @@ func TestCorpusIsLargeAndRunsInProcess(t *testing.T) {
 	t.Logf("corpus: %d cases, %d blocked in process", len(corpus), blocked)
 }
 
-// TestGuardMatchesDartGuard runs every corpus case through the Dart guard and `dashcrew guard` and requires the
-// same exit code, stdout and stderr.
-func TestGuardMatchesDartGuard(t *testing.T) {
+// TestGuardBlocksASupersetOfDart runs every corpus case through the Dart guard and `dashcrew guard`. Where Dart
+// blocks, Go must answer identically (exit code, stdout, stderr); where Dart allows, Go must either allow
+// identically or block a case listed in newBlocks or testdata/corpus_new_blocks.txt (G4b).
+func TestGuardBlocksASupersetOfDart(t *testing.T) {
 	dart := dartGuard(t)
 	goBinary := buildDashcrew(t)
 	f := newCorpusFolders(t)
@@ -168,13 +169,22 @@ func TestGuardMatchesDartGuard(t *testing.T) {
 	wg.Wait()
 
 	same, blocked, denied := 0, 0, 0
+	var newCases []corpusCase
+	var newOut []outcome
 	for _, r := range results {
 		if r.err != nil {
 			t.Errorf("%s: %v", r.c.name, r.err)
 			continue
 		}
-		if r.dart != r.goOut {
+		dartBlocks := r.dart.exit == 2 || r.dart.stdout != ""
+		goBlocks := r.goOut.exit == 2 || r.goOut.stdout != ""
+		if r.dart != r.goOut && !(goBlocks && !dartBlocks) {
 			t.Errorf("%s\nstdin %q args %q\n dart: %s\n   go: %s", r.c.name, r.c.stdin, r.c.args, r.dart, r.goOut)
+			continue
+		}
+		if r.dart != r.goOut {
+			newCases = append(newCases, r.c)
+			newOut = append(newOut, r.goOut)
 			continue
 		}
 		same++
@@ -185,5 +195,11 @@ func TestGuardMatchesDartGuard(t *testing.T) {
 			denied++
 		}
 	}
-	t.Logf("%d of %d cases identical; %d blocked with exit 2, %d denied on stdout", same, len(corpus), blocked, denied)
+	missing := goOnlyBlocks(t, newCases, newOut)
+	if len(missing) > 0 {
+		t.Errorf("%d Go-only blocks are in no new-blocks table; review them, then add these lines to %s:\n%s",
+			len(missing), corpusNewBlocksPath, strings.Join(missing, "\n"))
+	}
+	t.Logf("%d of %d cases identical (%d blocked with exit 2, %d denied on stdout); %d blocked by Go only, %d of their keys unlisted",
+		same, len(corpus), blocked, denied, len(newCases), len(missing))
 }

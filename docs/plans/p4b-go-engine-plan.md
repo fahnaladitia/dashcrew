@@ -156,4 +156,45 @@ Started before the P4 live run (user decision). The port targets the P4 goldens 
 
 ### G4b: guard hardening (Go only, with the G7 switch)
 
-Pending the user's decision on scope (gaps 1-4 plus `apply_patch`, or also 5) and on malformed payloads (fail-open with a doctor warning, or fail-closed). Go only: after G7 every hook calls the Go guard, so the Dart guard is not fixed.
+Decided:
+- Scope: close gaps 1-4 and the two `apply_patch` gaps. Gap 5 (a `$`-expansion as the first word) stays open, because blocking it would also block legitimate scripts.
+- Malformed payloads stay fail-open. The guard records each one in a local log, and `doctor` warns when the log has entries.
+- Go only: after G7 every hook calls the Go guard, so the Dart guard is not fixed.
+- The differential test changes meaning: Go must block everything Dart blocks (a superset), and every newly blocked case is listed in a test table.
+
+G7 is decided as prepare only: goreleaser config, formula template, version stamping, and the shim and workflow switch in both engines. Nothing is published until the user says yes, and the user creates the tap repo.
+
+G4b done.
+- Newly blocked, with test rows per gap:
+  1. Nested shells, 19 rows: `sh/bash/zsh/dash/ksh -c` with option clusters, `eval`, here-strings and heredocs, Codex argv lists. Followed 8 levels deep.
+  2. Keywords and grouping, 12 rows.
+  3. Wrappers, 32 rows: the list plus `rtk proxy`.
+  4. Line continuations, 8 rows.
+  5. `apply_patch`, 9 rows: CRLF headers; a leading `*** Move to:` is checked at its target and logged as malformed.
+- Kept allowed, 33 rows. Gap 5 is asserted as allowed.
+- Not blocked by choice: `source` / `.`, `fish -c`, `stdbuf`, `doas`, and nesting deeper than 8 levels (fail-open).
+- Differential: a superset, 0 cases where Dart blocks and Go allows. The corpus grew from 11,187 to 13,724 cases. The 1,746 Go-only blocks are listed in `internal/guard/testdata/corpus_new_blocks.txt` (1,160 lines), which an always-on test checks.
+- Malformed payloads go to `<git common dir>/dashcrew/guard-malformed.log` (timestamp, agent, reason; capped at 64 KiB). Go `sync` writes `last-sync`, and doctor's `guard-log` warns when there are entries since then. This is a Go-only parity exception.
+- Fuzz: `FuzzCommands` 13.1M runs, plus a Dart oracle run, and `FuzzEvaluateShell` 9.2M runs. No failures.
+- Latency: median 3.13 ms (p95 3.37).
+
+G7 prepared (nothing published).
+- Shim: one POSIX sh script, identical in both engines. It refuses (fail closed; exit 2, or the Antigravity deny shape) when `dashcrew` is missing or older than 0.1.0. Otherwise it runs `"$path" guard "$@"`.
+  - A successful version check is cached in `$HOME/.dashcrew/guard-ok`. The cache is used only when the stored line matches the path and `need`, and the binary is not newer than the cache file.
+  - Known gap: an upgrade at the same path with an old file time still hits the cache. Raising the minimum always forces a full check.
+- Version: stamped via `-ldflags`. Unstamped builds report 0.0.1, which the goldens record. `version.GuardMinimum` is 0.1.0, and the lock records `guard_min_version`, which replaces `guard_source`. Both CLIs have `--version`.
+- Removed: the per-machine compiled guard, `guard_source_embed.go` and `guard install`. `--[no-]compile-guard` is a no-op with a notice.
+- The generated workflow runs `setup-go` and `go install .../cmd/dashcrew@<ref>`, then `dashcrew check`.
+- Release:
+  - `.goreleaser.yaml` builds 6 archives plus checksums and a formula in the local snapshot. `brews` is kept although it is deprecated in goreleaser 2.18, because a formula serves both macOS and Linux CLI installs.
+  - `.github/workflows/release.yaml` runs on `v*` tags and needs the `HOMEBREW_TAP_TOKEN` secret.
+  - `dist/` is git-ignored.
+- doctor `guard-binary`: fails when there is no dashcrew on PATH, and warns for the Dart launcher, no version, or a version below the minimum.
+- Latency through the shim on a cache hit: 6.68 ms via macOS `/bin/sh` (bash 3.2 alone costs about 6 ms), 4.96 ms via dash. It was 10.1 ms before the cache. `dashcrew guard` alone takes 3.3 ms.
+- Checks: `go test` passes; Dart: 417 tests pass; parity: 243 calls per engine, green. Remaining parity exceptions: bare `guard`, `guard install`, and `guard-log` (G4b).
+- Publish steps (user only):
+  1. Create the public repo `fahnaladitia/homebrew-tap`.
+  2. Create a fine-grained token with Contents read/write on it and save it as `HOMEBREW_TAP_TOKEN` in this repo.
+  3. Commit and push to `main`.
+  4. Run `git tag v0.1.0 && git push origin v0.1.0`.
+  5. Run `brew install fahnaladitia/tap/dashcrew && dashcrew --version`.

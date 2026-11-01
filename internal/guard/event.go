@@ -1,6 +1,7 @@
 package guard
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -27,12 +28,23 @@ type Event struct {
 	FilePath string
 	Content  string
 	Role     *string
+	// Argv is a shell command sent as an argv list (Codex), checked as one command besides Command (G4b).
+	Argv []string
+	// Malformed says why the payload this event was read from is malformed; Run logs it, Evaluate ignores it.
+	Malformed string
 }
 
 // typeError is the Dart guard's cast failure: the call is allowed, as every read or parse failure is.
 func typeError(key string, value any) error {
-	return fmt.Errorf("%s is %T, not a string", key, value)
+	return &fieldTypeError{key: key, message: fmt.Sprintf("%s is %T, not a string", key, value)}
 }
+
+// fieldTypeError is a hook field of the wrong type; key is the field's name, never its value.
+type fieldTypeError struct {
+	key, message string
+}
+
+func (e *fieldTypeError) Error() string { return e.message }
 
 // optionalString is Dart's `value as String?`.
 func optionalString(key string, value any) (*string, error) {
@@ -88,7 +100,8 @@ func FromHook(json *omap.Map[any]) (Event, error) {
 
 	switch name := orEmpty(tool); {
 	case shellTools[name]:
-		return Event{Kind: Shell, Command: shellText(input.Value("command")), Role: role}, nil
+		command := input.Value("command")
+		return Event{Kind: Shell, Command: shellText(command), Argv: argvOf(command), Role: role}, nil
 	case name == "Write":
 		path, err := optionalString("file_path", input.Value("file_path"))
 		if err != nil {
@@ -106,7 +119,7 @@ func FromHook(json *omap.Map[any]) (Event, error) {
 			for i, edit := range edits {
 				object, ok := edit.(*omap.Map[any])
 				if !ok {
-					return Event{}, fmt.Errorf("edit %d is %T, not a map", i, edit)
+					return Event{}, &fieldTypeError{key: "edits", message: fmt.Sprintf("edit %d is %T, not a map", i, edit)}
 				}
 				if value := object.Value("new_string"); value != nil {
 					parts[i] = yamlutil.DartString(value)
@@ -163,6 +176,19 @@ func shellText(command any) string {
 	return ""
 }
 
+// argvOf is a shell tool's `command` when it is an argv list, as the shell would receive it; nil otherwise.
+func argvOf(command any) []string {
+	list, ok := command.([]any)
+	if !ok {
+		return nil
+	}
+	argv := make([]string, len(list))
+	for i, item := range list {
+		argv[i] = yamlutil.DartString(item)
+	}
+	return argv
+}
+
 // The Dart patterns run without the multiline flag, so `.` stops at \r, U+2028 and U+2029 as well as \n, and `$`
 // is the end of the line text: a header line ending in \r is not a header.
 var (
@@ -198,21 +224,47 @@ func AllFromHook(json *omap.Map[any]) ([]Event, error) {
 		return nil, err
 	}
 
+	events, err := patchEvents(patch, role, false)
+	if err != nil {
+		return patchEvents(patch, role, true)
+	}
+	hardened, _ := patchEvents(patch, role, true)
+	for _, extra := range hardened {
+		if !containsEvent(events, extra) {
+			events = append(events, extra)
+		}
+	}
+	return events, nil
+}
+
+// patchEvents reads the files of a patch as the Dart guard does, which fails on a `*** Move to:` before any file
+// header. With hardened (G4b) a header line ending in \r counts, and such a move is checked as an edit of its
+// target, marked Malformed. AllFromHook checks both readings, so the hardened one only adds events.
+func patchEvents(patch string, role *string, hardened bool) ([]Event, error) {
 	var events []Event
 	var path *string
 	var kind *Kind
 	var added []string
 	flush := func() error {
 		if path != nil {
-			if kind == nil {
-				return fmt.Errorf("patch moves %s before naming a file", *path)
+			event := Event{FilePath: *path, Content: strings.Join(added, "\n"), Role: role}
+			switch {
+			case kind != nil:
+				event.Kind = *kind
+			case hardened:
+				event.Kind, event.Malformed = Edit, "apply_patch moves a file before naming one"
+			default:
+				return errors.New("patch moves a file before naming one")
 			}
-			events = append(events, Event{Kind: *kind, FilePath: *path, Content: strings.Join(added, "\n"), Role: role})
+			events = append(events, event)
 		}
 		added = nil
 		return nil
 	}
 	for _, line := range strings.Split(patch, "\n") {
+		if hardened {
+			line = strings.TrimSuffix(line, "\r")
+		}
 		if file := patchHeader.FindStringSubmatch(line); file != nil {
 			if err := flush(); err != nil {
 				return nil, err
@@ -225,6 +277,11 @@ func AllFromHook(json *omap.Map[any]) ([]Event, error) {
 			p := dartTrim(file[2])
 			path = &p
 		} else if move := patchMoveTo.FindStringSubmatch(line); move != nil {
+			if hardened && kind == nil && path != nil {
+				if err := flush(); err != nil {
+					return nil, err
+				}
+			}
 			p := dartTrim(move[1])
 			path = &p
 		} else if strings.HasPrefix(line, "+") && path != nil {
@@ -235,6 +292,15 @@ func AllFromHook(json *omap.Map[any]) ([]Event, error) {
 		return nil, err
 	}
 	return events, nil
+}
+
+func containsEvent(events []Event, event Event) bool {
+	for _, e := range events {
+		if e.Kind == event.Kind && e.FilePath == event.FilePath && e.Content == event.Content {
+			return true
+		}
+	}
+	return false
 }
 
 // dartTrim is Dart's String.trim: Unicode White_Space and the byte order mark.

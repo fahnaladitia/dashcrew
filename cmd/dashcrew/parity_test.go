@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -20,11 +21,21 @@ import (
 // It needs a Dart SDK and `dart pub get` in the repository: set DASHCREW_DART to the dart executable, for example
 // `DASHCREW_DART=$(command -v dart) go test ./cmd/dashcrew -run Parity`. Without it the test skips.
 //
-// Known parity exceptions, all until G7 switches the shim to `dashcrew guard`:
-//   - `sync` with `--compile-guard` (the default): Dart compiles and installs its guard into $DASHCREW_HOME, Go
-//     accepts the flag and installs nothing. Every sync step here passes `--no-compile-guard`.
-//   - `guard install`: Dart compiles the guard and prints its path, Go exits 64.
-//   - `guard` and `guard <policy>`: Dart reports a missing or unknown subcommand (exit 64), Go runs the guard hook.
+// Known parity exceptions for good (G7: the guard is Go only, and the Dart engine is removed at G8):
+//   - `guard` and `guard <policy>`: Go runs the guard hook; Dart has no guard, so its `guard` refuses the call
+//     (exit 2, with the install hint). Their help text (`guard --help`, `help guard`) is identical.
+//   - `guard install ...`: removed in both. Go names the removal and exits 64, so a shim from before G7 that still
+//     calls it gets no malformed-log entry; Dart treats `install` as a policy argument (exit 2) or reports an
+//     unknown option such as `--expect` (exit 64).
+//
+// Resolved at G7: `--[no-]compile-guard` is a deprecated no-op in both, with the same notice on stderr, and is
+// compared below.
+//
+// Known parity exception for good (G4b, Go only; the Dart doctor and sync are not changed):
+//   - `sync` records its time in `<git common dir>/dashcrew/last-sync`, and `doctor` adds a `guard-log` warning
+//     when the Go guard logged malformed payloads in `<git common dir>/dashcrew/guard-malformed.log` since then.
+//     The snapshot skips that folder and no parity case has such a log, so the compared output stays identical.
+//
 // TestKnownParityExceptionsKeepTheirGoBehaviour pins the Go side of each.
 
 // parityEnvironment is what both CLIs run with.
@@ -106,7 +117,8 @@ func setUpParity(t *testing.T) parityEnvironment {
 	if out, err := compile.CombinedOutput(); err != nil {
 		t.Fatalf("dart compile kernel: %v\n%s", err, out)
 	}
-	build := exec.Command(filepath.Join(runtime.GOROOT(), "bin", "go"), "build", "-o", e.goBinary, "./cmd/dashcrew")
+	// -buildvcs=false keeps the module version unstamped, so Go reports and locks version.Unstamped, as Dart does.
+	build := exec.Command(filepath.Join(runtime.GOROOT(), "bin", "go"), "build", "-buildvcs=false", "-o", e.goBinary, "./cmd/dashcrew")
 	build.Dir = repo
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("go build: %v\n%s", err, out)
@@ -136,7 +148,6 @@ func (e parityEnvironment) newSide(t *testing.T, root string) side {
 	return side{root: root, env: []string{
 		"PATH=" + e.bin + ":/usr/bin:/bin",
 		"HOME=" + filepath.Join(root, "home"),
-		"DASHCREW_HOME=" + filepath.Join(root, "home", ".dashcrew"),
 		"GIT_CONFIG_NOSYSTEM=1",
 		"GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@example.com", "GIT_AUTHOR_DATE=" + date,
 		"GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@example.com", "GIT_COMMITTER_DATE=" + date,
@@ -382,14 +393,13 @@ func usageSteps() []step {
 	lines := [][]string{
 		{}, {"--help"}, {"-h"}, {"help"}, {"help", "help"}, {"help", "init"}, {"help", "sync"}, {"help", "doctor"},
 		{"help", "check"}, {"help", "worktree"}, {"help", "worktree", "create"}, {"help", "guard"}, {"help", "guard", "install"},
+		{"--version"}, {"--version", "sync"}, {"sync", "--version"}, {"help", "--version"}, {"--version=1"}, {"--no-version"},
 		{"help", "nope"}, {"help", "sync", "extra"}, {"help", "worktree", "nope"}, {"help", "-h"},
 		{"init", "--help"}, {"sync", "-h"}, {"doctor", "--help"}, {"check", "--help"}, {"worktree", "--help"},
 		{"worktree", "create", "--help"}, {"worktree", "list", "--help"}, {"worktree", "link", "--help"},
 		{"worktree", "remove", "--help"}, {"worktree", "watch", "--help"}, {"guard", "--help"}, {"guard", "-h"},
-		{"guard", "install", "--help"}, {"guard", "install", "-h"},
 		{"--help", "sync"}, {"-h", "worktree", "create"}, {"worktree", "-h", "create"}, {"sync", "--help", "extra"},
 		{"nope"}, {"snyc"}, {"worktre"}, {"sink"}, {"chek"}, {"worktree"}, {"worktree", "nope"}, {"worktree", "craete"},
-		{"guard", "install", "extra", "--nope"},
 		{"sync", "--bogus"}, {"sync", "-x"}, {"sync", "-xy"}, {"init", "-yp"}, {"init", "-yz"}, {"init", "-yfoo"},
 		{"init", "--agents", "bogus"}, {"init", "--agents", "codex,bogus"}, {"init", "--agents"}, {"init", "--no-yes"},
 		{"sync", "--no-project"}, {"sync", "--no-bogus"}, {"doctor", "-p"}, {"sync", "--force=1"}, {"sync", "--help=1"},
@@ -409,9 +419,11 @@ func usageSteps() []step {
 // one with every section, and the GitHub Actions annotations.
 func toolkitSteps() []step {
 	return []step{
+		cli("sync"),
+		cli("sync", "-p", "."),
+		{args: []string{"sync", "--project", "w"}, dir: "."},
+		cli("sync", "--compile-guard"),
 		cli("sync", "--no-compile-guard"),
-		cli("sync", "--no-compile-guard", "-p", "."),
-		{args: []string{"sync", "--no-compile-guard", "--project", "w"}, dir: "."},
 		cli("doctor"),
 		{args: []string{"doctor", "-p", "w"}, dir: "."},
 		cli("check"),
@@ -460,7 +472,7 @@ func parityCases() []parityCase {
 			{args: []string{"init"}, stdin: "\nMakefile\n"},
 			{args: []string{"init"}, stdin: "flutter\n"},
 			{args: []string{"init"}, stdin: "nope\n\nMakefile  go.mod\nmake lint\n\nmake test\nmake one\nmake deps\nmake fmt\n"},
-			cli("sync", "--no-compile-guard"),
+			cli("sync"),
 			cli("doctor"),
 		}},
 		{name: "init with a project platform", setup: projectPlatform, steps: []step{
@@ -474,29 +486,29 @@ func parityCases() []parityCase {
 			{args: []string{"init", "--force"}, stdin: "flutter\n"},
 		}},
 		{name: "no profile", steps: []step{
-			cli("sync", "--no-compile-guard"), cli("doctor"), cli("check"), cli("worktree", "list"),
+			cli("sync"), cli("doctor"), cli("check"), cli("worktree", "list"),
 			cli("worktree", "create", "feat/a", "main"),
 		}},
 		{name: "adopt and force", setup: func(t *testing.T, s side) {
 			s.write(t, "w/.ai/project.yaml", "toolkit: 1\nagents: [claude-code, codex]\n")
 			s.write(t, "w/AGENTS.md", "# Team rules\n\nKeep it short.\n")
 		}, steps: []step{
-			cli("sync", "--no-compile-guard"),
-			cli("sync", "--no-compile-guard", "--adopt"),
-			{args: []string{"sync", "--no-compile-guard"}, before: appendTo("w/CLAUDE.md", "edited\n")},
+			cli("sync"),
+			cli("sync", "--adopt"),
+			{args: []string{"sync"}, before: appendTo("w/CLAUDE.md", "edited\n")},
 			cli("doctor"),
-			cli("sync", "--no-compile-guard", "--force"),
-			{args: []string{"sync", "--no-compile-guard"}, before: func(t *testing.T, s side) {
+			cli("sync", "--force"),
+			{args: []string{"sync"}, before: func(t *testing.T, s side) {
 				s.write(t, "w/.ai/project.yaml", "toolkit: 1\nagents: [claude-code]\npolicy: { plan_gate: true }\n")
 			}},
-			{args: []string{"sync", "--no-compile-guard"}, before: func(t *testing.T, s side) {
+			{args: []string{"sync"}, before: func(t *testing.T, s side) {
 				s.write(t, "w/.ai/project.yaml", "toolkit: 1\nagents: [nope]\n")
 			}},
 			cli("doctor"),
 			cli("check"),
 		}},
 		{name: "migrate p3", setup: func(t *testing.T, s side) { copyDir(t, golden(t, "sample-migrate-p3", "p3"), s.path("w")) },
-			steps: []step{cli("doctor"), cli("sync", "--no-compile-guard"), cli("sync", "--no-compile-guard"), cli("doctor")}},
+			steps: []step{cli("doctor"), cli("sync"), cli("sync"), cli("doctor")}},
 		{name: "worktree create, list, link, remove", setup: repo(repoProfile), steps: []step{
 			cli("worktree", "list"),
 			cli("worktree", "create", "feat/a", "origin/develop", "--no-pub"),
@@ -641,20 +653,12 @@ func TestCLIParityWithTheDartEngine(t *testing.T) {
 func TestKnownParityExceptionsKeepTheirGoBehaviour(t *testing.T) {
 	project := t.TempDir()
 	writeFile(t, filepath.Join(project, ".ai", "project.yaml"), "toolkit: 1\nagents: [claude-code]\n")
-	home := t.TempDir()
-	t.Setenv("DASHCREW_HOME", home)
+	if code, _, stderr := dashcrew(t, nil, "sync", "-p", project); code != 0 {
+		t.Fatalf("sync: exit %d, %s", code, stderr)
+	}
 
-	for _, args := range [][]string{{"sync", "-p", project}, {"sync", "--compile-guard", "-p", project}} {
-		if code, _, stderr := dashcrew(t, nil, args...); code != 0 {
-			t.Errorf("%v: exit %d, %s", args, code, stderr)
-		}
-	}
-	if entries, _ := os.ReadDir(home); len(entries) != 0 {
-		t.Errorf("sync installed into DASHCREW_HOME: %v", entries)
-	}
 	for _, args := range [][]string{{"guard", "install"}, {"guard", "install", "--expect", "x", "--force"}} {
-		if code, stdout, stderr := dashcrew(t, nil, args...); code != 64 || stdout != "" ||
-			stderr != "dashcrew guard install is served by the Dart engine until the shim calls dashcrew guard.\n" {
+		if code, stdout, stderr := dashcrew(t, nil, args...); code != 64 || stdout != "" || stderr != guardInstallRemoved+"\n" {
 			t.Errorf("%v: exit %d, stdout %q, stderr %q", args, code, stdout, stderr)
 		}
 	}
@@ -662,5 +666,28 @@ func TestKnownParityExceptionsKeepTheirGoBehaviour(t *testing.T) {
 	t.Cleanup(func() { stdin = os.Stdin })
 	if code, stdout, stderr := dashcrew(t, nil, "guard", filepath.Join(project, "missing.json")); code != 0 || stdout != "" || stderr != "" {
 		t.Errorf("guard hook: exit %d, stdout %q, stderr %q", code, stdout, stderr)
+	}
+
+	// G4b: sync stamps the git common dir, a malformed payload is logged there, and doctor warns about it.
+	common := filepath.Join(project, ".git")
+	if err := os.MkdirAll(common, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if code, _, stderr := dashcrew(t, nil, "sync", "-p", project); code != 0 {
+		t.Fatalf("sync: %s", stderr)
+	}
+	if _, err := os.Stat(filepath.Join(common, "dashcrew", "last-sync")); err != nil {
+		t.Errorf("sync left no stamp: %v", err)
+	}
+	if _, stdout, _ := dashcrew(t, nil, "doctor", "-p", project); strings.Contains(stdout, "guard-log") {
+		t.Errorf("guard-log without a log:\n%s", stdout)
+	}
+	stdin = strings.NewReader(`{"tool_name":7,"cwd":` + strconv.Quote(project) + `}`)
+	if code, stdout, stderr := dashcrew(t, nil, "guard", filepath.Join(project, ".ai", "guard.json")); code != 0 || stdout != "" || stderr != "" {
+		t.Errorf("malformed guard call: exit %d, stdout %q, stderr %q", code, stdout, stderr)
+	}
+	log := filepath.Join(common, "dashcrew", "guard-malformed.log")
+	if _, stdout, _ := dashcrew(t, nil, "doctor", "-p", project); !strings.Contains(stdout, "warn  guard-log       the guard let 1 malformed payload through since the last sync, logged in "+log) {
+		t.Errorf("doctor:\n%s", stdout)
 	}
 }

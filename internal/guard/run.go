@@ -1,10 +1,12 @@
 package guard
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/fahnaladitia/dashcrew/internal/dartjson"
@@ -15,25 +17,35 @@ import (
 type Env struct {
 	LookupEnv func(string) (string, bool)
 	Getwd     func() (string, error)
+	// Now stamps the malformed log; nil means time.Now.
+	Now func() time.Time
 }
 
 // ProcessEnv is the running process's environment and working directory.
-var ProcessEnv = Env{LookupEnv: os.LookupEnv, Getwd: os.Getwd}
+var ProcessEnv = Env{LookupEnv: os.LookupEnv, Getwd: os.Getwd, Now: time.Now}
 
 // Run is `dashcrew guard`: hook JSON on stdin, the answer per HookResponse, the exit code returned.
 // Policy path: first argument, else `DASHCREW_GUARD_POLICY`, else `<hook cwd or first workspace path>/.ai/guard.json`.
 // Any read or parse failure allows the call (exit 0, no output); `dashcrew doctor` reports a broken install.
+// A malformed hook input is also recorded in the malformed log (see logMalformed), which doctor reports.
 func Run(args []string, stdin io.Reader, stdout, stderr io.Writer, env Env) int {
 	input, err := readJSON(stdin)
 	if err != nil {
+		reason := "input is not JSON"
+		if errors.Is(err, errNotUTF8) {
+			reason = "input is not UTF-8"
+		}
+		logMalformed(env, nil, reason)
 		return 0
 	}
 	object, ok := input.(*omap.Map[any])
 	if !ok {
+		logMalformed(env, nil, "input is not a JSON object")
 		return 0
 	}
 	policyPath, err := policyPath(args, object, env)
 	if err != nil {
+		logMalformed(env, object, malformedReason(err))
 		return 0
 	}
 	if info, err := os.Stat(policyPath); err != nil || info.IsDir() {
@@ -54,7 +66,14 @@ func Run(args []string, stdin io.Reader, stdout, stderr io.Writer, env Env) int 
 	}
 	events, err := AllFromHook(object)
 	if err != nil {
+		logMalformed(env, object, malformedReason(err))
 		return 0
+	}
+	for _, event := range events {
+		if event.Malformed != "" {
+			logMalformed(env, object, event.Malformed)
+			break
+		}
 	}
 	decision, err := EvaluateAll(events, policy)
 	if err != nil {
@@ -70,6 +89,17 @@ func Run(args []string, stdin io.Reader, stdout, stderr io.Writer, env Env) int 
 	return response.ExitCode
 }
 
+var errNotUTF8 = errors.New("input is not UTF-8")
+
+// malformedReason is the log reason for an error reading the hook input: the field of the wrong type, never its value.
+func malformedReason(err error) string {
+	var field *fieldTypeError
+	if errors.As(err, &field) {
+		return "hook field " + field.key + " has the wrong type"
+	}
+	return "hook input could not be read"
+}
+
 // readJSON decodes UTF-8 JSON as Dart's strict decoder does: malformed UTF-8 is an error, a leading byte order
 // mark is skipped.
 func readJSON(r io.Reader) (any, error) {
@@ -78,7 +108,7 @@ func readJSON(r io.Reader) (any, error) {
 		return nil, err
 	}
 	if !utf8.Valid(data) {
-		return nil, fmt.Errorf("input is not UTF-8")
+		return nil, errNotUTF8
 	}
 	return dartjson.Decode(strings.TrimPrefix(string(data), "\ufeff"))
 }

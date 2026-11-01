@@ -6,7 +6,7 @@ dashcrew keeps one neutral source of rules, skills, workflows and guards, and
 renders it for the AI coding agents your team uses: Claude Code, Codex and
 Antigravity. Your platform and stack are chosen once, in `.ai/project.yaml`.
 
-> Status: pre-release, not on pub.dev yet. Claude Code output has been run
+> Status: pre-release, no tagged release yet. Claude Code output has been run
 > end to end. Codex and Antigravity output is generated and checked against
 > their documentation (and, for Codex, its source), but not yet against a live
 > session.
@@ -20,7 +20,7 @@ core/ + packs/ + platforms/ (shipped)  --+
 .ai/packs/, .ai/platforms/ (yours)     --+-->  dashcrew sync  -->  AGENTS.md         read by every agent
 .ai/project.yaml                       --+                         per-agent files   skills, subagents, hooks, MCP
                                                                    .ai/guard.json    one policy for every agent
-                                                                   .ai/bin/guard     committed shim -> one guard per machine
+                                                                   .ai/bin/guard     committed shim -> dashcrew guard
                                                                    .ai/lock.json     hashes, versions, owned entries
 ```
 
@@ -29,18 +29,22 @@ core/ + packs/ + platforms/ (shipped)  --+
 - **Skills and workflows** (`plan`, `tdd`, `code-review`, `verify`, `learn`, `audit`, `worktree`, `build-fix`) become each agent's skill format. AGENTS.md carries a generated skill index; see [Choosing skills](#choosing-skills).
 - **Two subagents** remain, both read-only: `reviewer` (independent review of a large plan and of the diff) and `explorer` (maps many files to `file:line` for `plan` and `audit`).
 - **Platforms** hold everything that belongs to one stack: commands, lifecycle rules, doc comments, pack families. See [Platforms](#platforms).
-- **The guard** is one compiled binary per machine, shared by every project, that every agent's pre-tool hook reaches through the committed shim `.ai/bin/guard`. It reads the policy in `.ai/guard.json` and blocks the commands and writes listed in [Guard](#guard).
+- **The guard** is `dashcrew guard`, a subcommand of the same binary, that every agent's pre-tool hook reaches through the committed shim `.ai/bin/guard`. It reads the policy in `.ai/guard.json` and blocks the commands and writes listed in [Guard](#guard).
 - `doctor` checks the result against the lock without writing anything.
 
 ## Install
 
-Requires git and Dart 3.9 or later to run dashcrew itself, whatever the project's platform.
+One static binary per OS, with the catalog built in. Requires git and a POSIX shell (the guard shim is `sh`).
 
 ```bash
-dart pub global activate --source git https://github.com/fahnaladitia/dashcrew
+brew install fahnaladitia/tap/dashcrew
+# or, with Go 1.26 or later:
+go install github.com/fahnaladitia/dashcrew/cmd/dashcrew@latest
 ```
 
-Pin a commit with `--git-ref <sha>` so everyone on a team runs the same dashcrew.
+`dashcrew --version` prints the version. A team pins one: `brew` installs the latest release, and `go install ...@v0.1.0` (or a commit) a fixed one. The guard shim needs dashcrew 0.1.0 or newer on `PATH`.
+
+**Deprecated, for one release:** `dart pub global activate --source git https://github.com/fahnaladitia/dashcrew` still installs the Dart engine, which renders the same files but has no `dashcrew guard`. The shim refuses every tool call while that one is first on `PATH`, and `doctor` says so; remove it with `dart pub global deactivate dashcrew`.
 
 ## Quick start
 
@@ -48,7 +52,7 @@ In the project root:
 
 ```bash
 dashcrew init      # detects the platform, reads remote branches (flutter: also pubspec.yaml, lib/main_<flavor>.dart)
-dashcrew sync      # writes the toolkit and compiles the guard
+dashcrew sync      # writes the toolkit
 dashcrew doctor    # checks it; exit 1 on any failure
 ```
 
@@ -183,18 +187,13 @@ Writes only `.ai/project.yaml`.
 | `-p, --project` | `.` | project root holding `.ai/project.yaml` |
 | `--force` | off | overwrite generated files edited by hand, or a lock written by a newer dashcrew |
 | `--adopt` | off | keep an existing, hand-written AGENTS.md as the project block |
-| `--[no-]compile-guard` | on | install the shared guard for this dashcrew when it is missing (see [Guard](#guard)) |
+| `--[no-]compile-guard` | off | deprecated, does nothing; prints a notice. There is no per-machine guard to install any more |
 
 Running it twice writes nothing the second time. Files it stops generating are deleted.
 
-### `dashcrew guard install`
+### `dashcrew guard [<policy>]`
 
-| Flag | Default | |
-|---|---|---|
-| `--expect <hash>` | none | refuse unless this dashcrew builds the guard the project expects (the lock's `guard_source`) |
-| `--force` | off | compile again even when installed |
-
-Compiles the guard once into `${DASHCREW_HOME:-~/.dashcrew}/guard/<hash>/guard` and prints its path. `sync` and the shim run it for you.
+The guard hook: reads one tool call as hook JSON on stdin and answers per agent (see [Guard](#guard)). The policy is `<policy>`, else `.ai/guard.json` in the hook's working directory. Hooks call it through `.ai/bin/guard`; you do not run it yourself. `dashcrew guard install` was removed with the per-machine compiled guard.
 
 ### `dashcrew doctor`
 
@@ -203,7 +202,7 @@ Compiles the guard once into `${DASHCREW_HOME:-~/.dashcrew}/guard/<hash>/guard` 
 | Group | Checks |
 |---|---|
 | Profile and lock | `profile`, `project-packs`, `lock`, `version`, `drift` (generated files edited by hand), `stale` (output differs from the current profile and catalog) |
-| Guard | `guard-policy`, `guard-binary` (the shim, the installed guard for the locked hash, and a `git push` event through the shim) |
+| Guard | `guard-policy`, `guard-binary` (the shim; the `dashcrew` first on `PATH`, which fails when missing and warns when it is the Dart one or older than the lock's `guard_min_version`; then a `git push` event through the shim), `guard-log` (only when the guard logged malformed payloads since the last sync) |
 | Claude Code | `hook`, `claude-md`, `mcp`, `skills` |
 | Codex | `codex-hook`, `codex-mcp`, `codex-skills-budget`, `codex-trust` |
 | Antigravity | `antigravity-hook`, `antigravity-mcp`, `antigravity-roles` |
@@ -256,15 +255,19 @@ Each agent's pre-tool hook sends the tool call to `.ai/bin/guard`, which blocks:
 - importing the analytics vendor package in the app's `lib/` (the selected analytics pack's `vendor_import`), outside local packages;
 - a `gh` command whose arguments contain `/approve`: approvals are the user's, on whatever approval flow a team keeps on GitHub.
 
-Claude Code and Codex get exit code 2 with the reason on stderr; Antigravity gets `{"decision": "deny", "reason": ...}` on stdout. The guard fails open: a missing or broken guard never stops work, and `doctor` reports it.
+Claude Code and Codex get exit code 2 with the reason on stderr; Antigravity gets `{"decision": "deny", "reason": ...}` on stdout.
 
-**Where it runs.** `.ai/bin/guard` is a short `sh` script that `sync` writes and you commit. It runs `${DASHCREW_HOME:-~/.dashcrew}/guard/<hash>/guard`, compiled once per machine for the guard source in the lock and shared by every project. When that binary is missing and `dashcrew` is on `PATH`, the shim installs it first (about 2 s, once per machine and guard version); otherwise it prints `not installed on this machine: run dashcrew sync` and lets the call through. A teammate whose dashcrew builds a different guard gets an error instead of a wrong guard. The shim adds about 3 ms per tool call (about 15 ms in total on the maintainer's machine). The shim needs a POSIX shell, so Windows is not supported yet.
+**Hidden commands.** The guard also looks inside nested shells (`sh -c`, `bash -c` and other shells with option clusters, `eval`, here-strings, heredocs, Codex argv lists; up to 8 levels deep), shell keywords and grouping (`{ ...; }`, `if ... then`, `do`, `!`), wrappers with options (`sudo -u`, `env -i`, `/usr/bin/env`, `nice`, `timeout`, `exec`, `xargs`, `find -exec`, `command`, `builtin`, `rtk proxy`), line continuations, and `apply_patch` headers with CRLF line ends or a leading `*** Move to:`. It does not block a command whose first word is a `$` expansion (`$x push`), `source` or `.`, `fish -c`, `stdbuf`, `doas`, or nesting deeper than 8 levels: blocking those would also block legitimate scripts.
+
+**Malformed payloads.** A hook payload the guard cannot read (not JSON, not UTF-8, a field of the wrong type) is let through, so a changed agent hook format never stops work. Each one is recorded in `<git common dir>/dashcrew/guard-malformed.log` (time, agent, reason; at most 64 KiB), and `doctor` warns with `guard-log` when it has entries since the last `sync`. A policy file that is missing or broken also lets calls through; `doctor` reports it with `guard-policy`.
+
+**Where it runs.** `.ai/bin/guard` is a short `sh` script that `sync` writes and you commit. It runs `dashcrew guard` from `PATH` with the hook's arguments and stdin. It fails closed: when `dashcrew` is missing, or older than the minimum version the lock records as `guard_min_version` (0.1.0, the first release with `dashcrew guard`), it refuses every tool call with a one-line reason and the install command. The Dart engine reports 0.0.1 and is refused the same way. A passed version check is cached in `~/.dashcrew/guard-ok` as the dashcrew path and the minimum; while both match and that dashcrew is not newer than the cache, the shim skips `dashcrew --version` and starts one process per tool call. On the maintainer's machine a call takes about 7 ms through macOS `/bin/sh` (about 5 ms through `dash`), against 3 ms for `dashcrew guard` alone and 15 ms for the compiled Dart guard it replaces. It needs a POSIX shell, so Windows is not supported yet. Older dashcrew versions compiled a guard into `~/.dashcrew/guard/`; nothing uses that folder any more, so you can delete it.
 
 ## Merge gate on GitHub
 
 The plan is confirmed in the session by the task owner; the team reviews in the pull request, where this gate holds. GitHub is the only infrastructure.
 
-1. Set `ci: { github: true, dashcrew_ref: <commit or tag> }` and run `dashcrew sync`. Commit `.github/workflows/dashcrew.yml`.
+1. Set `ci: { github: true, dashcrew_ref: <commit or tag> }` and run `dashcrew sync`. Commit `.github/workflows/dashcrew.yml`. The workflow sets up Go and runs `go install github.com/fahnaladitia/dashcrew/cmd/dashcrew@<dashcrew_ref>`, then `dashcrew check`.
 2. In the repository settings, add a branch protection rule (or ruleset) for your base branches that requires the status check `check` from the `dashcrew check` workflow.
 3. Every pull request then needs a current toolkit and every heading of the PR template. Failures show as annotations on the PR.
 
@@ -285,9 +288,9 @@ them in the format it reads.
 
 ### Each teammate
 
-- Install the same dashcrew as everyone else (same `--git-ref`).
-- Nothing else to run after cloning: the first agent tool call installs this machine's guard through the committed shim (about 2 s, once).
-  Without dashcrew on `PATH` no guard rule applies, and the shim says so on every call.
+- Install the same dashcrew as everyone else (see [Install](#install)).
+- Nothing else to run after cloning: every agent tool call goes through the committed shim to `dashcrew guard`.
+  Without dashcrew 0.1.0 or newer on `PATH` the shim refuses every tool call and names the install command.
 - Run `dashcrew doctor` to confirm.
 - Codex users: trust the project when Codex asks, then approve the dashcrew hook in `/hooks`. Codex ignores a project's `.codex/` until both are done.
 
@@ -296,7 +299,7 @@ them in the format it reads.
 - Change rules through `.ai/project.yaml`, `.ai/packs/`, `.ai/platforms/` or the project block in AGENTS.md (between `dashcrew:project:begin` and `dashcrew:project:end`), never by editing generated files. `doctor` reports generated files edited by hand.
 - After a merge that touched `.ai/project.yaml`, `.ai/packs/` or `.ai/platforms/`: resolve conflicts in those files only, run `dashcrew sync`, and commit the regenerated files.
 - `sync` refuses a lock written by a newer dashcrew; update dashcrew instead of forcing it.
-  Until dashcrew has numbered releases, every commit reports the same version, so the version check cannot tell two commits apart: pin the same ref.
+  Release builds report their tag, and `go install` of a commit reports a version just above the previous tag. A local build without a version reports 0.0.1.
 
 ### What each agent enforces
 
@@ -316,8 +319,11 @@ dashcrew keeps AGENTS.md under the smallest cut of the selected agents, and `doc
 | `AGENTS.md exists and was not written by dashcrew` | `dashcrew sync --adopt` keeps your file as the project block |
 | `Files changed outside dashcrew` | move the change to its source (profile, project pack, project block), then `dashcrew sync --force` |
 | `.ai/lock.json was written by dashcrew X` | install that dashcrew (or the team's pinned ref) |
-| `guard-binary`: `not installed on this machine` | `dashcrew sync`, or `dashcrew guard install` |
-| `guard install`: `This project expects guard X` | install the dashcrew ref the team uses, then `dashcrew sync` |
+| `[dashcrew guard] dashcrew is not on PATH, so this tool call is refused` | install dashcrew (see [Install](#install)); the agent's next tool call goes through |
+| `[dashcrew guard] the dashcrew on PATH is older than X` | install dashcrew X or newer; `doctor` names the `dashcrew` it found |
+| `guard-binary`: `is the Dart one` | install the Go build, then `dart pub global deactivate dashcrew` |
+| `guard-log`: `the guard let N malformed payloads through` | update dashcrew if an agent changed its hook format; the log names the agent |
+| `dashcrew guard install was removed` | an old shim called it: run `dashcrew sync` to write the new `.ai/bin/guard` |
 | `plan_gate was removed in P4` | delete `policy.plan_gate` from `.ai/project.yaml`; see [Migrating to P4](#migrating-to-p4) |
 | `check`: `pr-sections` `missing: ## ...` | add the heading to the PR description; write "None" under it when it does not apply |
 | `gitignore`: `.ai/bin/ is in .gitignore` | remove that line so the shim is committed |
@@ -337,14 +343,17 @@ P4 makes dashcrew skill-first. A project synced by an earlier dashcrew migrates 
 ## Development
 
 ```bash
+go vet ./...
+go test ./...
+DASHCREW_DART=$(command -v dart) go test ./cmd/dashcrew -run Parity   # the Go CLI against the Dart one
 dart analyze --fatal-infos
 dart test
 DASHCREW_UPDATE_GOLDENS=1 dart test test/golden   # rewrite golden fixtures, then review the diff
 ```
 
-`test/golden/sample-migrate-p3/p3/` is a frozen pre-P4 output that the migration test syncs over; it is never rewritten.
+Both engines render byte-identical output until the Dart engine is removed; `internal/conformance` checks the Go engine against the same goldens. `test/golden/sample-migrate-p3/p3/` is a frozen pre-P4 output that the migration test syncs over; it is never rewritten.
 
-CI runs both on Dart 3.9.0 and stable. Contributor rules for AI agents are in [AGENTS.md](AGENTS.md).
+CI runs the Go job and the Dart job (Dart 3.9.0 and stable). Releases are cut by pushing a `v*` tag: `.github/workflows/release.yaml` runs goreleaser (`.goreleaser.yaml`), which stamps the version, builds darwin, linux and windows for amd64 and arm64, publishes a GitHub Release and updates the Homebrew formula in `fahnaladitia/homebrew-tap`. Contributor rules for AI agents are in [AGENTS.md](AGENTS.md).
 
 ## License
 

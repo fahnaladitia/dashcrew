@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"reflect"
+	"strings"
 	stdsync "sync"
 	"testing"
 	"time"
@@ -24,6 +25,7 @@ var fuzzSeeds = []string{
 	"dart analyze lib/", "flutter test test/a_test.dart", "git checkout --no-track -b feat/x main", "echo commit",
 	"git -C app push", `gh issue comment 42 --body "/approve plan"`, `gh api repos/a/b/issues/42/comments -f body='/approve plan'`,
 	`rtk gh pr comment 3 --body "/approve plan"`, "gh issue view 42", `echo "/approve plan"`,
+	"sh <<< 'git push'", "git \\\n push", `bash -c "git \` + "\n" + ` push"`, "cat <<< 'x' | sh", "bash <<EOF\nsh <<< 'git push'\nEOF",
 }
 
 // dartOracle is a running Dart `shellCommands` (testdata/shell_oracle.dart, compiled to the path in
@@ -112,7 +114,8 @@ func commandsJSON(t *testing.T, commands [][]string) string {
 }
 
 // FuzzCommands checks that Commands never panics, returns only non-empty commands, is deterministic, and, with
-// the Dart oracle, returns exactly what Dart's shellCommands returns for every valid UTF-8 script.
+// the Dart oracle, returns exactly what Dart's shellCommands returns for every valid UTF-8 script. Expanded must
+// hold the same properties, and equal Commands on a script with neither a continuation nor a here-string.
 func FuzzCommands(f *testing.F) {
 	for _, c := range shellCases {
 		f.Add(c.script)
@@ -129,6 +132,18 @@ func FuzzCommands(f *testing.F) {
 		}
 		if again := Commands(script); !reflect.DeepEqual(got, again) {
 			t.Fatalf("not deterministic: %q then %q", got, again)
+		}
+		expanded := Expanded(script)
+		for _, argv := range expanded {
+			if len(argv) == 0 {
+				t.Fatalf("empty expanded command in %q", expanded)
+			}
+		}
+		if again := Expanded(script); !reflect.DeepEqual(expanded, again) {
+			t.Fatalf("Expanded not deterministic: %q then %q", expanded, again)
+		}
+		if !strings.Contains(script, "\\\n") && !strings.Contains(script, "<<<") && !reflect.DeepEqual(got, expanded) {
+			t.Fatalf("Expanded differs without a continuation or here-string: %q then %q", got, expanded)
 		}
 		if o := startOracle(t); o != nil && utf8.ValidString(script) {
 			if want, have := o.commands(t, script), commandsJSON(t, got); want != have {

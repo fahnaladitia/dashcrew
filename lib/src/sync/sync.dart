@@ -9,10 +9,9 @@ import '../catalog/catalog.dart';
 import '../guard/compile.dart';
 import '../profile/profile.dart';
 import '../render/renderer.dart';
-import '../package_root.dart';
 import '../version.dart';
 import 'github_workflow.dart';
-import 'guard_install.dart';
+import 'guard_shim.dart';
 import 'project_files.dart';
 
 /// Sync refused to run; [message] names the files or settings involved.
@@ -39,18 +38,12 @@ class SyncResult {
 
 /// Renders `.ai/project.yaml` into the agent files of one project.
 /// Generated files are tracked in `.ai/lock.json`; a file edited by hand stops the run unless forced.
+/// The guard shim runs `dashcrew guard` from PATH and accepts [guardMinimumVersion] or newer, which the lock records.
 class Sync {
-  const Sync({required this.catalog, required this.projectDir, this.compileGuard = true, this.packageRoot, this.guardHome});
+  const Sync({required this.catalog, required this.projectDir});
 
   final Catalog catalog;
   final String projectDir;
-  final bool compileGuard;
-
-  /// dashcrew package root; defaults to the running dashcrew's.
-  final String? packageRoot;
-
-  /// Where the shared guard is installed; defaults to `DASHCREW_HOME`, else `~/.dashcrew`.
-  final String? guardHome;
 
   /// Required PR sections, rendered from the catalog; `dashcrew check` reads the same headings.
   static const prTemplatePath = '.github/pull_request_template.md';
@@ -58,7 +51,7 @@ class Sync {
   /// Written when `ci.github` is on; its `check` job is meant to be a required status check.
   static const githubWorkflowPath = '.github/workflows/dashcrew.yml';
 
-  /// The committed hook entry; it runs the guard installed for this project's guard source.
+  /// The committed hook entry; it runs `dashcrew guard` from PATH.
   static const guardShimPath = '.ai/bin/guard';
 
   static const generatedMarker = '<!-- dashcrew:generated - edit .ai/project.yaml or the project block, then run dashcrew sync -->';
@@ -150,22 +143,13 @@ class Sync {
     Process.runSync('chmod', ['+x', _file(guardShimPath).path]);
     if (_dropGuardIgnore()) written.add('.gitignore');
 
-    final guardHash = guardSourceHash(_root);
-    if (compileGuard) {
-      try {
-        GuardInstaller(packageRoot: _root, home: guardHome).install();
-      } on GuardInstallException catch (error) {
-        throw SyncException(error.message);
-      }
-    }
-
     final newLock = {
       'schema': 1,
       'dashcrew_version': dashcrewVersion,
       'files': {for (final path in files.keys.toList()..sort()) path: fileHash(path, files[path]!)},
       'packs': packs,
       'mcp_servers': {for (final agent in nowOwnedMcp.keys.toList()..sort()) agent: nowOwnedMcp[agent]},
-      'guard_source': guardHash,
+      'guard_min_version': guardMinimumVersion,
     };
     _writeIfChanged(lockPath, '${const JsonEncoder.withIndent('  ').convert(newLock)}\n');
 
@@ -219,7 +203,7 @@ class Sync {
     final files = <String, String>{
       'AGENTS.md': _agentsMd(targets, adopt: adopt),
       '.ai/guard.json': '${const JsonEncoder.withIndent('  ').convert(compileGuardPolicy(profile, catalog.resolvedFor(profile.platform)).toJson())}\n',
-      guardShimPath: GuardInstaller.shim(guardSourceHash(_root)),
+      guardShimPath: guardShim(guardMinimumVersion),
     };
     final prTemplate = targets.where((t) => t.target == 'pr_template').firstOrNull;
     if (prTemplate != null) {
@@ -309,8 +293,6 @@ class Sync {
     return '$generatedMarker\n\n${rules.trimRight()}\n\n$projectBegin$projectBlock$projectEnd\n';
   }
 
-  String get _root => packageRoot ?? dashcrewPackageRoot();
-
   /// A compiled guard from before the shim is binary, unreadable as text and never in the lock; it is dashcrew's own.
   void _removeCompiledGuard() {
     final file = _file(guardShimPath);
@@ -329,16 +311,5 @@ class Sync {
     final next = current.replaceAll('# dashcrew: compiled guard, per machine\n.ai/bin/\n', '');
     return next != current && _writeIfChanged('.gitignore', next);
   }
-
-
-  /// Hash of the guard sources in the dashcrew package; the lock keeps the one the binary was built from.
-  static String guardSourceHash(String packageRoot) {
-    final sources = [
-      p.join(packageRoot, 'bin', 'guard.dart'),
-      ...Directory(p.join(packageRoot, 'lib', 'src', 'guard')).listSync().whereType<File>().map((f) => f.path).toList()..sort(),
-    ];
-    return sha256.convert(utf8.encode(sources.map((s) => File(s).readAsStringSync()).join('\u0000'))).toString();
-  }
-
 
 }

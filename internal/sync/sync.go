@@ -1,8 +1,7 @@
 // Package sync renders `.ai/project.yaml` into the agent files of one project.
 //
 // Generated files are tracked in `.ai/lock.json`; a file edited by hand stops the run unless forced. The guard
-// policy and shim are written as the Dart engine writes them. Installing the Dart guard binary is not ported: the
-// shim switches to `dashcrew guard` in stage G7.
+// shim runs `dashcrew guard` from PATH and accepts dashcrew version.GuardMinimum or newer, which the lock records.
 package sync
 
 import (
@@ -103,9 +102,10 @@ func (s Sync) Run(force, adopt bool) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	if lockVersion, ok := lock.Value("dashcrew_version").(string); ok && version.Compare(lockVersion, version.Version) > 0 && !force {
-		return nil, &Error{Message: LockPath + " was written by dashcrew " + lockVersion + ", and this is " + version.Version + ". " +
-			"Update dashcrew, or rerun with --force to rewrite it with " + version.Version + "."}
+	current := version.Current()
+	if lockVersion, ok := lock.Value("dashcrew_version").(string); ok && version.Compare(lockVersion, current) > 0 && !force {
+		return nil, &Error{Message: LockPath + " was written by dashcrew " + lockVersion + ", and this is " + current + ". " +
+			"Update dashcrew, or rerun with --force to rewrite it with " + current + "."}
 	}
 	lockedFiles := lockFiles(lock)
 
@@ -191,11 +191,7 @@ func (s Sync) Run(force, adopt bool) (*Result, error) {
 		result.Written = append(result.Written, ".gitignore")
 	}
 
-	guardHash, err := guard.SourceHash()
-	if err != nil {
-		return nil, err
-	}
-	lockText, err := lockJSON(files, rendered.Packs, nowOwnedMcp, guardHash)
+	lockText, err := lockJSON(files, rendered.Packs, nowOwnedMcp)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +202,8 @@ func (s Sync) Run(force, adopt bool) (*Result, error) {
 }
 
 // lockJSON is `.ai/lock.json` with the Dart key order: files sorted by path, agents of mcp_servers sorted.
-func lockJSON(files *omap.Map[string], packs *omap.Map[any], ownedMcp map[string][]string, guardHash string) (string, error) {
+// `guard_min_version` is the oldest dashcrew the shim accepts.
+func lockJSON(files *omap.Map[string], packs *omap.Map[any], ownedMcp map[string][]string) (string, error) {
 	paths := files.Keys()
 	sort.Strings(paths)
 	fileHashes := omap.New[any]()
@@ -228,11 +225,11 @@ func lockJSON(files *omap.Map[string], packs *omap.Map[any], ownedMcp map[string
 	}
 	lock := omap.Of[any](
 		"schema", 1,
-		"dashcrew_version", version.Version,
+		"dashcrew_version", version.Current(),
 		"files", fileHashes,
 		"packs", packs,
 		"mcp_servers", servers,
-		"guard_source", guardHash,
+		"guard_min_version", version.GuardMinimum,
 	)
 	text, err := dartjson.EncodeIndent(lock, "  ")
 	if err != nil {
@@ -337,14 +334,10 @@ func (s Sync) Render(adopt bool, warnings *[]string) (*Rendered, error) {
 	if err != nil {
 		return nil, err
 	}
-	guardHash, err := guard.SourceHash()
-	if err != nil {
-		return nil, err
-	}
 	files := omap.New[string]()
 	files.Set("AGENTS.md", agentsMd)
 	files.Set(GuardPolicyPath, policy+"\n")
-	files.Set(guard.ShimPath, guard.Shim(guardHash))
+	files.Set(guard.ShimPath, guard.Shim(version.GuardMinimum))
 	for _, target := range targets {
 		if target.Target != "pr_template" {
 			continue
@@ -585,10 +578,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dart-lang/setup-dart@v1
+      - uses: actions/setup-go@v5
         with:
-          sdk: stable
-      - run: dart pub global activate --source git https://github.com/fahnaladitia/dashcrew --git-ref ` + dashcrewRef + `
-      - run: dart pub global run dashcrew check
+          go-version: stable
+          cache: false
+      - run: go install github.com/fahnaladitia/dashcrew/cmd/dashcrew@` + dashcrewRef + `
+      - run: dashcrew check
 `
 }

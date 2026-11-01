@@ -1,0 +1,61 @@
+# Release build for the Go engine. Run by .github/workflows/release.yaml on a v* tag; locally,
+# `goreleaser release --snapshot --clean --skip=publish` builds everything into dist/ without publishing.
+version: 2
+
+project_name: dashcrew
+
+before:
+  hooks:
+    - go mod tidy -diff
+
+builds:
+  - id: dashcrew
+    main: ./cmd/dashcrew
+    binary: dashcrew
+    env:
+      - CGO_ENABLED=0
+    goos: [darwin, linux, windows]
+    goarch: [amd64, arm64]
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X github.com/fahnaladitia/dashcrew/internal/version.Version={{ .Version }}
+
+archives:
+  - id: dashcrew
+    ids: [dashcrew]
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  use: github
+  sort: asc
+
+# brews is deprecated in goreleaser 2.18 (goreleaser check exits 2); kept because a formula installs the CLI on macOS and Linux alike.
+brews:
+  - name: dashcrew
+    ids: [dashcrew]
+    repository:
+      owner: fahnaladitia
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    directory: Formula
+    homepage: https://github.com/fahnaladitia/dashcrew
+    description: Agent-agnostic AI coding toolkit with a guard for agent tool calls
+    license: BSD-3-Clause
+    commit_author:
+      name: dashcrew release
+      email: noreply@github.com
+    install: |
+      bin.install "dashcrew"
+    test: |
+      assert_match version.to_s, shell_output("#{bin}/dashcrew --version")

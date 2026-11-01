@@ -20,8 +20,6 @@ import (
 type PrCheck struct {
 	Catalog    *catalog.Catalog
 	ProjectDir string
-	// GuardSource is passed to the doctor; see doctor.Doctor.
-	GuardSource string
 	// Environment supplies GITHUB_EVENT_PATH, whose pull request event carries the PR body in CI.
 	Environment map[string]string
 }
@@ -30,7 +28,7 @@ type PrCheck struct {
 // prBody wins; otherwise the body of the pull request event in CI; without either the section check is skipped.
 // An event file that is not JSON is an error.
 func (c PrCheck) Run(prBody *string) ([]doctor.Check, error) {
-	checks := doctor.Doctor{Catalog: c.Catalog, ProjectDir: c.ProjectDir, GuardSource: c.GuardSource}.Run()
+	checks := doctor.Doctor{Catalog: c.Catalog, ProjectDir: c.ProjectDir}.Run()
 	body := prBody
 	if body == nil {
 		var err error
