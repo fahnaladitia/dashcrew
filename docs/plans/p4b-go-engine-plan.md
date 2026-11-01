@@ -110,4 +110,50 @@ Replace the Dart engine (`lib/`, `bin/`) with a Go engine that renders byte-iden
 
 ## Progress
 
-Not started.
+Started before the P4 live run (user decision). The port targets the P4 goldens as committed in `f7ae017`.
+
+- G0-G2 done.
+  - `go.mod` (`github.com/fahnaladitia/dashcrew`, go 1.26). `catalog_embed.go` embeds `all:core all:platforms all:packs`.
+  - `cmd/dashcrew` has `sync` only for now. `internal/` holds profile, catalog, render, mustache, adapters, sync, plus the helpers projectfiles, yamlutil, dartjson and omap.
+  - CI has a `go` job next to the Dart job.
+  - Deviation: the goldens stay in `test/golden/`; they were not moved to `testdata/`.
+  - Dependencies: only `go.yaml.in/yaml/v3` v3.0.6. Plain scalars are resolved with Dart's YAML 1.2 core rules.
+  - Mustache: `cbroglie/mustache` v1.4.2 matched every golden, but differed from Dart on 6 of 53 recorded value cases (`<nil>`, Go map and list printing, falsy `""`, `" "` and `0`) and missed 6 strict errors. It was replaced by a small port of Dart `mustache_template` 2.0.4 that passes all 53 (`internal/mustache/testdata/dart_cases.json`).
+  - Conformance: all 7 samples byte-identical (316 files), with no extra files and an idempotent second sync. Excluded until their stages: `.ai/lock.json` (G3), `.ai/guard.json` and `.ai/bin/guard` (G4).
+  - Tests: 164 Go tests pass, and the 385 Dart tests are unchanged.
+  - Known differences: malformed inputs that crash Dart with a type error now return an ordinary error, and YAML syntax error wording differs.
+- G3 done.
+  - Ported: sync (lock in Dart key order, removals, conflicts and `--force`, owned MCP, warnings, the P4 migration note), `internal/doctor` and `internal/check` (same names, statuses, messages, `::error` lines, exit codes).
+  - CLI: `sync`, `doctor` and `check`, with exit codes 0, 1 and 64. Adapter `Files` is now ordered, so the `wrote` lines follow Dart's order.
+  - The lock's `guard_source` hash comes from the Dart guard sources, embedded via `guard_source_embed.go` until the guard switch.
+  - Conformance: 323 of 323 files identical, the lock included, and `sample-migrate-p3` added. The Dart and Go CLIs were run side by side on 5 samples and the migration, with identical output.
+  - Not resolved: JSON error wording in doctor details, and `--compile-guard` is accepted but does nothing.
+  - 16 Go packages pass; Dart 385.
+- Sequencing change (decided during G3): G4 ports the guard logic as `dashcrew guard` with every test and the latency benchmark, but the emitted shim and `guard.json` stay byte-identical to Dart. The shim switch to `dashcrew guard` (and the guard hash becoming the dashcrew version) moves to G7, done in both engines at once with the workflow switch, as one deliberate golden change. This keeps conformance strict until then.
+- G4 done.
+  - Ported tests: `guard_test` 58/58, `shell_test` 9/9 and `hook_command_test` 3/3, with count checks.
+  - Differential test against the compiled Dart guard: 11,187 cases, all identical (exit code, stdout, stderr). It skips unless `DASHCREW_DART_GUARD` is set. The one divergence found was a Go bug (a leading BOM), now fixed.
+  - Fuzz: 60 s Go-only (14.7M runs), plus 2 x 120 s with a Dart oracle (`DASHCREW_DART_SHELL`). No failures.
+  - Latency over 1,000 process calls: Go median 3.08 ms (p95 3.29); Dart AOT median 10.40 ms (p95 11.41).
+  - Conformance: the exclusion list is empty, 337 of 337 files identical.
+  - `dashcrew guard` is in the CLI. `guard install` exits 64 until G7.
+- Known gaps in the guard, inherited from Dart: both engines allow these, so they are not divergences.
+  1. `bash -c`, `sh -c`, `eval` and here-strings are not unwrapped; only Codex argv lists are.
+  2. Shell keywords hide the command: `{ ...; }`, `then`, `do`, `!`.
+  3. Wrappers with options, or not on the wrapper list: `sudo -u`, `env -i`, `/usr/bin/env`, `nice`, `timeout`, `exec`, `xargs`, `find -exec`, `command -p`, `builtin`.
+  4. A backslash-newline inside `git ... push` leaves an empty word.
+  5. Indirection: `$(echo git) push`, `git${IFS}push`, `$x push`.
+  6. Fail-open by design on malformed payloads, invalid UTF-8 and deep nesting. `apply_patch` with CRLF headers is not checked, and a leading `*** Move to:` line lets the whole patch through.
+
+  Hardening is a decision for the user (see G4b).
+- G5-G6 done.
+  - `internal/initproject`: `detect_test` 37/37, `init_test` 11/11, and the `init-app` golden in conformance.
+  - `internal/worktree`: `worktree_test` 16/16, run in temp git repos.
+  - `cmd/dashcrew/cli.go` ports the parts of Dart `args` we use (help, usage errors, "Did you mean").
+  - Parity test (`DASHCREW_DART` set): 21 cases, 224 calls per engine. It compares stdout, stderr, the exit code and the file tree, and is green.
+  - Known exceptions until G7: `--compile-guard` installs nothing, `guard install` exits 64, and bare `guard` runs the Go hook.
+  - Crash paths: where Dart exits 255 on malformed YAML, Go prints the error and exits 1.
+
+### G4b: guard hardening (Go only, with the G7 switch)
+
+Pending the user's decision on scope (gaps 1-4 plus `apply_patch`, or also 5) and on malformed payloads (fail-open with a doctor warning, or fail-closed). Go only: after G7 every hook calls the Go guard, so the Dart guard is not fixed.

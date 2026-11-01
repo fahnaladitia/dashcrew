@@ -1,0 +1,390 @@
+[
+ {
+  "template": "plain text\n",
+  "context": {},
+  "out": "plain text\n"
+ },
+ {
+  "template": "Hello {{name}}!",
+  "context": {
+   "name": "world"
+  },
+  "out": "Hello world!"
+ },
+ {
+  "template": "{{n}} {{b}} {{d}} {{nul}}|",
+  "context": {
+   "n": 3,
+   "b": true,
+   "d": 1.5,
+   "nul": null
+  },
+  "out": "3 true 1.5 |"
+ },
+ {
+  "template": "{{list}} {{map}}",
+  "context": {
+   "list": [
+    "a",
+    1
+   ],
+   "map": {
+    "k": "v"
+   }
+  },
+  "out": "[a, 1] {k: v}"
+ },
+ {
+  "template": "<b>{{x}}</b> {{&x}} {{{x}}}",
+  "context": {
+   "x": "<&\"'/>"
+  },
+  "out": "<b><&\"'/></b> <&\"'/> <&\"'/>"
+ },
+ {
+  "template": "{{#a}}\nyes\n{{/a}}\nafter\n",
+  "context": {
+   "a": true
+  },
+  "out": "yes\nafter\n"
+ },
+ {
+  "template": "{{#a}}\nyes\n{{/a}}\nafter\n",
+  "context": {
+   "a": false
+  },
+  "out": "after\n"
+ },
+ {
+  "template": "  {{#a}}  \n  yes\n  {{/a}}\nafter",
+  "context": {
+   "a": true
+  },
+  "out": "  yes\nafter"
+ },
+ {
+  "template": "before {{#a}}inline{{/a}} after\n",
+  "context": {
+   "a": true
+  },
+  "out": "before inline after\n"
+ },
+ {
+  "template": "{{#a}}{{/a}}\nx\n",
+  "context": {
+   "a": true
+  },
+  "out": "\nx\n"
+ },
+ {
+  "template": "- {{#list}}{{.}}, {{/list}}\n",
+  "context": {
+   "list": [
+    "a",
+    "b"
+   ]
+  },
+  "out": "- a, b, \n"
+ },
+ {
+  "template": "{{#list}}\n- {{name}}\n{{/list}}\n",
+  "context": {
+   "list": [
+    {
+     "name": "a"
+    },
+    {
+     "name": "b"
+    }
+   ]
+  },
+  "out": "- a\n- b\n"
+ },
+ {
+  "template": "{{#s}}value {{.}}{{/s}}|",
+  "context": {
+   "s": "text"
+  },
+  "out": "value text|"
+ },
+ {
+  "template": "{{#s}}value {{.}}{{/s}}|",
+  "context": {
+   "s": ""
+  },
+  "out": "value |"
+ },
+ {
+  "template": "{{#s}}value {{.}}{{/s}}|",
+  "context": {
+   "s": " "
+  },
+  "out": "value  |"
+ },
+ {
+  "template": "{{#n}}num {{.}}{{/n}}|",
+  "context": {
+   "n": 0
+  },
+  "out": "num 0|"
+ },
+ {
+  "template": "{{#nul}}x{{/nul}}|",
+  "context": {
+   "nul": null
+  },
+  "out": "|"
+ },
+ {
+  "template": "{{^nul}}none{{/nul}}|",
+  "context": {
+   "nul": null
+  },
+  "out": "none|"
+ },
+ {
+  "template": "{{^b}}not{{/b}}|",
+  "context": {
+   "b": false
+  },
+  "out": "not|"
+ },
+ {
+  "template": "{{^b}}not{{/b}}|",
+  "context": {
+   "b": true
+  },
+  "out": "|"
+ },
+ {
+  "template": "{{^l}}empty {{.}}{{/l}}|",
+  "context": {
+   "l": []
+  },
+  "out": "empty l|"
+ },
+ {
+  "template": "{{^l}}empty{{/l}}|",
+  "context": {
+   "l": [
+    1
+   ]
+  },
+  "out": "|"
+ },
+ {
+  "template": "{{^m}}x{{/m}}|",
+  "context": {
+   "m": {}
+  },
+  "out": "|"
+ },
+ {
+  "template": "{{#m}}{{k}}{{/m}}|",
+  "context": {
+   "m": {
+    "k": "v"
+   }
+  },
+  "out": "v|"
+ },
+ {
+  "template": "{{#a}}{{#b}}{{c}}{{/b}}{{/a}}|",
+  "context": {
+   "a": {
+    "b": true
+   },
+   "c": "outer"
+  },
+  "out": "outer|"
+ },
+ {
+  "template": "{{a.b.c}}|",
+  "context": {
+   "a": {
+    "b": {
+     "c": "deep"
+    }
+   }
+  },
+  "out": "deep|"
+ },
+ {
+  "template": "{{#a}}{{b.c}}{{/a}}|",
+  "context": {
+   "a": {
+    "x": 1
+   },
+   "b": {
+    "c": "fromroot"
+   }
+  },
+  "out": "fromroot|"
+ },
+ {
+  "template": "{{list.0}}|{{list.5}}",
+  "context": {
+   "list": [
+    "first"
+   ]
+  },
+  "error": "Value was missing for variable tag: list.5."
+ },
+ {
+  "template": "{{! comment }}\nline\n",
+  "context": {},
+  "out": "line\n"
+ },
+ {
+  "template": "  {{! comment }}  \nline\n",
+  "context": {},
+  "out": "line\n"
+ },
+ {
+  "template": "\n{{#a}}\n\nx\n{{/a}}\n\n",
+  "context": {
+   "a": true
+  },
+  "out": "\n\nx\n\n"
+ },
+ {
+  "template": "\r\n{{#a}}\r\nx\r\n{{/a}}\r\n",
+  "context": {
+   "a": true
+  },
+  "out": "\r\nx\r\n"
+ },
+ {
+  "template": "{{#a}} \n x\n{{/a}} trailing\n",
+  "context": {
+   "a": true
+  },
+  "out": " x\n trailing\n"
+ },
+ {
+  "template": "{{ spaced }}|{{# a }}y{{/ a }}",
+  "context": {
+   "spaced": "s",
+   "a": true
+  },
+  "out": "s|y"
+ },
+ {
+  "template": "single { brace } and {not tag}",
+  "context": {},
+  "out": "single { brace } and {not tag}"
+ },
+ {
+  "template": "{{#a}}\n{{#b}}\nboth\n{{/b}}\n{{/a}}\n",
+  "context": {
+   "a": true,
+   "b": true
+  },
+  "out": "both\n"
+ },
+ {
+  "template": "text\n  {{#a}}\n  in\n  {{/a}}\nend",
+  "context": {
+   "a": true
+  },
+  "out": "text\n  in\nend"
+ },
+ {
+  "template": "{{#a}}x{{/a}}",
+  "context": {
+   "a": true
+  },
+  "out": "x"
+ },
+ {
+  "template": "x\n{{#a}}\ny",
+  "context": {
+   "a": true
+  },
+  "error": "Unclosed tag: 'a'."
+ },
+ {
+  "template": "{{missing}}",
+  "context": {},
+  "error": "Value was missing for variable tag: missing."
+ },
+ {
+  "template": "{{#missing}}x{{/missing}}",
+  "context": {},
+  "error": "Value was missing for section tag: missing."
+ },
+ {
+  "template": "{{^missing}}x{{/missing}}",
+  "context": {},
+  "error": "Value was missing for inverse section: missing."
+ },
+ {
+  "template": "{{^s}}x{{/s}}",
+  "context": {
+   "s": "text"
+  },
+  "error": "Invalid value type for inverse section, section: s, type: String."
+ },
+ {
+  "template": "{{^n}}x{{/n}}",
+  "context": {
+   "n": 1
+  },
+  "error": "Invalid value type for inverse section, section: n, type: int."
+ },
+ {
+  "template": "{{#a}}x{{/b}}",
+  "context": {
+   "a": true
+  },
+  "error": "Mismatched tag, expected: 'a', was: 'b'"
+ },
+ {
+  "template": "{{#a}}x",
+  "context": {
+   "a": true
+  },
+  "error": "Unclosed tag: 'a'."
+ },
+ {
+  "template": "{{}}",
+  "context": {},
+  "error": "Empty tag name."
+ },
+ {
+  "template": "{{a b}}",
+  "context": {},
+  "error": "Unless in lenient mode, tags may only contain the characters a-z, A-Z, minus, underscore and period."
+ },
+ {
+  "template": "{{a",
+  "context": {},
+  "error": "Unexpected end of input."
+ },
+ {
+  "template": "{{a}b",
+  "context": {
+   "a": 1
+  },
+  "error": "Unexpected character, expected: }, was: b"
+ },
+ {
+  "template": "{{> part}}",
+  "context": {},
+  "error": "Partial not found: part."
+ },
+ {
+  "template": "{{#a.b}}x{{/a.b}}|",
+  "context": {
+   "a": {}
+  },
+  "error": "Value was missing for section tag: a.b."
+ },
+ {
+  "template": "{{a.b}}",
+  "context": {
+   "a": "str"
+  },
+  "error": "Value was missing for variable tag: a.b."
+ }
+]
