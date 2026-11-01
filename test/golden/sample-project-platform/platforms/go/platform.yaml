@@ -1,0 +1,9 @@
+description: Go services and command-line tools.
+detect: [go.mod]
+commands:
+  analyze: go vet
+  test: go test ./...
+  test_scoped: go test
+  deps: go mod download
+  format: gofmt -w
+doc_comment: Go doc comments

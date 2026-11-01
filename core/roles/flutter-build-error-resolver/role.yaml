@@ -1,4 +1,0 @@
-description: Diagnoses and fixes Flutter, Gradle, CocoaPods and code-generation build errors one error and one rebuild at a time, without speculative changes.
-capability: write-code
-model: high
-effort: medium

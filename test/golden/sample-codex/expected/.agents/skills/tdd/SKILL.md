@@ -14,8 +14,19 @@ Apply `test-driven-development` and `data-layer-tdd`. The test cases each unit t
 - Write data-layer logic test first: mappers, repositories, models, and state holders (blocs, cubits, notifiers).
 - Implement in this order: mapper, model, repository, state holder, then UI.
 - Start the UI only after the data-layer tests pass.
-- Skip UI and widget tests unless the user or the plan asks for them. The gap stays visible in the QA test matrix.
+- Skip UI and widget tests unless the user or the plan asks for them. The gap stays visible in the verification map.
 - Read every file in full before changing it.
+
+## Implementing
+
+The main session implements. Work the plan lists gets done; anything else does not.
+
+Before writing a line, read in order: the plan (standard and large), its Architecture and Design sections when present, and every file you will change, in full.
+
+- UI from the design spec, not from memory: the listed tokens and components, verbatim copy, no hardcoded server-driven text, identifiers from the plan, bounded image caches in lists, and every resource released.
+- Doc comments in the same edit as the code, per AGENTS.md.
+- A decision in the plan you cannot follow is raised to the user, never changed silently; the PR notes record it.
+- Wire analytics only after the user's decision at step 0.
 
 ## Cycle
 
@@ -106,3 +117,12 @@ test('save then find an order', () async {
   await db.close();
 });
 ```
+
+### Analytics calls
+
+Only after the user approved the event:
+
+- Buttons: `Analytics.instance.trackTap(...)`.
+- Custom and funnel events: `Analytics.instance.trackEvent(name, parameters: {...})`.
+- Screens are tracked by the navigator observer; call `Analytics.instance.trackScreen(...)` only for a screen the observer cannot see (a sheet, a tab).
+- A new event or property value adds the constant to `analytics_constants.dart`, adds or extends a test in the `analytics` package, and documents it in `docs/analytics.md`.

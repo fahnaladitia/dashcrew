@@ -16,7 +16,7 @@ Read the code first, then state the finding, its location and the fix. If the ca
 3. Derive the flow boundaries from the question, without asking for flags, and write them in chat as one line. Example: "after going back from the order detail page" gives `--from` = return from the detail page, `--to` = the status shown in the order list.
 4. Trace the reproduction path step by step: tap -> event -> state -> repository -> payload -> response -> mapper -> UI. Give `file:line` at every step and mark where the expected value turns into the wrong one.
 5. Run only the F checks that touch the hypothesis, usually F2 state, F3 navigation (the result of a pop, a `then` that does not wait) and F5 mapper. Do not run or write the rest.
-6. Use no roles, unless the trace crosses more than 10 files. Then run one `flutter-code-reviewer` with the step 4 trace as input.
+6. Use no subagents, unless the trace crosses more than 10 files. Then an `explorer` may map the path, and one `reviewer` checks the step 4 trace.
 
 Use the flow mode verdicts (`VALID`, `ALREADY FIXED`, `BACKEND`, `AS DESIGNED`, `NEEDS INFO`).
 Write the fix as a proposed diff; never apply it. The audit changes no tracker status.

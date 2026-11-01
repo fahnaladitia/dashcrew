@@ -1,7 +1,7 @@
 ---
 name: data-layer-tdd
 description: "Test cases and patterns for data-layer TDD in Flutter - mappers, repositories, models and state holders."
-when_to_use: "When writing or changing a mapper, repository, model or state holder, before the implementation."
+when_to_use: "Before writing or changing a mapper, repository, model, state holder or local store."
 ---
 
 # Data-layer TDD
@@ -92,3 +92,15 @@ Test the sequence of emitted states. Always cancel the subscription and close th
 - the Flutter framework
 - generated code (`*.g.dart`)
 - anything that passes whatever the implementation is
+
+## Local storage
+
+When the task touches a local store, a key, or how local data is read:
+
+- Find where stores are opened today and who owns each one; register a new store with its existing owner. Re-check the dependency declarations and store list, because they change.
+- Access stores from repositories or the persistence owner, never from UI components.
+- Keys are named constants with explicit defaults, and reads are defensive: a stored value may not have the type you expect.
+- Never rename a key already stored on user devices without a migration, and never delete or clear a store the task does not own.
+- When a store name is versioned, record who cleans up old versions, or put it in the PR notes.
+- Tokens, PINs and payment data never go into a plain store; they need encrypted or secure storage.
+- Tests open the store in a temporary directory and clear and close it in teardown; a store left open makes other tests flaky. Cover the default for an empty key, a write-read round trip, and a stored value of an unexpected type.

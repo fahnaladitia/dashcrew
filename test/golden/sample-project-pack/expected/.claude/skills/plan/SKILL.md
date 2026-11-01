@@ -6,36 +6,52 @@ argument-hint: "<task description or confirmed step 0 prompt>"
 
 # plan
 
-Runs the `flutter-planner` role. No implementation code is written until the plan is accepted (see Closing).
+The main session writes the plan for tier standard and large. No implementation code is written until the plan is accepted (see Closing).
 
 ## Skills
 
-- Apply `flutter-expert`, `flutter-development`, `spec-driven-development` and `source-driven-development`.
-- Ground every framework and package decision in the official Flutter, Dart or package documentation.
+- Apply the skills on the step 0 `Skills:` line; `flutter-expert`, `flutter-development`, `spec-driven-development` and `source-driven-development` when installed.
+- Ground every framework and package decision in the official Flutter, Dart or package documentation, and read the package source where a default matters.
 - Never guess an API, and never plan around a deprecated one.
 
 ## Restate
 
 - Restate the requirement in your own words.
-- Add no feature the prompt did not ask for.
+- Add no feature the step 0 block did not confirm.
 - List every ambiguity as an explicit assumption.
 
-## Files
+## Search first
 
-Save the plan to `.ai/plans/<plan-folder>/` as two files:
+- Search for the concept, the feature folder and the entities involved before proposing anything new.
+- When the answer needs a sweep across many files, ask the `explorer` for a `file:line` map instead of reading them all here.
 
-- `plan.md`: requirements, strategy, architecture, affected files, edge cases, leak analysis.
-- `code.md`: the concrete code changes to `lib/` per file, plus a test list (file, test name, setup, main assertion).
+## File
 
-- `code.md` never holds full test bodies; the implementing role writes them.
-- `flutter-planner` writes `plan.md` and `code.md` itself. The main session never retypes their content.
+Save the plan to `.ai/plans/<task-slug>/plan.md`, one file.
+
+- Tier large adds `code.md` next to it: signatures and the hunks that carry a decision, nothing else.
+- `code.md` never holds full test bodies; they are written test first during implementation.
 
 ## Required sections
 
-### Acceptance criteria and boundaries
+### Success criteria and boundaries
 
-- Write concrete, checkable acceptance criteria.
+- Copy the success criteria confirmed at step 0, with their ids. Add none and drop none without asking.
 - Write explicit boundaries in three lists: Always, Ask first, Never.
+
+### Verification map
+
+Map every criterion to the test that proves it (file and test name) or to its manual checklist item. A criterion with neither is a gap the plan must close.
+
+```
+AC-1  test/order_mapper_test.dart  maps missing discount to zero
+AC-2  manual                       order list after a cold start offline
+```
+
+### Skill sections
+
+- `feature-architecture` on the `Skills:` line adds an Architecture section; `design-fidelity` adds a Design section with the design spec.
+- Selected packs add their own sections below.
 
 ### File map
 
@@ -79,6 +95,7 @@ Focus on real breakage, not hypotheticals:
 - backend response shapes not confirmed by a contract or existing code
 - dependency registration order
 - local storage schema or migration changes
+- package defaults that change behavior (transitions, timeouts, dismissal), checked in the package source and cited with `file:line`
 
 ### Stages
 
@@ -104,22 +121,16 @@ Write "none" when there are none.
 - List edge cases (empty, error, partial data, repeated taps, back navigation).
 - List conflict risks with existing code and with other open work.
 
-## Branch
-
-For a new feat, fix or hotfix, end the plan with:
-
-- exactly 3 branch names, kebab-case, naming the area, with the prefix `feat/`, `fix/` or `hotfix/`
-- a question asking which base branch to fork from; never assume it (common bases: `main`)
-- the output of `git status` when the working tree is dirty
-
 ## Verdict
 
 Self-gate before closing. The verdict is NO-GO when any criterion below holds. Doubt counts as holding.
 
 - An open item has no owner, or an assumption would change the result if it were wrong.
 - The backend response shape is not confirmed by a contract or by existing code.
+- The change touches persisted-data schema or dependency registration order without a decision from the user.
 - A design or approach choice needs a user decision.
-- The scope grew beyond the prompt confirmed at step 0.
+- The scope grew beyond the step 0 block.
+- A step 0 decision the plan depends on is missing.
 
 Display the whole plan in chat as plain text, ending with:
 
@@ -130,19 +141,14 @@ Reason: <the criterion that failed, or "all criteria pass">
 
 ## Closing
 
-When step 0 set the tier to `trivial` or `small` and the verdict is GO, end with:
-
-```
-CONTINUE: tier <tier>, verdict GO. Implementation starts without confirmation.
-```
-
-In every other case (tier `standard` or `large`, or NO-GO on any tier), end with:
+End every plan with:
 
 ```
 AWAITING CONFIRMATION: proceed with this plan? (yes / change: ... / other approach: ...)
 ```
 
-Write no implementation code before an affirmative answer, except in the CONTINUE case above.
+- Write no implementation code before an affirmative answer.
+- Tier large: after the yes, run the `reviewer` on the plan. Fix its BLOCKER and HIGH findings in the plan before any code; a change in scope goes back to the user.
 
 ### Dependency injection
 

@@ -1,0 +1,19 @@
+# Synthetic profile: a project on no built-in platform, declared inline with platform: other.
+toolkit: 1
+platform: other
+platform_config:
+  detect: [scripts/test.sh]
+  commands:
+    analyze: ./scripts/lint.sh
+    test: ./scripts/test.sh --all
+    test_scoped: ./scripts/test.sh
+    deps: ./scripts/deps.sh
+    format: ./scripts/format.sh
+agents: [claude-code, codex, antigravity]
+stack:
+  tracker: { use: other, name: issue_cli }
+project:
+  base_branches: [main]
+  build_wrapper: scripts/build.sh
+policy:
+  formatter: true

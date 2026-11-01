@@ -1,6 +1,6 @@
 ---
 name: continuous-learning
-description: "Save reusable lessons from a session as one-fact memory files so the same correction never has to be given twice. Use when: At the end of a session, when `learn` runs, or right after the user corrects the same thing a second time."
+description: "Save reusable lessons from a session as one-fact memory files so the same correction never has to be given twice. Use when: When `learn` runs, or when the user corrects the same thing a second time."
 ---
 
 # Continuous learning

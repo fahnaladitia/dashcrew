@@ -1,2 +1,2 @@
-description: Where Dartdoc is required, where it is not, and the shape it takes.
-when_to_use: While writing or reviewing code that adds or changes a documented unit.
+description: Where doc comments are required, where they are not, and the shape they take.
+when_to_use: When writing or reviewing a documented unit.

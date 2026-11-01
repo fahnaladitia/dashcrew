@@ -1,6 +1,6 @@
 ---
 name: work-modes
-description: "Three working modes - dev (implement), research (understand before deciding) and review (report, never fix). Use when: When switching between implementing, investigating existing code, and reviewing without edits."
+description: "Three working modes - dev (implement), research (understand before deciding) and review (report, never fix). Use when: When switching between implementing, researching and reviewing without edits."
 ---
 
 # Work modes

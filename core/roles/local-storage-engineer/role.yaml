@@ -1,4 +1,0 @@
-description: Owns local persistence changes - stores, keys, defaults, open and close lifecycle, migrations - and their tests; called only when the task touches local persistence.
-capability: write-code
-model: high
-effort: medium

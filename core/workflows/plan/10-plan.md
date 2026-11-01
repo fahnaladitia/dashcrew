@@ -5,32 +5,35 @@ rules:
   - skill.plan-phase
   - plan.official-docs
   - plan.restate
-  - plan.save-two-files
+  - plan.one-file
+  - plan.code-md-large-only
   - plan.code-md-no-test-bodies
-  - plan.planner-writes-own-files
+  - plan.reuse-search-explorer
 ---
 # plan
 
-Runs the `flutter-planner` role. No implementation code is written until the plan is accepted (see Closing).
+The main session writes the plan for tier standard and large{{^policy.tier_gates}}, and for small{{/policy.tier_gates}}. No implementation code is written until the plan is accepted (see Closing).
 
 ## Skills
 
-- Apply `flutter-expert`, `flutter-development`, `spec-driven-development` and `source-driven-development`.
-- Ground every framework and package decision in the official Flutter, Dart or package documentation.
+- Apply the skills on the step 0 `Skills:` line; `spec-driven-development` and `source-driven-development` when installed.
+- Ground every framework and package decision in the official documentation of the language, framework or package, and read the package source where a default matters.
 - Never guess an API, and never plan around a deprecated one.
 
 ## Restate
 
 - Restate the requirement in your own words.
-- Add no feature the prompt did not ask for.
+- Add no feature the step 0 block did not confirm.
 - List every ambiguity as an explicit assumption.
 
-## Files
+## Search first
 
-Save the plan to `{{paths.plans}}/<plan-folder>/` as two files:
+- Search for the concept, the feature folder and the entities involved before proposing anything new.
+- When the answer needs a sweep across many files, ask the `explorer` for a `file:line` map instead of reading them all here.
 
-- `plan.md`: requirements, strategy, architecture, affected files, edge cases, leak analysis.
-- `code.md`: the concrete code changes to `lib/` per file, plus a test list (file, test name, setup, main assertion).
+## File
 
-- `code.md` never holds full test bodies; the implementing role writes them.
-- `flutter-planner` writes `plan.md` and `code.md` itself. The main session never retypes their content.
+Save the plan to `{{paths.plans}}/<task-slug>/plan.md`, one file.
+
+- Tier large adds `code.md` next to it: signatures and the hunks that carry a decision, nothing else.
+- `code.md` never holds full test bodies; they are written test first during implementation.

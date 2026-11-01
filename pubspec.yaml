@@ -1,7 +1,7 @@
 name: dashcrew
 description: >-
-  Agent-agnostic AI coding toolkit for Flutter projects. Renders rules, roles,
-  workflows and guards for Claude Code and Codex from one source.
+  Agent-agnostic AI coding toolkit with Flutter built in. Renders rules, skills,
+  workflows and guards for Claude Code, Codex and Antigravity from one source.
 version: 0.0.1
 repository: https://github.com/fahnaladitia/dashcrew
 issue_tracker: https://github.com/fahnaladitia/dashcrew/issues

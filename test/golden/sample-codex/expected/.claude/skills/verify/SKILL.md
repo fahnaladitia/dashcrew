@@ -57,8 +57,10 @@ flutter test test/<a>_test.dart test/<b>_test.dart --reporter expanded 2>&1 | ta
 - Report passed and failed counts, and name the scope.
 - A scoped run says nothing about the rest of the suite; never claim "all tests green".
 - When a file fails, rerun that file alone for the full output.
+- When a test fails, check once whether it also fails on the base, without touching this working tree: run that test file alone in a detached worktree of the base (`git worktree add --detach <scratch dir> <base>`, then `flutter pub get` there; remove it afterwards with `git worktree remove`). Failing there too, it is reported as pre-existing, not as a regression. Never stash, and never check out the base here.
 - Every mapper, repository, model and state holder the task touched must have a test. A missing test is FAIL, not a note.
 - When the change has no tests at all, trace it in chat instead: files and lines, the logic path before and after, and side effects.
+- Hand the user the manual checklist from step 0 in one message, and record each result for the PR Testing section.
 
 ## Phase 3: Secret scan
 
@@ -111,6 +113,7 @@ VERIFY: [PASS/FAIL]
 Scope:    [N files analyzed, M test files]
 Analyze:  [OK / N errors, M warnings]
 Tests:    [X/Y passed (scoped)]
+Manual:   [N items handed to the user / none]
 Secrets:  [OK / N findings]
 Arch:     [OK / N violations]
 QA ids:   [OK / N widgets without identifier / N/A]

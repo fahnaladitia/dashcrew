@@ -15,7 +15,8 @@ import '../sync/guard_install.dart';
 import '../sync/sync.dart';
 import '../version.dart';
 
-enum CheckStatus { ok, warn, fail, skip }
+/// [info] reports something worth knowing that needs no fix, such as files left from an older dashcrew.
+enum CheckStatus { ok, warn, fail, skip, info }
 
 /// Result of one doctor check; [detail] is a single line meant for the terminal.
 class DoctorCheck {
@@ -63,6 +64,9 @@ class Doctor {
   static int agentsMdLimitFor(Set<String> agents) => agents.contains('antigravity') ? 24000 : agentsMdLimit;
   static final _skillReference = RegExp(r'`([a-z0-9][a-z0-9-]*)` skill|skill `([a-z0-9][a-z0-9-]*)`');
 
+  /// One line of the AGENTS.md skill index: `- `x`: ...` or `- `x` (review): ...`.
+  static final _indexEntry = RegExp(r'^- `([a-z0-9][a-z0-9-]*)`(?: \(review\))?: ', multiLine: true);
+
   /// Every check, with the project packs in `.ai/packs/` overlaid on [catalog] when they parse.
   Future<List<DoctorCheck>> run() async {
     final Catalog overlaid;
@@ -94,7 +98,7 @@ class Doctor {
       lockCheck,
       _version(lock),
       _drift(lockedFiles),
-      _stale(lockedFiles, profileOk: profile.status == CheckStatus.ok),
+      _stale(lockedFiles, profileOk: profile.status != CheckStatus.fail),
       _guardPolicy(),
       if (machineChecks) await _guardBinary(lock),
       if (machineChecks && agents.contains('claude-code')) ...[
@@ -116,6 +120,7 @@ class Doctor {
       ],
       _agentsMdSize(agentsMdLimitFor(agents)),
       _gitignore(),
+      ?_handoffRosters(),
     ];
   }
 
@@ -127,6 +132,15 @@ class Doctor {
       return Profile.parse(_file('.ai/project.yaml').readAsStringSync(), knownOptions: catalog.knownOptions()).agents.toSet();
     } catch (_) {
       return {'claude-code'};
+    }
+  }
+
+  /// Platform of the profile; the default one when the profile cannot be read.
+  String _platform() {
+    try {
+      return Profile.parse(_file('.ai/project.yaml').readAsStringSync(), knownOptions: catalog.knownOptions()).platform;
+    } catch (_) {
+      return Profile.defaultPlatform;
     }
   }
 
@@ -157,9 +171,10 @@ class Doctor {
     } catch (error) {
       return DoctorCheck(id, CheckStatus.warn, '.agents/mcp_config.json invalid: $error');
     }
-    final missing = [for (final name in AntigravityAdapter.mcpServers.keys) if (!servers.containsKey(name)) name];
+    final expected = AntigravityAdapter(catalog, projectDir: projectDir, platform: _platform()).mcpServers.keys;
+    final missing = [for (final name in expected) if (!servers.containsKey(name)) name];
     if (missing.isNotEmpty) return DoctorCheck(id, CheckStatus.warn, 'missing: ${missing.join(', ')}; run dashcrew sync');
-    return DoctorCheck(id, CheckStatus.ok, 'defined: ${AntigravityAdapter.mcpServers.keys.join(', ')}');
+    return DoctorCheck(id, CheckStatus.ok, 'defined: ${expected.join(', ')}');
   }
 
   /// Antigravity may hang a subagent whose `tools` names an unknown tool.
@@ -203,8 +218,9 @@ class Doctor {
     const id = 'codex-mcp';
     final file = _file('.codex/config.toml');
     final toml = file.existsSync() ? file.readAsStringSync() : '';
+    final expected = CodexAdapter(catalog, projectDir: projectDir, platform: _platform()).mcpServers.keys;
     final missing = [
-      for (final name in CodexAdapter.mcpServers.keys)
+      for (final name in expected)
         if (!CodexAdapter.definesMcpServer(toml, name)) name,
     ];
     if (missing.isNotEmpty) {
@@ -212,7 +228,7 @@ class Doctor {
     }
     final byUser = !toml.contains('# dashcrew:begin');
     return DoctorCheck(id, CheckStatus.ok,
-        'defined: ${CodexAdapter.mcpServers.keys.join(', ')}${byUser ? ' (by the user, outside the dashcrew block)' : ''}');
+        'defined: ${expected.join(', ')}${byUser ? ' (by the user, outside the dashcrew block)' : ''}');
   }
 
   DoctorCheck _codexSkillsBudget() {
@@ -260,7 +276,8 @@ class Doctor {
     final file = _file('.ai/project.yaml');
     if (!file.existsSync()) return const DoctorCheck(id, CheckStatus.fail, '.ai/project.yaml missing; run dashcrew init');
     try {
-      Profile.parse(file.readAsStringSync(), knownOptions: catalog.knownOptions());
+      final warnings = Profile.parse(file.readAsStringSync(), knownOptions: catalog.knownOptions()).warnings;
+      if (warnings.isNotEmpty) return DoctorCheck(id, CheckStatus.warn, warnings.join('; '));
       return const DoctorCheck(id, CheckStatus.ok, '.ai/project.yaml valid');
     } catch (error) {
       return DoctorCheck(id, CheckStatus.fail, '.ai/project.yaml invalid: $error');
@@ -474,14 +491,15 @@ class Doctor {
     } catch (error) {
       return DoctorCheck(id, CheckStatus.warn, '.mcp.json invalid: $error');
     }
+    final expected = ClaudeCodeAdapter(catalog, projectDir: projectDir, platform: _platform()).mcpServers;
     final problems = [
-      for (final MapEntry(key: name, value: server) in ClaudeCodeAdapter.mcpServers.entries)
+      for (final MapEntry(key: name, value: server) in expected.entries)
         if (servers[name] == null)
           '$name missing'
         else if (jsonEncode(servers[name]) != jsonEncode(server))
           '$name defined differently',
     ];
-    if (problems.isEmpty) return DoctorCheck(id, CheckStatus.ok, 'defined: ${ClaudeCodeAdapter.mcpServers.keys.join(', ')}');
+    if (problems.isEmpty) return DoctorCheck(id, CheckStatus.ok, 'defined: ${expected.keys.join(', ')}');
     return DoctorCheck(id, CheckStatus.warn, problems.join(', '));
   }
 
@@ -493,15 +511,18 @@ class Doctor {
     for (final path in lockedFiles.keys.where((path) => path.endsWith('.md'))) {
       final file = _file(path);
       if (!file.existsSync()) continue;
-      for (final match in _skillReference.allMatches(file.readAsStringSync())) {
+      final text = file.readAsStringSync();
+      for (final match in _skillReference.allMatches(text)) {
         referenced.add(match.group(1) ?? match.group(2)!);
       }
+      if (path == 'AGENTS.md') referenced.addAll(_skillIndexNames(text));
     }
 
+    final platform = _platform();
     final dashcrewSkills = {
-      ...catalog.skills.keys,
-      ...catalog.workflows.keys,
-      for (final options in catalog.packs.values)
+      ...catalog.skillsFor(platform).keys,
+      ...catalog.workflowsFor(platform).keys,
+      for (final options in catalog.packsFor(platform).values)
         for (final pack in options.values) ...pack.skills.keys,
     };
     final userDir = userSkillsDir ?? defaultUserSkillsDir();
@@ -524,6 +545,15 @@ class Doctor {
     return DoctorCheck(id, CheckStatus.ok, '${referenced.length} referenced skills found');
   }
 
+  /// Skill names listed under the `### Skill index` heading of AGENTS.md; empty when there is none.
+  static Iterable<String> _skillIndexNames(String agentsMd) {
+    final start = agentsMd.indexOf('### Skill index\n');
+    if (start < 0) return const [];
+    final end = agentsMd.indexOf('\n#', start + 1);
+    final section = agentsMd.substring(start, end < 0 ? agentsMd.length : end);
+    return _indexEntry.allMatches(section).map((match) => match.group(1)!);
+  }
+
   DoctorCheck _agentsMdSize(int limit) {
     const id = 'agents-md-size';
     final file = _file('AGENTS.md');
@@ -533,6 +563,26 @@ class Doctor {
       return DoctorCheck(id, CheckStatus.warn, 'AGENTS.md is $size bytes, over $limit; some agents truncate it');
     }
     return DoctorCheck(id, CheckStatus.ok, 'AGENTS.md $size of $limit bytes');
+  }
+
+  /// Roster files the pre-P4 team flow wrote under the plans path; the team's files, so only reported.
+  DoctorCheck? _handoffRosters() {
+    String plans;
+    try {
+      plans = Profile.parse(_file('.ai/project.yaml').readAsStringSync(), knownOptions: catalog.knownOptions()).paths['plans'] as String;
+    } catch (_) {
+      plans = Profile.pathDefaults['plans'] as String;
+    }
+    final dir = Directory(p.join(projectDir, plans));
+    if (!dir.existsSync()) return null;
+    final rosters = [
+      for (final plan in dir.listSync().whereType<Directory>())
+        if (File(p.join(plan.path, 'handoff', '00-roster.md')).existsSync())
+          p.join(plans, p.basename(plan.path), 'handoff', '00-roster.md').replaceAll(r'\', '/'),
+    ]..sort();
+    if (rosters.isEmpty) return null;
+    return DoctorCheck('handoff-rosters', CheckStatus.info,
+        '${rosters.join(', ')} left from the pre-P4 team flow; nothing reads them now, delete them when done');
   }
 
   DoctorCheck _gitignore() {

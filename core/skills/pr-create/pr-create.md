@@ -2,12 +2,12 @@
 target: skill/pr-create
 rules: [pr.on-no-skip, pr.base-from-branch-creation, pr.commit-push-handover, pr.preflight.clean-tree, pr.preflight.has-commits, pr.preflight.upstream-same-name, pr.preflight.no-duplicate, pr.create-command, pr.draft-only-on-draft, pr.no-extra-metadata, pr.report-real-url, pr.return-to-base-suggestion, pr.return-to-base-not-run, pr.never-suggest-branch-delete, pr.merge-confirmation]
 ---
-# Opening a PR (step 8)
+# Opening a PR
 
 Opening a PR is an outward-facing action. Ask once: "Open a PR for `<branch>` into `<base>`? (yes / draft / no)". Act only on yes or draft.
 
 - On no: skip it, and say so in the summary.
-- `<base>` is the base chosen when the branch was created. Never guess it and never default to `main`; a role that does not know it asks.
+- `<base>` is the base chosen when the branch was created. Never guess it and never default to `main`; if you do not know it, ask.
 - Commit and push belong to the user. If either is missing, stop and hand over the exact command (first push: `git push -u origin <branch>`); never run it.
 
 ## Pre-flight: all must pass

@@ -1,2 +1,2 @@
 description: Write or update the single PR description file of the current branch from its real diff.
-when_to_use: At step 7 of every finished round of work on a branch, before asking about opening a PR.
+when_to_use: At the end of every round of work on a branch.

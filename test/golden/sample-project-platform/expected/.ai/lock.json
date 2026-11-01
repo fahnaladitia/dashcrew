@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "dashcrew_version": "0.0.1",
+  "files": {
+    ".ai/bin/guard": "f8a54fe67f5193066df5741eec04cab06b20f3be76282f5bb9d9091b748682eb",
+    ".ai/guard.json": "402ed0fcf76a6fbabf2dc4d8c0b2182d35b001880d0cc0a2b5abcf2781aa30eb",
+    ".claude/agents/explorer.md": "67ca188ed554a6a4b7def8e1c3d49addc5a908d1afd00254bd517a6c2d4fe9e9",
+    ".claude/agents/reviewer.md": "6083120a064a4fee042e27f00c6735a3fb6ae31a0e64e9f7659551b334c2a379",
+    ".claude/skills/acceptance-criteria/SKILL.md": "fb28738f06357c3fefed50e8d5c46d97c7512895371aadd36fead09ca2f63ac0",
+    ".claude/skills/audit/SKILL.md": "2df5ff4ba6c6461d6a98680243fc112dbdcd5863e2a0238fd7bf21442f2a30b7",
+    ".claude/skills/branching/SKILL.md": "8b93b9328ded4711840458464d3e1623b1848d180cefa5277239726b6763cf04",
+    ".claude/skills/build-fix/SKILL.md": "f14c36a03b0b47113a458122a622aa524a53013c2a91bf55f4b6b19581b32741",
+    ".claude/skills/code-review/SKILL.md": "4c551b884002a3f771fd3e3599adaf660007dfc471425cf934408f4ef455eb73",
+    ".claude/skills/continuous-learning/SKILL.md": "698f498fdff18b66f85f4cc314b49c7fdb43816a95851d0d6186e17df1d7da5f",
+    ".claude/skills/data-layer-tdd/SKILL.md": "09903afe1aefda596dd88d35bd7be68f57b1f1f306407722a46660fbbedf9dcf",
+    ".claude/skills/design-fidelity/SKILL.md": "2659d95907aab02c03d7cf5db59ef3cf9b89166e729748577d0d4cd314b8e350",
+    ".claude/skills/documentation/SKILL.md": "375d9c94406bae689b80203105822f6527587ed18ada97e8f70c2b8e947f33ac",
+    ".claude/skills/feature-architecture/SKILL.md": "fca9f44796945dcc3703a518cd10d2dde05c241ed1bc13ed40f7597d23114c21",
+    ".claude/skills/go-errors/SKILL.md": "c08020f19f99b6bf0af0b17a3078715327611ff8d83a7f8c772b833241075593",
+    ".claude/skills/guardrails/SKILL.md": "2a354bc4b4e91bd703a2733f9028bb8cea6f04e7138f50a6dbc87a59ff1e7892",
+    ".claude/skills/learn/SKILL.md": "f5d260c1d5735b9eb9c3c3a4ac7a713bae7b4da92659871de2dae23568e943ef",
+    ".claude/skills/plan/SKILL.md": "cb1a7879fe7443fb0b36dbc14e2b93a1a4c86bd665755ddf97cd2e672fd79ceb",
+    ".claude/skills/pr-create/SKILL.md": "e534b517a93d2650f5b8e1a543f801cbc0b96551e0c09898a620c021385961f2",
+    ".claude/skills/pr-description/SKILL.md": "3fa993f8cb3dc3a53f890f5195f85fcc94a361798160a60d4843775e8ac1794b",
+    ".claude/skills/prompt-polish/SKILL.md": "a15ce9881adfc5f6d1d5ed3214336beaab99c8baa4d3325d4c0e3483c9d6e2f7",
+    ".claude/skills/strategic-compact/SKILL.md": "a866040ed09e6f37bba02a199b46b91184ca6809f592fb63710b38f34209c9a3",
+    ".claude/skills/tdd/SKILL.md": "7cdbd55b8019650526479e0427dcb77120fde5bea6f1ee7f10c8d82fed40ebb0",
+    ".claude/skills/verification-loop/SKILL.md": "055cbb8370ce869e68e816562badd570bf3c8da6dd8adc3dfbe058c7bf760e21",
+    ".claude/skills/verify/SKILL.md": "f97c9478c2bfef74e35596bde96df5e04554452184ec81e6d1b26e1234c5bae8",
+    ".claude/skills/work-modes/SKILL.md": "42e7df44abe766f6727062a32c48428e095b5f0b186f47445793b8b2678420f7",
+    ".claude/skills/worktree/SKILL.md": "3608fcc81b0c8ca8d7cb387d976469bc8b56e9e3dc0ca1e4b97b51526d02c80b",
+    ".github/pull_request_template.md": "62399ed678218b8c8c1a474de439efe5e61053333d60b49bbfa5e3794daef52e",
+    "AGENTS.md": "1f87442402b487ea7a0983c1c59ca2af10a22dd751cfc9fcf8c3e623dbdc25b1",
+    "CLAUDE.md": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49"
+  },
+  "packs": {
+    "tracker/none": "builtin"
+  },
+  "mcp_servers": {
+    "claude-code": []
+  },
+  "guard_source": "6149580432f1cf558880d18a160c73d5791c04192aea630375117c8b8c5d112a"
+}

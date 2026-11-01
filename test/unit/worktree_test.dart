@@ -56,7 +56,7 @@ void main() {
 
   group('create', () {
     test('adds a worktree with no upstream, the base recorded and the toolkit linked', () {
-      worktrees.create('feat/orders', 'origin/develop', pubGet: false, out: output.add);
+      worktrees.create('feat/orders', 'origin/develop', installDeps: false, out: output.add);
       final path = worktreePath('feat-orders');
 
       expect(git(path, ['branch', '--show-current']), 'feat/orders');
@@ -69,7 +69,37 @@ void main() {
       expect(FileSystemEntity.isLinkSync(p.join(path, '.ai', 'project.yaml')), isFalse);
       expect(git(path, ['status', '--porcelain']), isEmpty);
       expect(output, contains('upstream: none'));
-      expect(output, contains('pub get: skipped'));
+      expect(output, contains('deps: skipped'));
+    });
+
+    test('runs the deps command of the profile platform when one of its detect files exists', () {
+      write(p.join(app, '.ai', 'project.yaml'), '''
+toolkit: 1
+agents: [claude-code]
+platform: other
+platform_config: { detect: [Makefile], commands: { analyze: make lint, test: make test, test_scoped: make one, deps: touch deps-ran, format: null } }
+''');
+      write(p.join(app, 'Makefile'), 'deps:\n');
+      commitAll(app, 'platform other');
+
+      Worktrees(projectDir: app, catalog: Catalog.load('.')).create('feat/a', 'main', out: output.add);
+
+      expect(output, contains('deps: ok (touch deps-ran)'));
+      expect(File(p.join(worktreePath('feat-a'), 'deps-ran')).existsSync(), isTrue);
+    });
+
+    test('deps is skipped without a detect file and reports a failing command with the rerun line', () {
+      Worktrees(projectDir: app, catalog: Catalog.load('.')).create('feat/a', 'main', out: output.add);
+      expect(output, contains('deps: skipped (no pubspec.yaml)'));
+
+      write(p.join(app, '.ai', 'project.yaml'), '''
+toolkit: 1
+agents: [claude-code]
+platform: other
+platform_config: { detect: [lib/a.dart], commands: { analyze: a, test: b, test_scoped: c, deps: exit 3 } }
+''');
+      Worktrees(projectDir: app, catalog: Catalog.load('.')).create('feat/b', 'main', out: output.add);
+      expect(output, contains('deps: failed (exit 3); rerun: cd ${worktreePath('feat-b')} && exit 3'));
     });
 
     test('links only what the main checkout ignores, so nothing it may commit gets hidden', () {
@@ -78,7 +108,7 @@ void main() {
       git(app, ['commit', '-q', '-m', 'untrack profile']);
       git(app, ['push', '-q', 'origin', 'main']);
 
-      worktrees.create('feat/a', 'origin/main', pubGet: false, out: output.add);
+      worktrees.create('feat/a', 'origin/main', installDeps: false, out: output.add);
       final path = worktreePath('feat-a');
 
       expect(FileSystemEntity.typeSync(p.join(path, '.mcp.json'), followLinks: false), FileSystemEntityType.notFound);
@@ -91,27 +121,27 @@ void main() {
     });
 
     test('refuses a missing base, an existing branch and an existing folder', () {
-      expect(() => worktrees.create('feat/a', 'origin/nope', pubGet: false, out: output.add),
+      expect(() => worktrees.create('feat/a', 'origin/nope', installDeps: false, out: output.add),
           throwsA(isA<WorktreeException>().having((e) => e.message, 'message', contains('origin/nope'))));
 
-      worktrees.create('feat/a', 'main', pubGet: false, out: output.add);
-      expect(() => worktrees.create('feat/a', 'main', pubGet: false, out: output.add),
+      worktrees.create('feat/a', 'main', installDeps: false, out: output.add);
+      expect(() => worktrees.create('feat/a', 'main', installDeps: false, out: output.add),
           throwsA(isA<WorktreeException>().having((e) => e.message, 'message', contains('already exists'))));
-      expect(() => worktrees.create('feat/b', 'main', name: 'feat-a', pubGet: false, out: output.add),
+      expect(() => worktrees.create('feat/b', 'main', name: 'feat-a', installDeps: false, out: output.add),
           throwsA(isA<WorktreeException>().having((e) => e.message, 'message', contains('already exists'))));
     });
 
     test('works from inside another worktree', () {
-      worktrees.create('feat/a', 'main', pubGet: false, out: output.add);
+      worktrees.create('feat/a', 'main', installDeps: false, out: output.add);
 
-      Worktrees(projectDir: worktreePath('feat-a')).create('feat/b', 'main', pubGet: false, out: output.add);
+      Worktrees(projectDir: worktreePath('feat-a')).create('feat/b', 'main', installDeps: false, out: output.add);
 
       expect(Directory(worktreePath('feat-b')).existsSync(), isTrue);
     });
   });
 
   test('link restores a missing link and drops an upstream', () {
-    worktrees.create('feat/a', 'main', pubGet: false, out: output.add);
+    worktrees.create('feat/a', 'main', installDeps: false, out: output.add);
     final path = worktreePath('feat-a');
     Link(p.join(path, 'AGENTS.md')).deleteSync();
     git(path, ['branch', '--set-upstream-to=origin/main']);
@@ -124,7 +154,7 @@ void main() {
   });
 
   test('list shows branch, base, upstream, dirty lines and missing links', () {
-    worktrees.create('feat/a', 'origin/develop', pubGet: false, out: output.add);
+    worktrees.create('feat/a', 'origin/develop', installDeps: false, out: output.add);
     write(p.join(worktreePath('feat-a'), 'lib', 'a.dart'), 'void a() { }\n');
     Link(p.join(worktreePath('feat-a'), 'CLAUDE.md')).deleteSync();
 
@@ -140,7 +170,7 @@ void main() {
 
   group('remove', () {
     test('refuses a dirty worktree', () {
-      worktrees.create('feat/a', 'main', pubGet: false, out: output.add);
+      worktrees.create('feat/a', 'main', installDeps: false, out: output.add);
       write(p.join(worktreePath('feat-a'), 'lib', 'new.dart'), '\n');
 
       expect(() => worktrees.remove('feat-a', out: output.add),
@@ -149,7 +179,7 @@ void main() {
     });
 
     test('removes a clean worktree, keeps the branch and the linked toolkit', () {
-      worktrees.create('feat/a', 'main', pubGet: false, out: output.add);
+      worktrees.create('feat/a', 'main', installDeps: false, out: output.add);
 
       worktrees.remove('feat-a', out: output.add);
 
@@ -172,7 +202,7 @@ void main() {
     });
 
     test('reports first commit and push once each', () {
-      worktrees.create('feat/a', 'origin/main', pubGet: false, out: output.add);
+      worktrees.create('feat/a', 'origin/main', installDeps: false, out: output.add);
       final path = worktreePath('feat-a');
       expect(watch().pass(const []), isEmpty);
 
@@ -188,7 +218,7 @@ void main() {
     });
 
     test('reports a moved base with the merge-tree result', () {
-      worktrees.create('feat/a', 'origin/main', pubGet: false, out: output.add);
+      worktrees.create('feat/a', 'origin/main', installDeps: false, out: output.add);
       final path = worktreePath('feat-a');
       write(p.join(path, 'lib', 'a.dart'), 'void a() { /* branch */ }\n');
       commitAll(path, 'branch change');
@@ -208,8 +238,8 @@ void main() {
     });
 
     test('reports growing file overlap between worktrees', () {
-      worktrees.create('feat/a', 'main', pubGet: false, out: output.add);
-      worktrees.create('feat/b', 'main', pubGet: false, out: output.add);
+      worktrees.create('feat/a', 'main', installDeps: false, out: output.add);
+      worktrees.create('feat/b', 'main', installDeps: false, out: output.add);
       write(p.join(worktreePath('feat-a'), 'lib', 'a.dart'), 'void a() { 1; }\n');
       expect(watch().pass(const []), isEmpty);
 
@@ -219,8 +249,8 @@ void main() {
     });
 
     test('reports PR changes and ends with done when every watched worktree is merged or removed', () {
-      worktrees.create('feat/a', 'main', pubGet: false, out: output.add);
-      worktrees.create('feat/b', 'main', pubGet: false, out: output.add);
+      worktrees.create('feat/a', 'main', installDeps: false, out: output.add);
+      worktrees.create('feat/b', 'main', installDeps: false, out: output.add);
       expect(watch().pass(const []), isEmpty);
 
       prs['feat/a'] = '#3 OPEN';
@@ -232,7 +262,7 @@ void main() {
     });
 
     test('run with once stops after one pass', () async {
-      worktrees.create('feat/a', 'main', pubGet: false, out: output.add);
+      worktrees.create('feat/a', 'main', installDeps: false, out: output.add);
       prs['feat/a'] = '#5 MERGED';
       final lines = <String>[];
 
@@ -242,8 +272,8 @@ void main() {
     });
 
     test('names limit the watch to those worktrees', () {
-      worktrees.create('feat/a', 'main', pubGet: false, out: output.add);
-      worktrees.create('feat/b', 'main', pubGet: false, out: output.add);
+      worktrees.create('feat/a', 'main', installDeps: false, out: output.add);
+      worktrees.create('feat/b', 'main', installDeps: false, out: output.add);
       prs['feat/b'] = '#4 OPEN';
 
       expect(watch().pass(const ['feat-a']), isEmpty);

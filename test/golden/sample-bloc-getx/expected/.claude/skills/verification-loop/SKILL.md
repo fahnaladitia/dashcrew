@@ -1,7 +1,7 @@
 ---
 name: verification-loop
 description: "Layered Flutter quality gate that produces evidence, not claims - analyze, scoped tests, secrets, architecture, QA identifiers and diff."
-when_to_use: "After a feature or large change, before a PR, after a refactor, and at `orchestrate` phase boundaries."
+when_to_use: "After a feature, a refactor or a rework round, and before a PR."
 ---
 
 # Verification loop
@@ -13,7 +13,7 @@ Show evidence, never a claim. "It should work" is not evidence.
 - after finishing a feature or a large change
 - before opening a PR
 - after a refactor
-- at phase boundaries in `orchestrate`
+- after a rework round
 
 ## How
 

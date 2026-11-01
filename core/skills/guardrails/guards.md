@@ -14,7 +14,7 @@ Guards back the Git and code rules in AGENTS.md mechanically. A block is the rul
 
 ## Post-edit check
 
-- After a Dart file is edited, a cheap pattern check prints warnings. It never blocks and never runs the analyzer.
+- After a source file is edited, a cheap pattern check may print warnings. It never blocks and never runs the analyzer.
 - Generated files are skipped, and output stops after 10 findings.
 
 ## Boundaries

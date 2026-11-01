@@ -1,4 +1,0 @@
-description: Maps acceptance criteria to tests, audits test identifiers and disposal in the diff, and writes widget or integration tests only when the plan asks; never edits application source.
-capability: write-code
-model: high
-effort: high

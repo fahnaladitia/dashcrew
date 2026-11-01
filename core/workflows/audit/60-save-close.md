@@ -7,7 +7,7 @@ rules:
 ---
 ## Save
 
-The main session writes the file. Read-only roles only return their report.
+The main session writes the file. Subagents only return their report.
 
 - code mode: `{{paths.audits}}/<path>/<YYYY-MM-DD>.md`, keeping `/` as folders
 - flow mode: `{{paths.audits}}/flow/<name>/<YYYY-MM-DD>.md`, with the Phase 1 map at the top; with `--task`: `{{paths.audits}}/flow/<name>/<YYYY-MM-DD>-<task id>.md`

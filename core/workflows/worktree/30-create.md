@@ -18,8 +18,8 @@ Before running it:
 - The branch name follows the branching rules. If the user's name breaks them, propose 3 compliant names and wait.
 - The current working tree does not need to be clean; the new worktree does not touch it.
 
-After it runs, report its output as is: path, branch and base, `upstream: none`, the `git status -sb` line, the links and the `pub get` result.
-If `pub get` failed, say so and give the command to rerun in the worktree. Never retry it silently.
+After it runs, report its output as is: path, branch and base, `upstream: none`, the `git status -sb` line, the links and the `deps` result.
+If `deps` failed, say so and give the command to rerun in the worktree. Never retry it silently.
 
 ## link
 

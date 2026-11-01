@@ -1,5 +1,0 @@
-description: Converts the design frames the user links into a checkable design spec mapped to existing tokens and components without redesigning; runs only when a design source is supplied and needs a design pack for tool specifics.
-capability: write-plans
-model: high
-effort: medium
-when: { stack.design.use: [figma] }

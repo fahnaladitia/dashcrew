@@ -1,0 +1,2 @@
+description: Layered Flutter quality gate that produces evidence, not claims - analyze, scoped tests, secrets, architecture, QA identifiers and diff.
+when_to_use: After a feature, a refactor or a rework round, and before a PR.

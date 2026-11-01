@@ -14,7 +14,7 @@ Show evidence, never a claim. "It should work" is not evidence.
 - after finishing a feature or a large change
 - before opening a PR
 - after a refactor
-- at phase boundaries in `orchestrate`
+- after a rework round
 
 ## How
 

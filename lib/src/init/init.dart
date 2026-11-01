@@ -11,7 +11,8 @@ typedef _Choice = ({String option, String? name, Map<String, Object?> params});
 
 _Choice _choiceOf(StackCandidate candidate) => (option: candidate.option, name: candidate.name, params: candidate.params);
 
-/// Writes `.ai/project.yaml` from what [detect] finds, confirmed per family unless `yes`.
+/// Writes `.ai/project.yaml` from what [detectPlatforms] and [detect] find, confirmed per question unless `yes`.
+/// A project that matches no platform is offered `platform: other`, never the default platform.
 /// Writes nothing else; `dashcrew sync` renders the toolkit afterwards.
 class Init {
   const Init({required this.catalog, required this.projectDir, this.agents = const ['claude-code']});
@@ -41,14 +42,26 @@ class Init {
     } on CatalogException catch (error) {
       throw InitException('Project pack: $error');
     }
-    final known = catalog.knownOptions();
-    final detection = detect(projectDir, remoteBranches: remoteBranches);
+    final matches = detectPlatforms(projectDir, catalog.platforms);
+    out('Detected in $projectDir:');
+    for (final name in matches) {
+      final files = catalog.platforms[name]!.detect.where((file) => File(p.join(projectDir, file)).existsSync());
+      out('  platform: $name (${files.join(', ')})');
+    }
+    if (matches.isEmpty) {
+      final expected = [for (final name in catalog.platforms.keys.toList()..sort()) '$name (${catalog.platforms[name]!.detect.join(', ')})'];
+      out('  platform: none of ${expected.join(', ')}');
+    }
+    final platform = yes ? _platformWithoutAsking(matches) : _askPlatform(catalog, matches, ask, out);
+    final platformConfig = platform == Profile.otherOption ? _askPlatformConfig(ask, out) : null;
+
+    final known = catalog.knownOptions()[platform]!;
+    final detection = detect(projectDir, remoteBranches: remoteBranches, platform: platform);
     final candidates = {
       for (final MapEntry(key: family, value: list) in detection.stack.entries)
         if (known.containsKey(family)) family: [for (final candidate in list) _fit(candidate, known[family]!)],
     };
 
-    out('Detected in $projectDir:');
     for (final family in candidates.keys.toList()..sort()) {
       out('  $family: ${candidates[family]!.map((c) => '${c.label} (${c.evidence.join(', ')})').join(' | ')}');
     }
@@ -71,12 +84,63 @@ class Init {
       if (choice != null) choices[family] = choice;
     }
 
-    final yaml = _profileYaml(choices, detection);
-    Profile.parse(yaml, knownOptions: known);
+    final yaml = _profileYaml(platform, platformConfig, choices, detection);
+    Profile.parse(yaml, knownOptions: catalog.knownOptions());
     file.parent.createSync(recursive: true);
     file.writeAsStringSync(yaml);
     out('wrote $profilePath');
     out('next: dashcrew sync');
+  }
+
+  String _platformWithoutAsking(List<String> matches) {
+    if (matches.length == 1) return matches.single;
+    if (matches.isEmpty) {
+      throw InitException('No platform detected. Rerun without --yes to declare platform: ${Profile.otherOption} and its commands.');
+    }
+    throw InitException('${matches.length} platforms detected: ${matches.join(', ')}. Rerun without --yes and pick one.');
+  }
+
+  /// One detected platform is proposed; none proposes `other`; several propose nothing and need an answer.
+  String _askPlatform(Catalog catalog, List<String> matches, String? Function(String prompt) ask, void Function(String line) out) {
+    final options = [...catalog.platforms.keys.toList()..sort(), Profile.otherOption];
+    final proposal = matches.isEmpty ? Profile.otherOption : (matches.length == 1 ? matches.single : null);
+    final shown = matches.isEmpty ? Profile.otherOption : matches.join(' | ');
+    while (true) {
+      final answer = ask('platform [$shown]: ')?.trim();
+      if (answer == null && proposal == null) throw InitException('Several platforms detected (${matches.join(', ')}); pick one.');
+      if (answer == null || answer.isEmpty) {
+        if (proposal != null) return proposal;
+      } else if (options.contains(answer)) {
+        return answer;
+      }
+      out('  expected one of ${options.join(', ')}');
+    }
+  }
+
+  /// `platform_config` for `other`: the detect files and each command, asked one by one.
+  Map<String, Object?> _askPlatformConfig(String? Function(String prompt) ask, void Function(String line) out) {
+    String? answer(String prompt, {required bool required}) {
+      while (true) {
+        final value = ask(prompt)?.trim();
+        if (value == null) {
+          if (!required) return null;
+          throw InitException('platform: ${Profile.otherOption} needs ${prompt.replaceAll(RegExp(r'[:\s]+$'), '')}; '
+              'rerun dashcrew init, or write platform_config in $profilePath by hand.');
+        }
+        if (value.isNotEmpty) return value;
+        if (!required) return null;
+        out('  required');
+      }
+    }
+
+    final detect = answer('detect (files that identify the platform, space separated): ', required: true)!;
+    return {
+      'detect': detect.split(RegExp(r'\s+')),
+      'commands': {
+        for (final key in Profile.platformCommands) key: answer('commands.$key: ', required: true),
+        for (final key in Profile.optionalPlatformCommands) key: answer('commands.$key (empty for none): ', required: false),
+      },
+    };
   }
 
   /// A detected option the catalog has no pack for becomes `other` with the package name.
@@ -113,11 +177,21 @@ class Init {
     }
   }
 
-  String _profileYaml(Map<String, _Choice> choices, Detection detection) {
+  String _profileYaml(String platform, Map<String, Object?>? platformConfig, Map<String, _Choice> choices, Detection detection) {
     final yaml = StringBuffer()
       ..writeln('# Written by dashcrew init. Edit it, then run dashcrew sync.')
       ..writeln('toolkit: 1')
-      ..writeln('agents: [${agents.map(_scalar).join(', ')}]');
+      ..writeln('platform: ${_scalar(platform)}');
+    if (platformConfig != null) {
+      yaml
+        ..writeln('platform_config:')
+        ..writeln('  detect: [${(platformConfig['detect'] as List<String>).map(_scalar).join(', ')}]')
+        ..writeln('  commands:');
+      (platformConfig['commands'] as Map<String, String?>).forEach((key, command) {
+        if (command != null) yaml.writeln('    $key: ${_scalar(command)}');
+      });
+    }
+    yaml.writeln('agents: [${agents.map(_scalar).join(', ')}]');
     if (choices.isNotEmpty) {
       yaml.writeln('stack:');
       for (final family in choices.keys.toList()..sort()) {

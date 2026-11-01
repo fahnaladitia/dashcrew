@@ -180,19 +180,33 @@ args = ["mcp-server"]
     test('one toml file per generated role, with effort and the role body', () {
       final files = render(fullStack);
 
-      final planner = files['.codex/agents/flutter-planner.toml']!;
-      expect(planner, startsWith('name = "flutter-planner"\ndescription = "'));
-      expect(planner, contains('\nmodel_reasoning_effort = "high"\n'));
-      expect(planner, contains('\ndeveloper_instructions = """\n'));
-      expect(planner, endsWith('"""\n'));
-      expect(files.keys, contains('.codex/agents/design-refiner.toml'));
+      final reviewer = files['.codex/agents/reviewer.toml']!;
+      expect(reviewer, startsWith('name = "reviewer"\ndescription = "'));
+      expect(reviewer, contains('\nmodel_reasoning_effort = "high"\n'));
+      expect(reviewer, contains('\ndeveloper_instructions = """\n'));
+      expect(reviewer, endsWith('"""\n'));
+      expect(files['.codex/agents/explorer.toml'], contains('\nmodel_reasoning_effort = "medium"\n'));
     });
 
     test('a role gated by an unselected pack is not generated', () {
-      final files = render('toolkit: 1\nagents: [codex]\n');
+      final gated = Catalog(
+        core: const [
+          Fragment(source: 'core/roles/gated/role.md', target: 'role/gated', order: 100, rules: [], when: {}, body: 'Gated.'),
+          Fragment(source: 'core/roles/open/role.md', target: 'role/open', order: 100, rules: [], when: {}, body: 'Open.'),
+        ],
+        packs: const {},
+        roles: const {
+          'gated': RoleMeta(name: 'gated', description: 'Gated.', capability: 'read', when: {'stack.design.use': ['figma']}),
+          'open': RoleMeta(name: 'open', description: 'Open.', capability: 'read'),
+        },
+      );
+      final profile = Profile.parse('toolkit: 1\nagents: [codex]\n', knownOptions: gated.knownOptions());
+      final renderer = Renderer(gated);
 
-      expect(files.keys, isNot(contains('.codex/agents/design-refiner.toml')));
-      expect(files.keys, contains('.codex/agents/flutter-engineer.toml'));
+      final files = CodexAdapter(gated, projectDir: project.path)
+          .files(profile, renderer.render(profile), renderer.contextFor(profile), lockedFiles: const {});
+
+      expect(files.keys.where((path) => path.startsWith('.codex/agents/')), ['.codex/agents/open.toml']);
     });
 
     test('backslashes and triple quotes in a body are escaped', () {

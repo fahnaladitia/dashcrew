@@ -10,10 +10,13 @@ import 'adapter.dart';
 /// the guard under its own key in `.agents/hooks.json` and MCP servers in `.agents/mcp_config.json`.
 /// Antigravity reads AGENTS.md itself; it cuts every rule file at 24,000 bytes.
 class AntigravityAdapter extends Adapter {
-  const AntigravityAdapter(this.catalog, {required this.projectDir});
+  const AntigravityAdapter(this.catalog, {required this.projectDir, this.platform = Profile.defaultPlatform});
 
   final Catalog catalog;
   final String projectDir;
+
+  /// The profile's platform; its `mcp_servers` go to `.agents/mcp_config.json`.
+  final String platform;
 
   @override
   String get agent => 'antigravity';
@@ -59,12 +62,10 @@ class AntigravityAdapter extends Adapter {
   };
 
   /// MCP servers dashcrew keeps in `.agents/mcp_config.json`.
-  static const mcpServers = <String, Map<String, Object?>>{
-    'dart-mcp-server': {
-      'command': 'dart',
-      'args': ['mcp-server'],
-    },
-  };
+  Map<String, Map<String, Object?>> get mcpServers => {
+        for (final MapEntry(key: name, value: server) in (catalog.platforms[platform]?.mcpServers ?? const {}).entries)
+          name: {'command': server.command, 'args': server.args},
+      };
 
   static const _readTools = ['view_file', 'list_dir', 'find_by_name', 'grep_search', 'run_command'];
 

@@ -10,7 +10,15 @@ final update = Platform.environment['DASHCREW_UPDATE_GOLDENS'] == '1';
 void main() {
   final catalog = Catalog.load('.');
 
-  for (final fixture in ['sample-bloc-getx', 'sample-project-pack', 'sample-riverpod-gorouter', 'sample-codex', 'sample-antigravity']) {
+  for (final fixture in [
+    'sample-bloc-getx',
+    'sample-project-pack',
+    'sample-riverpod-gorouter',
+    'sample-codex',
+    'sample-antigravity',
+    'sample-other',
+    'sample-project-platform',
+  ]) {
     group(fixture, () {
       final fixtureDir = p.join('test', 'golden', fixture);
       final expectedDir = p.join(fixtureDir, 'expected');
@@ -21,11 +29,13 @@ void main() {
       setUp(() {
         project = Directory.systemTemp.createTempSync('dashcrew_golden_');
         File(p.join(fixtureDir, 'project.yaml')).copySync(p.join((Directory(p.join(project.path, '.ai'))..createSync()).path, 'project.yaml'));
-        _tree(p.join(fixtureDir, 'packs')).forEach((path, content) {
-          File(p.join(project.path, '.ai', 'packs', path))
-            ..parent.createSync(recursive: true)
-            ..writeAsStringSync(content);
-        });
+        for (final folder in ['packs', 'platforms']) {
+          _tree(p.join(fixtureDir, folder)).forEach((path, content) {
+            File(p.join(project.path, '.ai', folder, path))
+              ..parent.createSync(recursive: true)
+              ..writeAsStringSync(content);
+          });
+        }
         sync().run();
       });
       tearDown(() => project.deleteSync(recursive: true));
@@ -33,7 +43,7 @@ void main() {
       test('sync output matches expected/', () {
         final actual = _tree(project.path)
           ..remove('.ai/project.yaml')
-          ..removeWhere((path, _) => path.startsWith('.ai/packs/'));
+          ..removeWhere((path, _) => path.startsWith('.ai/packs/') || path.startsWith('.ai/platforms/'));
         if (update) {
           final dir = Directory(expectedDir);
           if (dir.existsSync()) dir.deleteSync(recursive: true);

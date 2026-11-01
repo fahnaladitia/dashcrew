@@ -3,9 +3,13 @@ import 'package:test/test.dart';
 
 void main() {
   const knownOptions = {
-    'state': {'bloc', 'riverpod'},
-    'di': {'get_it', 'none'},
-    'analytics': {'posthog', 'none'},
+    'flutter': {
+      'state': {'bloc', 'riverpod'},
+      'di': {'get_it', 'none'},
+      'analytics': {'posthog', 'none'},
+    },
+    'go': {'tracker': {'none'}},
+    'other': {'tracker': {'none'}},
   };
 
   Profile parse(String yaml) => Profile.parse(yaml, knownOptions: knownOptions);
@@ -17,9 +21,18 @@ void main() {
     expect(profile.language['dartdoc'], 'en');
     expect(profile.policy['agent_commit'], false);
     expect(profile.policy['dartdoc_max_lines'], 3);
-    expect(profile.policy['plan_gate'], false);
+    expect(profile.policy.containsKey('plan_gate'), isFalse);
+    expect(profile.warnings, isEmpty);
     expect(profile.paths['plans'], '.ai/plans');
     expect(profile.stack, isEmpty);
+  });
+
+  test('policy.plan_gate is still accepted, ignored, and warned about', () {
+    final profile = parse('toolkit: 1\nagents: [claude-code]\npolicy: { plan_gate: true }\n');
+
+    expect(profile.policy.containsKey('plan_gate'), isFalse);
+    expect(profile.toContext()['policy'], isNot(contains('plan_gate')));
+    expect(profile.warnings, ['plan_gate was removed in P4; delete it from .ai/project.yaml']);
   });
 
   test('stack accepts shorthand and map form', () {
@@ -184,5 +197,86 @@ stack: { analytics: { use: posthog, facade: Analytics.instance } }
 
     expect((context['policy'] as Map)['formatter'], false);
     expect(((context['stack'] as Map)['analytics'] as Map)['use'], 'posthog');
+  });
+
+  group('platform', () {
+    const commands = 'commands: { analyze: make lint, test: make test, test_scoped: make test-one, deps: make deps }';
+
+    test('missing reads as flutter, with no platform_config', () {
+      final profile = parse('toolkit: 1\nagents: [claude-code]\nstack: { state: bloc }\n');
+
+      expect(profile.platform, 'flutter');
+      expect(profile.platformConfig, isNull);
+    });
+
+    test('a project platform validates the stack against its own families', () {
+      final profile = parse('toolkit: 1\nagents: [claude-code]\nplatform: go\nstack: { tracker: none }\n');
+
+      expect(profile.platform, 'go');
+      expect(
+        () => parse('toolkit: 1\nagents: [claude-code]\nplatform: go\nstack: { state: bloc }\n'),
+        throwsA(isA<ProfileException>().having((e) => e.path, 'path', 'stack.state')),
+      );
+    });
+
+    test('unknown platform fails and lists the known ones', () {
+      expect(
+        () => parse('toolkit: 1\nagents: [claude-code]\nplatform: rust\n'),
+        throwsA(isA<ProfileException>()
+            .having((e) => e.path, 'path', 'platform')
+            .having((e) => e.message, 'message', allOf(contains('flutter'), contains('go'), contains('other')))),
+      );
+    });
+
+    test('other reads detect and commands from platform_config; format is optional', () {
+      final profile = parse('''
+toolkit: 1
+agents: [claude-code]
+platform: other
+platform_config:
+  detect: [Makefile]
+  $commands
+''');
+
+      expect(profile.platform, 'other');
+      expect(profile.platformConfig, {
+        'detect': ['Makefile'],
+        'commands': {'analyze': 'make lint', 'test': 'make test', 'test_scoped': 'make test-one', 'deps': 'make deps', 'format': null},
+      });
+    });
+
+    test('other without platform_config fails', () {
+      expect(
+        () => parse('toolkit: 1\nagents: [claude-code]\nplatform: other\n'),
+        throwsA(isA<ProfileException>().having((e) => e.path, 'path', 'platform_config')),
+      );
+    });
+
+    test('platform_config without platform other fails', () {
+      expect(
+        () => parse('toolkit: 1\nagents: [claude-code]\nplatform_config: { detect: [Makefile], $commands }\n'),
+        throwsA(isA<ProfileException>()
+            .having((e) => e.path, 'path', 'platform_config')
+            .having((e) => e.message, 'message', contains('platform: other'))),
+      );
+    });
+
+    final broken = {
+      'detect: [], $commands': 'platform_config.detect',
+      'detect: Makefile, $commands': 'platform_config.detect',
+      'detect: [Makefile]': 'platform_config.commands',
+      'detect: [Makefile], commands: { analyze: make lint, test: make test, deps: make deps }': 'platform_config.commands.test_scoped',
+      "detect: [Makefile], commands: { analyze: '', test: a, test_scoped: b, deps: c }": 'platform_config.commands.analyze',
+      'detect: [Makefile], commands: { analyze: a, test: b, test_scoped: c, deps: d, lint: e }': 'platform_config.commands.lint',
+      'detect: [Makefile], $commands, link: x': 'platform_config.link',
+    };
+    broken.forEach((config, path) {
+      test('invalid platform_config fails with its path ($path)', () {
+        expect(
+          () => parse('toolkit: 1\nagents: [claude-code]\nplatform: other\nplatform_config: { $config }\n'),
+          throwsA(isA<ProfileException>().having((e) => e.path, 'path', path)),
+        );
+      });
+    });
   });
 }

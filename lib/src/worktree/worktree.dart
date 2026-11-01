@@ -3,6 +3,9 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:yaml/yaml.dart';
 
+import '../catalog/catalog.dart';
+import '../package_root.dart';
+import '../profile/profile.dart';
 import '../yaml_util.dart';
 
 /// A worktree command refused to run; [message] says why and what the user can do.
@@ -40,7 +43,12 @@ class WorktreeInfo {
 /// The only writing git commands are `worktree add --no-track -b`, `branch --unset-upstream`,
 /// `config branch.<b>.dashcrew-base` and `worktree remove`; nothing commits, pushes or deletes a branch.
 class Worktrees {
-  Worktrees({required String projectDir}) : gitDir = _commonGitDir(projectDir);
+  /// [catalog] resolves the platform's deps command; it defaults to the running dashcrew's, loaded on first use.
+  Worktrees({required String projectDir, Catalog? catalog})
+      : gitDir = _commonGitDir(projectDir),
+        _catalog = catalog;
+
+  final Catalog? _catalog;
 
   /// The repository's shared git directory, also when [Worktrees] is created from inside a task worktree.
   final String gitDir;
@@ -59,7 +67,8 @@ class Worktrees {
   }
 
   /// Creates `<branch>` from [base] in a new worktree; [base] must exist and is recorded without `origin/`.
-  WorktreeInfo create(String branch, String base, {String? name, bool pubGet = true, required void Function(String) out}) {
+  /// With [installDeps], runs the deps command of the main checkout's platform (`platform.commands.deps`).
+  WorktreeInfo create(String branch, String base, {String? name, bool installDeps = true, required void Function(String) out}) {
     final folder = name ?? branch.replaceAll('/', '-');
     final path = p.join(worktreesDir, folder);
     if (_git(mainDir, ['check-ref-format', '--branch', branch]).exitCode != 0) {
@@ -86,7 +95,7 @@ class Worktrees {
     out('upstream: none');
     out('status: ${(_git(path, ['status', '-sb']).stdout as String).split('\n').first}');
     out('links: ${linked.isEmpty ? 'none' : linked.join(', ')}');
-    out('pub get: ${pubGet ? _pubGet(path) : 'skipped'}');
+    out('deps: ${installDeps ? _installDeps(path) : 'skipped'}');
     return list().singleWhere((info) => info.path == path);
   }
 
@@ -206,13 +215,38 @@ class Worktrees {
       ..writeAsStringSync('$prefix${missing.join('\n')}\n');
   }
 
-  String _pubGet(String path) {
-    if (!File(p.join(path, 'pubspec.yaml')).existsSync()) return 'skipped (no pubspec.yaml)';
-    final fvm = File(p.join(path, '.fvmrc')).existsSync();
-    final command = fvm ? ['fvm', 'flutter', 'pub', 'get'] : ['flutter', 'pub', 'get'];
-    final result = Process.runSync(command.first, command.sublist(1), workingDirectory: path, runInShell: true);
-    if (result.exitCode == 0) return 'ok (${command.join(' ')})';
-    return 'failed (exit ${result.exitCode}); rerun: cd $path && ${command.join(' ')}';
+  /// Runs the deps command in [path] when one of the platform's detect files is there.
+  /// A Flutter command runs through `fvm` when the worktree has `.fvmrc`.
+  String _installDeps(String path) {
+    final PlatformSpec platform;
+    try {
+      platform = _platform();
+    } on Exception catch (error) {
+      return 'skipped (${p.join('.ai', 'project.yaml')}: $error)';
+    }
+    final command = platform.commands['deps'];
+    if (command == null) return 'skipped (platform ${platform.name} has no deps command)';
+    if (!platform.detect.any((file) => File(p.join(path, file)).existsSync())) {
+      return 'skipped (no ${platform.detect.join(' or ')})';
+    }
+    final fvm = command.startsWith('flutter ') && File(p.join(path, '.fvmrc')).existsSync();
+    final run = fvm ? 'fvm $command' : command;
+    final result = Platform.isWindows
+        ? Process.runSync('cmd', ['/c', run], workingDirectory: path)
+        : Process.runSync('/bin/sh', ['-c', run], workingDirectory: path);
+    if (result.exitCode == 0) return 'ok ($run)';
+    return 'failed (exit ${result.exitCode}); rerun: cd $path && $run';
+  }
+
+  /// The platform of the main checkout's profile; no profile reads as [Profile.defaultPlatform].
+  PlatformSpec _platform() {
+    final catalog = (_catalog ?? Catalog.load(dashcrewPackageRoot())).withProjectPacks(mainDir);
+    final file = File(p.join(mainDir, '.ai', 'project.yaml'));
+    if (!file.existsSync()) {
+      return catalog.platforms[Profile.defaultPlatform] ??
+          const PlatformSpec(name: Profile.defaultPlatform, detect: [], commands: {});
+    }
+    return catalog.platformFor(Profile.parse(file.readAsStringSync(), knownOptions: catalog.knownOptions()));
   }
 
   static ProcessResult _git(String dir, List<String> args) => Process.runSync('git', args, workingDirectory: dir);

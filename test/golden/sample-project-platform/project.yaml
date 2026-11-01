@@ -1,0 +1,8 @@
+# Synthetic profile: a project platform in .ai/platforms/go that adds one rule and one skill.
+toolkit: 1
+platform: go
+agents: [claude-code]
+stack:
+  tracker: none
+project:
+  base_branches: [main]

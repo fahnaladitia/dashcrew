@@ -1,5 +1,7 @@
 # GitHub-enforced gates and multi-repo tasks
 
+> Note (P4): the plan gate was dropped in P4 (`docs/plans/p4-skill-first-plan.md`, S5). The task owner confirms the plan in the session; there is no `dashcrew gate` command and no `plan-approval` check. The merge gate (`dashcrew check` as a required status check) and the multi-repo part below live on.
+
 ## Problem Statement
 How might a small team (four people, three Flutter apps, later one shared core repo), each using their own AI
 agent, get gates that cannot be skipped, one place to review, and rules that stay identical across repos, with

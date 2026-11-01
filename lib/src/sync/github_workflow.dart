@@ -10,7 +10,6 @@ on:
 
 permissions:
   contents: read
-  issues: read
   pull-requests: read
 
 jobs:
@@ -23,6 +22,4 @@ jobs:
           sdk: stable
       - run: dart pub global activate --source git https://github.com/fahnaladitia/dashcrew --git-ref $dashcrewRef
       - run: dart pub global run dashcrew check
-        env:
-          GITHUB_TOKEN: \${{ github.token }}
 ''';

@@ -1,2 +1,2 @@
 description: Create a task branch that never tracks its base, and keep upstreams correct.
-when_to_use: When creating a branch at step 1, or when a branch tracks the wrong upstream.
+when_to_use: When creating the branch, or when it tracks the wrong upstream.

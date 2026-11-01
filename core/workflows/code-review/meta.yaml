@@ -1,2 +1,2 @@
-description: Review the current change against architecture, lifecycle, security and project rules, stating each bug with its fix and ending in a verdict.
+description: Run the read-only reviewer on the current change against the project rules, the success criteria and the active review checklists, then fix by severity.
 argument_hint: "[base branch]"

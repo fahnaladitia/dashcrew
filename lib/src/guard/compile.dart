@@ -20,6 +20,5 @@ GuardPolicy compileGuardPolicy(Profile profile, Catalog catalog) {
     roleCapability: {for (final role in catalog.roles.values) role.name: role.capability},
     forbiddenImports: forbiddenImports,
     localPackages: [for (final package in profile.project['local_packages'] as List) package.toString()],
-    planGate: profile.policy['plan_gate'] == true,
   );
 }

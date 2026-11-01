@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "blocked_git": [
+    "cherry-pick",
+    "commit",
+    "merge",
+    "push",
+    "rebase",
+    "reset",
+    "revert",
+    "stash",
+    "tag"
+  ],
+  "block_formatters": true,
+  "plans_dir": ".ai/plans",
+  "role_capability": {
+    "explorer": "read",
+    "reviewer": "read"
+  },
+  "forbidden_imports": [],
+  "local_packages": []
+}

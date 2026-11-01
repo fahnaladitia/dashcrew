@@ -4,8 +4,10 @@ import 'package:test/test.dart';
 void main() {
   final catalog = Catalog.load('.');
 
-  GuardPolicy compile(String yaml) =>
-      compileGuardPolicy(Profile.parse(yaml, knownOptions: catalog.knownOptions()), catalog);
+  GuardPolicy compile(String yaml) {
+    final profile = Profile.parse(yaml, knownOptions: catalog.knownOptions());
+    return compileGuardPolicy(profile, catalog.resolvedFor(profile.platform));
+  }
 
   test('defaults block commit and formatters, plans under .ai/plans', () {
     final policy = compile('toolkit: 1\nagents: [claude-code]\n');
@@ -16,12 +18,10 @@ void main() {
     expect(policy.forbiddenImports, isEmpty);
   });
 
-  test('role capabilities come from role.yaml', () {
+  test('role capabilities come from role.yaml: the two subagents are read-only', () {
     final policy = compile('toolkit: 1\nagents: [claude-code]\n');
 
-    expect(policy.roleCapability['flutter-planner'], 'write-plans');
-    expect(policy.roleCapability['flutter-code-reviewer'], 'read');
-    expect(policy.roleCapability['flutter-engineer'], 'write-code');
+    expect(policy.roleCapability, {'explorer': 'read', 'reviewer': 'read'});
   });
 
   test('agent_commit and formatter policies relax only their own rules', () {

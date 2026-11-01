@@ -1,24 +1,26 @@
 ---
 name: code-review
-description: "Review the current change against architecture, lifecycle, security and project rules, stating each bug with its fix and ending in a verdict."
+description: "Run the read-only reviewer on the current change against the project rules, the success criteria and the active review checklists, then fix by severity."
 argument-hint: "[base branch]"
 ---
 
 # code-review
 
-Runs the `flutter-code-reviewer` role on the current change.
-Review the change against clean architecture, security and the project rules in AGENTS.md.
+The main session runs the `reviewer` subagent on the current change and acts on its verdict. The `reviewer` writes nothing.
 
-## Style
+## Inputs to the reviewer
 
-- Start reviewing right away; do not ask for clarification first.
-- State the bug, show the fix, stop.
-- Make no suggestion outside the scope of the review.
-- No compliments, before or after the findings.
+Pass paths and facts, never copied file content:
 
-## Steps
+- the base branch chosen when the branch was created; never guess it
+- the step 0 success criteria, and the plan path when there is one
+- the skills on the step 0 `Skills:` line that the skill index marks `review`
+- for a re-review: the rework diff only
 
-The change is the committed work on the branch plus the uncommitted working tree:
+## What the reviewer does
+
+- Starts reviewing right away, without asking for clarification.
+- Covers the committed work on the branch plus the uncommitted working tree:
 
 ```bash
 git diff --stat <base>...HEAD
@@ -28,14 +30,23 @@ git diff
 git status --porcelain
 ```
 
-- Read every changed file in full, not only the hunks. Context outside the hunk often decides whether the change is right.
-- Read untracked new files in full too.
+- Reads every changed file in full, not only the hunks, and untracked new files too. Context outside the hunk often decides whether the change is right.
+- Reviews against AGENTS.md, the priorities below, and the checklist of every active review skill.
+- Spec: for each criterion, met, partial or not met, with the `file:line` that proves it and the covering test, or its manual checklist item. A criterion with neither is HIGH.
+- Scope: files changed outside the plan or inside its "not doing" list; a branch that tracks its base (reported, never fixed); every `Not in design` item recorded for the PR notes; every open question raised to the user.
+- States the bug, shows the fix, stops. No suggestion outside the scope of the review, no compliments.
 
-When a code graph tool is connected, measure the impact radius before reading:
+When a code graph tool is connected, it measures the impact radius before reading:
 
 - list the changed functions with their risk score
 - find callers outside the diff that are affected, and read the risky ones
 - look up the tests covering each high-risk function; a risky function with no test is HIGH
+
+## After the verdict
+
+- Fix every BLOCKER and HIGH, then run the `reviewer` again on the rework diff only.
+- MEDIUM and LOW go to the PR notes; ask the user about them once, as one list.
+- A second BLOCK goes to the user as a decision, never into a third round.
 
 ## Priorities
 
@@ -55,6 +66,7 @@ Review in this order: correctness, lifecycle and async; architecture boundaries;
 - a new mapper, repository, model or state holder without a test
 - business logic in a widget instead of the state holder
 - a QA-relevant widget without its identifier, or an identifier built from a dynamic value (list index, hashCode, timestamp)
+- an identifier removed or renamed without proof that no automation suite uses it
 
 **MEDIUM**
 
@@ -104,15 +116,25 @@ Fix:
 ## Verdict
 
 ```
-REVIEW: <n> files
+REVIEW: <plan | n files>
 
 BLOCKER  n
 HIGH     n
 MEDIUM   n
+LOW      n
+
+Criteria
+  AC-1  met      <file:line>   <test file:line | manual item>
+  AC-2  partial  <what is missing>
 
 Verdict: [BLOCK / PASS WITH NOTES / PASS]
 ```
 
+- LOW is a finding that changes neither behavior nor risk (naming, a small duplication).
 - BLOCK when there is any BLOCKER or HIGH.
-- PASS WITH NOTES when there are only MEDIUM findings.
+- PASS WITH NOTES when there are only MEDIUM or LOW findings.
 - PASS otherwise.
+
+### Dio usage
+
+- Importing `package:dio` only to handle `DioException` is not a violation. Search for `Dio(`, `BaseOptions(` and `interceptors` outside `lib/data/client/`, not for the import.

@@ -44,11 +44,10 @@ project: { local_packages: [core] }
     expect(read('AGENTS.md'), contains('<!-- dashcrew:project:begin -->'));
     expect(read('CLAUDE.md').trim(), '@AGENTS.md');
 
-    final planner = read('.claude/agents/flutter-planner.md');
-    expect(planner, startsWith('---\nname: flutter-planner\n'));
-    expect(planner, contains('tools: Read, Write, Grep, Glob, Bash'));
-    expect(planner, contains('model: opus'));
-    expect(read('.claude/agents/flutter-code-reviewer.md'), contains('tools: Read, Grep, Glob, Bash\n'));
+    final reviewer = read('.claude/agents/reviewer.md');
+    expect(reviewer, startsWith('---\nname: reviewer\n'));
+    expect(reviewer, contains('tools: Read, Grep, Glob, Bash\nmodel: opus\neffort: high\n'));
+    expect(read('.claude/agents/explorer.md'), contains('tools: Read, Grep, Glob, Bash\nmodel: sonnet\neffort: medium\n'));
 
     expect(read('.claude/skills/plan/SKILL.md'), startsWith('---\nname: plan\ndescription: '));
     expect(read('.claude/skills/bloc-patterns/SKILL.md'), contains('name: bloc-patterns'));
@@ -122,6 +121,15 @@ project: { local_packages: [core] }
     });
   });
 
+  test('a profile that still sets policy.plan_gate syncs with a warning', () {
+    write('.ai/project.yaml', 'toolkit: 1\nagents: [claude-code]\npolicy: { plan_gate: true }\n');
+
+    final result = sync();
+
+    expect(result.warnings, contains('plan_gate was removed in P4; delete it from .ai/project.yaml'));
+    expect(read('.ai/guard.json'), isNot(contains('plan_gate')));
+  });
+
   test('a lock with the old mcp_servers list is read as claude code ownership', () {
     sync();
     final lock = jsonDecode(read('.ai/lock.json')) as Map<String, Object?>;
@@ -191,11 +199,11 @@ project: { local_packages: [core] }
     expect(result.warnings.join('\n'), contains('CLAUDE.md'));
   });
 
-  test('role gated by an unselected pack is not generated', () {
+  test('only the reviewer and explorer subagents are generated', () {
     sync();
 
-    expect(exists('.claude/agents/design-refiner.md'), isFalse);
-    expect(exists('.claude/agents/flutter-engineer.md'), isTrue);
+    final agents = Directory('${project.path}/.claude/agents').listSync().map((e) => e.path.split('/').last).toList()..sort();
+    expect(agents, ['explorer.md', 'reviewer.md']);
   });
 
   test('files no longer generated are removed', () {
@@ -207,6 +215,38 @@ project: { local_packages: [core] }
 
     expect(exists('.claude/skills/bloc-patterns/SKILL.md'), isFalse);
     expect(result.removed, contains('.claude/skills/bloc-patterns/SKILL.md'));
+    expect(result.notes, isEmpty);
+  });
+
+  group('P4 migration note', () {
+    void lockRoleFile(String path) {
+      const content = '---\nname: tech-lead\n---\n';
+      write(path, content);
+      final lock = jsonDecode(read('.ai/lock.json')) as Map<String, Object?>;
+      (lock['files'] as Map)[path] = Sync.fileHash(path, content);
+      write('.ai/lock.json', jsonEncode(lock));
+    }
+
+    test('a fresh sync prints no note', () {
+      expect(sync().notes, isEmpty);
+    });
+
+    test('a locked role file from before P4 prints the note once and is removed', () {
+      sync();
+      lockRoleFile('.codex/agents/tech-lead.toml');
+
+      final result = sync();
+
+      expect(result.notes, [Sync.p4MigrationNote]);
+      expect(result.removed, ['.codex/agents/tech-lead.toml']);
+      expect(sync().notes, isEmpty);
+    });
+
+    test('the note names what was removed and where the README explains it', () {
+      for (final part in ['roles', 'plan gate', 'orchestrate team', 'Migrating to P4']) {
+        expect(Sync.p4MigrationNote, contains(part));
+      }
+    });
   });
 
   test('codex alone writes its toolkit and nothing for claude code', () {
@@ -216,7 +256,7 @@ project: { local_packages: [core] }
 
     expect(exists('AGENTS.md'), isTrue);
     expect(exists('.agents/skills/plan/SKILL.md'), isTrue);
-    expect(exists('.codex/agents/flutter-planner.toml'), isTrue);
+    expect(exists('.codex/agents/reviewer.toml'), isTrue);
     expect(read('.codex/hooks.json'), contains('.ai/bin/guard'));
     expect(read('.codex/config.toml'), contains('[mcp_servers.dart-mcp-server]'));
     expect(exists('CLAUDE.md'), isFalse);
@@ -234,7 +274,7 @@ project: { local_packages: [core] }
     sync();
 
     expect(exists('.agents/skills/plan/SKILL.md'), isTrue);
-    expect(exists('.agents/agents/flutter-planner.md'), isTrue);
+    expect(exists('.agents/agents/reviewer.md'), isTrue);
     expect(read('.agents/hooks.json'), contains('dashcrew-guard'));
     expect(read('.agents/mcp_config.json'), contains('dart-mcp-server'));
     expect(exists('CLAUDE.md'), isFalse);
@@ -252,8 +292,8 @@ project: { local_packages: [core] }
     final result = sync();
 
     expect(result.written.where((path) => path == '.agents/skills/plan/SKILL.md'), hasLength(1));
-    expect(exists('.codex/agents/flutter-planner.toml'), isTrue);
-    expect(exists('.agents/agents/flutter-planner.md'), isTrue);
+    expect(exists('.codex/agents/explorer.toml'), isTrue);
+    expect(exists('.agents/agents/explorer.md'), isTrue);
     expect(sync().written, isEmpty);
   });
 
@@ -352,7 +392,7 @@ project: { local_packages: [core] }
 
     test('a generated file that is a link is reported, and --force never writes into its target', () {
       final source = outsideFile('planner.md', 'team planner\n');
-      link('.claude/agents/flutter-planner.md', source.path);
+      link('.claude/agents/reviewer.md', source.path);
 
       expect(() => sync(), throwsA(isA<SyncException>().having((e) => e.message, 'message', contains('link to ${source.path}'))));
       expect(source.readAsStringSync(), 'team planner\n');
@@ -360,8 +400,8 @@ project: { local_packages: [core] }
       sync(force: true);
 
       expect(source.readAsStringSync(), 'team planner\n');
-      expect(FileSystemEntity.isLinkSync('${project.path}/.claude/agents/flutter-planner.md'), isFalse);
-      expect(read('.claude/agents/flutter-planner.md'), contains('name: flutter-planner'));
+      expect(FileSystemEntity.isLinkSync('${project.path}/.claude/agents/reviewer.md'), isFalse);
+      expect(read('.claude/agents/reviewer.md'), contains('name: reviewer'));
     });
 
     test('a generated file inside a linked folder is reported, and --force leaves the folder target alone', () {
@@ -404,7 +444,8 @@ project: { local_packages: [core] }
       final runs = [for (final step in steps) (step as YamlMap)['run']].whereType<String>().toList();
       expect(runs, contains(contains('--git-ref 0123abc')));
       expect(runs.last, 'dart pub global run dashcrew check');
-      expect(read(path), contains(r'GITHUB_TOKEN: ${{ github.token }}'));
+      expect(read(path), isNot(contains('GITHUB_TOKEN')));
+      expect((workflow['permissions'] as YamlMap).keys, ['contents', 'pull-requests']);
       expect(((jsonDecode(read('.ai/lock.json')) as Map)['files'] as Map).keys, contains(path));
     });
 

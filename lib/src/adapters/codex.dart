@@ -10,10 +10,13 @@ import 'adapter.dart';
 /// the guard hook in `.codex/hooks.json` and MCP servers in a `.codex/config.toml` block.
 /// Codex reads AGENTS.md itself. Project `.codex/` files load only once the user trusts the project and its hooks.
 class CodexAdapter extends Adapter {
-  const CodexAdapter(this.catalog, {required this.projectDir});
+  const CodexAdapter(this.catalog, {required this.projectDir, this.platform = Profile.defaultPlatform});
 
   final Catalog catalog;
   final String projectDir;
+
+  /// The profile's platform; its `mcp_servers` go to `.codex/config.toml`.
+  final String platform;
 
   @override
   String get agent => 'codex';
@@ -31,9 +34,7 @@ class CodexAdapter extends Adapter {
   };
 
   /// MCP servers dashcrew keeps in its `.codex/config.toml` block.
-  static const mcpServers = <String, ({String command, List<String> args})>{
-    'dart-mcp-server': (command: 'dart', args: ['mcp-server']),
-  };
+  Map<String, McpServer> get mcpServers => catalog.platforms[platform]?.mcpServers ?? const {};
   static const _blockBegin = '# dashcrew:begin';
   static const _blockEnd = '# dashcrew:end';
 

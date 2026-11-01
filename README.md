@@ -1,10 +1,10 @@
 # dashcrew
 
-Agent-agnostic AI coding toolkit for Flutter projects.
+Agent-agnostic AI coding toolkit. Flutter is the built-in platform; any other stack works through `platform: other`.
 
-dashcrew keeps one neutral source of rules, roles, workflows and guards, and
+dashcrew keeps one neutral source of rules, skills, workflows and guards, and
 renders it for the AI coding agents your team uses: Claude Code, Codex and
-Antigravity. Your stack is chosen once, in `.ai/project.yaml`.
+Antigravity. Your platform and stack are chosen once, in `.ai/project.yaml`.
 
 > Status: pre-release, not on pub.dev yet. Claude Code output has been run
 > end to end. Codex and Antigravity output is generated and checked against
@@ -16,23 +16,25 @@ Not affiliated with or endorsed by Google, the Flutter team, Anthropic or OpenAI
 ## How it works
 
 ```
-core/ + packs/ (shipped)   --+
-.ai/packs/ (your project)  --+-->  dashcrew sync  -->  AGENTS.md         read by every agent
-.ai/project.yaml           --+                         per-agent files   skills, roles, hooks, MCP
-                                                       .ai/guard.json    one policy for every agent
-                                                       .ai/bin/guard     committed shim -> one guard per machine
-                                                       .ai/lock.json     hashes, versions, owned entries
+core/ + packs/ + platforms/ (shipped)  --+
+.ai/packs/, .ai/platforms/ (yours)     --+-->  dashcrew sync  -->  AGENTS.md         read by every agent
+.ai/project.yaml                       --+                         per-agent files   skills, subagents, hooks, MCP
+                                                                   .ai/guard.json    one policy for every agent
+                                                                   .ai/bin/guard     committed shim -> one guard per machine
+                                                                   .ai/lock.json     hashes, versions, owned entries
 ```
 
 - **Rules** go into one `AGENTS.md`. Your own rules live in its project block, which `sync` never rewrites.
-- **Workflows** (`plan`, `tdd`, `verify`, ...) and **skills** become each agent's skill format.
-- **Roles** (planner, engineer, reviewer, ...) become each agent's subagent format, with a capability: `read`, `write-plans` or `write-code`.
+- **One agent plans and builds.** The main session runs the chain: step 0, then `plan`, `tdd`, `code-review` and `verify` as the task's size tier needs. Skills, not personas, carry the expertise.
+- **Skills and workflows** (`plan`, `tdd`, `code-review`, `verify`, `learn`, `audit`, `worktree`, `build-fix`) become each agent's skill format. AGENTS.md carries a generated skill index; see [Choosing skills](#choosing-skills).
+- **Two subagents** remain, both read-only: `reviewer` (independent review of a large plan and of the diff) and `explorer` (maps many files to `file:line` for `plan` and `audit`).
+- **Platforms** hold everything that belongs to one stack: commands, lifecycle rules, doc comments, pack families. See [Platforms](#platforms).
 - **The guard** is one compiled binary per machine, shared by every project, that every agent's pre-tool hook reaches through the committed shim `.ai/bin/guard`. It reads the policy in `.ai/guard.json` and blocks the commands and writes listed in [Guard](#guard).
 - `doctor` checks the result against the lock without writing anything.
 
 ## Install
 
-Requires git and Dart 3.9 or later (Flutter 3.35 or later).
+Requires git and Dart 3.9 or later to run dashcrew itself, whatever the project's platform.
 
 ```bash
 dart pub global activate --source git https://github.com/fahnaladitia/dashcrew
@@ -42,20 +44,21 @@ Pin a commit with `--git-ref <sha>` so everyone on a team runs the same dashcrew
 
 ## Quick start
 
-In the Flutter project root:
+In the project root:
 
 ```bash
-dashcrew init      # reads pubspec.yaml, lib/main_<flavor>.dart and remote branches; writes .ai/project.yaml
+dashcrew init      # detects the platform, reads remote branches (flutter: also pubspec.yaml, lib/main_<flavor>.dart)
 dashcrew sync      # writes the toolkit and compiles the guard
 dashcrew doctor    # checks it; exit 1 on any failure
 ```
 
-`init` prints what it detected with the evidence, then asks about every stack family, proposing the detected option (`state [bloc]: ` after finding `flutter_bloc` in `pubspec.yaml`, `design [-]: ` when nothing was found). Enter keeps the proposal, `-` drops the family, and `other <package>` names a library dashcrew has no pack for. `--yes` writes what it detected without asking.
+`init` prints what it detected with the evidence, then asks for the platform: the one whose `detect` files it found, `other` when none matched, or your pick when several did. With `other` it asks for the detect files and each command. It then asks about every stack family of that platform, proposing the detected option: `state [bloc]: ` after finding `flutter_bloc` in `pubspec.yaml`, `design [-]: ` when nothing was found (only `flutter` detects options so far). Enter keeps the proposal, `-` drops the family, and `other <package>` names a library dashcrew has no pack for. `--yes` writes what it detected without asking, and stops when no platform or several matched.
 
 ## The profile: `.ai/project.yaml`
 
 ```yaml
 toolkit: 1                                # required
+platform: flutter                         # flutter (default), a project platform, or other
 agents: [claude-code, codex, antigravity] # required: every agent your team uses
 language: { dartdoc: en, pr: en, chat: en }
 stack:
@@ -75,13 +78,13 @@ policy:
   dartdoc_max_lines: 3
   tier_gates: true
   terse_prompts: false
-  plan_gate: false
 paths: { plans: .ai/plans, audits: .ai/audits, pr: .ai/pr, memory: .ai/memory }
 ci: { github: true, dashcrew_ref: <commit or tag> }
 ```
 
 | Key | Default | Effect |
 |---|---|---|
+| `platform` | `flutter` | `flutter`, a project platform in `.ai/platforms/<name>/`, or `other` with `platform_config`; see [Platforms](#platforms) |
 | `agents` | none, required | `claude-code`, `codex`, `antigravity`; files are written for each |
 | `language.dartdoc`, `.pr`, `.chat` | `en` | language of Dartdoc, PR descriptions and chat (ISO 639-1) |
 | `stack.<family>` | not set | an option name, or `{use: <option>, <param>: ...}`; see [Stack options](#stack-options) |
@@ -96,11 +99,31 @@ ci: { github: true, dashcrew_ref: <commit or tag> }
 | `policy.tier_gates` | `true` | trivial and small tasks with a GO plan continue without waiting |
 | `policy.terse_prompts` | `false` | agents answer short and blunt |
 | `paths.*` | `.ai/plans`, `.ai/audits`, `.ai/pr`, `.ai/memory` | where plans, audits, PR descriptions and project memory live |
-| `policy.plan_gate` | `false` | app code stays closed until the branch's plan issue is approved; see [Gates on GitHub](#gates-on-github) |
-| `ci.github` | `false` | write `.github/workflows/dashcrew.yml`, which runs `dashcrew check` on every pull request |
+| `ci.github` | `false` | write `.github/workflows/dashcrew.yml`, which runs `dashcrew check` on every pull request; see [Merge gate on GitHub](#merge-gate-on-github) |
 | `ci.dashcrew_ref` | none | dashcrew commit or tag that workflow installs; required with `ci.github` |
 
+## Platforms
+
+The profile's `platform` picks one. Every stack works at the first level; the others add depth.
+
+| Level | How | What the team gets |
+|---|---|---|
+| `platform: other` | declare it inline: `platform_config: { detect: [<file>], commands: { analyze, test, test_scoped, deps, format } }` (`format` optional) | all of core: the chain, skills, guard, `reviewer` and `explorer`, PR template and `dashcrew check`; core renders your commands, with no stack-specific rules |
+| Project platform | write `.ai/platforms/<name>/` in your repo, in the format of `platforms/` (`platform.yaml`, rules, skills, workflows, packs), and set `platform: <name>` | depth for that stack, your conventions, no dashcrew release needed |
+| Built-in | `platforms/<name>/` in this repo; today `flutter` | shared with every team |
+
+```yaml
+platform: other
+platform_config:
+  detect: [go.mod]
+  commands: { analyze: go vet ./..., test: go test ./..., test_scoped: go test, deps: go mod download, format: gofmt -w }
+```
+
+A project platform with a built-in name replaces it whole. The format is in [docs/catalog-format.md](docs/catalog-format.md#platforms).
+
 ## Stack options
+
+The `flutter` platform ships these families; `tracker` and `design` are shared by every platform.
 
 | Family | Options | Shipped with dashcrew |
 |---|---|---|
@@ -113,12 +136,32 @@ ci: { github: true, dashcrew_ref: <commit or tag> }
 | `analytics` | `posthog`, `firebase`, `mixpanel`, `none` | ask-before-tracking, facade-only imports |
 | `tracker` | `clickup`, `none` | task status flow |
 | `qa` | `semantics-identifier` | QA identifier rules |
-| `design` | `figma`, `none` | design-to-code role |
+| `design` | `figma`, `none` | design-to-code skill (`figma-design`) |
 
 Every family also takes `{use: other, name: <package>}` for a library without a pack.
-Pack params and their defaults are in `packs/<family>/<option>/pack.yaml`; set them in the map form (`state: {use: bloc, shared_dir: lib/shared/blocs/}`).
+Pack params and their defaults are in `pack.yaml` of each pack (`platforms/flutter/packs/<family>/<option>/` or `packs/<family>/<option>/`); set them in the map form (`state: {use: bloc, shared_dir: lib/shared/blocs/}`).
 
 **Project packs.** Put your own packs in `.ai/packs/<family>/<option>/`, in the same format. One with a shipped name replaces it; a new family (`architecture/clean`) becomes a valid `stack` key for that project. See [docs/catalog-format.md](docs/catalog-format.md).
+
+## Choosing skills
+
+Skills are picked once per task, at step 0, in one visible line. The agent prints this block before any work and you confirm or edit it once:
+
+```text
+TASK:             <feat | fix | hotfix>: <polished request>
+Tier:             trivial | small | standard | large   (<evidence>)
+Assumptions:      <each one, or none>
+Questions:        <all of them, once, or none>
+Skills:           <name> (<why>), <name> (<why>)
+Success criteria: <id> <criterion> -> unit | widget | integration | manual
+Branch:           1) <name>  2) <name>  3) <name>   base: <ask>
+```
+
+That is the flutter rendering; other platforms say `ui` where it says `widget`.
+
+- **The index.** AGENTS.md has a generated `### Skill index`: one line per installed skill with its `when_to_use`, sorted by name. The agent writes the `Skills:` line from it. Nobody keeps that table by hand: a skill in a pack or project platform appears once it renders, and `doctor` checks that every indexed skill is installed.
+- **Review checklists.** A skill whose `meta.yaml` sets `review: true` is marked `(review)` in the index. When it is in the `Skills:` line, the `reviewer` applies its checklist to the diff. Shipped ones: `design-fidelity`, plus `mobile-security` and `qa-identifiers` (with `qa: semantics-identifier`) on flutter.
+- **Your own.** Add a skill to a project pack (`skills/<name>.yaml` plus a `target: skill/<name>` fragment) or a project platform (`skills/<name>/meta.yaml`), with a `when_to_use` that says when to pick it.
 
 ## Commands
 
@@ -126,7 +169,7 @@ Pack params and their defaults are in `packs/<family>/<option>/pack.yaml`; set t
 
 | Flag | Default | |
 |---|---|---|
-| `-p, --project` | `.` | Flutter project root holding `pubspec.yaml` |
+| `-p, --project` | `.` | project root |
 | `-y, --yes` | off | write the detected profile without asking |
 | `--agents` | `claude-code` | agents to list in the profile (repeatable) |
 | `--force` | off | replace an existing `.ai/project.yaml` |
@@ -164,18 +207,9 @@ Compiles the guard once into `${DASHCREW_HOME:-~/.dashcrew}/guard/<hash>/guard` 
 | Claude Code | `hook`, `claude-md`, `mcp`, `skills` |
 | Codex | `codex-hook`, `codex-mcp`, `codex-skills-budget`, `codex-trust` |
 | Antigravity | `antigravity-hook`, `antigravity-mcp`, `antigravity-roles` |
-| Project | `agents-md-size`, `gitignore` (warns while `.ai/bin/` is ignored) |
+| Project | `agents-md-size`, `gitignore` (warns while `.ai/bin/` is ignored), `handoff-rosters` (only when found) |
 
-Agent checks run only for the agents in the profile.
-
-### `dashcrew gate`
-
-| Subcommand | |
-|---|---|
-| `submit plan --file <plan.md> [--issue <n>]` | posts the plan to the branch's GitHub issue (the given one, the linked one, or a new `Plan: <branch>` issue), links it to the branch and records the gate as pending |
-| `status` | reads the issue and records whether the latest plan is approved; prints `plan: approved`, `pending` or `no issue linked` |
-
-Both use `gh`. There is no approve command: approval is a comment on GitHub.
+Agent checks run only for the agents in the profile. Each line starts with `ok`, `warn`, `fail`, `skip` or `info`; only `fail` sets exit 1. `info` reports something that needs no fix, such as `handoff-rosters`: `<plans>/*/handoff/00-roster.md` files left by the pre-P4 team flow.
 
 ### `dashcrew check`
 
@@ -184,7 +218,7 @@ Both use `gh`. There is no approve command: approval is a comment on GitHub.
 | `-p, --project` | `.` | project root |
 | `--pr-body <file>` | none | the PR description to check; in a pull request workflow the event supplies it |
 
-Read-only; exit 1 on any failure, with `::error` annotations in GitHub Actions. It runs the toolkit checks of `doctor` that need no agent or guard binary, then `pr-sections` (every heading of `.github/pull_request_template.md` in the PR body) and `plan-approval` (a `Plan: #<n>` line whose issue is approved; required only with `policy.plan_gate`).
+Read-only; exit 1 on any failure, with `::error` annotations in GitHub Actions. It runs the toolkit checks of `doctor` that need no agent or guard binary, then `pr-sections` (every heading of `.github/pull_request_template.md` in the PR body).
 
 ### `dashcrew worktree`
 
@@ -192,7 +226,7 @@ One worktree per parallel task, at `<repo>.worktrees/<name>`. It never commits, 
 
 | Subcommand | |
 |---|---|
-| `create <branch> <base> [--name <dir>] [--no-pub]` | new branch with no upstream; links the git-ignored toolkit files from the main checkout; records the base; runs `flutter pub get` (`fvm` when `.fvmrc` exists) |
+| `create <branch> <base> [--name <dir>] [--no-pub]` | new branch with no upstream; links the git-ignored toolkit files from the main checkout; records the base; runs the platform's `deps` command when one of its `detect` files is there (`flutter pub get`, through `fvm` when `.fvmrc` exists) |
 | `list` | branch, base, upstream, dirty lines, missing links |
 | `link <name>` | restores missing links and drops an upstream the branch should not have |
 | `remove <name>` | removes a clean worktree; the branch stays |
@@ -206,9 +240,9 @@ Every subcommand takes `-p, --project`, any folder inside the repository.
 |---|---|---|---|
 | Rules | `AGENTS.md`, `CLAUDE.md` (`@AGENTS.md`) | `AGENTS.md` | `AGENTS.md` |
 | Skills and workflows | `.claude/skills/<name>/SKILL.md` | `.agents/skills/<name>/SKILL.md` | `.agents/skills/<name>/SKILL.md` (shared with Codex) |
-| Roles | `.claude/agents/<role>.md` | `.codex/agents/<role>.toml` | `.agents/agents/<role>.md` |
+| Subagents (`reviewer`, `explorer`) | `.claude/agents/<name>.md` | `.codex/agents/<name>.toml` | `.agents/agents/<name>.md` |
 | Guard hook | `.claude/settings.json` | `.codex/hooks.json` | `.agents/hooks.json`, key `dashcrew-guard` |
-| MCP (`dart-mcp-server`) | `.mcp.json` | `.codex/config.toml`, between `# dashcrew:begin` and `# dashcrew:end` | `.agents/mcp_config.json` |
+| MCP (the platform's `mcp_servers`; `dart-mcp-server` for flutter) | `.mcp.json` | `.codex/config.toml`, between `# dashcrew:begin` and `# dashcrew:end` | `.agents/mcp_config.json` |
 
 Settings, hooks and MCP files are merged: your own entries stay, and an MCP server you defined differently is left alone with a warning. Every agent also gets `.ai/guard.json`, `.ai/lock.json`, the guard shim `.ai/bin/guard` and `.github/pull_request_template.md`; with `ci.github`, also `.github/workflows/dashcrew.yml`. A template or workflow your team wrote under those names is left alone with a warning.
 
@@ -218,45 +252,35 @@ Each agent's pre-tool hook sends the tool call to `.ai/bin/guard`, which blocks:
 
 - `git commit` (unless `policy.agent_commit`), `push`, `stash`, `reset`, `rebase`, `cherry-pick`, `revert`, `merge`, `tag`, including behind `sudo`, `env`, `rtk`, `fvm`, variable assignments, git global options (`-C`, `-c`), `&&` chains, `$( )`, and heredocs fed to a shell;
 - `dart format`, `dart fix`, `flutter format` (unless `policy.formatter`);
-- writes by a `read` role, and writes outside `paths.plans` by a `write-plans` role;
+- writes by a `read` subagent (`reviewer` and `explorer` are both `read`);
 - importing the analytics vendor package in the app's `lib/` (the selected analytics pack's `vendor_import`), outside local packages;
-- with `policy.plan_gate`, writes under the app's `lib/` or `test/` while the branch's plan issue is pending;
-- a `gh` command whose arguments contain `/approve`: approvals are the user's.
+- a `gh` command whose arguments contain `/approve`: approvals are the user's, on whatever approval flow a team keeps on GitHub.
 
 Claude Code and Codex get exit code 2 with the reason on stderr; Antigravity gets `{"decision": "deny", "reason": ...}` on stdout. The guard fails open: a missing or broken guard never stops work, and `doctor` reports it.
 
 **Where it runs.** `.ai/bin/guard` is a short `sh` script that `sync` writes and you commit. It runs `${DASHCREW_HOME:-~/.dashcrew}/guard/<hash>/guard`, compiled once per machine for the guard source in the lock and shared by every project. When that binary is missing and `dashcrew` is on `PATH`, the shim installs it first (about 2 s, once per machine and guard version); otherwise it prints `not installed on this machine: run dashcrew sync` and lets the call through. A teammate whose dashcrew builds a different guard gets an error instead of a wrong guard. The shim adds about 3 ms per tool call (about 15 ms in total on the maintainer's machine). The shim needs a POSIX shell, so Windows is not supported yet.
 
-## Gates on GitHub
+## Merge gate on GitHub
 
-Two human gates, enforced instead of only described. GitHub is the only infrastructure.
-
-**Plan gate** (opt-in, `policy.plan_gate: true`):
-
-1. When the plan waits for the user, the agent runs `dashcrew gate submit plan --file <plan.md>`. The plan lands on the branch's GitHub issue and the agent stops.
-2. You read it there and comment `/approve plan` (first line), from the browser or the GitHub mobile app. Only an owner, member or collaborator of the repository counts, and only after the latest plan comment, so a revised plan needs a new approval.
-3. The agent runs `dashcrew gate status`. Until it prints `plan: approved`, the guard refuses writes under `lib/` and `test/` on that branch. A branch with no plan issue is not blocked, so small fixes keep their fast path.
-
-**Merge gate:**
+The plan is confirmed in the session by the task owner; the team reviews in the pull request, where this gate holds. GitHub is the only infrastructure.
 
 1. Set `ci: { github: true, dashcrew_ref: <commit or tag> }` and run `dashcrew sync`. Commit `.github/workflows/dashcrew.yml`.
 2. In the repository settings, add a branch protection rule (or ruleset) for your base branches that requires the status check `check` from the `dashcrew check` workflow.
-3. Every pull request then needs: a current toolkit, every heading of the PR template, and, when its body says `Plan: #<n>`, an approved plan issue. Failures show as annotations on the PR.
-4. With `policy.plan_gate`, the PR template and the agent's PR description end with `Plan: #<n>` and `Closes #<n>`. The second line makes GitHub close the plan issue when the PR merges into the default branch; a PR into another base leaves it open, to close by hand.
+3. Every pull request then needs a current toolkit and every heading of the PR template. Failures show as annotations on the PR.
 
-The guard keeps the agent from posting approvals, but on GitHub an agent and its user share one token: this prevents mistakes, not deliberate misuse.
+The workflow reads the PR body from the pull request event and needs no token beyond read access to the repository.
 
 ## Using dashcrew in a team
 
 Teammates may use different agents in the same repository. They share one
-AGENTS.md, one set of skills and roles, and one guard policy; each agent gets
+AGENTS.md, one set of skills and subagents, and one guard policy; each agent gets
 them in the format it reads.
 
 ### Set up once
 
 1. List every agent the team uses: `agents: [claude-code, codex, antigravity]`.
 2. Run `dashcrew sync` and commit everything it wrote:
-   `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.codex/`, `.agents/`, `.mcp.json`, and `.ai/` (`project.yaml`, `lock.json`, `guard.json`, `bin/guard`, `packs/`).
+   `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.codex/`, `.agents/`, `.mcp.json`, and `.ai/` (`project.yaml`, `lock.json`, `guard.json`, `bin/guard`, `packs/`, `platforms/`).
    Teammates then get the toolkit on pull, and `dashcrew doctor` compares their checkout with the committed lock.
 
 ### Each teammate
@@ -269,8 +293,8 @@ them in the format it reads.
 
 ### Day to day
 
-- Change rules through `.ai/project.yaml`, `.ai/packs/` or the project block in AGENTS.md (between `dashcrew:project:begin` and `dashcrew:project:end`), never by editing generated files. `doctor` reports generated files edited by hand.
-- After a merge that touched `.ai/project.yaml` or `.ai/packs/`: resolve conflicts in those files only, run `dashcrew sync`, and commit the regenerated files.
+- Change rules through `.ai/project.yaml`, `.ai/packs/`, `.ai/platforms/` or the project block in AGENTS.md (between `dashcrew:project:begin` and `dashcrew:project:end`), never by editing generated files. `doctor` reports generated files edited by hand.
+- After a merge that touched `.ai/project.yaml`, `.ai/packs/` or `.ai/platforms/`: resolve conflicts in those files only, run `dashcrew sync`, and commit the regenerated files.
 - `sync` refuses a lock written by a newer dashcrew; update dashcrew instead of forcing it.
   Until dashcrew has numbered releases, every commit reports the same version, so the version check cannot tell two commits apart: pin the same ref.
 
@@ -278,10 +302,9 @@ them in the format it reads.
 
 | | Claude Code | Codex | Antigravity |
 |---|---|---|---|
-| Rules (AGENTS.md), skills, roles | yes | yes | yes |
+| Rules (AGENTS.md), skills, subagents | yes | yes | yes |
 | Guard: no push, commit, history rewrite, formatter or vendor import | yes | yes, once trusted | yes, by its documented hook format |
-| Read-only roles cannot write | guard | guard | the role's `tools` allowlist |
-| Plans-only roles write only under the plans folder | guard | guard | instruction only |
+| `reviewer` and `explorer` cannot write | guard | guard | the subagent's `tools` allowlist |
 | AGENTS.md cut at | no documented cut | 32 KiB | 24,000 bytes |
 
 dashcrew keeps AGENTS.md under the smallest cut of the selected agents, and `doctor` warns above it.
@@ -295,12 +318,21 @@ dashcrew keeps AGENTS.md under the smallest cut of the selected agents, and `doc
 | `.ai/lock.json was written by dashcrew X` | install that dashcrew (or the team's pinned ref) |
 | `guard-binary`: `not installed on this machine` | `dashcrew sync`, or `dashcrew guard install` |
 | `guard install`: `This project expects guard X` | install the dashcrew ref the team uses, then `dashcrew sync` |
-| guard: `The plan for <branch> is not approved yet` | comment `/approve plan` on the issue, then `dashcrew gate status` |
+| `plan_gate was removed in P4` | delete `policy.plan_gate` from `.ai/project.yaml`; see [Migrating to P4](#migrating-to-p4) |
 | `check`: `pr-sections` `missing: ## ...` | add the heading to the PR description; write "None" under it when it does not apply |
-| `check`: `plan #<n> is not approved` | the latest plan on the issue has no `/approve plan` from a collaborator after it |
 | `gitignore`: `.ai/bin/ is in .gitignore` | remove that line so the shim is committed |
 | `codex-trust`: `project not trusted` | trust the project when Codex asks, then approve the hook in `/hooks` |
 | `skill <name> skipped` | a project pack replaced the pack that defined it; add `skills/<name>.yaml` to your pack |
+
+## Migrating to P4
+
+P4 makes dashcrew skill-first. A project synced by an earlier dashcrew migrates on its next `dashcrew sync`; there is no legacy option.
+
+- **Roles removed.** Every old role subagent is deleted for every agent: the eleven each project had (planner, engineer, tech-lead, `worktree-monitor` and the others), plus `design-refiner` and `local-storage-engineer`, which the design and storage packs added. `reviewer` and `explorer` remain. What the roles checked now lives in skills (`acceptance-criteria`, `feature-architecture`, `figma-design`, `hive-storage`, `qa-identifiers`) and in the workflows.
+- **`orchestrate` and `checkpoint` removed.** `orchestrate team` is now the default chain: step 0 with a `Skills:` line, then the tier's steps. `verify` checks a failing test once against the base instead of a checkpoint.
+- **Plan gate removed.** No `dashcrew gate` command, no `plan-approval` check, no plan-gate guard rule; `.ai/guard.json` loses `plan_gate`. Delete `policy.plan_gate` from `.ai/project.yaml`: it is ignored with a warning for one release, then rejected as an unknown key. The merge gate (`dashcrew check`) stays.
+- **What `sync` does.** It deletes every generated file it no longer writes, prints `note: Migrated to P4: ...` once, and rewrites AGENTS.md around your project block. Files the team wrote are never touched: plans and handoffs under `paths.plans`, project memory under `paths.memory`, and the AGENTS.md project block.
+- **After it.** Commit the result. `doctor` lists leftover `<plans>/*/handoff/00-roster.md` files as `info`; nothing reads them, so delete them when the plans are done. Text in your project block or project packs that names a removed role or `orchestrate` is yours to edit.
 
 ## Development
 
@@ -309,6 +341,8 @@ dart analyze --fatal-infos
 dart test
 DASHCREW_UPDATE_GOLDENS=1 dart test test/golden   # rewrite golden fixtures, then review the diff
 ```
+
+`test/golden/sample-migrate-p3/p3/` is a frozen pre-P4 output that the migration test syncs over; it is never rewritten.
 
 CI runs both on Dart 3.9.0 and stable. Contributor rules for AI agents are in [AGENTS.md](AGENTS.md).
 

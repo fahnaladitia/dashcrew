@@ -1,2 +1,2 @@
-description: Diagnose and fix Flutter, code generation, dependency, Gradle and CocoaPods build errors one at a time, with real verification.
+description: Diagnose and fix build, code generation and dependency errors one at a time, with real verification.
 argument_hint: "[error output or failing command]"

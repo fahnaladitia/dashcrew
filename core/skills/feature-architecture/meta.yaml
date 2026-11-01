@@ -1,0 +1,2 @@
+description: Decide a feature's structure before implementation - component split, state boundaries, rebuild scope, DI placement, QA identifiers, data flow and disposal.
+when_to_use: For a new screen, state holder or feature folder, or a change across two or more layers.

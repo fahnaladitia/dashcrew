@@ -1,4 +1,0 @@
-description: Decides feature structure before implementation - widget split, state boundaries, rebuild scope, test identifiers, data flow and disposal - for new screens, redesigns and multi-layer changes.
-capability: write-plans
-model: high
-effort: high

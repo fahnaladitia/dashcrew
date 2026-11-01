@@ -89,12 +89,12 @@ stack:
 
   test('generated file deleted fails drift', () async {
     sync();
-    delete('.claude/agents/flutter-planner.md');
+    delete('.claude/agents/reviewer.md');
 
     final checks = await doctor();
 
     expect(checks['drift']!.status, CheckStatus.fail);
-    expect(checks['drift']!.detail, contains('.claude/agents/flutter-planner.md'));
+    expect(checks['drift']!.detail, contains('.claude/agents/reviewer.md'));
   });
 
   test('editing the AGENTS.md project block is not drift', () async {
@@ -158,6 +158,17 @@ stack:
     expect(checks['skills']!.detail, contains('prompt-polish'));
   });
 
+  test('a skill named only in the AGENTS.md skill index is checked too', () async {
+    sync();
+    expect(read('AGENTS.md'), contains('- `work-modes`: '));
+    delete('.claude/skills/work-modes/SKILL.md');
+
+    final checks = await doctor();
+
+    expect(checks['skills']!.status, CheckStatus.fail);
+    expect(checks['skills']!.detail, contains('work-modes'));
+  });
+
   test('unknown external skill warns, one in the user skills dir does not', () async {
     sync();
     write('AGENTS.md', read('AGENTS.md').replaceFirst(
@@ -191,6 +202,42 @@ stack:
     expect(checks['lock']!.status, CheckStatus.fail);
     expect(checks['drift']!.status, CheckStatus.skip);
     expect(checks['stale']!.status, CheckStatus.skip);
+  });
+
+  test('a profile that still sets policy.plan_gate warns and keeps the stale check', () async {
+    write('.ai/project.yaml', 'toolkit: 1\nagents: [claude-code]\npolicy: { plan_gate: true }\n');
+    sync();
+
+    final checks = await doctor();
+
+    expect(checks['profile']!.status, CheckStatus.warn);
+    expect(checks['profile']!.detail, contains('plan_gate was removed in P4; delete it from .ai/project.yaml'));
+    expect(checks['stale']!.status, CheckStatus.ok);
+  });
+
+  group('handoff-rosters', () {
+    test('no check without a roster file left from before P4', () async {
+      sync();
+      write('.ai/plans/orders/plan.md', '# Plan\n');
+
+      expect((await doctor()).containsKey('handoff-rosters'), isFalse);
+    });
+
+    test('rosters under the plans path are reported as information', () async {
+      write('.ai/project.yaml', 'toolkit: 1\nagents: [claude-code]\npaths: { plans: docs/plans }\n');
+      sync();
+      write('docs/plans/orders/handoff/00-roster.md', '# Roster\n');
+      write('docs/plans/profile-page/handoff/00-roster.md', '# Roster\n');
+      write('docs/plans/profile-page/handoff/10-product-manager.md', '# Handoff\n');
+      write('.ai/plans/ignored/handoff/00-roster.md', '# Roster\n');
+
+      final check = (await doctor())['handoff-rosters']!;
+
+      expect(check.status, CheckStatus.info);
+      expect(check.detail, contains('docs/plans/orders/handoff/00-roster.md, docs/plans/profile-page/handoff/00-roster.md'));
+      expect(check.detail, isNot(contains('.ai/plans/ignored')));
+      expect(check.detail, isNot(contains('10-product-manager')));
+    });
   });
 
   test('missing profile fails profile and skips stale', () async {
@@ -362,7 +409,7 @@ stack:
     test('a removed guard entry fails and an unknown role tool fails', () async {
       sync();
       write('.agents/hooks.json', '{}');
-      write('.agents/agents/flutter-planner.md', read('.agents/agents/flutter-planner.md').replaceFirst('view_file', 'view_files'));
+      write('.agents/agents/reviewer.md', read('.agents/agents/reviewer.md').replaceFirst('view_file', 'view_files'));
 
       final checks = await doctor();
 

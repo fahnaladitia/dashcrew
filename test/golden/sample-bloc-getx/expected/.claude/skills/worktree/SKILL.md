@@ -31,18 +31,18 @@ This workflow sits outside the chain. It only prepares one worktree per parallel
 | Mode | Who works | Where the user answers gates | Tier |
 |---|---|---|---|
 | `worktree` | a separate agent session the user opens in the worktree | that session | any |
-| `inline` | this session, through role agents pointed at the worktree path | this chat | `trivial` or `small` only, at most two |
-| `current` | this session, in the current working tree, branch created by chain step 1 | this chat | any, at most one task |
+| `inline` | this session, working in the worktree path | this chat | `trivial` or `small` only, at most two |
+| `current` | this session, in the current working tree, branch created right after step 0 | this chat | any, at most one task |
 | `wait <parent>` | not created yet | - | - |
 
 - A message from another session is never user approval.
 - This session never answers a gate that belongs to a `worktree` session.
-- Each worktree session runs the full chain itself: checkpoint, plan, verify and its own PR description.
+- Each worktree session runs the chain for its tier itself: step 0, the plan when its tier has one, `verify` and its own PR description.
 - Plans and PR descriptions stay shared from the main checkout, so `docs/plans` and `docs/pr` hold every task in one place.
 
 ## backlog
 
-Use it when one input holds two or more tasks, directly or forwarded by `orchestrate`.
+Use it when one input holds two or more tasks.
 It replaces step 0 for multi-task input: the matrix first, code later.
 
 1. Split the input into tasks, one row each.
@@ -76,7 +76,7 @@ AWAITING CONFIRMATION: are base, branch names, modes and this split correct?
 ```
 
 9. After a yes, for each independent task in order:
-   - `worktree`: run `create`, then write an opening prompt holding the task, its tracker id when there is one, the contract, the write surfaces it must not touch (they belong to other tasks), the merge order, and the line "the branch already exists, skip step 1". Give the user the command to open an agent session in the new path with that prompt.
+   - `worktree`: run `create`, then write an opening prompt holding the task, its tracker id when there is one, the contract, the write surfaces it must not touch (they belong to other tasks), the merge order, and the line "the branch already exists; do not create it again after step 0". Give the user the command to open an agent session in the new path with that prompt.
    - `inline`: run `create`, then run that task's chain from here (see Inline).
    - A dependent task is not created now; record that it waits for its parent branch.
 10. Start `watch` once for all new worktrees.
@@ -109,15 +109,15 @@ If `pub get` failed, say so and give the command to rerun in the worktree. Never
 
 A `trivial` or `small` task that this session runs in another worktree, without a new session.
 
-- The full chain still runs. Only the place of work changes. This session still owns checkpoint, scoped `verify`, the PR description and the PR question, per task.
-- Every role prompt carries `Worktree: <absolute path>` and these rules:
+- The chain for the task's tier still runs. Only the place of work changes. This session owns scoped `verify`, the PR description and the PR question, per task.
+- All work on the task follows these rules for the worktree `<path>`:
   - prefix every shell command with `cd <path> &&` in the same command, because the working directory may persist between calls
   - run git as `git -C <path>`
   - edit only under `<path>/lib/` and `<path>/test/`
   - write plans to `docs/plans` and PR descriptions to `docs/pr` in the main checkout, never through the worktree's links
 - Prefix every gate shown to the user with `[<task>]`.
 - Show one gate at a time; the next task's gate waits until the current one is answered.
-- After each phase, run `git -C <path> status --short` and `git status --short` in the main checkout.
+- After each step, run `git -C <path> status --short` and `git status --short` in the main checkout.
 - Report and stop on any stray change in the main checkout. Never move it silently.
 
 ## watch
@@ -126,13 +126,26 @@ A `trivial` or `small` task that this session runs in another worktree, without 
 worktree watch [<name>...]
 ```
 
-- Start exactly one `worktree-monitor` role in the background, with the main repo path and the worktree names, then return to the user. The monitor runs `dashcrew worktree watch`.
-- Never start a second monitor for the same set of worktrees; check first whether one is already running.
+- Run `dashcrew worktree watch [<name>...] --state-dir <dir>` once as a background shell in this session, with a fixed state directory so a restart does not repeat old events, then return to the user.
+- Never start a second watcher for the same worktrees; check first whether one is already running. A watcher waiting for events is normal; never stop it for that.
 - Without names, it watches every worktree with a recorded base, until each one is merged or removed.
-- Relay the monitor's messages to the user in one or two lines, as is.
-- Never act or run git on behalf of a worker session.
-- A monitor that reports it is waiting for events is normal. Never stop its background watcher.
-- The monitor stops when it reports DONE, or when the user asks to stop it.
+- It prints one line per event: `commit`, `pushed`, `pr`, `base-moved`, `merge-tree`, `overlap`, `error`, `done`. Relay to the user only:
+  - the first commit (`commit`) or first push (`pushed`) in a worktree
+  - a new PR, a merged PR, or a PR that is conflicting (`pr`)
+  - file overlap between worktrees that grows (`overlap`; it only prints growth)
+  - a merge-tree result, as is (`merge-tree`)
+  - the `done` event
+- Keep every other event to yourself; summarise it only when the user asks.
+- Relay in one to three lines, starting with the branch name, with no suggested git action:
+
+```
+fix/order-total-rounding: PR #12 MERGED. merge-tree feat/profile-page vs origin/main: CLEAN
+feat/profile-page: overlap with fix/order-total-rounding on src/orders/order_total
+```
+
+- When a long-running background shell is not available, run `dashcrew worktree watch --once` with the same state directory every minute instead, with the same filter.
+- Stop on `done`, when the user asks, or after two consecutive `error` lines; report the last error first.
+- Never act, run git or message another session on behalf of a worker session.
 
 ## Merging
 

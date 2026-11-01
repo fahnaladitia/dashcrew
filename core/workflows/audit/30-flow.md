@@ -15,7 +15,7 @@ rules:
 
 Examples: `audit flow checkout --from CartPage` for a whole journey, `audit flow change-avatar --from "tap change photo" --to "profile header shows the new photo"` for one action.
 
-- `--from` and `--to` may be a screen, a route, a state holder event, a widget tap (QA identifier) or a state.
+- `--from` and `--to` may be a screen, a route, a state holder event, a tap on a QA identifier or a state.
 - Without `--from`, find candidate entry points and ask the user.
 - Without `--to`, the flow ends when the user leaves the journey.
 - Never guess a boundary.
@@ -34,7 +34,7 @@ Every item gets one verdict, with `file:line`, commit or contract evidence:
 
 | Verdict | Meaning |
 |---|---|
-| `VALID` | a mobile bug proven in the current code |
+| `VALID` | an app bug proven in the current code |
 | `ALREADY FIXED` | fixed in commit `<sha>`, merged after the feedback was written |
 | `BACKEND` | the app follows the payload; the data or the backend contract is wrong |
 | `AS DESIGNED` | matches the design or the contract; the feedback asks for a change, not a bug fix |
@@ -61,25 +61,25 @@ Then write the step table:
 
 Size the flow from the map, in one line with evidence:
 
-- `small`: at most 3 steps and 10 files. No roles; the main session runs F1 to F9 itself. Write irrelevant checks as `N/A` with the reason, never drop them.
-- `large`: everything else. Use a roster and roles as in code mode.
+- `small`: at most 3 steps and 10 files. No subagents; the main session runs F1 to F9 itself. Write irrelevant checks as `N/A` with the reason, never drop them.
+- `large`: everything else. Use reviewers as in code mode; an `explorer` may build the Phase 1 map when the entry points spread across many files.
 
 ### Phase 2: Checks F1 to F9
 
 | Check | What | Who |
 |---|---|---|
 | F1 | entry points: every entry reaches the same initial state; a double entry never opens the screen twice | main session |
-| F2 | state per step: loading, empty, error with retry, success; no impossible state | `flutter-code-reviewer` |
-| F3 | navigation and back stack: correct pop or replace, back button and gesture, sheets left under a page, re-entry after leaving | `flutter-code-reviewer` |
-| F4 | async and lifecycle across screens: `BuildContext` after `await`, subscriptions or listeners outliving their screen, state holders handed down the tree | `flutter-code-reviewer` |
+| F2 | state per step: loading, empty, error with retry, success; no impossible state | `reviewer` |
+| F3 | navigation and back stack: correct pop or replace, back button and gesture, sheets left under a page, re-entry after leaving | `reviewer` |
+| F4 | async and lifecycle across screens: UI or state touched after an `await` once its owner is gone, subscriptions or listeners outliving their screen, state holders handed down the tree | `reviewer` |
 | F5 | data contract: each endpoint's mapper against the backend contract, null and default fallbacks, DTOs leaking into the UI | main session |
-| F6 | failure paths: network, timeout, expiry, backend error codes; whether the user stays on the screen or leaves, per the contract | `flutter-code-reviewer` |
+| F6 | failure paths: network, timeout, expiry, backend error codes; whether the user stays on the screen or leaves, per the contract | `reviewer` |
 | F7 | analytics funnel per step against the project's analytics catalog; gaps are reported, never wired; `N/A` when the project has no analytics | main session |
-| F8 | QA identifiers along the journey; whether an integration test covers the journey | `qa-engineer` |
+| F8 | QA identifiers along the journey; whether an integration test covers the journey | `reviewer` (qa checklist) |
 | F9 | data-layer tests per step (mapper, repository, state holder) | main session |
 
-- `flutter-security-reviewer` runs only when the flow touches payment, auth or personal data; otherwise it is SKIP with evidence.
-- Role prompts carry the Phase 1 map, the steps that belong to the role, and "report only, edit nothing, run no `flutter test`".
+- A security `reviewer` runs only when the flow touches payment, auth or personal data; otherwise it is SKIP with evidence.
+- Reviewer prompts carry the Phase 1 map, the steps that belong to its focus, and "report only, edit nothing, run no tests".
 - Write findings per map step (`#3 CheckoutPage`) with `file:line` and a concrete fix. Consolidation and severity follow code mode.
 
 ### Output
@@ -95,7 +95,7 @@ F4 lifecycle     OK / <n> findings
 F5 data contract OK / <n> findings
 F6 failure paths OK / <n> findings
 F7 analytics     OK / <n> steps without event / N/A
-F8 QA            OK / <n> widgets without identifier, integration test yes/no
+F8 QA            OK / <n> elements without identifier, integration test yes/no
 F9 data tests    OK / <n> units without test
 
 BLOCKER n | HIGH n | MEDIUM n

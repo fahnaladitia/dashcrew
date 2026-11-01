@@ -1,0 +1,2 @@
+description: Hive specifics for this project - who opens boxes, keys and defaults, schema changes and tests.
+when_to_use: When the scope touches Hive - opening a box, a new key, a TypeAdapter, a default value or a migration.

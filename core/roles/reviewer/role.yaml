@@ -1,0 +1,4 @@
+description: Independent read-only review of a plan (tier large) or of the current diff against AGENTS.md, the success criteria and the active review checklists; returns code-review findings with file:line and a verdict, and writes nothing.
+capability: read
+model: high
+effort: high

@@ -39,6 +39,8 @@ typedef SkillDoc = ({String name, DocMeta meta, String body});
 /// a workflow without a description throws [StateError].
 List<SkillDoc> skillDocs(Catalog catalog, Profile profile, List<RenderedTarget> targets, List<String>? warnings) {
   final packSkills = {for (final pack in Renderer(catalog).selectedPacks(profile)) ...pack.skills};
+  final skills = catalog.skillsFor(profile.platform);
+  final workflows = catalog.workflowsFor(profile.platform);
   final docs = <SkillDoc>[];
   for (final target in targets) {
     final slash = target.target.indexOf('/');
@@ -46,14 +48,14 @@ List<SkillDoc> skillDocs(Catalog catalog, Profile profile, List<RenderedTarget> 
     final kind = target.target.substring(0, slash);
     final name = target.target.substring(slash + 1);
     if (kind == 'skill') {
-      final meta = catalog.skills[name] ?? packSkills[name];
+      final meta = skills[name] ?? packSkills[name];
       if (meta == null) {
         warnings?.add('skill $name skipped: no selected pack defines skills/$name.yaml');
         continue;
       }
       docs.add((name: name, meta: meta, body: target.content));
     } else if (kind == 'workflow') {
-      final meta = catalog.workflows[name];
+      final meta = workflows[name];
       if (meta == null) throw StateError('workflow/$name has no meta.yaml');
       docs.add((name: name, meta: meta, body: target.content));
     }
@@ -97,11 +99,12 @@ String agentsSkillFile(String name, DocMeta meta, String body) {
   return (changed: changed, owned: nowOwned);
 }
 
-/// Adapter for [agent]; throws [SyncException] for an agent that has none yet.
-Adapter adapterFor(String agent, Catalog catalog, String projectDir) => switch (agent) {
-      'claude-code' => ClaudeCodeAdapter(catalog, projectDir: projectDir),
-      'codex' => CodexAdapter(catalog, projectDir: projectDir),
-      'antigravity' => AntigravityAdapter(catalog, projectDir: projectDir),
+/// Adapter for [agent] on [platform]; throws [SyncException] for an agent that has none yet.
+Adapter adapterFor(String agent, Catalog catalog, String projectDir, {String platform = Profile.defaultPlatform}) =>
+    switch (agent) {
+      'claude-code' => ClaudeCodeAdapter(catalog, projectDir: projectDir, platform: platform),
+      'codex' => CodexAdapter(catalog, projectDir: projectDir, platform: platform),
+      'antigravity' => AntigravityAdapter(catalog, projectDir: projectDir, platform: platform),
       _ => throw SyncException('Agent adapter not available yet: $agent. Supported: ${supportedAdapters.join(', ')}.'),
     };
 

@@ -1,0 +1,4 @@
+description: Read-only research across many files for plan and audit; returns a short map of the files, symbols and file:line that answer one question, with no file dumps.
+capability: read
+model: standard
+effort: medium

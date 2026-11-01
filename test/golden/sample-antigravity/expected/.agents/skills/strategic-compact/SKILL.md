@@ -1,6 +1,6 @@
 ---
 name: strategic-compact
-description: "Compact the context deliberately at phase boundaries, after writing down the state that must survive. Use when: At a phase boundary in a long session, or when the agent suggests compacting."
+description: "Compact the context deliberately at phase boundaries, after writing down the state that must survive. Use when: At a phase boundary in a long session."
 ---
 
 # Strategic compact
@@ -41,7 +41,7 @@ Relevant files: <paths>
 
 What you write explicitly is far more likely to survive than what is only implied across dozens of tool calls.
 
-## With `orchestrate`
+## With a plan
 
-Phase boundaries in `orchestrate` are the best compact points there are.
-The HANDOFF block is designed to be enough to continue after a compact. If it is not, the handoff is too thin.
+The boundaries between plan stages are the best compact points there are.
+The plan file plus the state block must be enough to continue after a compact. If they are not, write down what is missing first.

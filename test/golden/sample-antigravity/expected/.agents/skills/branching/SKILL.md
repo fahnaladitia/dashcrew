@@ -1,6 +1,6 @@
 ---
 name: branching
-description: "Create a task branch that never tracks its base, and keep upstreams correct. Use when: When creating a branch at step 1, or when a branch tracks the wrong upstream."
+description: "Create a task branch that never tracks its base, and keep upstreams correct. Use when: When creating the branch, or when it tracks the wrong upstream."
 ---
 
 # Branching
@@ -21,7 +21,7 @@ With git's default `branch.autoSetupMerge`, a branch created from a remote-track
 ## Wrong upstream
 
 - Symptom: `git status -sb` shows `## feat/x...origin/<shared-branch> [ahead 1]`.
-- Fix: `git branch --unset-upstream`, without asking. It is local config, reversible, and touches no commit or remote. A read-only role reports it to the main session instead.
+- Fix: `git branch --unset-upstream`, without asking. It is local config, reversible, and touches no commit or remote. The `reviewer` only reports it.
 - Never "fix" it by pointing the upstream at the base branch.
 
 ## Upstream and pull

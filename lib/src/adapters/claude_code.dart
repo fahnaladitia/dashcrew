@@ -9,10 +9,14 @@ import 'adapter.dart';
 /// Claude Code layout: `.claude/agents/<role>.md`, `.claude/skills/<name>/SKILL.md` (skills and workflows), `CLAUDE.md`.
 /// `.claude/settings.json` and `.mcp.json` are merged, never replaced.
 class ClaudeCodeAdapter extends Adapter {
-  ClaudeCodeAdapter(this.catalog, {required String projectDir}) : _project = ProjectFiles(projectDir);
+  ClaudeCodeAdapter(this.catalog, {required String projectDir, this.platform = Profile.defaultPlatform})
+      : _project = ProjectFiles(projectDir);
 
   final Catalog catalog;
   final ProjectFiles _project;
+
+  /// The profile's platform; its `mcp_servers` go to `.mcp.json`.
+  final String platform;
 
   @override
   String get agent => 'claude-code';
@@ -27,13 +31,11 @@ class ClaudeCodeAdapter extends Adapter {
       {'type': 'command', 'command': guardCommand},
     ],
   };
-  static const mcpServers = <String, Map<String, Object?>>{
-    'dart-mcp-server': {
-      'type': 'stdio',
-      'command': 'dart',
-      'args': ['mcp-server'],
-    },
-  };
+  /// The platform's MCP servers as `.mcp.json` entries.
+  Map<String, Map<String, Object?>> get mcpServers => {
+        for (final MapEntry(key: name, value: server) in (catalog.platforms[platform]?.mcpServers ?? const {}).entries)
+          name: {'type': 'stdio', 'command': server.command, 'args': server.args},
+      };
 
   static const _tools = {
     'read': 'Read, Grep, Glob, Bash',

@@ -19,8 +19,7 @@ Future<void> main(List<String> arguments) async {
     if (!policyFile.existsSync()) exit(0);
     final policy = GuardPolicy.fromJson(jsonDecode(policyFile.readAsStringSync()) as Map<String, Object?>);
 
-    final gate = policy.planGate ? readPlanGateState(File(policyPath).absolute.parent.parent.path) : null;
-    final response = hookResponse(input, evaluateAll(GuardEvent.allFromHook(input), policy, gate: gate));
+    final response = hookResponse(input, evaluateAll(GuardEvent.allFromHook(input), policy));
     if (response.stdout.isNotEmpty) stdout.writeln(response.stdout);
     if (response.stderr.isNotEmpty) stderr.writeln(response.stderr);
     await stdout.flush();

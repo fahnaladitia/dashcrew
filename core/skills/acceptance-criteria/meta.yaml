@@ -1,0 +1,2 @@
+description: Write checkable Given/When/Then success criteria, with error states and their recovery, each mapped to the test that proves it.
+when_to_use: At step 0 when the task has no checkable criteria in a file, the prompt or the tracker task.

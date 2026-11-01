@@ -24,7 +24,7 @@ class RenderedTarget {
   final Set<String> rules;
 }
 
-/// Renders the catalog for one profile: core plus selected packs, filtered by `when`.
+/// Renders the catalog for one profile: core and the profile's platform plus selected packs, filtered by `when`.
 /// Templates are strict; an unknown variable fails instead of rendering empty.
 class Renderer {
   const Renderer(this.catalog);
@@ -33,12 +33,16 @@ class Renderer {
 
   List<RenderedTarget> render(Profile profile) {
     final context = contextFor(profile);
-    final fragments = [...catalog.core, for (final pack in selectedPacks(profile)) ...pack.fragments];
+    final fragments = [
+      ...catalog.fragmentsFor(profile.platform),
+      for (final pack in selectedPacks(profile)) ...pack.fragments,
+    ];
 
     final byTarget = <String, List<Fragment>>{};
     for (final fragment in fragments) {
       if (whenMatches(fragment.when, context)) (byTarget[fragment.target] ??= []).add(fragment);
     }
+    context['skill_index'] = _skillIndex(profile, byTarget.keys);
 
     final targets = byTarget.keys.toList()..sort();
     return [
@@ -68,15 +72,33 @@ class Renderer {
     }
   }
 
-  /// Packs chosen by `profile.stack` that exist in the catalog.
-  List<Pack> selectedPacks(Profile profile) => [
-        for (final MapEntry(key: family, value: choice) in profile.stack.entries)
-          ?catalog.packs[family]?[choice.option],
-      ];
+  /// `skill_index`: one entry per skill target that renders and has a description, sorted by name.
+  /// A skill without `when_to_use` is indexed by its description.
+  List<Map<String, Object?>> _skillIndex(Profile profile, Iterable<String> targets) {
+    final metas = {for (final pack in selectedPacks(profile)) ...pack.skills, ...catalog.skillsFor(profile.platform)};
+    final names = [
+      for (final target in targets)
+        if (target.startsWith('skill/')) target.substring('skill/'.length),
+    ]..sort();
+    return [
+      for (final name in names)
+        if (metas[name] case final meta?)
+          {'name': name, 'when_to_use': meta.whenToUse ?? meta.description, 'review': meta.review},
+    ];
+  }
 
-  /// Template context: the profile plus `pack.<family>` params merged over pack defaults.
+  /// Packs chosen by `profile.stack` that exist for the profile's platform.
+  List<Pack> selectedPacks(Profile profile) {
+    final packs = catalog.packsFor(profile.platform);
+    return [
+      for (final MapEntry(key: family, value: choice) in profile.stack.entries) ?packs[family]?[choice.option],
+    ];
+  }
+
+  /// Template context: the profile, `platform.*`, and `pack.<family>` params merged over pack defaults.
   Map<String, Object?> contextFor(Profile profile) {
     final context = profile.toContext();
+    context['platform'] = catalog.platformFor(profile).toContext();
     context['pack'] = {
       for (final pack in selectedPacks(profile)) pack.family: {...pack.params, ...profile.stack[pack.family]!.params},
     };

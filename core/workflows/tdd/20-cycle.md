@@ -9,7 +9,7 @@ rules:
 ---
 ## Cycle
 
-Run the cycle per plan stage (mapper, state, widget), not per test.
+Run the cycle per plan stage (mapper, state, UI), not per test.
 
 ### 1. RED
 
@@ -17,7 +17,7 @@ Run the cycle per plan stage (mapper, state, widget), not per test.
 - Write all RED tests of the stage, then run them in one call:
 
 ```bash
-flutter test test/order_mapper_test.dart --reporter expanded
+{{platform.commands.test_scoped}} <the stage's test files>
 ```
 
 - A valid RED fails on an assertion.
@@ -35,11 +35,11 @@ flutter test test/order_mapper_test.dart --reporter expanded
 
 ### Run budget
 
-- Aim for at most 6 `flutter test` runs per task. Each run recompiles, which costs 10 to 20 seconds.
+- Aim for at most 6 test runs per task. Each run pays the test runner's startup cost.
 - At the end, run every test file you touched in one call:
 
 ```bash
-flutter test test/order_mapper_test.dart test/order_repository_test.dart --reporter expanded
+{{platform.commands.test_scoped}} <every test file you touched>
 ```
 
 - Never run the whole suite here. Regressions outside the scope are caught by `verify` on the diff.
@@ -49,11 +49,11 @@ flutter test test/order_mapper_test.dart test/order_repository_test.dart --repor
 ```
 TDD: <subject>
 
-RED    test/<name>_test.dart:<line>  <test name>
-GREEN  lib/<path>/<file>.dart
+RED    <test file>:<line>  <test name>
+GREEN  <source file>
 REFAC  <what was tidied, or none>
 
-flutter test: X/Y passed
+tests: X/Y passed
 ```
 
-Paste the real `flutter test` output. "It should pass" is not evidence.
+Paste the real test output. "It should pass" is not evidence.

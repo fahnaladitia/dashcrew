@@ -12,7 +12,7 @@ Four modes, one workflow. It sits outside the chain.
 ## Read-only
 
 - Edit nothing under `lib/`, `test/` or the toolkit.
-- Create no branch and no checkpoint.
+- Create no branch.
 - Fixes are proposals only. Each one becomes a new task that runs the normal chain.
 
 `audit` judges code that is already merged. It does not replace `code-review` (the change in progress) or `verify` (the gate before a PR).

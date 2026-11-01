@@ -1,0 +1,15 @@
+# P3 profile: all three agents, the plan gate on, and the packs that added roles (storage, design).
+toolkit: 1
+agents: [claude-code, codex, antigravity]
+stack:
+  state: none
+  di: none
+  router: none
+  network: none
+  storage: hive
+  test: none
+  analytics: none
+  tracker: none
+  design: figma
+policy:
+  plan_gate: true

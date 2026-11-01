@@ -13,8 +13,8 @@ Apply `test-driven-development` and `data-layer-tdd`. The test cases each unit t
 
 ## Scope
 
-- Write data-layer logic test first: mappers, repositories, models, and state holders (blocs, cubits, notifiers).
+- Write data-layer logic test first: mappers, repositories, models, and state holders.
 - Implement in this order: mapper, model, repository, state holder, then UI.
 - Start the UI only after the data-layer tests pass.
-- Skip UI and widget tests unless the user or the plan asks for them. The gap stays visible in the QA test matrix.
+- Skip UI tests unless the user or the plan asks for them. The gap stays visible in the verification map.
 - Read every file in full before changing it.

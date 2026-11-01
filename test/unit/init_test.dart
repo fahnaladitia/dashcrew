@@ -60,6 +60,7 @@ dev_dependencies:
     expect(result.profile, '''
 # Written by dashcrew init. Edit it, then run dashcrew sync.
 toolkit: 1
+platform: flutter
 agents: [claude-code]
 stack:
   di: get_it
@@ -78,7 +79,7 @@ project:
   });
 
   test('interactive answers keep, change, pick and drop families', () {
-    final families = catalog.knownOptions().keys.toList()..sort();
+    final families = catalog.knownOptions()['flutter']!.keys.toList()..sort();
     final answers = {
       for (final family in families) family: '',
       'network': 'dio',
@@ -87,21 +88,23 @@ project:
       'tracker': 'other linear_cli',
     };
 
-    final result = init(yes: false, answers: [for (final family in families) answers[family]!]);
+    final result = init(yes: false, answers: ['', for (final family in families) answers[family]!]);
 
     expect(result.profile, contains('  network: dio\n'));
     expect(result.profile, contains('  router: getx\n'));
     expect(result.profile, contains('  tracker: { use: other, name: linear_cli }\n'));
     expect(result.profile, contains('  state: bloc\n'));
     expect(result.profile, isNot(contains('  test:')));
+    expect(result.output, contains('platform [flutter]: '));
+    expect(result.profile, contains('platform: flutter\n'));
     expect(result.output, contains('state [bloc]: '));
     expect(result.output, contains('network [dio | http]: '));
     expect(result.output.join('\n'), contains('state: bloc (flutter_bloc in dependencies)'));
   });
 
   test('an invalid answer asks again with the valid options', () {
-    final families = catalog.knownOptions().keys.toList()..sort();
-    final answers = [for (final family in families) if (family == 'state') ...['mobx', 'other'] else ''];
+    final families = catalog.knownOptions()['flutter']!.keys.toList()..sort();
+    final answers = ['', for (final family in families) if (family == 'state') ...['mobx', 'other'] else ''];
 
     final result = init(yes: false, answers: answers);
 
@@ -127,12 +130,22 @@ project:
   test('a project pack family is offered and an option missing from the catalog becomes other', () {
     write('.ai/packs/architecture/clean/pack.yaml', 'description: clean\n');
     write('pubspec.yaml', 'name: app\ndependencies:\n  get: ^4.0.0\n');
+    final flutter = catalog.platforms['flutter']!;
     final withoutGetx = Catalog(
       core: catalog.core,
-      packs: {...catalog.packs, 'router': {}},
+      packs: catalog.packs,
       roles: catalog.roles,
       skills: catalog.skills,
       workflows: catalog.workflows,
+      platforms: {
+        'flutter': PlatformSpec(
+          name: 'flutter',
+          root: flutter.root,
+          detect: flutter.detect,
+          commands: flutter.commands,
+          packs: {...flutter.packs, 'router': {}},
+        ),
+      },
     );
 
     final output = <String>[];
@@ -150,5 +163,88 @@ project:
     expect(output, contains('architecture [-]: '));
     expect(output, contains('router [other get]: '));
     expect(read('.ai/project.yaml'), contains('  router: { use: other, name: get }\n'));
+  });
+
+  group('platform', () {
+    const goPlatform = 'detect: [go.mod]\ncommands: { analyze: go vet ./..., test: go test ./..., test_scoped: go test, deps: go mod download }\n';
+
+    test('a repo matching no platform is never given flutter: --yes refuses and names other', () {
+      File(p.join(project.path, 'pubspec.yaml')).deleteSync();
+
+      expect(
+        () => init(),
+        throwsA(isA<InitException>().having((e) => e.message, 'message', contains('platform: other'))),
+      );
+      expect(File(p.join(project.path, '.ai', 'project.yaml')).existsSync(), isFalse);
+    });
+
+    test('a repo matching no platform is offered other, and the commands are asked', () {
+      File(p.join(project.path, 'pubspec.yaml')).deleteSync();
+      write('Makefile', 'lint:\n');
+
+      final result = init(yes: false, answers: ['', 'Makefile', 'make lint', 'make test', '', 'make test-one', 'make deps', '']);
+
+      expect(result.output, contains('platform [other]: '));
+      expect(result.output, contains('  required'));
+      expect(result.profile, '''
+# Written by dashcrew init. Edit it, then run dashcrew sync.
+toolkit: 1
+platform: other
+platform_config:
+  detect: [Makefile]
+  commands:
+    analyze: "make lint"
+    test: "make test"
+    test_scoped: "make test-one"
+    deps: "make deps"
+agents: [claude-code]
+''');
+      final profile = Profile.parse(result.profile, knownOptions: catalog.knownOptions());
+      expect(profile.platformConfig!['commands'], containsPair('format', null));
+    });
+
+    test('other without the commands stops instead of writing a broken profile', () {
+      File(p.join(project.path, 'pubspec.yaml')).deleteSync();
+
+      expect(
+        () => init(yes: false, answers: ['', 'Makefile']),
+        throwsA(isA<InitException>().having((e) => e.message, 'message', contains('commands.analyze'))),
+      );
+    });
+
+    test('a project platform is detected and offers its own families', () {
+      File(p.join(project.path, 'pubspec.yaml')).deleteSync();
+      write('go.mod', 'module example.com/app\n');
+      write('.ai/platforms/go/platform.yaml', goPlatform);
+      write('.ai/platforms/go/packs/router/chi/pack.yaml', 'description: chi\n');
+
+      final families = Catalog.load('.').withProjectPacks(project.path).knownOptions()['go']!.keys.toList()..sort();
+      final result = init(yes: false, answers: ['', for (final family in families) family == 'router' ? 'chi' : '']);
+
+      expect(result.output.first, startsWith('Detected in'));
+      expect(result.output, contains('  platform: go (go.mod)'));
+      expect(result.output, contains('platform [go]: '));
+      expect(result.output, contains('router [-]: '));
+      expect(result.output, isNot(contains('state [-]: ')));
+      expect(result.profile, contains('platform: go\n'));
+      expect(result.profile, contains('  router: chi\n'));
+      expect(result.profile, isNot(contains('lib/main_dev.dart')));
+    });
+
+    test('two matching platforms are asked; --yes refuses', () {
+      write('go.mod', 'module example.com/app\n');
+      write('.ai/platforms/go/platform.yaml', goPlatform);
+
+      expect(
+        () => init(),
+        throwsA(isA<InitException>().having((e) => e.message, 'message', allOf(contains('flutter'), contains('go')))),
+      );
+      final families = catalog.knownOptions()['flutter']!.keys.toList()..sort();
+      final result = init(yes: false, answers: ['', 'flutter', for (final _ in families) '']);
+
+      expect(result.output, contains('platform [flutter | go]: '));
+      expect(result.output.where((line) => line == 'platform [flutter | go]: '), hasLength(2));
+      expect(result.profile, contains('platform: flutter\n'));
+    });
   });
 }

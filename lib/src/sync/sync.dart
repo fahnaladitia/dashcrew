@@ -27,11 +27,14 @@ class SyncException implements Exception {
 
 /// What one sync run changed.
 class SyncResult {
-  const SyncResult({required this.written, required this.removed, required this.warnings});
+  const SyncResult({required this.written, required this.removed, required this.warnings, this.notes = const []});
 
   final List<String> written;
   final List<String> removed;
   final List<String> warnings;
+
+  /// One-time information about this run, such as [Sync.p4MigrationNote]; never a problem to fix.
+  final List<String> notes;
 }
 
 /// Renders `.ai/project.yaml` into the agent files of one project.
@@ -62,6 +65,28 @@ class Sync {
   static const projectBegin = '<!-- dashcrew:project:begin -->';
   static const projectEnd = '<!-- dashcrew:project:end -->';
   static const lockPath = '.ai/lock.json';
+
+  /// Printed once by the sync that drops the pre-P4 role files; the lock records no version that tells P3 from P4.
+  static const p4MigrationNote = 'Migrated to P4: the roles were removed (only reviewer and explorer remain), '
+      'the plan gate and dashcrew gate were removed, and orchestrate team is now the default chain with skills '
+      'picked at step 0. Plans, handoffs and project memory are untouched. See "Migrating to P4" in the dashcrew README.';
+
+  /// Subagents dashcrew generated before P4; one of them in the lock but no longer rendered marks a pre-P4 project.
+  static const _preP4Roles = {
+    'dart-tdd-guide',
+    'design-refiner',
+    'flutter-architect',
+    'flutter-build-error-resolver',
+    'flutter-code-reviewer',
+    'flutter-engineer',
+    'flutter-planner',
+    'flutter-security-reviewer',
+    'local-storage-engineer',
+    'product-manager',
+    'qa-engineer',
+    'tech-lead',
+    'worktree-monitor',
+  };
 
   SyncResult run({bool force = false, bool adopt = false}) {
     final warnings = <String>[];
@@ -102,6 +127,9 @@ class Sync {
       if (_writeIfChanged(path, content)) written.add(path);
     });
 
+    final dropped = lockedFiles.keys.where((path) => !files.containsKey(path));
+    final notes = [if (dropped.any(_isPreP4Role)) p4MigrationNote];
+
     final removed = <String>[];
     for (final path in lockedFiles.keys) {
       if (files.containsKey(path) || project.linkWithin(path) != null) continue;
@@ -141,7 +169,13 @@ class Sync {
     };
     _writeIfChanged(lockPath, '${const JsonEncoder.withIndent('  ').convert(newLock)}\n');
 
-    return SyncResult(written: written, removed: removed, warnings: warnings);
+    return SyncResult(written: written, removed: removed, warnings: warnings, notes: notes);
+  }
+
+  /// `.claude/agents/<role>.md`, `.codex/agents/<role>.toml` or `.agents/agents/<role>.md` of a pre-P4 role.
+  static bool _isPreP4Role(String path) {
+    final parts = path.split('/');
+    return parts.length == 3 && parts[1] == 'agents' && _preP4Roles.contains(p.basenameWithoutExtension(path));
   }
 
   /// Generated files as `sync` would write them now, without touching the disk.
@@ -170,7 +204,8 @@ class Sync {
       throw SyncException('Project pack: $error');
     }
     final profile = _profile(catalog);
-    final adapters = [for (final agent in profile.agents) adapterFor(agent, catalog, projectDir)];
+    warnings?.addAll(profile.warnings);
+    final adapters = [for (final agent in profile.agents) adapterFor(agent, catalog, projectDir, platform: profile.platform)];
 
     final renderer = Renderer(catalog);
     final targets = renderer.render(profile);
@@ -183,7 +218,7 @@ class Sync {
 
     final files = <String, String>{
       'AGENTS.md': _agentsMd(targets, adopt: adopt),
-      '.ai/guard.json': '${const JsonEncoder.withIndent('  ').convert(compileGuardPolicy(profile, catalog).toJson())}\n',
+      '.ai/guard.json': '${const JsonEncoder.withIndent('  ').convert(compileGuardPolicy(profile, catalog.resolvedFor(profile.platform)).toJson())}\n',
       guardShimPath: GuardInstaller.shim(guardSourceHash(_root)),
     };
     final prTemplate = targets.where((t) => t.target == 'pr_template').firstOrNull;

@@ -11,7 +11,7 @@ Four modes, one workflow. It sits outside the chain.
 ## Read-only
 
 - Edit nothing under `lib/`, `test/` or the toolkit.
-- Create no branch and no checkpoint.
+- Create no branch.
 - Fixes are proposals only. Each one becomes a new task that runs the normal chain.
 
 `audit` judges code that is already merged. It does not replace `code-review` (the change in progress) or `verify` (the gate before a PR).
@@ -60,28 +60,28 @@ Selected packs add their own checks to this list.
 - `dynamic` inside a JSON mapper, or a timer cancelled when the state holder closes, is not a violation.
 - When a code graph tool is connected, use it to find `build` methods over 100 lines and files many features depend on (risky to change later).
 
-### Phase 3: Roles (parallel, read-only)
+### Phase 3: Reviewers (parallel, read-only)
 
-- Show the roster first: RUN or SKIP per role, with evidence and active skills.
-- Then start every RUN role in one message.
+- Show the plan first: one line per focus with the reviewer it gets, or SKIP with evidence.
+- Then start one `reviewer` per focus in one message.
 
-| Focus | Role | Reference |
+| Focus | Who | Checklist |
 |---|---|---|
-| arch, lifecycle | `flutter-code-reviewer` | AGENTS.md architecture and Dart and Flutter rules |
-| perf | `flutter-code-reviewer` (a second prompt) | the project performance rules; `performance-optimization` for the measure-first principle only |
-| security | `flutter-security-reviewer` | the project security rules and the OWASP Mobile Top 10 reference |
-| qa | `qa-engineer` | the QA identifier rules |
+| arch, lifecycle | `reviewer` | AGENTS.md architecture and Dart and Flutter rules |
+| perf | `reviewer` (a second prompt) | `flutter-performance`; `performance-optimization` for the measure-first principle only |
+| security | `reviewer` | `mobile-security` |
+| qa | `reviewer` | `qa-identifiers` when the qa pack is selected, else the QA identifier rules in AGENTS.md |
 | test | main session | Phase 1 results |
 
-Every role prompt says:
+Every reviewer prompt says:
 
 - audit the existing code in `<path>`, not a diff; report only, edit and write nothing
 - run no `flutter test`
-- the Phase 2 results relevant to its focus, so the role does not search again
-- for `qa-engineer`: audit identifiers only, write no tests
-- for `flutter-security-reviewer`: run any scanner from a scratch folder, then check `git status --porcelain` and move any stray output out of the repo
+- the Phase 2 results relevant to its focus, so it does not search again
+- for qa: audit identifiers only, write no tests
+- for security: run any scanner from a scratch folder, then check `git status --porcelain` and move any stray output out of the repo
 
-More than 80 files: split by subfolder, with at most 6 role agents at once.
+More than 80 files: split by subfolder, with at most 6 reviewers at once.
 
 Extra checks for `arch` and `perf`:
 
@@ -170,25 +170,25 @@ Then write the step table:
 
 Size the flow from the map, in one line with evidence:
 
-- `small`: at most 3 steps and 10 files. No roles; the main session runs F1 to F9 itself. Write irrelevant checks as `N/A` with the reason, never drop them.
-- `large`: everything else. Use a roster and roles as in code mode.
+- `small`: at most 3 steps and 10 files. No subagents; the main session runs F1 to F9 itself. Write irrelevant checks as `N/A` with the reason, never drop them.
+- `large`: everything else. Use reviewers as in code mode; an `explorer` may build the Phase 1 map when the entry points spread across many files.
 
 ### Phase 2: Checks F1 to F9
 
 | Check | What | Who |
 |---|---|---|
 | F1 | entry points: every entry reaches the same initial state; a double entry never opens the screen twice | main session |
-| F2 | state per step: loading, empty, error with retry, success; no impossible state | `flutter-code-reviewer` |
-| F3 | navigation and back stack: correct pop or replace, back button and gesture, sheets left under a page, re-entry after leaving | `flutter-code-reviewer` |
-| F4 | async and lifecycle across screens: `BuildContext` after `await`, subscriptions or listeners outliving their screen, state holders handed down the tree | `flutter-code-reviewer` |
+| F2 | state per step: loading, empty, error with retry, success; no impossible state | `reviewer` |
+| F3 | navigation and back stack: correct pop or replace, back button and gesture, sheets left under a page, re-entry after leaving | `reviewer` |
+| F4 | async and lifecycle across screens: `BuildContext` after `await`, subscriptions or listeners outliving their screen, state holders handed down the tree | `reviewer` |
 | F5 | data contract: each endpoint's mapper against the backend contract, null and default fallbacks, DTOs leaking into the UI | main session |
-| F6 | failure paths: network, timeout, expiry, backend error codes; whether the user stays on the screen or leaves, per the contract | `flutter-code-reviewer` |
+| F6 | failure paths: network, timeout, expiry, backend error codes; whether the user stays on the screen or leaves, per the contract | `reviewer` |
 | F7 | analytics funnel per step against the project's analytics catalog; gaps are reported, never wired; `N/A` when the project has no analytics | main session |
-| F8 | QA identifiers along the journey; whether an integration test covers the journey | `qa-engineer` |
+| F8 | QA identifiers along the journey; whether an integration test covers the journey | `reviewer` (qa checklist) |
 | F9 | data-layer tests per step (mapper, repository, state holder) | main session |
 
-- `flutter-security-reviewer` runs only when the flow touches payment, auth or personal data; otherwise it is SKIP with evidence.
-- Role prompts carry the Phase 1 map, the steps that belong to the role, and "report only, edit nothing, run no `flutter test`".
+- A security `reviewer` runs only when the flow touches payment, auth or personal data; otherwise it is SKIP with evidence.
+- Reviewer prompts carry the Phase 1 map, the steps that belong to its focus, and "report only, edit nothing, run no `flutter test`".
 - Write findings per map step (`#3 CheckoutPage`) with `file:line` and a concrete fix. Consolidation and severity follow code mode.
 
 ### Output
@@ -243,7 +243,7 @@ Read the code first, then state the finding, its location and the fix. If the ca
 3. Derive the flow boundaries from the question, without asking for flags, and write them in chat as one line. Example: "after going back from the order detail page" gives `--from` = return from the detail page, `--to` = the status shown in the order list.
 4. Trace the reproduction path step by step: tap -> event -> state -> repository -> payload -> response -> mapper -> UI. Give `file:line` at every step and mark where the expected value turns into the wrong one.
 5. Run only the F checks that touch the hypothesis, usually F2 state, F3 navigation (the result of a pop, a `then` that does not wait) and F5 mapper. Do not run or write the rest.
-6. Use no roles, unless the trace crosses more than 10 files. Then run one `flutter-code-reviewer` with the step 4 trace as input.
+6. Use no subagents, unless the trace crosses more than 10 files. Then an `explorer` may map the path, and one `reviewer` checks the step 4 trace.
 
 Use the flow mode verdicts (`VALID`, `ALREADY FIXED`, `BACKEND`, `AS DESIGNED`, `NEEDS INFO`).
 Write the fix as a proposed diff; never apply it. The audit changes no tracker status.
@@ -276,12 +276,12 @@ Add no other dimension.
 
 | Check | What |
 |---|---|
-| T1 | the agent's generated command, role and skill folders are complete, with no broken links |
-| T2 | the workflow (command) list in AGENTS.md matches the generated workflow files |
-| T3 | the role lists in AGENTS.md and in the team overview match the generated role files |
-| T4 | read-only roles have no file-writing tools; roles that write plans may write only while the guard restricts them to `.ai/plans`; a role with no tool restriction at all is reported |
-| T5 | every skill that AGENTS.md, the workflows or the roles reference can be loaded in the current session |
-| T6 | every installed skill has a recorded source (the skills lock file or the toolkit itself) and at least one reference; no deliberately excluded skill is installed |
+| T1 | the agent's generated command, subagent and skill folders are complete, with no broken links |
+| T2 | the workflow (command) list and the skill index in AGENTS.md match the generated workflow and skill files |
+| T3 | the subagents AGENTS.md names (`reviewer`, `explorer`) match the generated subagent files |
+| T4 | read-only subagents have no file-writing tools; a subagent with no tool restriction at all is reported |
+| T5 | every skill that AGENTS.md, the workflows or the subagents reference can be loaded in the current session |
+| T6 | every installed skill has a recorded source (the skills lock file or the toolkit itself) and at least one reference; no skill the `prompt-polish` exclusions name is installed |
 | T7 | every hook script the agent settings reference exists on disk |
 
 ### Skill map
@@ -289,14 +289,14 @@ Add no other dimension.
 End with one table covering every loaded skill:
 
 ```
-| Skill | Chain step | Role | Trigger | Verdict | Reason |
+| Skill | Chain step | Trigger | Verdict | Reason |
 ```
 
 - Verdicts: `Keep`, `Improve`, `Update`, `Retire`, `Merge into <X>`.
 - Each reason stands alone: for Retire, name the flaw and the replacement; for Merge, name the target and what moves.
 - Usage frequency is not measurable here. Write "not measurable", never zero, and never use it as a reason to retire.
 
-Change the toolkit (install, remove, or edit a skill, role or workflow) only after the user says yes.
+Change the toolkit (install, remove, or edit a skill, subagent or workflow) only after the user says yes.
 
 ### Output
 
@@ -305,8 +305,8 @@ AUDIT toolkit
 
 T1 links           OK / <n> problems
 T2 workflow list   OK / <n> problems
-T3 role list       OK / <n> problems
-T4 role tools      OK / <n> problems
+T3 subagent list   OK / <n> problems
+T4 subagent tools  OK / <n> problems
 T5 skills loadable OK / <n> not loaded
 T6 skills sourced  OK / <n> problems
 T7 hooks           OK / <n> problems
@@ -321,7 +321,7 @@ File: <audit file>
 
 ## Save
 
-The main session writes the file. Read-only roles only return their report.
+The main session writes the file. Subagents only return their report.
 
 - code mode: `.ai/audits/<path>/<YYYY-MM-DD>.md`, keeping `/` as folders
 - flow mode: `.ai/audits/flow/<name>/<YYYY-MM-DD>.md`, with the Phase 1 map at the top; with `--task`: `.ai/audits/flow/<name>/<YYYY-MM-DD>-<task id>.md`

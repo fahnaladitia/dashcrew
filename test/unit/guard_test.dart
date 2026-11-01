@@ -8,9 +8,9 @@ GuardPolicy policy({bool agentCommit = false, bool formatter = false}) => GuardP
       blockFormatters: !formatter,
       plansDir: '.ai/plans',
       roleCapability: const {
-        'flutter-planner': 'write-plans',
-        'flutter-code-reviewer': 'read',
-        'flutter-engineer': 'write-code',
+        'planner': 'write-plans',
+        'reviewer': 'read',
+        'engineer': 'write-code',
       },
       forbiddenImports: const ['package:vendor_sdk/'],
       localPackages: const ['core'],
@@ -82,21 +82,21 @@ void main() {
   });
 
   test('write-plans role may write under the plans dir only', () {
-    expect(evaluate(write('/repo/.ai/plans/orders/plan.md', role: 'flutter-planner'), policy()).blocked, isFalse);
-    expect(evaluate(write('/repo/lib/main.dart', role: 'flutter-planner'), policy()).blocked, isTrue);
+    expect(evaluate(write('/repo/.ai/plans/orders/plan.md', role: 'planner'), policy()).blocked, isFalse);
+    expect(evaluate(write('/repo/lib/main.dart', role: 'planner'), policy()).blocked, isTrue);
     expect(
-      evaluate(write('/repo/.ai/plans/orders/plan.md', role: 'flutter-planner', kind: ToolKind.edit), policy()).blocked,
+      evaluate(write('/repo/.ai/plans/orders/plan.md', role: 'planner', kind: ToolKind.edit), policy()).blocked,
       isTrue,
     );
   });
 
   test('read role cannot write or edit', () {
-    expect(evaluate(write('/repo/.ai/plans/x.md', role: 'flutter-code-reviewer'), policy()).blocked, isTrue);
-    expect(evaluate(write('/repo/lib/a.dart', role: 'flutter-code-reviewer', kind: ToolKind.edit), policy()).blocked, isTrue);
+    expect(evaluate(write('/repo/.ai/plans/x.md', role: 'reviewer'), policy()).blocked, isTrue);
+    expect(evaluate(write('/repo/lib/a.dart', role: 'reviewer', kind: ToolKind.edit), policy()).blocked, isTrue);
   });
 
   test('write-code role and the main session write freely', () {
-    expect(evaluate(write('/repo/lib/a.dart', role: 'flutter-engineer'), policy()).blocked, isFalse);
+    expect(evaluate(write('/repo/lib/a.dart', role: 'engineer'), policy()).blocked, isFalse);
     expect(evaluate(write('/repo/lib/a.dart'), policy()).blocked, isFalse);
   });
 
@@ -116,11 +116,11 @@ void main() {
       final bash = GuardEvent.fromHook({
         'tool_name': 'Bash',
         'tool_input': {'command': 'git push'},
-        'agent_type': 'flutter-planner',
+        'agent_type': 'planner',
       });
       expect(bash.kind, ToolKind.shell);
       expect(bash.command, 'git push');
-      expect(bash.role, 'flutter-planner');
+      expect(bash.role, 'planner');
 
       final edit = GuardEvent.fromHook({
         'tool_name': 'Edit',
@@ -299,30 +299,12 @@ void main() {
     });
   });
 
-  group('plan gate', () {
-    GuardPolicy gated() => GuardPolicy.fromJson({...policy().toJson(), 'plan_gate': true});
-    const pending = (branch: 'feat/orders', plan: 'pending', issue: 42);
-    const approved = (branch: 'feat/orders', plan: 'approved', issue: 42);
+  test('an older guard.json that still carries plan_gate loads, and the key is dropped', () {
+    final loaded = GuardPolicy.fromJson({...policy().toJson(), 'plan_gate': true});
 
-    test('blocks app code and tests while the plan is pending', () {
-      final lib = evaluate(write('/repo/lib/feature/a.dart'), gated(), gate: pending);
-      expect(lib.blocked, isTrue);
-      expect(lib.reason, allOf(contains('#42'), contains('dashcrew gate status')));
-      expect(evaluate(write('/repo/test/a_test.dart'), gated(), gate: pending).blocked, isTrue);
-    });
-
-    test('allows once approved, outside app code, without an issue, or with the gate off', () {
-      expect(evaluate(write('/repo/lib/a.dart'), gated(), gate: approved).blocked, isFalse);
-      expect(evaluate(write('/repo/.ai/plans/orders/plan.md'), gated(), gate: pending).blocked, isFalse);
-      expect(evaluate(write('/repo/lib/a.dart'), gated()).blocked, isFalse);
-      expect(evaluate(write('/repo/lib/a.dart'), policy(), gate: pending).blocked, isFalse);
-      expect(evaluate(write('/repo/core/lib/a.dart'), gated(), gate: pending).blocked, isFalse);
-    });
-
-    test('policy json without plan_gate reads as off', () {
-      final json = policy().toJson()..remove('plan_gate');
-      expect(GuardPolicy.fromJson(json).planGate, isFalse);
-    });
+    expect(loaded.toJson(), isNot(contains('plan_gate')));
+    expect(evaluate(write('/repo/lib/a.dart'), loaded).blocked, isFalse);
+    expect(evaluate(shell('gh issue comment 42 --body "/approve plan"'), loaded).blocked, isTrue);
   });
 
   group('approvals are the user\'s', () {
@@ -334,7 +316,8 @@ void main() {
       test('blocks $command', () {
         final decision = evaluate(shell(command), policy());
         expect(decision.blocked, isTrue);
-        expect(decision.reason, contains('dashcrew gate status'));
+        expect(decision.reason, contains("Approvals are the user's"));
+        expect(decision.reason, isNot(contains('dashcrew gate')));
       });
     }
 

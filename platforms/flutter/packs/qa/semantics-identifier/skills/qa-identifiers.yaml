@@ -1,0 +1,3 @@
+description: Propose, apply and audit Semantics QA identifiers, and find widgets by them in tests.
+when_to_use: When a task adds, changes or removes QA-relevant widgets, or writes widget or integration tests.
+review: true

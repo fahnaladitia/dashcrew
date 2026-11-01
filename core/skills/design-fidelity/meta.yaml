@@ -1,2 +1,3 @@
-description: Implement a UI from the design frame the user gave, exactly as drawn, and record every gap.
-when_to_use: When a task comes with a design link, or when slicing or redesigning a screen.
+description: Implement a UI from the design frame the user gave, exactly as drawn, through a design spec in the plan, and record every gap.
+when_to_use: When a task comes with a design link, or slices or redesigns a screen.
+review: true

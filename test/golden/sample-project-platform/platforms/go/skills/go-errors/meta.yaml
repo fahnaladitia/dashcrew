@@ -1,0 +1,3 @@
+description: Error handling checklist for Go code - wrapping, sentinel errors and what a caller may compare.
+when_to_use: When a change adds, wraps or handles an error path in Go code.
+review: true

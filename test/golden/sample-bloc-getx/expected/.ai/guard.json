@@ -14,19 +14,8 @@
   "block_formatters": true,
   "plans_dir": "docs/plans",
   "role_capability": {
-    "dart-tdd-guide": "write-code",
-    "design-refiner": "write-plans",
-    "flutter-architect": "write-plans",
-    "flutter-build-error-resolver": "write-code",
-    "flutter-code-reviewer": "read",
-    "flutter-engineer": "write-code",
-    "flutter-planner": "write-plans",
-    "flutter-security-reviewer": "read",
-    "local-storage-engineer": "write-code",
-    "product-manager": "write-plans",
-    "qa-engineer": "write-code",
-    "tech-lead": "read",
-    "worktree-monitor": "read"
+    "explorer": "read",
+    "reviewer": "read"
   },
   "forbidden_imports": [
     "package:posthog_flutter"
@@ -34,6 +23,5 @@
   "local_packages": [
     "core",
     "analytics_facade"
-  ],
-  "plan_gate": false
+  ]
 }

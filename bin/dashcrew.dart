@@ -8,14 +8,13 @@ import 'package:dashcrew/src/package_root.dart';
 Future<void> main(List<String> arguments) async {
   final runner = CommandRunner<int>(
     'dashcrew',
-    'Agent-agnostic AI coding toolkit for Flutter projects.',
+    'Agent-agnostic AI coding toolkit with Flutter built in.',
   )
     ..addCommand(InitCommand())
     ..addCommand(SyncCommand())
     ..addCommand(DoctorCommand())
     ..addCommand(WorktreeCommand())
     ..addCommand(GuardCommand())
-    ..addCommand(GateCommand())
     ..addCommand(CheckCommand());
   try {
     exitCode = await runner.run(arguments) ?? 0;
@@ -34,16 +33,13 @@ Future<void> main(List<String> arguments) async {
   } on GuardInstallException catch (error) {
     stderr.writeln(error.message);
     exitCode = 1;
-  } on GateException catch (error) {
-    stderr.writeln(error.message);
-    exitCode = 1;
   }
 }
 
 class InitCommand extends Command<int> {
   InitCommand() {
     argParser
-      ..addOption('project', abbr: 'p', help: 'Flutter project root holding pubspec.yaml.', defaultsTo: '.')
+      ..addOption('project', abbr: 'p', help: 'Project root.', defaultsTo: '.')
       ..addFlag('yes', abbr: 'y', help: 'Write the detected profile without asking.', negatable: false)
       ..addMultiOption('agents', help: 'Agents to render for.', allowed: Profile.supportedAgents, defaultsTo: ['claude-code'])
       ..addFlag('force', help: 'Replace an existing .ai/project.yaml.', negatable: false);
@@ -53,7 +49,7 @@ class InitCommand extends Command<int> {
   String get name => 'init';
 
   @override
-  String get description => 'Detect the stack from pubspec.yaml and write .ai/project.yaml. Writes nothing else.';
+  String get description => 'Detect the platform and stack and write .ai/project.yaml. Writes nothing else.';
 
   @override
   int run() {
@@ -107,6 +103,9 @@ class SyncCommand extends Command<int> {
     }
     for (final warning in result.warnings) {
       stderr.writeln('warning: $warning');
+    }
+    for (final note in result.notes) {
+      stdout.writeln('note: $note');
     }
     if (result.written.isEmpty && result.removed.isEmpty) stdout.writeln('up to date');
     return 0;
@@ -174,7 +173,7 @@ class _WorktreeCreate extends _WorktreeSubcommand {
   _WorktreeCreate() {
     argParser
       ..addOption('name', help: 'Folder name; defaults to the branch with / replaced by -.')
-      ..addFlag('pub', help: 'Run flutter pub get in the new worktree.', defaultsTo: true);
+      ..addFlag('pub', help: "Run the platform's deps command (platform.commands.deps) in the new worktree.", defaultsTo: true);
   }
 
   @override
@@ -189,7 +188,7 @@ class _WorktreeCreate extends _WorktreeSubcommand {
   @override
   int run() {
     worktrees.create(positional(0, 'branch'), positional(1, 'base'),
-        name: argResults!['name'] as String?, pubGet: argResults!['pub'] as bool, out: stdout.writeln);
+        name: argResults!['name'] as String?, installDeps: argResults!['pub'] as bool, out: stdout.writeln);
     return 0;
   }
 }
@@ -311,76 +310,6 @@ class _GuardInstall extends Command<int> {
   }
 }
 
-class GateCommand extends Command<int> {
-  GateCommand() {
-    addSubcommand(_GateSubmit());
-    addSubcommand(_GateStatus());
-  }
-
-  @override
-  String get name => 'gate';
-
-  @override
-  String get description => 'Human approval on the branch\'s GitHub issue. Approving happens on GitHub only.';
-}
-
-class _GateSubmit extends Command<int> {
-  _GateSubmit() {
-    argParser
-      ..addOption('project', abbr: 'p', help: 'Any folder inside the repository.', defaultsTo: '.')
-      ..addOption('file', help: 'The plan to post (required).')
-      ..addOption('issue', help: 'Issue number to use; defaults to the branch\'s linked issue, else a new one.');
-  }
-
-  @override
-  String get name => 'submit';
-
-  @override
-  String get invocation => 'dashcrew gate submit plan --file <plan.md> [--issue <n>]';
-
-  @override
-  String get description => 'Post the plan to the branch\'s GitHub issue, then stop and wait for /approve plan.';
-
-  @override
-  int run() {
-    final rest = argResults!.rest;
-    if (rest.length != 1 || rest.single != 'plan') usageException('The only gate is "plan": dashcrew gate submit plan --file <plan.md>.');
-    final file = argResults!['file'] as String?;
-    if (file == null) usageException('--file <plan.md> is required.');
-    final issueText = argResults!['issue'] as String?;
-    final issue = issueText == null ? null : int.tryParse(issueText);
-    if (issueText != null && issue == null) usageException('--issue must be a number.');
-    final result = Gates(projectDir: argResults!['project'] as String).submitPlan(file, issue: issue);
-    stdout
-      ..writeln('posted the plan to #${result.issue}: ${result.url}')
-      ..writeln('waiting for a comment whose first line is "/approve plan"; run dashcrew gate status after it');
-    return 0;
-  }
-}
-
-class _GateStatus extends Command<int> {
-  _GateStatus() {
-    argParser.addOption('project', abbr: 'p', help: 'Any folder inside the repository.', defaultsTo: '.');
-  }
-
-  @override
-  String get name => 'status';
-
-  @override
-  String get description => 'Read the branch\'s plan issue and record whether the latest plan is approved.';
-
-  @override
-  int run() {
-    final state = Gates(projectDir: argResults!['project'] as String).status();
-    stdout.writeln(switch (state.plan) {
-      'approved' => 'plan: approved (#${state.issue})',
-      'pending' => 'plan: pending (#${state.issue}); waiting for "/approve plan" after the latest plan',
-      _ => 'plan: no issue linked to this branch; dashcrew gate submit plan --file <plan.md> starts one',
-    });
-    return 0;
-  }
-}
-
 class CheckCommand extends Command<int> {
   CheckCommand() {
     argParser
@@ -392,7 +321,7 @@ class CheckCommand extends Command<int> {
   String get name => 'check';
 
   @override
-  String get description => 'Merge gate for a pull request: toolkit current, PR sections present, plan issue approved. Writes nothing.';
+  String get description => 'Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.';
 
   @override
   Future<int> run() async {

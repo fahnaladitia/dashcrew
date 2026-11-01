@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:yaml/yaml.dart';
 
+import '../catalog/catalog.dart';
 import '../profile/profile.dart';
 import '../yaml_util.dart';
 
@@ -94,8 +95,19 @@ class Detection {
   final List<String> baseBranches;
 }
 
-/// Reads `pubspec.yaml`, `lib/main_<flavor>.dart` and [remoteBranches] (`origin/<name>`).
-Detection detect(String projectDir, {required List<String> remoteBranches}) {
+/// Names of the [platforms] with at least one `detect` file in [projectDir], sorted.
+List<String> detectPlatforms(String projectDir, Map<String, PlatformSpec> platforms) => [
+      for (final name in platforms.keys.toList()..sort())
+        if (platforms[name]!.detect.any((file) => File(p.join(projectDir, file)).existsSync())) name,
+    ];
+
+/// Reads [remoteBranches] (`origin/<name>`) and, for the default platform only, `pubspec.yaml` and
+/// `lib/main_<flavor>.dart`; any other [platform] gets no stack, flavor or local package proposal.
+Detection detect(String projectDir, {required List<String> remoteBranches, String platform = Profile.defaultPlatform}) {
+  final baseBranches = [for (final name in baseBranchCandidates) if (remoteBranches.contains('origin/$name')) name];
+  if (platform != Profile.defaultPlatform) {
+    return Detection(stack: const {}, flavors: const {}, localPackages: const [], baseBranches: baseBranches);
+  }
   final pubspecFile = File(p.join(projectDir, 'pubspec.yaml'));
   if (!pubspecFile.existsSync()) throw InitException('No pubspec.yaml in $projectDir. Run dashcrew init in the Flutter project root.');
   final pubspec = plainYaml(loadYaml(pubspecFile.readAsStringSync()));
@@ -141,7 +153,7 @@ Detection detect(String projectDir, {required List<String> remoteBranches}) {
     stack: stack,
     flavors: flavors,
     localPackages: localPackages,
-    baseBranches: [for (final name in baseBranchCandidates) if (remoteBranches.contains('origin/$name')) name],
+    baseBranches: baseBranches,
   );
 }
 

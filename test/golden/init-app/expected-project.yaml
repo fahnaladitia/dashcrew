@@ -1,5 +1,6 @@
 # Written by dashcrew init. Edit it, then run dashcrew sync.
 toolkit: 1
+platform: flutter
 agents: [claude-code]
 stack:
   analytics: posthog

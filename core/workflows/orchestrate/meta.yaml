@@ -1,2 +1,0 @@
-description: Run a chain of role agents for large work, one phase at a time, with a roster decided up front and handoffs saved as files.
-argument_hint: "team | feature | bugfix | refactor | security | slicing <task description>"

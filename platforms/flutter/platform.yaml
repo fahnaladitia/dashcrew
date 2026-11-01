@@ -1,0 +1,12 @@
+description: Flutter apps and packages written in Dart.
+detect: [pubspec.yaml]
+commands:
+  analyze: flutter analyze
+  test: flutter test
+  test_scoped: flutter test --reporter expanded
+  deps: flutter pub get
+  format: dart format
+link: pubspec_overrides.yaml
+doc_comment: Dartdoc
+mcp_servers:
+  dart-mcp-server: { command: dart, args: [mcp-server] }

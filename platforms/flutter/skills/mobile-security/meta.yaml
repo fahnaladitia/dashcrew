@@ -1,0 +1,3 @@
+description: Security checklist for a Flutter mobile app - credentials, storage, transport, personal data, platform surface, scanners and verdict.
+when_to_use: When the scope touches auth or tokens, storage, the network client, deep links, WebViews, analytics properties, permissions, platform config or logs of user data.
+review: true

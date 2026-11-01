@@ -134,4 +134,29 @@ dependencies:
   test('missing pubspec.yaml fails', () {
     expect(() => detect(project.path, remoteBranches: const []), throwsA(isA<InitException>()));
   });
+
+  test('platforms match on any of their detect files', () {
+    const commands = {'analyze': 'a', 'test': 'b', 'test_scoped': 'c', 'deps': 'd', 'format': null};
+    final platforms = {
+      'flutter': const PlatformSpec(name: 'flutter', detect: ['pubspec.yaml'], commands: commands),
+      'go': const PlatformSpec(name: 'go', detect: ['go.mod', 'go.work'], commands: commands),
+    };
+
+    expect(detectPlatforms(project.path, platforms), isEmpty);
+    write('go.work', '');
+    expect(detectPlatforms(project.path, platforms), ['go']);
+    write('pubspec.yaml', 'name: app\n');
+    expect(detectPlatforms(project.path, platforms), ['flutter', 'go']);
+  });
+
+  test('a platform other than the default reads no pubspec.yaml', () {
+    write('pubspec.yaml', 'name: app\ndependencies:\n  dio: ^5.0.0\n');
+    write('lib/main_dev.dart', '');
+
+    final detection = detect(project.path, remoteBranches: const ['origin/main'], platform: 'go');
+
+    expect(detection.stack, isEmpty);
+    expect(detection.flavors, isEmpty);
+    expect(detection.baseBranches, ['main']);
+  });
 }

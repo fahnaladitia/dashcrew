@@ -6,7 +6,7 @@ argument-hint: "[error output or failing command]"
 
 # build-fix
 
-Runs the `flutter-build-error-resolver` role.
+The main session runs it. Read the error and the related code before forming any theory; never guess.
 This is not a chain step: use it when a build error blocks any step, then resume where you were.
 
 Never start with a clean. It destroys evidence and costs minutes. Read the error first.
@@ -29,6 +29,8 @@ Symptom: a missing `.g.dart` file or a missing generated symbol.
 dart run build_runner build --delete-conflicting-outputs
 ```
 
+A change to a persisted type's ids or field order breaks data already stored on user devices; raise it to the user, never change it silently.
+
 ### 3. Dependency resolution
 
 ```bash
@@ -41,7 +43,7 @@ flutter pub get 2>&1 | tail -20
 cd android && ./gradlew assembleDebug --stacktrace 2>&1 | tail -40
 ```
 
-Common causes: minSdk too low for a new dependency, duplicate classes from transitive dependencies, Kotlin or AGP version mismatch.
+Common causes: minSdk too low for a new dependency, duplicate classes from transitive dependencies, Kotlin or AGP version mismatch, manifest merge conflicts.
 
 ### 5. iOS / CocoaPods
 
@@ -71,6 +73,8 @@ Cause:   <root cause, at file:line>
 Fix:     <what changed>
 Verify:  <command run, with its real output>
 ```
+
+Paste the command output. A claim without output is not verification.
 
 ## Dependency conflicts
 

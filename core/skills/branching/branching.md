@@ -20,7 +20,7 @@ With git's default `branch.autoSetupMerge`, a branch created from a remote-track
 ## Wrong upstream
 
 - Symptom: `git status -sb` shows `## feat/x...origin/<shared-branch> [ahead 1]`.
-- Fix: `git branch --unset-upstream`, without asking. It is local config, reversible, and touches no commit or remote. A read-only role reports it to the main session instead.
+- Fix: `git branch --unset-upstream`, without asking. It is local config, reversible, and touches no commit or remote. The `reviewer` only reports it.
 - Never "fix" it by pointing the upstream at the base branch.
 
 ## Upstream and pull

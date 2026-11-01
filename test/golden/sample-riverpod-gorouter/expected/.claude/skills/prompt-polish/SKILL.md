@@ -1,45 +1,36 @@
 ---
 name: prompt-polish
-description: "Turn a raw request into the confirmed step 0 block before any planning starts."
-when_to_use: "At the start of every task that runs the chain, before the plan workflow."
+description: "Turn a raw request into the confirmed step 0 block before any plan or code."
+when_to_use: "At the start of every task."
 ---
 
 # Prompt polish (step 0)
 
-Turn the request into the block below, print it in chat, and wait for the user to confirm it before `plan` runs. If the project keeps its own prompt template, fill that one; it wins over this one.
+Turn the request into the step 0 block in AGENTS.md, print it in chat, and wait for the user to confirm it. If the project keeps its own prompt template, fill that one; it wins over this one.
 
 ## Refine before writing
 
 - Who is this for, and what core problem does it solve?
-- Which assumptions hide in the request? Name each one.
-- Write an explicit Not Doing list so scope cannot creep. Use the `idea-refine` skill when it is installed.
+- Which assumptions hide in the request? Name each one; when the request reads two ways, name both.
+- Keep scope tight: what is left out goes into the TASK line as "not doing". Use the `idea-refine` skill when it is installed.
 
-## Category
+## Lines
 
-- `feat`: new feature, screen slicing, redesign, API integration, new user flow.
-- `fix`: functional bug, wrong state or calculation, UI issue that does not crash.
-- `hotfix`: critical production crash or blocking exception.
-
-## Block
-
-```text
-CATEGORY:         feat | fix | hotfix
-GOAL:             <who it is for> - <core problem>
-NOT DOING:        <explicit exclusions>
-ASSUMPTIONS:      <hidden assumptions surfaced>
-TIER:             trivial | small | standard | large - <evidence>
-SCOPE:            <exact directories and files>
-DATA FLOW:        <layers touched: request -> client -> response DTO -> mapper -> model -> repository -> state holder -> UI>
-DATA-LAYER TESTS: <test files and cases to write first, in test/>
-DISPOSAL TARGETS: <controllers, focus nodes, subscriptions, timers, tickers, image cache widths>
-DARTDOC TARGETS:  <units that will need Dartdoc>
-BRANCH:           1) <name>  2) <name>  3) <name>  - base branch? <ask>
-PLAN:             .ai/plans/<task-slug>/plan.md (strategy) + code.md (code changes)
-PR DESCRIPTION:   .ai/pr/<branch-name>.md
-```
-
-Installed packs and workflows may add lines below the block (roster, QA identifiers, analytics question).
+- `TASK`: the category, then the request in one or two sentences with the exact directories and files in scope.
+  - `feat`: new feature, screen slicing, redesign, API integration, new user flow.
+  - `fix`: functional bug, wrong state or calculation, UI issue that does not crash.
+  - `hotfix`: critical production crash or blocking exception.
+- `Tier`: per the size tier table in AGENTS.md, with evidence.
+- `Questions`: every question at once, including the ones packs add (analytics, identifiers). Never ask a second round later.
+- `Skills`: from the skill index in AGENTS.md, each with the reason it applies. No skill that conflicts with the project's choices:
+  - architecture skills that impose a state-management pattern the project does not use
+  - test skills that require a mocking library the project does not use
+  - long-form documentation writers that break the Dartdoc line cap
+  - mass lint or format auto-fix skills
+  - setup skills for an HTTP client, router or analytics product the project does not use
+- `Success criteria`: when the task has none, apply `acceptance-criteria`. Map each criterion to the test type that proves it, or `manual`.
+- `Branch`: 3 names per the branching rules, and the base question.
 
 ## Confirmation
 
-The user confirms scope, Not Doing, roster, tier and the analytics decision once, on this block. Add no further confirmation point.
+The user confirms the whole block once. Add no further confirmation point before the plan.

@@ -33,18 +33,17 @@ void main() {
     expect(antigravity.keys, contains('.agents/skills/bloc-patterns/SKILL.md'));
   });
 
-  test('roles land in .agents/agents with a tools allowlist from their capability', () {
+  test('the two subagents land in .agents/agents with the read tools allowlist', () {
     final files = render('toolkit: 1\nagents: [antigravity]\n');
 
-    final reviewer = files['.agents/agents/flutter-code-reviewer.md']!;
-    expect(reviewer, startsWith('---\nname: flutter-code-reviewer\ndescription: "'));
+    final reviewer = files['.agents/agents/reviewer.md']!;
+    expect(reviewer, startsWith('---\nname: reviewer\ndescription: "'));
     expect(reviewer, contains('\nmodel: inherit\ntools: [view_file, list_dir, find_by_name, grep_search, run_command]\n---\n\n'));
-    expect(files['.agents/agents/flutter-planner.md'], contains('tools: [view_file, list_dir, find_by_name, grep_search, run_command, write_to_file]'));
-    expect(
-      files['.agents/agents/flutter-engineer.md'],
-      contains('tools: [view_file, list_dir, find_by_name, grep_search, run_command, write_to_file, replace_file_content, multi_replace_file_content]'),
-    );
-    expect(files.keys, isNot(contains('.agents/agents/design-refiner.md')));
+    expect(files['.agents/agents/explorer.md'], contains('tools: [view_file, list_dir, find_by_name, grep_search, run_command]\n'));
+    expect(files.keys.where((path) => path.startsWith('.agents/agents/')).toList()..sort(),
+        ['.agents/agents/explorer.md', '.agents/agents/reviewer.md']);
+    expect(AntigravityAdapter.toolsByCapability['write-plans'], [...AntigravityAdapter.toolsByCapability['read']!, 'write_to_file']);
+    expect(AntigravityAdapter.toolsByCapability['write-code'], containsAll(['replace_file_content', 'multi_replace_file_content']));
   });
 
   test('every allowlisted tool is a documented antigravity tool name', () {

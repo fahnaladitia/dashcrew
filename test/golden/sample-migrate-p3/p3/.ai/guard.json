@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "blocked_git": [
+    "cherry-pick",
+    "commit",
+    "merge",
+    "push",
+    "rebase",
+    "reset",
+    "revert",
+    "stash",
+    "tag"
+  ],
+  "block_formatters": true,
+  "plans_dir": ".ai/plans",
+  "role_capability": {
+    "dart-tdd-guide": "write-code",
+    "design-refiner": "write-plans",
+    "flutter-architect": "write-plans",
+    "flutter-build-error-resolver": "write-code",
+    "flutter-code-reviewer": "read",
+    "flutter-engineer": "write-code",
+    "flutter-planner": "write-plans",
+    "flutter-security-reviewer": "read",
+    "local-storage-engineer": "write-code",
+    "product-manager": "write-plans",
+    "qa-engineer": "write-code",
+    "tech-lead": "read",
+    "worktree-monitor": "read"
+  },
+  "forbidden_imports": [],
+  "local_packages": [],
+  "plan_gate": true
+}

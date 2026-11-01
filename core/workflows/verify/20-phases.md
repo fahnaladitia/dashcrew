@@ -6,13 +6,15 @@ rules:
   - verify.warnings-nonblocking
   - verify.test-evidence
   - verify.trace-when-no-tests
+  - verify.failure-checked-on-base
+  - verify.manual-checklist
   - verify.leak-audit
   - verify.diff-review
 ---
 ## Phase 1: Analyze (STOP on failure)
 
 ```bash
-flutter analyze <files and folders from the scope> 2>&1 | tail -30
+{{platform.commands.analyze}} <files and folders from the scope> 2>&1 | tail -30
 ```
 
 - Analyze runs first. Errors must be zero; an analyze failure stops verify.
@@ -22,44 +24,41 @@ flutter analyze <files and folders from the scope> 2>&1 | tail -30
 
 ## Phase 2: Tests
 
-Run every test file in scope in one call; each call pays a 10 to 20 second compile.
+Run every test file in scope in one call; each call pays the test runner's startup cost.
 
 ```bash
-flutter test test/<a>_test.dart test/<b>_test.dart --reporter expanded 2>&1 | tail -40
+{{platform.commands.test_scoped}} <test files from the scope> 2>&1 | tail -40
 ```
 
 - Report passed and failed counts, and name the scope.
 - A scoped run says nothing about the rest of the suite; never claim "all tests green".
 - When a file fails, rerun that file alone for the full output.
+- When a test fails, check once whether it also fails on the base, without touching this working tree: run that test file alone in a detached worktree of the base (`git worktree add --detach <scratch dir> <base>`, then `{{platform.commands.deps}}` there; remove it afterwards with `git worktree remove`). Failing there too, it is reported as pre-existing, not as a regression. Never stash, and never check out the base here.
 - Every mapper, repository, model and state holder the task touched must have a test. A missing test is FAIL, not a note.
 - When the change has no tests at all, trace it in chat instead: files and lines, the logic path before and after, and side effects.
+- Hand the user the manual checklist from step 0 in one message, and record each result for the PR Testing section.
 
 ## Phase 3: Secret scan
 
 ```bash
-grep -rn "sk-\|api_key\|apiKey *=\|secret *=\|password *=\|Bearer " lib/ --include="*.dart" | grep -v "\.g\.dart" | head -20
+grep -rn "sk-\|api_key\|apiKey *=\|secret *=\|password *=\|Bearer " <source folders> | head -20
 ```
 
 DTO field names and constant keys are not findings. Look for literals that hold real values.
 
 ## Phase 4: Architecture and leaks
 
-```bash
-grep -rn "print(" lib/ --include="*.dart" | grep -v "debugPrint" | head -20
-```
-
 Selected packs add their own boundary checks to this phase.
 
 Check by reading, on the changed files:
 
 - a response DTO used in the UI without a mapper
-- `BuildContext` used after an `await` without a `mounted` guard
-- every controller, focus node, timer, animation ticker and stream subscription is disposed or cancelled
-- network images in lists and grids set a cache bound (`cacheWidth`, `cacheHeight` or `memCacheWidth`)
+- debug output left in app code instead of the project logger
+- every resource the change opens (subscription, listener, timer, connection, file handle) is closed or cancelled
 
 ## Phase 5: QA identifiers
 
-For each screen this task sliced or redesigned, every QA-relevant widget carries its identifier as AGENTS.md defines it.
+For each screen this task sliced or redesigned, every QA-relevant element carries its identifier as AGENTS.md defines it.
 Write N/A when no screen was sliced or redesigned.
 
 ## Phase 6: Diff review
