@@ -24,6 +24,7 @@ var samples = []string{
 	"sample-other",
 	"sample-project-platform",
 	"sample-knowledge",
+	"sample-release-lines",
 }
 
 // update rewrites the goldens from the current output instead of comparing:

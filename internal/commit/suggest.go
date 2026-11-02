@@ -11,6 +11,8 @@ import (
 // Input is what the member or agent passes to suggest; nil leaves the part to derivation or a placeholder.
 type Input struct {
 	Subject, Body, Type, Scope *string
+	// PortedFrom are the commits a port carries; each adds a `Ported-from:` trailer.
+	PortedFrom []string
 }
 
 // Suggestion is everything suggest derived, the message and the commands, for text or JSON output.
@@ -66,7 +68,7 @@ func Suggest(repo Repo, cfg *profile.Commit, branchPrefix *omap.Map[any], in Inp
 		}
 	}
 
-	parts := Parts{Type: s.Type, Scope: s.Scope, Ticket: s.Ticket}
+	parts := Parts{Type: s.Type, Scope: s.Scope, Ticket: s.Ticket, PortedFrom: in.PortedFrom}
 	if in.Subject != nil {
 		parts.Subject = *in.Subject
 		s.Filled = true

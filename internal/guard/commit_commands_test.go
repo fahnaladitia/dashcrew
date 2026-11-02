@@ -32,3 +32,30 @@ func TestCommitCommandsAreAllowedWhileGitCommitStaysBlocked(t *testing.T) {
 		t.Error("agent_commit: true blocks git commit")
 	}
 }
+
+// Release lines (P6): recording a branch's release is local branch config, and the release and port checks only read
+// git, so the agent may run them; the merge or cherry-pick a port needs stays the user's.
+func TestReleaseCommandsAreAllowedWhileMergeAndCherryPickStayBlocked(t *testing.T) {
+	for _, p := range []Policy{testPolicy(false, false), testPolicy(true, false)} {
+		for _, command := range []string{
+			"git config branch.fix/totals.dashcrew-release 2.4.5",
+			"git config --get branch.fix/totals.dashcrew-release",
+			"dashcrew release lines",
+			"dashcrew release status 2.4.5",
+			"dashcrew check --ports --from 2.4.5 --to main",
+			"dashcrew commit suggest --ported-from abc1234 --subject 'keep the total'",
+		} {
+			if blocked(t, shellEvent(command), p) {
+				t.Errorf("blocked: %s", command)
+			}
+		}
+		for _, command := range []string{
+			"git " + "merge --no-ff --no-commit -X find-renames release/2.4.5",
+			"git " + "cherry-pick -x --no-commit abc1234",
+		} {
+			if !blocked(t, shellEvent(command), p) {
+				t.Errorf("allowed: %s", command)
+			}
+		}
+	}
+}

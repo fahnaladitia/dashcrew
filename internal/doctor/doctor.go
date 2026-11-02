@@ -20,6 +20,7 @@ import (
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
 	"github.com/fahnaladitia/dashcrew/internal/dartjson"
 	"github.com/fahnaladitia/dashcrew/internal/guard"
+	"github.com/fahnaladitia/dashcrew/internal/lines"
 	"github.com/fahnaladitia/dashcrew/internal/omap"
 	"github.com/fahnaladitia/dashcrew/internal/profile"
 	"github.com/fahnaladitia/dashcrew/internal/sync"
@@ -111,10 +112,14 @@ func (d Doctor) Run() []Check {
 
 func (d Doctor) checks(projectPacks Check) []Check {
 	profileCheck := d.profileCheck()
-	lockCheck, lock := d.lockCheck()
+	lockCheck, lock, lockConflicted := d.lockCheck()
+	filesFrom := lock
+	if lockConflicted {
+		filesFrom, _, _ = sync.Sync{Catalog: d.Catalog, ProjectDir: d.ProjectDir}.MergeLock()
+	}
 	var lockedFiles *omap.Map[string]
-	if lock != nil {
-		if files, ok := lock.Value("files").(*omap.Map[any]); ok {
+	if filesFrom != nil {
+		if files, ok := filesFrom.Value("files").(*omap.Map[any]); ok {
 			lockedFiles = omap.New[string]()
 			for _, path := range files.Keys() {
 				hash, _ := files.Value(path).(string)
@@ -123,13 +128,14 @@ func (d Doctor) checks(projectPacks Check) []Check {
 		}
 	}
 	agents := d.agents()
+	line := d.releaseLine()
 	checks := []Check{
 		profileCheck,
 		projectPacks,
 		lockCheck,
-		d.version(lock),
-		d.drift(lockedFiles),
-		d.stale(lockedFiles, profileCheck.Status != Fail),
+		d.version(lock, line),
+		d.drift(lockedFiles, lockConflicted),
+		d.stale(lockedFiles, profileCheck.Status != Fail && !lockConflicted, line),
 		d.guardPolicy(),
 	}
 	if d.MachineChecks {
@@ -151,6 +157,9 @@ func (d Doctor) checks(projectPacks Check) []Check {
 		}
 		if staleCheck, ok := d.knowledgeStale(); ok {
 			checks = append(checks, staleCheck)
+		}
+		if lineCheck, ok := d.releaseLineCheck(lock, line); ok {
+			checks = append(checks, lineCheck)
 		}
 	}
 	checks = append(checks, d.agentsMdSize(AgentsMdLimitFor(agents)), d.gitignore())
@@ -543,24 +552,28 @@ func (d Doctor) projectPacks() Check {
 	return Check{id, OK, fmt.Sprintf("%d project packs: %s", len(names), strings.Join(names, ", "))}
 }
 
-func (d Doctor) lockCheck() (Check, *omap.Map[any]) {
+// lockCheck reads the lock; conflicted is true when it holds merge conflict markers.
+func (d Doctor) lockCheck() (check Check, lock *omap.Map[any], conflicted bool) {
 	const id = "lock"
 	if !d.exists(sync.LockPath) {
-		return Check{id, Fail, sync.LockPath + " missing; run dashcrew sync"}, nil
+		return Check{id, Fail, sync.LockPath + " missing; run dashcrew sync"}, nil, false
 	}
 	text, err := d.read(sync.LockPath)
 	if err != nil {
-		return Check{id, Fail, sync.LockPath + " is not JSON: " + err.Error()}, nil
+		return Check{id, Fail, sync.LockPath + " is not JSON: " + err.Error()}, nil, false
+	}
+	if sync.HasConflictMarkers(text) {
+		return Check{id, Fail, sync.LockPath + " has conflict markers; run dashcrew sync --after-merge, then stage and commit what it lists"}, nil, true
 	}
 	value, err := dartjson.Decode(text)
 	if err != nil {
-		return Check{id, Fail, sync.LockPath + " is not JSON: " + err.Error()}, nil
+		return Check{id, Fail, sync.LockPath + " is not JSON: " + err.Error()}, nil, false
 	}
 	lock, ok := value.(*omap.Map[any])
 	if !ok || !isOne(lock.Value("schema")) {
-		return Check{id, Fail, sync.LockPath + " has an unknown schema; run dashcrew sync --force"}, nil
+		return Check{id, Fail, sync.LockPath + " has an unknown schema; run dashcrew sync --force"}, nil, false
 	}
-	return Check{id, OK, sync.LockPath + " schema 1"}, lock
+	return Check{id, OK, sync.LockPath + " schema 1"}, lock, false
 }
 
 // isOne is Dart's `value == 1`, which a JSON 1.0 also meets.
@@ -575,7 +588,7 @@ func isOne(value any) bool {
 }
 
 // version warns when teammates on different dashcrew versions would rewrite each other's generated files.
-func (d Doctor) version(lock *omap.Map[any]) Check {
+func (d Doctor) version(lock *omap.Map[any], line *releaseLine) Check {
 	const id = "version"
 	if lock == nil {
 		return Check{id, Skip, "needs the lock"}
@@ -588,44 +601,57 @@ func (d Doctor) version(lock *omap.Map[any]) Check {
 	switch order := version.Compare(written, current); {
 	case order > 0:
 		return Check{id, Warn, "the lock was written by dashcrew " + written + ", this is " + current + "; update dashcrew to " + written}
+	case order < 0 && line != nil && line.resolution.Protected():
+		return Check{id, Info, "the lock was written by dashcrew " + written + "; this release line keeps it until dashcrew sync --upgrade"}
 	case order < 0:
 		return Check{id, Warn, "the lock was written by dashcrew " + written + "; run dashcrew sync to move it to " + version.Current()}
 	}
 	return Check{id, OK, "lock written by this dashcrew (" + version.Current() + ")"}
 }
 
-func (d Doctor) drift(lockedFiles *omap.Map[string]) Check {
+// drift fails generated files that are missing, carry merge conflict markers or differ from the lock. After a
+// merge (markers, a conflicted lock or a MERGE_HEAD) the fix is `sync --after-merge`, else `sync --force`.
+func (d Doctor) drift(lockedFiles *omap.Map[string], lockConflicted bool) Check {
 	const id = "drift"
 	if lockedFiles == nil {
 		return Check{id, Skip, "needs the lock"}
 	}
 	paths := lockedFiles.Keys()
 	sort.Strings(paths)
-	var missing, edited []string
+	var missing, conflicted, edited []string
 	for _, path := range paths {
 		if !d.exists(path) {
 			missing = append(missing, path)
 			continue
 		}
 		content, err := d.read(path)
-		if err != nil || sync.FileHash(path, content) != lockedFiles.Value(path) {
+		switch {
+		case err == nil && sync.HasConflictMarkers(content):
+			conflicted = append(conflicted, path)
+		case err != nil || sync.FileHash(path, content) != lockedFiles.Value(path):
 			edited = append(edited, path)
 		}
 	}
-	if len(missing) == 0 && len(edited) == 0 {
+	if len(missing) == 0 && len(conflicted) == 0 && len(edited) == 0 {
 		return Check{id, OK, fmt.Sprintf("%d generated files match the lock", lockedFiles.Len())}
 	}
 	var parts []string
 	if len(missing) > 0 {
 		parts = append(parts, "missing: "+strings.Join(missing, ", "))
 	}
+	if len(conflicted) > 0 {
+		parts = append(parts, "conflict markers: "+strings.Join(conflicted, ", "))
+	}
 	if len(edited) > 0 {
 		parts = append(parts, "edited by hand: "+strings.Join(edited, ", "))
+	}
+	if len(conflicted) > 0 || lockConflicted || lines.MergeInProgress(d.ProjectDir) {
+		return Check{id, Fail, strings.Join(parts, "; ") + " (dashcrew sync --after-merge renders them fresh; stage and commit what it lists)"}
 	}
 	return Check{id, Fail, strings.Join(parts, "; ") + " (dashcrew sync --force restores them)"}
 }
 
-func (d Doctor) stale(lockedFiles *omap.Map[string], profileOK bool) Check {
+func (d Doctor) stale(lockedFiles *omap.Map[string], profileOK bool, line *releaseLine) Check {
 	const id = "stale"
 	if lockedFiles == nil || !profileOK {
 		return Check{id, Skip, "needs a valid profile and the lock"}
@@ -655,11 +681,92 @@ func (d Doctor) stale(lockedFiles *omap.Map[string], profileOK bool) Check {
 	if len(changed) == 0 {
 		return Check{id, OK, "output matches the current profile and catalog"}
 	}
-	shown := strings.Join(changed, ", ")
-	if len(changed) > 5 {
-		shown = strings.Join(changed[:5], ", ") + ", ..."
+	held := map[string]bool{}
+	if line != nil && line.resolution.Protected() {
+		if hold, err := (sync.Sync{Catalog: d.Catalog, ProjectDir: d.ProjectDir}).Hold(); err == nil && hold != nil {
+			for _, path := range hold.Files {
+				held[path] = true
+			}
+		}
 	}
-	return Check{id, Warn, fmt.Sprintf("%d files would change (%s); run dashcrew sync", len(changed), shown)}
+	var heldFiles, writable []string
+	for _, path := range changed {
+		if held[path] {
+			heldFiles = append(heldFiles, path)
+		} else {
+			writable = append(writable, path)
+		}
+	}
+	shown := func(paths []string) string {
+		if len(paths) > 5 {
+			return strings.Join(paths[:5], ", ") + ", ..."
+		}
+		return strings.Join(paths, ", ")
+	}
+	if len(writable) == 0 {
+		return Check{id, Info, "held at the lock's toolkit on this release line: " + shown(heldFiles) + "; dashcrew sync --upgrade writes them"}
+	}
+	detail := fmt.Sprintf("%d files would change (%s); run dashcrew sync", len(writable), shown(writable))
+	if len(heldFiles) > 0 {
+		detail += "; held on this release line until dashcrew sync --upgrade: " + shown(heldFiles)
+	}
+	return Check{id, Warn, detail}
+}
+
+// releaseLine is the branch's place among the profile's release lines.
+type releaseLine struct {
+	all        []lines.Line
+	resolution lines.Resolution
+}
+
+// releaseLine is nil without `project.release_lines` or outside a git repository.
+func (d Doctor) releaseLine() *releaseLine {
+	p, err := d.parseProfile()
+	if err != nil || p.ReleaseLines == nil {
+		return nil
+	}
+	all, err := lines.List(d.ProjectDir, p.ReleaseLines)
+	if err != nil {
+		return nil
+	}
+	return &releaseLine{all: all, resolution: lines.Resolve(d.ProjectDir, p.ReleaseLines, all, "")}
+}
+
+// releaseLineCheck compares a release line's toolkit version with the main line's lock, read from git; false off
+// a release line or when the main line's lock cannot be read.
+func (d Doctor) releaseLineCheck(lock *omap.Map[any], line *releaseLine) (Check, bool) {
+	const id = "release-line"
+	if line == nil || !line.resolution.Protected() || lock == nil {
+		return Check{}, false
+	}
+	main := lines.Main(line.all)
+	if main == nil {
+		return Check{}, false
+	}
+	text, ok := lines.Show(d.ProjectDir, main.Ref+":./"+sync.LockPath)
+	if !ok {
+		return Check{}, false
+	}
+	value, err := dartjson.Decode(text)
+	mainLock, _ := value.(*omap.Map[any])
+	if err != nil || mainLock == nil {
+		return Check{}, false
+	}
+	mainVersion, _ := mainLock.Value("dashcrew_version").(string)
+	ours, _ := lock.Value("dashcrew_version").(string)
+	if mainVersion == "" || ours == "" {
+		return Check{}, false
+	}
+	prefix := line.resolution.Describe() + ": toolkit "
+	switch order := version.Compare(ours, mainVersion); {
+	case order < 0:
+		return Check{id, Info, prefix + ours + ", the main line " + main.Branch + " has " + mainVersion +
+			"; dashcrew sync --upgrade moves this line"}, true
+	case order > 0:
+		return Check{id, Warn, prefix + ours + " is newer than the main line " + main.Branch + "'s " + mainVersion +
+			"; upgrade the main line too"}, true
+	}
+	return Check{id, OK, prefix + ours + ", same as the main line " + main.Branch}, true
 }
 
 func (d Doctor) guardPolicy() Check {

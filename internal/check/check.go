@@ -14,7 +14,10 @@ import (
 	"github.com/fahnaladitia/dashcrew/internal/commit"
 	"github.com/fahnaladitia/dashcrew/internal/dartjson"
 	"github.com/fahnaladitia/dashcrew/internal/doctor"
+	releaselines "github.com/fahnaladitia/dashcrew/internal/lines"
 	"github.com/fahnaladitia/dashcrew/internal/omap"
+	"github.com/fahnaladitia/dashcrew/internal/ports"
+	"github.com/fahnaladitia/dashcrew/internal/profile"
 	"github.com/fahnaladitia/dashcrew/internal/sync"
 )
 
@@ -42,7 +45,110 @@ func (c PrCheck) Run(prBody *string) ([]doctor.Check, error) {
 		text, _ := pullRequest.Value("body").(string)
 		body = &text
 	}
-	return append(checks, c.sections(body), c.commits(pullRequest)), nil
+	checks = append(checks, c.sections(body), c.commits(pullRequest))
+	if p, err := (sync.Sync{Catalog: c.Catalog, ProjectDir: c.ProjectDir}).Profile(); err == nil && p.ReleaseLines != nil && p.ReleaseLines.CheckPorts {
+		checks = append(checks, c.ports(p))
+	}
+	return checks, nil
+}
+
+// ports is `release_lines.check_ports`: every adjacent pair of lines, as `dashcrew check --ports` runs it.
+func (c PrCheck) ports(p *profile.Profile) doctor.Check {
+	const id = "ports"
+	pairs, err := Ports(c.ProjectDir, p, "", "")
+	if err != nil {
+		return doctor.Check{ID: id, Status: doctor.Fail, Detail: err.Error() + "; a CI checkout needs fetch-depth: 0 and every line fetched"}
+	}
+	if len(pairs) == 0 {
+		return doctor.Check{ID: id, Status: doctor.Skip, Detail: "fewer than two lines; a CI checkout needs fetch-depth: 0 and every line fetched"}
+	}
+	var problems []string
+	fixes := 0
+	for _, pair := range pairs {
+		fixes += len(pair.Fixes)
+		for _, fix := range pair.Fixes {
+			if fix.Status == ports.Missing || fix.Status == ports.Lost {
+				problems = append(problems, pair.From.Branch+" -> "+pair.To.Branch+": "+strings.Join(strings.Fields(fix.Line()), " "))
+			}
+		}
+	}
+	if len(problems) > 0 {
+		return doctor.Check{ID: id, Status: doctor.Fail, Detail: strings.Join(problems, "; ") + "; port it with the port workflow"}
+	}
+	return doctor.Check{ID: id, Status: doctor.OK, Detail: fmt.Sprintf("%s on %s reached the newer lines", plural(fixes, "fix", "fixes"), plural(len(pairs), "line pair", "line pairs"))}
+}
+
+func plural(n int, one, many string) string {
+	if n == 1 {
+		return "1 " + one
+	}
+	return fmt.Sprintf("%d %s", n, many)
+}
+
+// Ports checks the fixes of from against to (`dashcrew check --ports`). from and to are a version, a line branch
+// or `main`; empty from is the line before to, empty to the line after from, and both empty every adjacent pair.
+func Ports(dir string, p *profile.Profile, from, to string) ([]ports.Pair, error) {
+	if p.ReleaseLines == nil {
+		return nil, fmt.Errorf("no release_lines in .ai/project.yaml; add project.release_lines: { main, release, hotfix } first")
+	}
+	all, err := releaselines.List(dir, p.ReleaseLines)
+	if err != nil {
+		return nil, fmt.Errorf("%s is not inside a git repository", dir)
+	}
+	index := func(name string) (int, error) {
+		line := releaselines.Find(all, name)
+		if line == nil {
+			return 0, fmt.Errorf("no line %s; dashcrew release lines lists them", name)
+		}
+		for i := range all {
+			if all[i].Ref == line.Ref {
+				return i, nil
+			}
+		}
+		return 0, fmt.Errorf("no line %s", name)
+	}
+	var pairs [][2]releaselines.Line
+	switch {
+	case from == "" && to == "":
+		pairs = releaselines.Pairs(all)
+	default:
+		fromIndex, toIndex := -1, -1
+		if from != "" {
+			if fromIndex, err = index(from); err != nil {
+				return nil, err
+			}
+			if fromIndex == len(all)-1 && all[fromIndex].Kind == profile.MainLine {
+				return nil, fmt.Errorf("--from %s: the main line has no newer line", from)
+			}
+		}
+		if to != "" {
+			if toIndex, err = index(to); err != nil {
+				return nil, err
+			}
+		}
+		switch {
+		case fromIndex < 0:
+			fromIndex = toIndex - 1
+		case toIndex < 0:
+			toIndex = fromIndex + 1
+		}
+		if fromIndex < 0 || toIndex >= len(all) {
+			return nil, fmt.Errorf("no line before or after the one named")
+		}
+		if fromIndex >= toIndex {
+			return nil, fmt.Errorf("--from %s is not older than --to %s", from, to)
+		}
+		pairs = [][2]releaselines.Line{{all[fromIndex], all[toIndex]}}
+	}
+	var out []ports.Pair
+	for _, pair := range pairs {
+		result, err := ports.Check(dir, p.Commit, all, pair[0], pair[1])
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, result)
+	}
+	return out, nil
 }
 
 // pullRequest is the `pull_request` object of the event in CI; nil outside a pull request event.

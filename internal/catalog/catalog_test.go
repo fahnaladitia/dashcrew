@@ -530,3 +530,25 @@ func TestShippedCatalogLoads(t *testing.T) {
 		t.Errorf("core %d, platforms %v, roles %d", len(catalog.Core), catalog.Platforms, len(catalog.Roles))
 	}
 }
+
+func TestDigestFollowsTheCatalogFilesAndSurvivesProjectPacks(t *testing.T) {
+	root := t.TempDir()
+	write(t, root, "core/notes.txt", "one\n")
+	first := load(t, root)
+	if first.Digest == "" || load(t, root).Digest != first.Digest {
+		t.Fatalf("digest %q is not stable", first.Digest)
+	}
+	project := t.TempDir()
+	write(t, project, ".ai/packs/state/mine/pack.yaml", "description: mine\n")
+	overlaid, err := first.WithProjectPacks(project)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if overlaid.Digest != first.Digest || first.ResolvedFor("flutter").Digest != first.Digest {
+		t.Error("project packs or platform resolution changed the digest")
+	}
+	write(t, root, "core/notes.txt", "two\n")
+	if load(t, root).Digest == first.Digest {
+		t.Error("digest ignores a changed file")
+	}
+}

@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
 	"github.com/fahnaladitia/dashcrew/internal/commit"
@@ -52,6 +53,7 @@ func commitCommand(cli cliIO) *command {
 	suggest.option("body", "", "The body; without it and without --subject the command keeps a <body> placeholder.", nil)
 	suggest.option("type", "", "Override the type derived from the branch.", nil)
 	suggest.option("scope", "", "Override the scope derived from the files; an empty value drops it.", nil)
+	suggest.option("ported-from", "", "Comma-separated commits this change ports; each becomes a Ported-from: trailer.", nil)
 	suggest.flag("json", "", "Print the derived parts and commands as JSON.", false, false)
 	suggest.run = func(r *results) (int, error) {
 		repo, p, err := openCommitRepo(r)
@@ -74,6 +76,14 @@ func commitCommand(cli cliIO) *command {
 		}
 		prefixes, _ := p.Project.Value("branch_prefix").(*omap.Map[any])
 		in := commit.Input{Subject: r.option("subject"), Body: r.option("body"), Type: r.option("type"), Scope: r.option("scope")}
+		if value := r.option("ported-from"); value != nil {
+			for _, sha := range strings.Split(*value, ",") {
+				if sha = strings.TrimSpace(sha); !commit.CommitHash.MatchString(sha) {
+					return 0, &usageError{suggest, "--ported-from " + sha + " is not a commit hash (7 to 40 hex characters)."}
+				}
+				in.PortedFrom = append(in.PortedFrom, strings.TrimSpace(sha))
+			}
+		}
 		s, err := commit.Suggest(repo, p.Commit, prefixes, in, relative)
 		if err != nil {
 			return 0, &exitError{1, err.Error()}

@@ -2,11 +2,11 @@
 
 ## Workflow chain
 
-Run this chain by default, unasked. Never skip a step of your tier's chain; finish each step before the next starts.
+Run this chain unasked. Never skip a step of your tier's chain; finish each before the next.
 
 ### Step 0
 
-Never run a raw prompt: polish it with `prompt-polish` and print this block first:
+Never run a raw prompt: polish it with `prompt-polish` and print this block:
 
 ```text
 TASK:             <feat | fix | hotfix>: <polished request>
@@ -31,14 +31,14 @@ The user confirms or edits it once. Then create the branch (see Branching); its 
 
 - Two read-only subagents: `reviewer` (a plan or a diff) and `explorer` (maps many files to `file:line`); the main session does the rest.
 - Loops stop when the step 0 success criteria pass, not when findings run out. BLOCKER and HIGH are fixed; MEDIUM and LOW go to the PR Notes, asked about once as one list.
-- A re-review covers only the rework diff. A second failing review goes to the user, never into a third round.
-- Criteria mapped to `manual` form one device checklist, handed over at `verify` and recorded in the PR Testing section.
+- A re-review covers only the rework diff. A second failing review goes to the user, never a third round.
+- Criteria mapped to `manual` form one device checklist, handed over at `verify`, recorded in the PR Testing section.
 - A branch's work is done only when its PR description is written or updated (`pr-description`), every round, small tasks included. Then ask once whether to open a PR (`pr-create`); never without an explicit yes, which never carries over to another branch or round.
 - The summary gives what changed, was skipped and needs follow-up; every unit that got Dartdoc; test status, skipped tests included; the PR description path, the commit command and the PR decision (the URL, or "not created"). End the session with `learn`.
 
-- Only these workflows exist: `plan`, `tdd`, `code-review`, `verify`, `learn`, `audit`, `worktree`, `build-fix`. If a request names another, say it does not exist.
+- Only these workflows exist: `plan`, `tdd`, `code-review`, `verify`, `learn`, `audit`, `worktree`, `build-fix`. Say any other named one does not exist.
 - `build-fix` is a detour, not a step: take it when a build, Gradle, CocoaPods or build_runner error blocks a step, then resume.
-- `audit` (read-only) and `worktree` sit outside the chain. Each audit finding becomes a new task; each worktree session, or the main session for an inline task, runs the chain.
+- `audit` (read-only) and `worktree` sit outside the chain. Each audit finding becomes a new task; each worktree session (the main session for an inline one) runs the chain.
 
 ### Size tier
 

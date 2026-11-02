@@ -1,7 +1,7 @@
 ---
 target: skill/pr-description
 order: 100
-rules: [pr.description-path, pr.one-file-per-branch, pr.write-at-step7, pr.from-diff-not-plan, pr.record-dropped, pr.language, pr.ends-at-last-section, pr.update-merges-sections, pr.sections-never-deleted, pr.section.title, pr.section.summary, pr.section.changes, pr.section.files, pr.section.testing, pr.testing-manual-checklist]
+rules: [pr.description-path, pr.release-plan-path, pr.one-file-per-branch, pr.write-at-step7, pr.from-diff-not-plan, pr.record-dropped, pr.language, pr.ends-at-last-section, pr.update-merges-sections, pr.sections-never-deleted, pr.section.title, pr.section.summary, pr.section.changes, pr.section.files, pr.section.testing, pr.testing-manual-checklist]
 ---
 # PR description
 
@@ -11,6 +11,9 @@ Each branch has exactly one PR description file. Write it at the end of the chai
 
 - `{{paths.pr}}/<branch>.md`, where `<branch>` is the verbatim output of `git branch --show-current`. A `/` stays a folder: `feat/order-history` writes `{{paths.pr}}/feat/order-history.md`.
 - One file per branch for its whole life: update the existing file, never open a second one, never rename it.
+{{#has_release_lines}}
+- A task with a release keeps its plan in `{{paths.plans}}/<release>/<task-slug>/`; name the release in the Summary. A port also names its origin line and commits.
+{{/has_release_lines}}
 
 ## Content
 

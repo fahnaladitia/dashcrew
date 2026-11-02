@@ -1,0 +1,305 @@
+# release status and ports
+
+=== step 1: dashcrew "release" "status" "--help"
+exit: 0
+stdout:
+| Regenerate <plans>/<version>/README.md, the release ledger: the task folders with their branch
+| and PR description, the commits on the line that carry Ported-from:, and the pending ports.
+| Writes only that file; reads git.
+| 
+| Usage: dashcrew release status <version> [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml.
+|                  (defaults to ".")
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 2: dashcrew "check" "--help"
+exit: 0
+stdout:
+| Merge gate for a pull request: toolkit current, PR sections present, commits in the pattern. Writes nothing.
+| 
+| Usage: dashcrew check [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml.
+|                  (defaults to ".")
+|     --pr-body    File holding the PR description; a pull_request workflow supplies it from the event.
+|     --base       Lint the commits of <base>..HEAD; a pull_request workflow supplies the range from the event.
+|     --ports      Only check that each fix of an older release line reached the newer one (exit 1 if not).
+|     --from       With --ports: the older line (a version, a line branch or main); default every adjacent pair.
+|     --to         With --ports: the newer line; default the line after --from.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 3: dashcrew "check" "--ports"
+exit: 1
+stdout:
+| release/2.4.0 -> hotfix/2.4.5: 6 fixes since develop at d4384e3
+|   ok       46ed83b fix: totals round down (merged)
+|   ok       99e0f2a fix: empty cart crash (merged)
+|   ok       e0682c7 fix: wrong currency (merged)
+|   ok       368e9f7 fix(cart): stale badge (merged)
+|   ok       acdbc19 fix: double charge (merged)
+|   ok       c7d3135 chore: rotate the signing key (merged)
+| hotfix/2.4.5 -> release/2.5.0: 7 fixes since develop at d4384e3, 4 missing or lost
+|   missing  46ed83b fix: totals round down
+|   ok       99e0f2a fix: empty cart crash (Ported-from: in 48786dc)
+|   ok       e0682c7 fix: wrong currency (cherry-pick -x in 01bcca8)
+|   ok       368e9f7 fix(cart): stale badge (same patch-id as 279c221)
+|   lost     acdbc19 fix: double charge (ported as aa04360, reverted by 7ce7c0f)
+|   missing  c7d3135 chore: rotate the signing key
+|   missing  5d17cb3 fix: login loop
+| release/2.5.0 -> develop: 3 fixes since develop at d260185, 3 missing or lost
+|   missing  48786dc fix: empty cart crash
+|   missing  01bcca8 fix: wrong currency
+|   missing  279c221 fix: badge count after checkout
+| 7 fixes are missing or lost; port them with the port workflow, then run this again
+stderr: (empty)
+files: (unchanged)
+
+=== step 4: dashcrew "check" "--ports" "--from" "2.4.0" "--to" "2.5.0"
+exit: 1
+stdout:
+| release/2.4.0 -> release/2.5.0: 6 fixes since develop at d4384e3, 3 missing or lost
+|   missing  46ed83b fix: totals round down
+|   ok       99e0f2a fix: empty cart crash (Ported-from: in 48786dc)
+|   ok       e0682c7 fix: wrong currency (cherry-pick -x in 01bcca8)
+|   ok       368e9f7 fix(cart): stale badge (same patch-id as 279c221)
+|   lost     acdbc19 fix: double charge (ported as aa04360, reverted by 7ce7c0f)
+|   missing  c7d3135 chore: rotate the signing key
+| 3 fixes are missing or lost; port them with the port workflow, then run this again
+stderr: (empty)
+files: (unchanged)
+
+=== step 5: dashcrew "check" "--ports" "--from" "release/2.4.0" "--to" "hotfix/2.4.5"
+exit: 0
+stdout:
+| release/2.4.0 -> hotfix/2.4.5: 6 fixes since develop at d4384e3
+|   ok       46ed83b fix: totals round down (merged)
+|   ok       99e0f2a fix: empty cart crash (merged)
+|   ok       e0682c7 fix: wrong currency (merged)
+|   ok       368e9f7 fix(cart): stale badge (merged)
+|   ok       acdbc19 fix: double charge (merged)
+|   ok       c7d3135 chore: rotate the signing key (merged)
+| every fix reached the newer lines
+stderr: (empty)
+files: (unchanged)
+
+=== step 6: dashcrew "check" "--ports" "--to" "main"
+exit: 1
+stdout:
+| release/2.5.0 -> develop: 3 fixes since develop at d260185, 3 missing or lost
+|   missing  48786dc fix: empty cart crash
+|   missing  01bcca8 fix: wrong currency
+|   missing  279c221 fix: badge count after checkout
+| 3 fixes are missing or lost; port them with the port workflow, then run this again
+stderr: (empty)
+files: (unchanged)
+
+=== step 7: dashcrew "check" "--ports" "--from" "main"
+exit: 1
+stdout: (empty)
+stderr:
+| --from main: the main line has no newer line
+files: (unchanged)
+
+=== step 8: dashcrew "check" "--ports" "--from" "9.9.9"
+exit: 1
+stdout: (empty)
+stderr:
+| no line 9.9.9; dashcrew release lines lists them
+files: (unchanged)
+
+=== step 9: dashcrew "check" "--ports" "--base" "develop"
+exit: 64
+stdout: (empty)
+stderr:
+| --ports runs alone, without --pr-body or --base.
+| 
+| Usage: dashcrew check [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml.
+|                  (defaults to ".")
+|     --pr-body    File holding the PR description; a pull_request workflow supplies it from the event.
+|     --base       Lint the commits of <base>..HEAD; a pull_request workflow supplies the range from the event.
+|     --ports      Only check that each fix of an older release line reached the newer one (exit 1 if not).
+|     --from       With --ports: the older line (a version, a line branch or main); default every adjacent pair.
+|     --to         With --ports: the newer line; default the line after --from.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 10: dashcrew "check" "--from" "2.4.0"
+exit: 64
+stdout: (empty)
+stderr:
+| --from and --to need --ports.
+| 
+| Usage: dashcrew check [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml.
+|                  (defaults to ".")
+|     --pr-body    File holding the PR description; a pull_request workflow supplies it from the event.
+|     --base       Lint the commits of <base>..HEAD; a pull_request workflow supplies the range from the event.
+|     --ports      Only check that each fix of an older release line reached the newer one (exit 1 if not).
+|     --from       With --ports: the older line (a version, a line branch or main); default every adjacent pair.
+|     --to         With --ports: the newer line; default the line after --from.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 11: dashcrew "release" "status" "2.4.5"
+exit: 0
+stdout:
+| wrote   .ai/plans/2.4.5/README.md
+| 
+| <!-- dashcrew:release-status - regenerate with dashcrew release status <version>; never edit by hand -->
+| # Release 2.4.5
+| 
+| Line: `hotfix/2.4.5` (hotfix), since `release/2.4.0`.
+| 
+| ## Tasks
+| 
+| | Task | Branch | PR description |
+| |---|---|---|
+| | `login-loop` | `fix/login-loop` | `.ai/pr/fix/login-loop.md` |
+| | `session-timeout` | none found | none |
+| 
+| ## Ported here
+| 
+| None.
+| 
+| ## Pending ports
+| 
+| - `release/2.4.0 -> hotfix/2.4.5`: none pending
+| - `hotfix/2.4.5 -> release/2.5.0`: missing `46ed83b` fix: totals round down
+| - `hotfix/2.4.5 -> release/2.5.0`: lost `acdbc19` fix: double charge (reverted by `7ce7c0f`)
+| - `hotfix/2.4.5 -> release/2.5.0`: missing `c7d3135` chore: rotate the signing key
+| - `hotfix/2.4.5 -> release/2.5.0`: missing `5d17cb3` fix: login loop
+stderr: (empty)
+files:
++ w/.ai/plans/2.4.5/README.md  -rw-r--r-- sha256:4b754bb601230a1f
+
+=== step 12: dashcrew "release" "status" "2.5.0"
+exit: 0
+stdout:
+| wrote   .ai/plans/2.5.0/README.md
+| 
+| <!-- dashcrew:release-status - regenerate with dashcrew release status <version>; never edit by hand -->
+| # Release 2.5.0
+| 
+| Line: `release/2.5.0` (release), since `hotfix/2.4.5`.
+| 
+| ## Tasks
+| 
+| No task folders in `.ai/plans/2.5.0/`.
+| 
+| ## Ported here
+| 
+| - `48786dc` fix: empty cart crash (Ported-from: 99e0f2a)
+| 
+| ## Pending ports
+| 
+| - `hotfix/2.4.5 -> release/2.5.0`: missing `46ed83b` fix: totals round down
+| - `hotfix/2.4.5 -> release/2.5.0`: lost `acdbc19` fix: double charge (reverted by `7ce7c0f`)
+| - `hotfix/2.4.5 -> release/2.5.0`: missing `c7d3135` chore: rotate the signing key
+| - `hotfix/2.4.5 -> release/2.5.0`: missing `5d17cb3` fix: login loop
+| - `release/2.5.0 -> develop`: missing `48786dc` fix: empty cart crash
+| - `release/2.5.0 -> develop`: missing `01bcca8` fix: wrong currency
+| - `release/2.5.0 -> develop`: missing `279c221` fix: badge count after checkout
+stderr: (empty)
+files:
++ w/.ai/plans/2.5.0  dir
++ w/.ai/plans/2.5.0/README.md  -rw-r--r-- sha256:9331a4cde034f0f5
+
+=== step 13: dashcrew "release" "status" "9.9.9"
+exit: 0
+stdout:
+| wrote   .ai/plans/9.9.9/README.md
+| 
+| <!-- dashcrew:release-status - regenerate with dashcrew release status <version>; never edit by hand -->
+| # Release 9.9.9
+| 
+| No line branch holds 9.9.9; only its tasks are listed.
+| 
+| ## Tasks
+| 
+| No task folders in `.ai/plans/9.9.9/`.
+| 
+| ## Ported here
+| 
+| None: no line branch.
+| 
+| ## Pending ports
+| 
+| None: no line branch.
+stderr: (empty)
+files:
++ w/.ai/plans/9.9.9  dir
++ w/.ai/plans/9.9.9/README.md  -rw-r--r-- sha256:9f799fda146a6ae3
+
+=== step 14: dashcrew "release" "status"
+exit: 64
+stdout: (empty)
+stderr:
+| Pass one version, such as 2.4.5.
+| 
+| Usage: dashcrew release status <version> [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml.
+|                  (defaults to ".")
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 15: dashcrew "commit" "lint" "fix: totals round down\n\nPorted-from: 1a2b3c4\nPort: yes"
+exit: 0
+stdout:
+| the message follows <type>(<scope>): <subject>
+stderr: (empty)
+files: (unchanged)
+
+=== step 16: dashcrew "commit" "lint" "fix: totals round down\n\nPorted-from: release/2.4.0\nPort: true"
+exit: 1
+stdout:
+| trailer Ported-from "release/2.4.0" is not a commit hash (7 to 40 hex characters)
+| trailer Port "true" must be yes
+stderr: (empty)
+files: (unchanged)
+
+=== step 17: dashcrew "commit" "suggest" "--subject" "totals round down" "--ported-from" "1a2b3c4"
+(after the case's setup for this step)
+exit: 0
+stdout:
+| type:    fix            (branch fix/port-totals-2.5.0)
+| scope:   -              (no scopes in project.commit)
+| files:   1 changed
+| 
+| git add -- README.md
+| git commit -m 'fix: totals round down' -m 'Ported-from: 1a2b3c4'
+stderr: (empty)
+files: (unchanged)
+
+=== step 18: dashcrew "commit" "suggest" "--ported-from" "HEAD~1"
+exit: 64
+stdout: (empty)
+stderr:
+| --ported-from HEAD~1 is not a commit hash (7 to 40 hex characters).
+| 
+| Usage: dashcrew commit suggest [arguments]
+| -h, --help           Print this usage information.
+| -p, --project        Any folder inside the repository.
+|                      (defaults to ".")
+|     --subject        The subject; without it the command keeps a <subject> placeholder.
+|     --body           The body; without it and without --subject the command keeps a <body> placeholder.
+|     --type           Override the type derived from the branch.
+|     --scope          Override the scope derived from the files; an empty value drops it.
+|     --ported-from    Comma-separated commits this change ports; each becomes a Ported-from: trailer.
+|     --json           Print the derived parts and commands as JSON.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)

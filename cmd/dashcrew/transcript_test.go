@@ -16,6 +16,7 @@ import (
 	"testing"
 
 	"github.com/fahnaladitia/dashcrew/internal/knowledge"
+	"github.com/fahnaladitia/dashcrew/internal/sync"
 )
 
 // The CLI transcript test runs the README's commands through the built binary in temp folders and compares, per
@@ -96,7 +97,8 @@ func setUpCLI(t *testing.T) cliEnvironment {
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("go build: %v\n%s", err, out)
 	}
-	// PATH holds git and the system tools only: no dashcrew, gh, flutter or fvm.
+	// PATH holds git and the system tools only: no dashcrew, flutter or fvm. A runner may ship gh in /usr/bin (Ubuntu
+	// does), so the bin folder, first on PATH, holds a gh stub that fails: every OS then sees gh missing or failing.
 	gitPath, err := exec.LookPath("git")
 	if err != nil {
 		t.Fatal(err)
@@ -105,6 +107,10 @@ func setUpCLI(t *testing.T) cliEnvironment {
 		t.Fatal(err)
 	}
 	if err := os.Symlink(gitPath, filepath.Join(e.bin, "git")); err != nil {
+		t.Fatal(err)
+	}
+	ghStub := "#!/bin/sh\necho 'gh stub: the transcripts run without gh' >&2\nexit 127\n"
+	if err := os.WriteFile(filepath.Join(e.bin, "gh"), []byte(ghStub), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	return e
@@ -451,6 +457,104 @@ func commitOnBranch(file, message string) func(t *testing.T, s side) {
 	}
 }
 
+const linesProfile = "toolkit: 1\nagents: [claude-code]\nproject:\n" +
+	"  release_lines: { main: develop, release: 'release/(?P<version>[0-9.]+)', hotfix: 'hotfix/(?P<version>[0-9.]+)' }\n" +
+	"  branch_prefix:\n    feat: feat/\n    hotfix: hotfix/\n    fix: fix/\n"
+
+// linesRepo is w on develop with the release lines profile committed.
+func linesRepo(t *testing.T, s side) {
+	s.write(t, "w/.ai/project.yaml", linesProfile)
+	s.write(t, "w/README.md", "readme\n")
+	s.git(t, "w", "init", "-q", "-b", "develop")
+	s.git(t, "w", "add", "-A")
+	s.git(t, "w", "commit", "-q", "-m", "chore: init")
+}
+
+// releaseLinesRepo adds release/2.4.0 with a fix, hotfix/2.4.5 cut from it, release/2.5.0 only on the remote,
+// a branch that records release 2.4.5 and one cut from release/2.4.0 that records nothing.
+func releaseLinesRepo(t *testing.T, s side) {
+	linesRepo(t, s)
+	s.git(t, "w", "checkout", "-q", "-b", "release/2.4.0")
+	commitOnBranch("fix.txt", "fix: totals")(t, s)
+	s.git(t, "w", "checkout", "-q", "-b", "hotfix/2.4.5")
+	commitOnBranch("hot.txt", "fix: crash")(t, s)
+	s.git(t, "w", "checkout", "-q", "develop")
+	commitOnBranch("feature.txt", "feat: next")(t, s)
+	s.git(t, "w", "update-ref", "refs/remotes/origin/release/2.5.0", "HEAD")
+	s.git(t, "w", "branch", "fix/recorded", "develop")
+	s.git(t, "w", "config", "branch.fix/recorded.dashcrew-release", "2.4.5")
+	s.git(t, "w", "checkout", "-q", "-b", "fix/guess", "release/2.4.0")
+	commitOnBranch("guess.txt", "fix: guess")(t, s)
+	s.git(t, "w", "checkout", "-q", "develop")
+}
+
+// portsRepo holds release/2.4.0 with five fixes, a feature and a chore marked Port: yes; hotfix/2.4.5 cut from it
+// with one fix; and release/2.5.0 cut from develop, where one fix is ported by trailer, one by cherry-pick -x, one by
+// patch-id and one ported then reverted. A task of 2.4.5 has a plan folder, a recorded branch and a PR description.
+func portsRepo(t *testing.T, s side) {
+	linesRepo(t, s)
+	s.git(t, "w", "checkout", "-q", "-b", "release/2.4.0")
+	for _, c := range [][2]string{
+		{"m.txt", "fix: totals round down"}, {"t.txt", "fix: empty cart crash"}, {"c.txt", "fix: wrong currency"},
+		{"p.txt", "fix(cart): stale badge"}, {"l.txt", "fix: double charge"}, {"n.txt", "feat: gift cards"},
+	} {
+		commitOnBranch(c[0], c[1])(t, s)
+	}
+	commitOnBranch("y.txt", "chore: rotate the signing key\n\nPort: yes")(t, s)
+	short := func(rev string) string { return s.git(t, "w", "rev-parse", "--short=7", rev) }
+	trailer, pick, lost := short("HEAD~5"), short("HEAD~4"), short("HEAD~2")
+	s.git(t, "w", "checkout", "-q", "-b", "hotfix/2.4.5")
+	commitOnBranch("h.txt", "fix: login loop")(t, s)
+	s.git(t, "w", "branch", "fix/login-loop")
+	s.git(t, "w", "config", "branch.fix/login-loop.dashcrew-release", "2.4.5")
+	s.git(t, "w", "checkout", "-q", "develop")
+	commitOnBranch("b.txt", "feat: next")(t, s)
+	s.git(t, "w", "checkout", "-q", "-b", "release/2.5.0")
+	s.write(t, "w/t.txt", "fix: empty cart crash, adapted\n")
+	s.git(t, "w", "add", "-A")
+	s.git(t, "w", "commit", "-q", "-m", "fix: empty cart crash\n\nPorted-from: "+trailer)
+	s.git(t, "w", "cherry-pick", "-x", pick)
+	s.write(t, "w/p.txt", "fix(cart): stale badge\n")
+	s.git(t, "w", "add", "-A")
+	s.git(t, "w", "commit", "-q", "-m", "fix: badge count after checkout")
+	s.git(t, "w", "cherry-pick", lost)
+	s.git(t, "w", "revert", "--no-edit", "HEAD")
+	s.git(t, "w", "checkout", "-q", "develop")
+	s.write(t, "w/.ai/plans/2.4.5/login-loop/plan.md", "plan\n")
+	s.write(t, "w/.ai/plans/2.4.5/session-timeout/plan.md", "plan\n")
+	s.write(t, "w/.ai/pr/fix/login-loop.md", "# fix: login loop\n")
+	s.write(t, "w/.git/info/exclude", ".ai/plans/\n.ai/pr/\n")
+}
+
+// olderLineToolkit makes w's lock read as written by dashcrew 0.0.0, whose catalog rendered AGENTS.md differently,
+// and commits it.
+func olderLineToolkit(t *testing.T, s side) {
+	data, err := os.ReadFile(s.path("w/.ai/lock.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	agents, err := os.ReadFile(s.path("w/AGENTS.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	older := strings.Replace(string(agents), "\n", "\nOlder catalog text.\n", 1)
+	s.write(t, "w/AGENTS.md", older)
+	lock := strings.Replace(string(data), `"dashcrew_version": "0.0.1"`, `"dashcrew_version": "0.0.0"`, 1)
+	lock = strings.Replace(lock, sync.FileHash("AGENTS.md", string(agents)), sync.FileHash("AGENTS.md", older), 1)
+	s.write(t, "w/.ai/lock.json", lock)
+	s.git(t, "w", "add", "-A")
+	s.git(t, "w", "commit", "-q", "-m", "chore: toolkit 0.0.0")
+}
+
+// editProfile replaces from with to in w's profile.
+func editProfile(t *testing.T, s side, from, to string) {
+	data, err := os.ReadFile(s.path("w/.ai/project.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	s.write(t, "w/.ai/project.yaml", strings.Replace(string(data), from, to, 1))
+}
+
 func cli(args ...string) step { return step{args: args} }
 
 func usageSteps() []step {
@@ -752,6 +856,99 @@ func cliCases() []cliCase {
 			cli("check", "--base", "nope"),
 			cli("help", "check"),
 		}},
+		{name: "release lines", setup: releaseLinesRepo, steps: []step{
+			cli("help", "release"),
+			cli("release", "lines", "--help"),
+			cli("release", "lines"),
+			{args: []string{"release", "lines"}, before: func(t *testing.T, s side) { s.git(t, "w", "checkout", "-q", "release/2.4.0") }},
+			{args: []string{"release", "lines"}, before: func(t *testing.T, s side) { s.git(t, "w", "checkout", "-q", "fix/recorded") }},
+			{args: []string{"release", "lines", "-p", "w"}, dir: ".", before: func(t *testing.T, s side) { s.git(t, "w", "checkout", "-q", "fix/guess") }},
+			{args: []string{"release", "lines"}, before: func(t *testing.T, s side) { s.git(t, "w", "checkout", "-q", "--detach") }},
+			{args: []string{"release", "lines"}, before: func(t *testing.T, s side) {
+				s.write(t, "w/.ai/project.yaml", "toolkit: 1\nagents: [claude-code]\n")
+			}},
+			{args: []string{"release", "lines"}, before: func(t *testing.T, s side) {
+				s.write(t, "w/.ai/project.yaml", "toolkit: 1\nagents: [claude-code]\nproject: { release_lines: { main: develop, release: 'release/(.+)' } }\n")
+			}},
+		}},
+		{name: "release status and ports", setup: portsRepo, steps: []step{
+			cli("release", "status", "--help"),
+			cli("check", "--help"),
+			cli("check", "--ports"),
+			cli("check", "--ports", "--from", "2.4.0", "--to", "2.5.0"),
+			cli("check", "--ports", "--from", "release/2.4.0", "--to", "hotfix/2.4.5"),
+			cli("check", "--ports", "--to", "main"),
+			cli("check", "--ports", "--from", "main"),
+			cli("check", "--ports", "--from", "9.9.9"),
+			cli("check", "--ports", "--base", "develop"),
+			cli("check", "--from", "2.4.0"),
+			cli("release", "status", "2.4.5"),
+			cli("release", "status", "2.5.0"),
+			cli("release", "status", "9.9.9"),
+			cli("release", "status"),
+			cli("commit", "lint", "fix: totals round down\n\nPorted-from: 1a2b3c4\nPort: yes"),
+			cli("commit", "lint", "fix: totals round down\n\nPorted-from: release/2.4.0\nPort: true"),
+			{args: []string{"commit", "suggest", "--subject", "totals round down", "--ported-from", "1a2b3c4"}, before: func(t *testing.T, s side) {
+				s.git(t, "w", "checkout", "-q", "-b", "fix/port-totals-2.5.0", "release/2.5.0")
+				s.write(t, "w/README.md", "readme, totals round down\n")
+			}},
+			cli("commit", "suggest", "--ported-from", "HEAD~1"),
+		}},
+		{name: "sync on a release line", setup: linesRepo, steps: []step{
+			cli("sync"),
+			{args: []string{"sync"}, before: func(t *testing.T, s side) {
+				s.git(t, "w", "add", "-A")
+				s.git(t, "w", "commit", "-q", "-m", "chore: toolkit")
+				s.git(t, "w", "checkout", "-q", "-b", "release/2.4.0")
+				olderLineToolkit(t, s)
+			}},
+			cli("doctor"),
+			{args: []string{"sync"}, before: func(t *testing.T, s side) { editProfile(t, s, "feat: feat/", "feat: feature/") }},
+			cli("sync", "--upgrade"),
+			cli("sync"),
+			{args: []string{"sync"}, before: func(t *testing.T, s side) {
+				s.git(t, "w", "checkout", "-q", "-f", "develop")
+				s.git(t, "w", "checkout", "-q", "-b", "fix/totals")
+				s.git(t, "w", "config", "branch.fix/totals.dashcrew-release", "2.4.0")
+				olderLineToolkit(t, s)
+			}},
+			{args: []string{"sync"}, before: func(t *testing.T, s side) {
+				s.git(t, "w", "checkout", "-q", "develop")
+				olderLineToolkit(t, s)
+			}},
+		}},
+		{name: "sync after a merge between lines", setup: linesRepo, steps: []step{
+			cli("sync"),
+			{args: []string{"sync"}, before: func(t *testing.T, s side) {
+				s.git(t, "w", "add", "-A")
+				s.git(t, "w", "commit", "-q", "-m", "chore: toolkit")
+				s.git(t, "w", "branch", "release/2.5.0")
+				s.git(t, "w", "checkout", "-q", "-b", "release/2.4.0")
+				editProfile(t, s, "feat: feat/", "feat: feature/")
+				s.write(t, "w/README.md", "readme 2.4.0\n")
+			}},
+			{args: []string{"sync"}, before: func(t *testing.T, s side) {
+				s.git(t, "w", "add", "-A")
+				s.git(t, "w", "commit", "-q", "-m", "chore: feature prefix")
+				s.git(t, "w", "checkout", "-q", "release/2.5.0")
+				editProfile(t, s, "fix: fix/", "fix: bugfix/")
+				s.write(t, "w/README.md", "readme 2.5.0\n")
+			}},
+			{args: []string{"check"}, before: func(t *testing.T, s side) {
+				s.git(t, "w", "add", "-A")
+				s.git(t, "w", "commit", "-q", "-m", "chore: bugfix prefix")
+				merge := exec.Command("git", "merge", "-q", "--no-edit", "release/2.4.0")
+				merge.Dir = s.path("w")
+				merge.Env = s.env
+				if out, err := merge.CombinedOutput(); err == nil {
+					t.Fatalf("the merge did not conflict:\n%s", out)
+				}
+			}},
+			cli("sync"),
+			cli("sync", "--after-merge"),
+			cli("check"),
+			cli("sync"),
+		}},
 		{name: "worktree watch", setup: repo(repoProfile), steps: []step{
 			cli("worktree", "watch", "--once"),
 			cli("worktree", "create", "feat/a", "origin/main", "--no-pub"),
@@ -794,7 +991,7 @@ func cliCases() []cliCase {
 		}},
 	}
 	for _, name := range []string{"sample-bloc-getx", "sample-project-pack", "sample-riverpod-gorouter", "sample-codex",
-		"sample-antigravity", "sample-other", "sample-project-platform", "sample-knowledge"} {
+		"sample-antigravity", "sample-other", "sample-project-platform", "sample-knowledge", "sample-release-lines"} {
 		cases = append(cases, cliCase{name: name, setup: sample(name), steps: toolkitSteps()})
 	}
 	return cases

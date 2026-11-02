@@ -1,0 +1,2 @@
+description: Carry merged fixes from an older release line to every newer line and the main line - one worktree per target, merge upward by default, a PR description and commit command per target.
+argument_hint: "<commit range | PR> [<target line>...]"

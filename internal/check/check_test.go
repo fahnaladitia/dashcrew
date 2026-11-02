@@ -267,3 +267,101 @@ func checkWithBase(t *testing.T, project string, base *string, environment map[s
 	}
 	return out
 }
+
+func TestConflictMarkersInGeneratedFilesFailTheGate(t *testing.T) {
+	project := setup(t, "")
+	write(t, filepath.Join(project, "AGENTS.md"), "<<<<<<< HEAD\nours\n=======\ntheirs\n>>>>>>> release/2.4.0\n")
+	write(t, filepath.Join(project, filepath.FromSlash(sync.LockPath)), "{\n<<<<<<< HEAD\n=======\n>>>>>>> release/2.4.0\n}\n")
+
+	checks := check(t, project, text(fullBody), nil)
+
+	if c := checks["lock"]; c.Status != doctor.Fail || !strings.Contains(c.Detail, "conflict markers; run dashcrew sync --after-merge") {
+		t.Errorf("lock %v", c)
+	}
+	project = setup(t, "")
+	write(t, filepath.Join(project, "AGENTS.md"), "<<<<<<< HEAD\nours\n=======\ntheirs\n>>>>>>> release/2.4.0\n")
+	if c := check(t, project, text(fullBody), nil)["drift"]; c.Status != doctor.Fail ||
+		!strings.Contains(c.Detail, "conflict markers: AGENTS.md (dashcrew sync --after-merge") {
+		t.Errorf("drift %v", c)
+	}
+}
+
+const portsProfile = "project:\n  release_lines: { main: develop, release: 'release/(?P<version>[0-9.]+)', check_ports: true }\n"
+
+// portsProject is a synced project in git with develop and release/2.4.0, which has one fix develop lacks.
+func portsProject(t *testing.T, profile string) (string, func(args ...string) string) {
+	t.Helper()
+	project := setup(t, profile)
+	t.Setenv("GIT_CONFIG_NOSYSTEM", "1")
+	t.Setenv("GIT_CONFIG_GLOBAL", filepath.Join(project, ".no-global"))
+	git := func(args ...string) string {
+		t.Helper()
+		cmd := exec.Command("git", append([]string{"-c", "user.name=t", "-c", "user.email=t@example.com"}, args...)...)
+		cmd.Dir = project
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("git %v: %v\n%s", args, err, out)
+		}
+		return strings.TrimSpace(string(out))
+	}
+	git("init", "-q", "-b", "develop")
+	git("add", "-A")
+	git("commit", "-q", "-m", "chore: toolkit")
+	git("checkout", "-q", "-b", "release/2.4.0")
+	write(t, filepath.Join(project, "src", "f.txt"), "fixed")
+	git("add", "-A")
+	git("commit", "-q", "-m", "fix: totals")
+	return project, git
+}
+
+func TestCheckRunsThePortCheckOnlyWhenTheProfileAsks(t *testing.T) {
+	project, git := portsProject(t, portsProfile)
+	short := git("rev-parse", "--short=7", "HEAD")
+	got := check(t, project, text(fullBody), nil)["ports"]
+	if got.Status != doctor.Fail || got.Detail != "release/2.4.0 -> develop: missing "+short+" fix: totals; port it with the port workflow" {
+		t.Errorf("missing %v", got)
+	}
+	git("checkout", "-q", "develop")
+	git("cherry-pick", "-x", "release/2.4.0")
+	if got := check(t, project, text(fullBody), nil)["ports"]; got.Status != doctor.OK || got.Detail != "1 fix on 1 line pair reached the newer lines" {
+		t.Errorf("ported %v", got)
+	}
+
+	project, _ = portsProject(t, strings.Replace(portsProfile, ", check_ports: true", "", 1))
+	if got, ok := check(t, project, text(fullBody), nil)["ports"]; ok {
+		t.Errorf("ran without check_ports: %v", got)
+	}
+}
+
+func TestPortsTakesFromAndToByVersionBranchOrMain(t *testing.T) {
+	project, git := portsProject(t, portsProfile)
+	git("checkout", "-q", "-b", "release/2.5.0", "develop")
+	p, err := sync.Sync{Catalog: shippedCatalog, ProjectDir: project}.Profile()
+	if err != nil {
+		t.Fatal(err)
+	}
+	names := func(from, to string) string {
+		pairs, err := Ports(project, p, from, to)
+		if err != nil {
+			return err.Error()
+		}
+		var out []string
+		for _, pair := range pairs {
+			out = append(out, pair.From.Branch+">"+pair.To.Branch)
+		}
+		return strings.Join(out, " ")
+	}
+	for _, c := range [][3]string{
+		{"", "", "release/2.4.0>release/2.5.0 release/2.5.0>develop"},
+		{"2.4.0", "", "release/2.4.0>release/2.5.0"},
+		{"", "main", "release/2.5.0>develop"},
+		{"release/2.4.0", "develop", "release/2.4.0>develop"},
+		{"2.5.0", "2.4.0", "--from 2.5.0 is not older than --to 2.4.0"},
+		{"9.9.9", "", "no line 9.9.9; dashcrew release lines lists them"},
+		{"main", "", "--from main: the main line has no newer line"},
+	} {
+		if got := names(c[0], c[1]); got != c[2] {
+			t.Errorf("--from %q --to %q: %s, want %s", c[0], c[1], got, c[2])
+		}
+	}
+}

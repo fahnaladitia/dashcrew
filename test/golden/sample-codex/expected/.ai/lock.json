@@ -60,7 +60,7 @@
     ".codex/agents/reviewer.toml": "ea588ab99f8c93a42b9f6742749096ceee18c5c94be0e90b8657a0220a7ebf51",
     ".github/pull_request_template.md": "d04513360a2435b2a27fa0e0218d96c66c1a787a82ef950ea445f63073c982b9",
     ".github/workflows/dashcrew.yml": "8414f6f1f3a37a294ed635311ea8b026d9dc1438b4ad535b8e9f703b58022266",
-    "AGENTS.md": "a361e5fe1f9f7a7204005acf9e4b00fdac03cdefbfdef365fa7e88bd8596985e",
+    "AGENTS.md": "3a63308a82afd414613dacd98255953f9dd0e07b0623918eb6cb9c691201fa8f",
     "CLAUDE.md": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49"
   },
   "packs": {

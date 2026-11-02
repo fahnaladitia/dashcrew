@@ -4,6 +4,9 @@
 package catalog
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
 	"io/fs"
 	"os"
 	"path"
@@ -147,6 +150,9 @@ type Catalog struct {
 	Skills    map[string]DocMeta
 	Workflows map[string]DocMeta
 	Platforms map[string]*PlatformSpec
+	// Digest is the sha256 of every file under the catalog's core/, platforms/ and packs/, path and content; a
+	// project's packs and platforms leave it as it is. The lock of a release line records it.
+	Digest string
 }
 
 // LoadEmbedded loads the catalog compiled into the binary.
@@ -158,6 +164,9 @@ func LoadEmbedded() (*Catalog, error) {
 func Load(fsys fs.FS) (*Catalog, error) {
 	c := &Catalog{Roles: map[string]RoleMeta{}}
 	var err error
+	if c.Digest, err = digest(fsys); err != nil {
+		return nil, err
+	}
 	if isDir(fsys, "core") {
 		if c.Core, err = fragmentsIn(fsys, "core"); err != nil {
 			return nil, err
@@ -188,6 +197,32 @@ func Load(fsys fs.FS) (*Catalog, error) {
 		return nil, err
 	}
 	return c, nil
+}
+
+// digest hashes the path and content of every file under core/, platforms/ and packs/ in walk order.
+func digest(fsys fs.FS) (string, error) {
+	hash := sha256.New()
+	for _, root := range []string{"core", "platforms", "packs"} {
+		if !isDir(fsys, root) {
+			continue
+		}
+		err := fs.WalkDir(fsys, root, func(name string, entry fs.DirEntry, err error) error {
+			if err != nil || entry.IsDir() {
+				return err
+			}
+			data, err := fs.ReadFile(fsys, name)
+			if err != nil {
+				return err
+			}
+			fmt.Fprintf(hash, "%s\x00%d\x00", name, len(data))
+			hash.Write(data)
+			return nil
+		})
+		if err != nil {
+			return "", err
+		}
+	}
+	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
 func copyPacks(packs Packs) Packs {
@@ -229,7 +264,7 @@ func (c *Catalog) WithProjectPacks(projectDir string) (*Catalog, error) {
 	for name, platform := range projectPlatforms {
 		platforms[name] = platform
 	}
-	return &Catalog{Core: c.Core, Packs: packs, Roles: c.Roles, Skills: c.Skills, Workflows: c.Workflows, Platforms: platforms}, nil
+	return &Catalog{Core: c.Core, Packs: packs, Roles: c.Roles, Skills: c.Skills, Workflows: c.Workflows, Platforms: platforms, Digest: c.Digest}, nil
 }
 
 // PacksFor is the packs a profile on platform may select: the platform's families over the shared ones;
@@ -258,7 +293,7 @@ func (c *Catalog) PacksFor(platform string) Packs {
 
 // ResolvedFor is this catalog with Packs resolved by PacksFor, for code that reads Packs directly.
 func (c *Catalog) ResolvedFor(platform string) *Catalog {
-	return &Catalog{Core: c.Core, Packs: c.PacksFor(platform), Roles: c.Roles, Skills: c.Skills, Workflows: c.Workflows, Platforms: c.Platforms}
+	return &Catalog{Core: c.Core, Packs: c.PacksFor(platform), Roles: c.Roles, Skills: c.Skills, Workflows: c.Workflows, Platforms: c.Platforms, Digest: c.Digest}
 }
 
 // FragmentsFor is core minus the fragments the platform replaces, then the platform's own.

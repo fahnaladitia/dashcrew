@@ -15,6 +15,8 @@ import (
 // Parts are the pieces of one message; an empty Type or Subject stays a placeholder.
 type Parts struct {
 	Type, Scope, Ticket, Subject, Body string
+	// PortedFrom are the commits a port carries, one `Ported-from:` trailer each.
+	PortedFrom []string
 }
 
 // segment is a literal run of a pattern, or a placeholder with the brackets that wrap it.
@@ -90,12 +92,17 @@ func Header(cfg *profile.Commit, p Parts) string {
 	return b.String()
 }
 
-// TrailerLines are the trailers suggest adds: the ticket trailer when the profile names one and a ticket is known.
+// TrailerLines are the trailers suggest adds: the ticket trailer when the profile names one and a ticket is known,
+// then one `Ported-from:` per ported commit.
 func TrailerLines(cfg *profile.Commit, p Parts) []string {
-	if cfg.Ticket == nil || cfg.Ticket.Trailer == "" || p.Ticket == "" {
-		return nil
+	var lines []string
+	if cfg.Ticket != nil && cfg.Ticket.Trailer != "" && p.Ticket != "" {
+		lines = append(lines, cfg.Ticket.Trailer+": "+p.Ticket)
 	}
-	return []string{cfg.Ticket.Trailer + ": " + p.Ticket}
+	for _, sha := range p.PortedFrom {
+		lines = append(lines, PortedFromTrailer+": "+sha)
+	}
+	return lines
 }
 
 // Message is the header, the body and the trailers, separated by blank lines.
@@ -171,6 +178,15 @@ var (
 	scaleSuffix = regexp.MustCompile(`^[0-9]+(?:\.[0-9]+)?x\.`)
 	// BaseTrailers are allowed in every profile, before the ticket trailer and `project.commit.trailers`.
 	BaseTrailers = []string{"Co-authored-by", "Signed-off-by", "Reviewed-by"}
+	// CommitHash is a full or abbreviated commit hash, as `Ported-from:` carries it.
+	CommitHash = regexp.MustCompile(`^[0-9a-f]{7,40}$`)
+)
+
+// The port trailers `project.release_lines` allows: the commit a port came from, and a fix marked for porting
+// whatever its type.
+const (
+	PortedFromTrailer = "Ported-from"
+	PortTrailer       = "Port"
 )
 
 // Lint returns one line per problem of message against the profile: the pattern, the type, the subject line
@@ -216,10 +232,24 @@ func Lint(cfg *profile.Commit, message string) []string {
 		allowed = append(allowed, cfg.Ticket.Trailer)
 	}
 	allowed = append(allowed, cfg.Trailers...)
+	if cfg.PortTrailers {
+		allowed = append(allowed, PortedFromTrailer, PortTrailer)
+	}
 	for _, line := range trailers {
 		key := trailerLine.FindStringSubmatch(line)[1]
 		if !containsFold(allowed, key) {
 			problems = append(problems, fmt.Sprintf("trailer %q is not allowed; allowed: %s", key, strings.Join(allowed, ", ")))
+			continue
+		}
+		if !cfg.PortTrailers {
+			continue
+		}
+		value := strings.TrimSpace(line[len(key)+1:])
+		switch {
+		case strings.EqualFold(key, PortedFromTrailer) && !CommitHash.MatchString(value):
+			problems = append(problems, fmt.Sprintf("trailer %s %q is not a commit hash (7 to 40 hex characters)", PortedFromTrailer, value))
+		case strings.EqualFold(key, PortTrailer) && value != "yes":
+			problems = append(problems, fmt.Sprintf("trailer %s %q must be yes", PortTrailer, value))
 		}
 	}
 	for i, line := range lines {
@@ -238,6 +268,51 @@ func Lint(cfg *profile.Commit, message string) []string {
 		}
 	}
 	return problems
+}
+
+// Parsed is what the port check reads from a message: the type (empty when the subject line does not match the
+// pattern), the subject line and the trailer block as key and value pairs.
+type Parsed struct {
+	Type, Subject string
+	Trailers      [][2]string
+}
+
+// Parse reads message against the profile's pattern without linting it.
+func Parse(cfg *profile.Commit, message string) Parsed {
+	text := strings.TrimRight(strings.ReplaceAll(message, "\r\n", "\n"), " \t\n")
+	lines := strings.Split(text, "\n")
+	parsed := Parsed{Subject: lines[0]}
+	pattern := headerPattern(cfg.Pattern)
+	if match := pattern.FindStringSubmatch(lines[0]); match != nil {
+		if index := pattern.SubexpIndex("type"); index >= 0 {
+			parsed.Type = match[index]
+		}
+	}
+	_, trailers := splitBody(lines[1:])
+	for _, line := range trailers {
+		key := trailerLine.FindStringSubmatch(line)[1]
+		parsed.Trailers = append(parsed.Trailers, [2]string{key, strings.TrimSpace(line[len(key)+1:])})
+	}
+	return parsed
+}
+
+// Trailer is the first value of key, matched without case; empty when the message has none.
+func (p Parsed) Trailer(key string) string {
+	if values := p.Values(key); len(values) > 0 {
+		return values[0]
+	}
+	return ""
+}
+
+// Values are every value of key, matched without case, in message order.
+func (p Parsed) Values(key string) []string {
+	var out []string
+	for _, pair := range p.Trailers {
+		if strings.EqualFold(pair[0], key) {
+			out = append(out, pair[1])
+		}
+	}
+	return out
 }
 
 // emails are the index pairs of the email addresses in text; `@mention`, a lone `name@` and an image density

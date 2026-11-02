@@ -169,3 +169,15 @@ func TestSuggestNeverShowsAnEmailFromTheBranchOrTheGitConfig(t *testing.T) {
 		}
 	}
 }
+
+func TestSuggestPutsPortedFromInTheTrailerBlockAfterTheTicket(t *testing.T) {
+	r := cartRepo(t)
+	s := suggest(t, r, Input{Subject: ptr("keep the total"), PortedFrom: []string{"abc1234"}})
+	args := shellWords(t, strings.TrimPrefix(s.CommitCommand, "git commit "))
+	if want := []string{"-m", "fix(cart): keep the total", "-m", "Refs: ABC-123\nPorted-from: abc1234"}; !reflect.DeepEqual(args, want) {
+		t.Errorf("args %q", args)
+	}
+	if len(s.Problems) != 1 || !strings.Contains(s.Problems[0], `trailer "Ported-from" is not allowed`) {
+		t.Errorf("without release_lines the trailer fails lint: %v", s.Problems)
+	}
+}

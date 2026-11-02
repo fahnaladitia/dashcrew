@@ -72,6 +72,22 @@ type Sync struct {
 	// Home holds `.dashcrew/knowledge/<name>`, the knowledge clone; empty means the user's home folder. Read only
 	// when the profile sets `knowledge`.
 	Home string
+
+	// profileText replaces .ai/project.yaml when set: the previous profile of a release line's hold.
+	profileText *string
+	// lock replaces .ai/lock.json when set: the merged lock of --after-merge.
+	lock *omap.Map[any]
+}
+
+// Options of RunWith.
+type Options struct {
+	// Force overwrites files edited by hand and a lock from a newer dashcrew; Adopt keeps a foreign AGENTS.md.
+	Force, Adopt bool
+	// Upgrade lets a release line take this dashcrew's catalog; see LineHold.
+	Upgrade bool
+	// AfterMerge renders fresh the generated files dashcrew owns (per the lock) that hold conflict markers or
+	// disagree with the lock, and lists every changed file in Result.Stage. It never stages or commits.
+	AfterMerge bool
 }
 
 // Rendered is what Render produces: generated files in the order the Dart engine writes them,
@@ -82,6 +98,8 @@ type Rendered struct {
 	Adapters []adapters.Adapter
 	// Knowledge is the profile's `knowledge`; nil without it.
 	Knowledge *profile.Knowledge
+	// Profile is the parsed profile the files were rendered from.
+	Profile *profile.Profile
 }
 
 // Result is what one Run changed. Notes are one-time information, such as P4MigrationNote; never a problem to fix.
@@ -90,6 +108,14 @@ type Result struct {
 	Removed  []string
 	Warnings []string
 	Notes    []string
+	// Held are generated files a release line kept at the lock's toolkit, and HeldMessage says why and how to
+	// proceed; empty when nothing was held.
+	Held        []string
+	HeldMessage string
+	// Resolved are the owned files --after-merge rendered fresh; Stage is every file it changed, for the member
+	// to stage. Both stay empty without AfterMerge.
+	Resolved []string
+	Stage    []string
 }
 
 func (s Sync) project() projectfiles.Project { return projectfiles.New(s.ProjectDir) }
@@ -98,7 +124,26 @@ func (s Sync) project() projectfiles.Project { return projectfiles.New(s.Project
 // config files and rewrites the lock. force overwrites files edited by hand and a lock from a newer dashcrew;
 // adopt keeps a foreign AGENTS.md as the project block.
 func (s Sync) Run(force, adopt bool) (*Result, error) {
-	result := &Result{Written: []string{}, Removed: []string{}, Warnings: []string{}, Notes: []string{}}
+	return s.RunWith(Options{Force: force, Adopt: adopt})
+}
+
+// RunWith is Run with the release line and merge options.
+func (s Sync) RunWith(opts Options) (*Result, error) {
+	force, adopt := opts.Force, opts.Adopt
+	result := &Result{Written: []string{}, Removed: []string{}, Warnings: []string{}, Notes: []string{},
+		Held: []string{}, Resolved: []string{}, Stage: []string{}}
+	lockConflicted := false
+	if opts.AfterMerge {
+		if text, err := s.project().Read(ProfilePath); err == nil && HasConflictMarkers(text) {
+			return nil, &Error{Message: ProfilePath + " has conflict markers. It is the team's file: resolve it by hand, " +
+				"then rerun dashcrew sync --after-merge."}
+		}
+		merged, conflicted, err := s.MergeLock()
+		if err != nil {
+			return nil, err
+		}
+		s.lock, lockConflicted = merged, conflicted
+	}
 	rendered, err := s.Render(adopt, &result.Warnings)
 	if err != nil {
 		return nil, err
@@ -114,6 +159,24 @@ func (s Sync) Run(force, adopt bool) (*Result, error) {
 			"Update dashcrew, or rerun with --force to rewrite it with " + current + "."}
 	}
 	lockedFiles := lockFiles(lock)
+	profileText := ""
+	if rendered.Profile.ReleaseLines != nil {
+		if profileText, err = s.profileSource(); err != nil {
+			return nil, err
+		}
+	}
+	held := map[string]bool{}
+	lineHold := s.hold(rendered, lock, profileText, opts.Upgrade)
+	if lineHold != nil && len(lineHold.Files) > 0 {
+		result.Held = lineHold.Files
+		result.HeldMessage = lineHold.Message()
+		for _, path := range lineHold.Files {
+			held[path] = true
+		}
+	}
+	if opts.AfterMerge && HasConflictMarkers(files.Value("AGENTS.md")) {
+		result.Warnings = append(result.Warnings, "AGENTS.md: the project block has conflict markers; it is the team's text, resolve it by hand.")
+	}
 
 	project := s.project()
 	if err := s.removeCompiledGuard(); err != nil {
@@ -134,6 +197,10 @@ func (s Sync) Run(force, adopt bool) (*Result, error) {
 			return nil, err
 		}
 		locked, isLocked := lockedFiles.Get(path)
+		if opts.AfterMerge && isLocked && (HasConflictMarkers(content) || locked != FileHash(path, content)) {
+			result.Resolved = append(result.Resolved, path)
+			continue
+		}
 		adoptedAgentsMd := path == "AGENTS.md" && !isLocked
 		generated, isGenerated := files.Get(path)
 		if !adoptedAgentsMd && (!isLocked || locked != FileHash(path, content)) && (isLocked || !isGenerated || generated != content) {
@@ -145,6 +212,9 @@ func (s Sync) Run(force, adopt bool) (*Result, error) {
 	}
 
 	for _, path := range files.Keys() {
+		if held[path] {
+			continue
+		}
 		wrote, err := project.WriteIfChanged(path, files.Value(path))
 		if err != nil {
 			return nil, err
@@ -162,7 +232,7 @@ func (s Sync) Run(force, adopt bool) (*Result, error) {
 	}
 
 	for _, path := range lockedFiles.Keys() {
-		if files.Has(path) || project.LinkWithin(path) != nil || !project.Exists(path) {
+		if files.Has(path) || held[path] || project.LinkWithin(path) != nil || !project.Exists(path) {
 			continue
 		}
 		if err := os.Remove(project.Path(path)); err != nil {
@@ -213,25 +283,81 @@ func (s Sync) Run(force, adopt bool) (*Result, error) {
 		result.Removed = append(result.Removed, ".gitignore")
 	}
 
-	lockText, err := lockJSON(files, rendered.Packs, nowOwnedMcp, knowledgeEntry)
+	hashes := omap.New[string]()
+	for _, path := range union(files.Keys(), lockedFiles.Keys()) {
+		switch locked, isLocked := lockedFiles.Get(path); {
+		case held[path] && isLocked:
+			hashes.Set(path, locked)
+		case files.Has(path) && !held[path]:
+			hashes.Set(path, FileHash(path, files.Value(path)))
+		}
+	}
+	toolkit := lockToolkit{version: current, guardMinimum: version.GuardMinimum, catalog: s.Catalog.Digest}
+	if lineHold != nil {
+		toolkit.version, _ = lock.Value("dashcrew_version").(string)
+		if toolkit.version == "" {
+			toolkit.version = current
+		}
+		if minimum, ok := lock.Value("guard_min_version").(string); ok {
+			toolkit.guardMinimum = minimum
+		}
+		toolkit.catalog, _ = lockInputs(lock)
+	}
+	lockText, err := lockJSON(hashes, rendered.Packs, nowOwnedMcp, knowledgeEntry, toolkit,
+		lineInputs(rendered.Profile, toolkit.catalog, profileText))
 	if err != nil {
 		return nil, err
 	}
-	if _, err := project.WriteIfChanged(LockPath, lockText); err != nil {
+	wroteLock, err := project.WriteIfChanged(LockPath, lockText)
+	if err != nil {
 		return nil, err
+	}
+	if opts.AfterMerge {
+		if lockConflicted && !contains(result.Resolved, LockPath) {
+			result.Resolved = append(result.Resolved, LockPath)
+		}
+		stage := append(append(append([]string{}, result.Resolved...), result.Written...), result.Removed...)
+		if wroteLock || lockConflicted {
+			stage = append(stage, LockPath)
+		}
+		result.Stage = union(stage, nil)
+		sort.Strings(result.Stage)
 	}
 	return result, nil
 }
 
+// lockToolkit is the toolkit a lock records: the dashcrew version, the guard minimum and the catalog digest.
+type lockToolkit struct {
+	version, guardMinimum, catalog string
+}
+
+// profileSource is the profile text sync renders: the override, else .ai/project.yaml.
+func (s Sync) profileSource() (string, error) {
+	if s.profileText != nil {
+		return *s.profileText, nil
+	}
+	return s.project().Read(ProfilePath)
+}
+
+func contains(list []string, value string) bool {
+	for _, item := range list {
+		if item == value {
+			return true
+		}
+	}
+	return false
+}
+
 // lockJSON is `.ai/lock.json` with the Dart key order: files sorted by path, agents of mcp_servers sorted.
 // `guard_min_version` is the oldest dashcrew the shim accepts. `knowledge` (name, link, state, target, head) is
-// written last and only when the profile sets it.
-func lockJSON(files *omap.Map[string], packs *omap.Map[any], ownedMcp map[string][]string, knowledgeEntry *omap.Map[any]) (string, error) {
-	paths := files.Keys()
+// written only when the profile sets it, and `inputs` (catalog digest, profile hash) last, only with release_lines.
+func lockJSON(hashes *omap.Map[string], packs *omap.Map[any], ownedMcp map[string][]string, knowledgeEntry *omap.Map[any],
+	toolkit lockToolkit, inputs *omap.Map[any]) (string, error) {
+	paths := hashes.Keys()
 	sort.Strings(paths)
 	fileHashes := omap.New[any]()
 	for _, path := range paths {
-		fileHashes.Set(path, FileHash(path, files.Value(path)))
+		fileHashes.Set(path, hashes.Value(path))
 	}
 	agents := make([]string, 0, len(ownedMcp))
 	for agent := range ownedMcp {
@@ -248,14 +374,17 @@ func lockJSON(files *omap.Map[string], packs *omap.Map[any], ownedMcp map[string
 	}
 	lock := omap.Of[any](
 		"schema", 1,
-		"dashcrew_version", version.Current(),
+		"dashcrew_version", toolkit.version,
 		"files", fileHashes,
 		"packs", packs,
 		"mcp_servers", servers,
-		"guard_min_version", version.GuardMinimum,
+		"guard_min_version", toolkit.guardMinimum,
 	)
 	if knowledgeEntry != nil {
 		lock.Set("knowledge", knowledgeEntry)
+	}
+	if inputs != nil {
+		lock.Set("inputs", inputs)
 	}
 	text, err := dartjson.EncodeIndent(lock, "  ")
 	if err != nil {
@@ -400,7 +529,7 @@ func (s Sync) Render(adopt bool, warnings *[]string) (*Rendered, error) {
 			files.Set(path, content)
 		}
 	}
-	return &Rendered{Files: files, Packs: packs, Adapters: agentAdapters, Knowledge: p.Knowledge}, nil
+	return &Rendered{Files: files, Packs: packs, Adapters: agentAdapters, Knowledge: p.Knowledge, Profile: p}, nil
 }
 
 // ownedByDashcrew is true when path is missing, in the lock, or starts with marker.
@@ -427,10 +556,10 @@ func (s Sync) Profile() (*profile.Profile, error) {
 
 func (s Sync) profile(c *catalog.Catalog) (*profile.Profile, error) {
 	project := s.project()
-	if !project.Exists(".ai/project.yaml") {
+	if s.profileText == nil && !project.Exists(".ai/project.yaml") {
 		return nil, &Error{Message: "No .ai/project.yaml in " + s.ProjectDir + ". Run dashcrew init first."}
 	}
-	text, err := project.Read(".ai/project.yaml")
+	text, err := s.profileSource()
 	if err != nil {
 		return nil, err
 	}
@@ -447,6 +576,9 @@ func (s Sync) profile(c *catalog.Catalog) (*profile.Profile, error) {
 
 // readLock is `.ai/lock.json`; empty when there is no lock.
 func (s Sync) readLock() (*omap.Map[any], error) {
+	if s.lock != nil {
+		return s.lock, nil
+	}
 	project := s.project()
 	if !project.Exists(LockPath) {
 		return omap.New[any](), nil
@@ -454,6 +586,9 @@ func (s Sync) readLock() (*omap.Map[any], error) {
 	text, err := project.Read(LockPath)
 	if err != nil {
 		return nil, err
+	}
+	if HasConflictMarkers(text) {
+		return nil, &Error{Message: LockPath + " has conflict markers from a merge; run dashcrew sync --after-merge."}
 	}
 	value, err := dartjson.Decode(text)
 	if err != nil {

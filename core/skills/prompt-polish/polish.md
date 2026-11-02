@@ -1,6 +1,6 @@
 ---
 target: skill/prompt-polish
-rules: [workflow.step0-idea-refine, workflow.step0-detect-category, workflow.step0-prompt-template-file, workflow.polish.scope-paths, workflow.polish.branch-proposals, workflow.step0-user-confirms-once, step0.questions-once, step0.skills-from-index, step0.skill-exclusions, step0.criteria-mapped]
+rules: [step0.release, workflow.step0-idea-refine, workflow.step0-detect-category, workflow.step0-prompt-template-file, workflow.polish.scope-paths, workflow.polish.branch-proposals, workflow.step0-user-confirms-once, step0.questions-once, step0.skills-from-index, step0.skill-exclusions, step0.criteria-mapped]
 ---
 # Prompt polish (step 0)
 
@@ -28,6 +28,9 @@ Turn the request into the step 0 block in AGENTS.md, print it in chat, and wait 
   - setup skills for a client, router or analytics product the project does not use
 - `Success criteria`: when the task has none, apply `acceptance-criteria`. Map each criterion to the test type that proves it, or `manual`.
 - `Branch`: 3 names per the branching rules, and the base question.
+{{#has_release_lines}}
+- `Release`: the version the task ships in, or `none`; ask it with the base. A fix on an older line is ported later with `port`.
+{{/has_release_lines}}
 
 ## Confirmation
 

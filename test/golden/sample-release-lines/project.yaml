@@ -1,0 +1,14 @@
+# Synthetic profile: a team that builds two releases at once, cuts patch lines, and shares a knowledge repo. The
+# golden run has no git repository and no clone, so sync warns about the clone and no line holds the toolkit.
+toolkit: 1
+agents: [claude-code, codex]
+knowledge:
+  repo: git@example.com:app-team/knowledge.git
+  name: app-knowledge
+project:
+  base_branches: [develop]
+  release_lines:
+    main: develop
+    release: 'release/(?P<version>[0-9]+\.[0-9]+\.[0-9]+)'
+    hotfix: 'hotfix/(?P<version>[0-9]+\.[0-9]+\.[0-9]+)'
+    check_ports: true

@@ -27,6 +27,8 @@ type Commit struct {
 	// AllowEmailTrailers are the only trailers whose value may hold an email address (a DCO `Signed-off-by`, say);
 	// an email anywhere else fails lint.
 	AllowEmailTrailers []string
+	// PortTrailers allows `Ported-from: <sha>` and `Port: yes` and checks their shape; set by `project.release_lines`.
+	PortTrailers bool
 }
 
 // Ticket reads a ticket id from the branch name: the first group of FromBranch, else the whole match.

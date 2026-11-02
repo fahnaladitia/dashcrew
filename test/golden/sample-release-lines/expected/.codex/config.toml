@@ -1,0 +1,8 @@
+# dashcrew:begin - written by dashcrew sync; edit outside this block
+[mcp_servers.dart-mcp-server]
+command = "dart"
+args = ["mcp-server"]
+[mcp_servers.dashcrew-knowledge]
+command = "dashcrew"
+args = ["knowledge","serve","--clone","~/.dashcrew/knowledge/app-knowledge"]
+# dashcrew:end

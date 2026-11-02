@@ -130,7 +130,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:352a198c0be12c9a
-+ w/.ai/lock.json  -rw-r--r-- sha256:0d077cdc0568909c
++ w/.ai/lock.json  -rw-r--r-- sha256:a37270001b862477
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:ac4fca699a608a65
@@ -195,7 +195,7 @@ files:
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
 + w/.gitignore  -rw-r--r-- sha256:3a003918a77c43a0
 + w/.mcp.json  -rw-r--r-- sha256:4b1f4a87542aa9fc
-+ w/AGENTS.md  -rw-r--r-- sha256:e127335e5e1cf051
++ w/AGENTS.md  -rw-r--r-- sha256:9d1ed9a603d804fe
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 2: dashcrew "sync" "-p" "."
@@ -256,7 +256,7 @@ stdout:
 | ok    antigravity-mcp defined: dart-mcp-server, dashcrew-knowledge
 | ok    antigravity-roles2 roles, every tool name known
 | warn  knowledge       no clone of notes-knowledge at ~/.dashcrew/knowledge/notes-knowledge; run dashcrew knowledge pull
-| ok    agents-md-size  AGENTS.md 16147 of 24000 bytes
+| ok    agents-md-size  AGENTS.md 16094 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)
@@ -285,7 +285,7 @@ stdout:
 | ok    antigravity-mcp defined: dart-mcp-server, dashcrew-knowledge
 | ok    antigravity-roles2 roles, every tool name known
 | warn  knowledge       no clone of notes-knowledge at ~/.dashcrew/knowledge/notes-knowledge; run dashcrew knowledge pull
-| ok    agents-md-size  AGENTS.md 16147 of 24000 bytes
+| ok    agents-md-size  AGENTS.md 16094 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)
@@ -300,7 +300,7 @@ stdout:
 | ok    drift           59 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16147 of 24000 bytes
+| ok    agents-md-size  AGENTS.md 16094 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | skip  pr-sections     no PR body; pass --pr-body <file> or run on a pull_request event
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
@@ -318,7 +318,7 @@ stdout:
 | ok    drift           59 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16147 of 24000 bytes
+| ok    agents-md-size  AGENTS.md 16094 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | fail  pr-sections     missing: ## Changes, ## Affected files, ## Testing, ## Notes / not done (write "None" under a heading that does not apply)
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
@@ -336,7 +336,7 @@ stdout:
 | ok    drift           59 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16147 of 24000 bytes
+| ok    agents-md-size  AGENTS.md 16094 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | fail  pr-sections     missing: ## Changes, ## Affected files, ## Testing, ## Notes / not done (write "None" under a heading that does not apply)
 | ::error title=dashcrew pr-sections::missing: ## Changes, ## Affected files, ## Testing, ## Notes / not done (write "None" under a heading that does not apply)
@@ -355,7 +355,7 @@ stdout:
 | ok    drift           59 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16147 of 24000 bytes
+| ok    agents-md-size  AGENTS.md 16094 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | ok    pr-sections     5 required sections present
 | skip  commits         no base; pass --base <branch> or run on a pull_request event

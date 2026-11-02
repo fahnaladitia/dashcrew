@@ -22,6 +22,8 @@ import (
 	"github.com/fahnaladitia/dashcrew/internal/initproject"
 	"github.com/fahnaladitia/dashcrew/internal/knowledge"
 	"github.com/fahnaladitia/dashcrew/internal/knowledgemcp"
+	"github.com/fahnaladitia/dashcrew/internal/ledger"
+	"github.com/fahnaladitia/dashcrew/internal/lines"
 	"github.com/fahnaladitia/dashcrew/internal/profile"
 	"github.com/fahnaladitia/dashcrew/internal/sync"
 	"github.com/fahnaladitia/dashcrew/internal/version"
@@ -128,7 +130,8 @@ func newRoot(cli cliIO) *command {
 		add(guardCommand()).
 		add(checkCommand(cli)).
 		add(commitCommand(cli)).
-		add(verifyCommand(cli))
+		add(verifyCommand(cli)).
+		add(releaseCommand(cli))
 	return root
 }
 
@@ -171,6 +174,8 @@ func syncCommand(cli cliIO) *command {
 	c.flag("force", "", "Overwrite generated files that were edited by hand.", false, false)
 	c.flag("adopt", "", "Keep an existing AGENTS.md as the project block.", false, false)
 	c.flag("compile-guard", "", "Deprecated, does nothing: hooks run dashcrew guard from PATH.", false, true)
+	c.flag("upgrade", "", "On a release line, take this dashcrew's catalog instead of holding its changes.", false, false)
+	c.flag("after-merge", "", "Render fresh the generated files that carry merge conflict markers or disagree with the lock.", false, false)
 	c.run = func(r *results) (int, error) {
 		if r.wasParsed("compile-guard") {
 			fmt.Fprintln(cli.stderr, compileGuardNotice)
@@ -183,7 +188,8 @@ func syncCommand(cli cliIO) *command {
 		if err != nil {
 			return 0, err
 		}
-		result, err := sync.Sync{Catalog: cat, ProjectDir: projectDir}.Run(r.flag("force"), r.flag("adopt"))
+		opts := sync.Options{Force: r.flag("force"), Adopt: r.flag("adopt"), Upgrade: r.flag("upgrade"), AfterMerge: r.flag("after-merge")}
+		result, err := sync.Sync{Catalog: cat, ProjectDir: projectDir}.RunWith(opts)
 		if err != nil {
 			return 0, err
 		}
@@ -201,12 +207,121 @@ func syncCommand(cli cliIO) *command {
 		for _, note := range result.Notes {
 			cli.out("note: " + note)
 		}
-		if len(result.Written) == 0 && len(result.Removed) == 0 {
+		if opts.AfterMerge {
+			for _, path := range result.Resolved {
+				cli.out("fresh   " + path + " (conflict markers or out of step with the lock)")
+			}
+			if len(result.Stage) > 0 {
+				cli.out("Stage them yourself once they look right (dashcrew never stages or commits):")
+				cli.out("  git add -- " + strings.Join(result.Stage, " "))
+			}
+		}
+		if len(result.Held) > 0 {
+			fmt.Fprintln(cli.stderr, result.HeldMessage)
+			return 1, nil
+		}
+		if len(result.Written) == 0 && len(result.Removed) == 0 && len(result.Stage) == 0 {
 			cli.out("up to date")
 		}
 		return 0, nil
 	}
 	return c
+}
+
+func releaseCommand(cli cliIO) *command {
+	branch := newCommand("release", "Release lines from project.release_lines. Reads git only.")
+	linesCmd := newCommand("lines", "List the release and hotfix lines oldest first, then the main line, with their head commits,\n"+
+		"and the line of the current branch with how it was found.")
+	linesCmd.option("project", "p", "Project root holding .ai/project.yaml.", ptr("."))
+	linesCmd.run = func(r *results) (int, error) {
+		projectDir, err := absolute(*r.option("project"))
+		if err != nil {
+			return 0, err
+		}
+		cat, err := catalog.LoadEmbedded()
+		if err != nil {
+			return 0, err
+		}
+		p, err := sync.Sync{Catalog: cat, ProjectDir: projectDir}.Profile()
+		if err != nil {
+			return 0, &exitError{1, err.Error()}
+		}
+		if p.ReleaseLines == nil {
+			return 0, &exitError{1, "No release_lines in .ai/project.yaml; add project.release_lines: { main, release, hotfix } first."}
+		}
+		all, err := lines.List(projectDir, p.ReleaseLines)
+		if err != nil {
+			return 0, &exitError{1, projectDir + " is not inside a git repository"}
+		}
+		versionWidth, branchWidth := len("main"), len(p.ReleaseLines.Main)
+		for _, line := range all {
+			versionWidth, branchWidth = max(versionWidth, len(line.Version)), max(branchWidth, len(line.Branch))
+		}
+		row := func(label, name, head string) {
+			cli.out(fmt.Sprintf("  %-*s  %-*s  %s", versionWidth, label, branchWidth, name, head))
+		}
+		cli.out("lines (oldest first):")
+		if len(all) == 0 || (len(all) == 1 && lines.Main(all) != nil) {
+			cli.out("  no release or hotfix line branch found")
+		}
+		for _, line := range all {
+			if line.Kind != profile.MainLine {
+				row(line.Version, line.Branch, line.Head[:min(7, len(line.Head))])
+			}
+		}
+		if main := lines.Main(all); main != nil {
+			row("main", main.Branch, main.Head[:min(7, len(main.Head))])
+		} else {
+			row("main", p.ReleaseLines.Main, "no such branch")
+		}
+		cli.out("current: " + lines.Resolve(projectDir, p.ReleaseLines, all, "").Describe())
+		return 0, nil
+	}
+	statusCmd := newCommand("status", "Regenerate <plans>/<version>/README.md, the release ledger: the task folders with their branch\n"+
+		"and PR description, the commits on the line that carry Ported-from:, and the pending ports.\n"+
+		"Writes only that file; reads git.")
+	statusCmd.invocation = "dashcrew release status <version> [arguments]"
+	statusCmd.option("project", "p", "Project root holding .ai/project.yaml.", ptr("."))
+	statusCmd.run = func(r *results) (int, error) {
+		if len(r.rest) != 1 {
+			return 0, &usageError{statusCmd, "Pass one version, such as 2.4.5."}
+		}
+		projectDir, err := absolute(*r.option("project"))
+		if err != nil {
+			return 0, err
+		}
+		cat, err := catalog.LoadEmbedded()
+		if err != nil {
+			return 0, err
+		}
+		p, err := sync.Sync{Catalog: cat, ProjectDir: projectDir}.Profile()
+		if err != nil {
+			return 0, &exitError{1, err.Error()}
+		}
+		if p.ReleaseLines == nil {
+			return 0, &exitError{1, "No release_lines in .ai/project.yaml; add project.release_lines: { main, release, hotfix } first."}
+		}
+		all, err := lines.List(projectDir, p.ReleaseLines)
+		if err != nil {
+			return 0, &exitError{1, projectDir + " is not inside a git repository"}
+		}
+		text, err := ledger.Status(projectDir, p, all, r.rest[0])
+		if err != nil {
+			return 0, &exitError{1, err.Error()}
+		}
+		plans, _ := p.Paths.Value("plans").(string)
+		path, err := ledger.Write(projectDir, plans, r.rest[0], text)
+		if err != nil {
+			return 0, &exitError{1, err.Error()}
+		}
+		cli.out("wrote   " + path)
+		cli.out("")
+		for _, line := range strings.Split(strings.TrimSuffix(text, "\n"), "\n") {
+			cli.out(line)
+		}
+		return 0, nil
+	}
+	return branch.add(linesCmd).add(statusCmd)
 }
 
 // printChecks prints one line per check and, when annotate is on (GitHub Actions), an `::error` line per failure.
@@ -249,7 +364,19 @@ func checkCommand(cli cliIO) *command {
 	c.option("project", "p", "Project root holding .ai/project.yaml.", ptr("."))
 	c.option("pr-body", "", "File holding the PR description; a pull_request workflow supplies it from the event.", nil)
 	c.option("base", "", "Lint the commits of <base>..HEAD; a pull_request workflow supplies the range from the event.", nil)
+	c.flag("ports", "", "Only check that each fix of an older release line reached the newer one (exit 1 if not).", false, false)
+	c.option("from", "", "With --ports: the older line (a version, a line branch or main); default every adjacent pair.", nil)
+	c.option("to", "", "With --ports: the newer line; default the line after --from.", nil)
 	c.run = func(r *results) (int, error) {
+		if r.flag("ports") {
+			if r.option("pr-body") != nil || r.option("base") != nil {
+				return 0, &usageError{c, "--ports runs alone, without --pr-body or --base."}
+			}
+			return checkPorts(cli, r)
+		}
+		if r.option("from") != nil || r.option("to") != nil {
+			return 0, &usageError{c, "--from and --to need --ports."}
+		}
 		var body *string
 		if bodyFile := r.option("pr-body"); bodyFile != nil {
 			info, err := os.Stat(*bodyFile)
@@ -278,6 +405,54 @@ func checkCommand(cli cliIO) *command {
 		return printChecks(cli.stdout, checks, cli.env["GITHUB_ACTIONS"] == "true"), nil
 	}
 	return c
+}
+
+// checkPorts is `dashcrew check --ports`: one block per line pair, one line per fix, then a summary.
+func checkPorts(cli cliIO, r *results) (int, error) {
+	projectDir, err := absolute(*r.option("project"))
+	if err != nil {
+		return 0, err
+	}
+	cat, err := catalog.LoadEmbedded()
+	if err != nil {
+		return 0, err
+	}
+	p, err := sync.Sync{Catalog: cat, ProjectDir: projectDir}.Profile()
+	if err != nil {
+		return 0, &exitError{1, err.Error()}
+	}
+	from, to := "", ""
+	if value := r.option("from"); value != nil {
+		from = *value
+	}
+	if value := r.option("to"); value != nil {
+		to = *value
+	}
+	pairs, err := check.Ports(projectDir, p, from, to)
+	if err != nil {
+		return 0, &exitError{1, err.Error()}
+	}
+	if len(pairs) == 0 {
+		cli.out("fewer than two lines: nothing to compare; dashcrew release lines lists them")
+		return 0, nil
+	}
+	problems := 0
+	for _, pair := range pairs {
+		for _, line := range pair.Lines() {
+			cli.out(line)
+		}
+		problems += pair.Problems()
+	}
+	if problems > 0 {
+		fixes := "1 fix is"
+		if problems > 1 {
+			fixes = strconv.Itoa(problems) + " fixes are"
+		}
+		cli.out(fixes + " missing or lost; port them with the port workflow, then run this again")
+		return 1, nil
+	}
+	cli.out("every fix reached the newer lines")
+	return 0, nil
 }
 
 func worktreeCommand(cli cliIO) *command {

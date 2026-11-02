@@ -9,6 +9,7 @@ rules:
   - plan.code-md-large-only
   - plan.code-md-no-test-bodies
   - plan.reuse-search-explorer
+  - plan.release-folder
 ---
 # plan
 
@@ -36,7 +37,7 @@ The main session writes the plan for tier standard and large{{^policy.tier_gates
 
 ## File
 
-Save the plan to `{{paths.plans}}/<task-slug>/plan.md`, one file.
+Save the plan to `{{paths.plans}}/<task-slug>/plan.md`, one file.{{#has_release_lines}} A task with a release (step 0 `Release:`, or `git config branch.<branch>.dashcrew-release`) uses `{{paths.plans}}/<release>/<task-slug>/plan.md`; `dashcrew release status <release>` lists it in that release's ledger.{{/has_release_lines}}
 
 - Tier large adds `code.md` next to it: signatures and the hunks that carry a decision, nothing else.
 - `code.md` never holds full test bodies; they are written test first during implementation.

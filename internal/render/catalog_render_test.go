@@ -13,6 +13,8 @@ import (
 const (
 	agentsMdLimit            = 32 * 1024
 	antigravityAgentsMdLimit = 24000
+	// agentsMdBudget is the heaviest AGENTS.md before release lines (P6): new catalog lines are paid with cuts.
+	agentsMdBudget = 23788
 )
 
 var (
@@ -272,8 +274,22 @@ func TestLargestOptionOfEveryFamilyStaysUnderTheLimit(t *testing.T) {
 
 	profile := "toolkit: 1\nagents: [claude-code]\nstack: { " + strings.Join(stack, ", ") + " }\n"
 	content := targetContent(t, renderShipped(t, profile), "agents_md")
-	withKnowledge := targetContent(t, renderShipped(t, profile+"knowledge: { repo: 'git@example.com:team/notes.git' }\n"), "agents_md")
-	t.Logf("%s: AGENTS.md %d bytes, %d with knowledge", strings.Join(stack, ", "), len(content), len(withKnowledge))
+	const knowledge = "knowledge: { repo: 'git@example.com:team/notes.git' }\n"
+	const releaseLines = "project: { release_lines: { main: develop, release: 'release/(?P<version>[0-9.]+)' } }\n"
+	withKnowledge := targetContent(t, renderShipped(t, profile+knowledge), "agents_md")
+	withRelease := targetContent(t, renderShipped(t, profile+releaseLines), "agents_md")
+	withBoth := targetContent(t, renderShipped(t, profile+knowledge+releaseLines), "agents_md")
+	t.Logf("%s: AGENTS.md %d bytes, %d with knowledge, %d with release lines, %d with both", strings.Join(stack, ", "),
+		len(content), len(withKnowledge), len(withRelease), len(withBoth))
+
+	for name, size := range map[string]int{"plain": len(content), "knowledge": len(withKnowledge), "release lines": len(withRelease), "both": len(withBoth)} {
+		if size > agentsMdBudget {
+			t.Errorf("%s: AGENTS.md %d bytes, over the %d budget; pay for new lines with cuts in the same file", name, size, agentsMdBudget)
+		}
+	}
+	if len(withKnowledge) > len(content) {
+		t.Errorf("knowledge adds %d bytes to the heaviest AGENTS.md; pay for its line in the knowledge-gated text", len(withKnowledge)-len(content))
+	}
 
 	if len(content) >= antigravityAgentsMdLimit {
 		t.Errorf("%s: AGENTS.md %d bytes", strings.Join(stack, ", "), len(content))
@@ -416,6 +432,39 @@ func TestKnowledgeAddsALineToAgentsMdExplorerAndPlanOnlyWhenSet(t *testing.T) {
 		}
 		if agentsMd := targetContent(t, on, "agents_md"); strings.Contains(agentsMd, "team feedback") || len(agentsMd) > len(targetContent(t, off, "agents_md")) {
 			t.Errorf("%q: the knowledge line is not paid for by the memory line it replaces", platform)
+		}
+	}
+}
+
+func TestReleaseTextRendersOnlyWithReleaseLines(t *testing.T) {
+	const releaseLines = "project: { release_lines: { main: develop, release: 'release/(?P<version>[0-9.]+)' } }\n"
+	for _, platform := range []string{"", "platform: other\nplatform_config: { detect: [x], commands: { analyze: a, test: t, test_scoped: s, deps: d } }\n"} {
+		plain := renderShipped(t, "toolkit: 1\nagents: [claude-code]\n"+platform+"knowledge: { repo: x }\n")
+		lines := renderShipped(t, "toolkit: 1\nagents: [claude-code]\n"+platform+"knowledge: { repo: x }\n"+releaseLines)
+		checks := []struct{ target, text string }{
+			{"agents_md", "Release:          <version> | none\n```"},
+			{"agents_md", "`build-fix`, `port`. Say"},
+			{"agents_md", "`audit` (read-only), `port` and `worktree` sit outside the chain."},
+			{"skill/branching", "7. With a release, record it: `git config branch.<name>.dashcrew-release <version>`."},
+			{"skill/prompt-polish", "- `Release`: the version the task ships in"},
+			{"skill/pr-description", "keeps its plan in `.ai/plans/<release>/<task-slug>/`"},
+			{"workflow/plan", "uses `.ai/plans/<release>/<task-slug>/plan.md`"},
+			{"workflow/learn", "Pages describe the main line."},
+		}
+		for _, c := range checks {
+			if strings.Contains(targetContent(t, plain, c.target), c.text) {
+				t.Errorf("%s%s without release_lines holds %q", platform, c.target, c.text)
+			}
+			if !strings.Contains(targetContent(t, lines, c.target), c.text) {
+				t.Errorf("%s%s with release_lines lacks %q", platform, c.target, c.text)
+			}
+		}
+		if targetNames(plain)["workflow/port"] || !targetNames(lines)["workflow/port"] {
+			t.Errorf("%sworkflow/port: plain %v, release lines %v", platform, targetNames(plain)["workflow/port"], targetNames(lines)["workflow/port"])
+		}
+		if port := targetContent(t, lines, "workflow/port"); !strings.Contains(port, "git merge --no-ff --no-commit -X find-renames") ||
+			!strings.Contains(port, "The user commits, pushes and opens the PR.") {
+			t.Errorf("port workflow:\n%s", port)
 		}
 	}
 }

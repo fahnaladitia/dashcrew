@@ -24,14 +24,15 @@ stdout:
 | Reads git only; with --subject the message is linted and a problem exits 1.
 | 
 | Usage: dashcrew commit suggest [arguments]
-| -h, --help       Print this usage information.
-| -p, --project    Any folder inside the repository.
-|                  (defaults to ".")
-|     --subject    The subject; without it the command keeps a <subject> placeholder.
-|     --body       The body; without it and without --subject the command keeps a <body> placeholder.
-|     --type       Override the type derived from the branch.
-|     --scope      Override the scope derived from the files; an empty value drops it.
-|     --json       Print the derived parts and commands as JSON.
+| -h, --help           Print this usage information.
+| -p, --project        Any folder inside the repository.
+|                      (defaults to ".")
+|     --subject        The subject; without it the command keeps a <subject> placeholder.
+|     --body           The body; without it and without --subject the command keeps a <body> placeholder.
+|     --type           Override the type derived from the branch.
+|     --scope          Override the scope derived from the files; an empty value drops it.
+|     --ported-from    Comma-separated commits this change ports; each becomes a Ported-from: trailer.
+|     --json           Print the derived parts and commands as JSON.
 | 
 | Run "dashcrew help" to see global options.
 stderr: (empty)

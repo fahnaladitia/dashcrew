@@ -18,6 +18,7 @@ stdout:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   release     Release lines from project.release_lines. Reads git only.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
@@ -44,6 +45,7 @@ stdout:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   release     Release lines from project.release_lines. Reads git only.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
@@ -70,6 +72,7 @@ stdout:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   release     Release lines from project.release_lines. Reads git only.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
@@ -96,6 +99,7 @@ stdout:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   release     Release lines from project.release_lines. Reads git only.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
@@ -146,6 +150,8 @@ stdout:
 |     --force                 Overwrite generated files that were edited by hand.
 |     --adopt                 Keep an existing AGENTS.md as the project block.
 |     --[no-]compile-guard    Deprecated, does nothing: hooks run dashcrew guard from PATH.
+|     --upgrade               On a release line, take this dashcrew's catalog instead of holding its changes.
+|     --after-merge           Render fresh the generated files that carry merge conflict markers or disagree with the lock.
 | 
 | Run "dashcrew help" to see global options.
 stderr: (empty)
@@ -177,6 +183,9 @@ stdout:
 |                  (defaults to ".")
 |     --pr-body    File holding the PR description; a pull_request workflow supplies it from the event.
 |     --base       Lint the commits of <base>..HEAD; a pull_request workflow supplies the range from the event.
+|     --ports      Only check that each fix of an older release line reached the newer one (exit 1 if not).
+|     --from       With --ports: the older line (a version, a line branch or main); default every adjacent pair.
+|     --to         With --ports: the newer line; default the line after --from.
 | 
 | Run "dashcrew help" to see global options.
 stderr: (empty)
@@ -290,6 +299,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   release     Release lines from project.release_lines. Reads git only.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
@@ -316,6 +326,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   release     Release lines from project.release_lines. Reads git only.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
@@ -342,6 +353,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   release     Release lines from project.release_lines. Reads git only.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
@@ -362,6 +374,8 @@ stderr:
 |     --force                 Overwrite generated files that were edited by hand.
 |     --adopt                 Keep an existing AGENTS.md as the project block.
 |     --[no-]compile-guard    Deprecated, does nothing: hooks run dashcrew guard from PATH.
+|     --upgrade               On a release line, take this dashcrew's catalog instead of holding its changes.
+|     --after-merge           Render fresh the generated files that carry merge conflict markers or disagree with the lock.
 | 
 | Run "dashcrew help" to see global options.
 files: (unchanged)
@@ -427,6 +441,8 @@ stdout:
 |     --force                 Overwrite generated files that were edited by hand.
 |     --adopt                 Keep an existing AGENTS.md as the project block.
 |     --[no-]compile-guard    Deprecated, does nothing: hooks run dashcrew guard from PATH.
+|     --upgrade               On a release line, take this dashcrew's catalog instead of holding its changes.
+|     --after-merge           Render fresh the generated files that carry merge conflict markers or disagree with the lock.
 | 
 | Run "dashcrew help" to see global options.
 stderr: (empty)
@@ -458,6 +474,9 @@ stdout:
 |                  (defaults to ".")
 |     --pr-body    File holding the PR description; a pull_request workflow supplies it from the event.
 |     --base       Lint the commits of <base>..HEAD; a pull_request workflow supplies the range from the event.
+|     --ports      Only check that each fix of an older release line reached the newer one (exit 1 if not).
+|     --from       With --ports: the older line (a version, a line branch or main); default every adjacent pair.
+|     --to         With --ports: the newer line; default the line after --from.
 | 
 | Run "dashcrew help" to see global options.
 stderr: (empty)
@@ -597,6 +616,8 @@ stdout:
 |     --force                 Overwrite generated files that were edited by hand.
 |     --adopt                 Keep an existing AGENTS.md as the project block.
 |     --[no-]compile-guard    Deprecated, does nothing: hooks run dashcrew guard from PATH.
+|     --upgrade               On a release line, take this dashcrew's catalog instead of holding its changes.
+|     --after-merge           Render fresh the generated files that carry merge conflict markers or disagree with the lock.
 | 
 | Run "dashcrew help" to see global options.
 stderr: (empty)
@@ -650,6 +671,8 @@ stdout:
 |     --force                 Overwrite generated files that were edited by hand.
 |     --adopt                 Keep an existing AGENTS.md as the project block.
 |     --[no-]compile-guard    Deprecated, does nothing: hooks run dashcrew guard from PATH.
+|     --upgrade               On a release line, take this dashcrew's catalog instead of holding its changes.
+|     --after-merge           Render fresh the generated files that carry merge conflict markers or disagree with the lock.
 | 
 | Run "dashcrew help" to see global options.
 stderr: (empty)
@@ -674,6 +697,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   release     Release lines from project.release_lines. Reads git only.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
@@ -704,6 +728,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   release     Release lines from project.release_lines. Reads git only.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
@@ -734,6 +759,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   release     Release lines from project.release_lines. Reads git only.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
@@ -764,6 +790,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   release     Release lines from project.release_lines. Reads git only.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
@@ -794,6 +821,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   release     Release lines from project.release_lines. Reads git only.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
@@ -875,6 +903,8 @@ stderr:
 |     --force                 Overwrite generated files that were edited by hand.
 |     --adopt                 Keep an existing AGENTS.md as the project block.
 |     --[no-]compile-guard    Deprecated, does nothing: hooks run dashcrew guard from PATH.
+|     --upgrade               On a release line, take this dashcrew's catalog instead of holding its changes.
+|     --after-merge           Render fresh the generated files that carry merge conflict markers or disagree with the lock.
 | 
 | Run "dashcrew help" to see global options.
 files: (unchanged)
@@ -892,6 +922,8 @@ stderr:
 |     --force                 Overwrite generated files that were edited by hand.
 |     --adopt                 Keep an existing AGENTS.md as the project block.
 |     --[no-]compile-guard    Deprecated, does nothing: hooks run dashcrew guard from PATH.
+|     --upgrade               On a release line, take this dashcrew's catalog instead of holding its changes.
+|     --after-merge           Render fresh the generated files that carry merge conflict markers or disagree with the lock.
 | 
 | Run "dashcrew help" to see global options.
 files: (unchanged)
@@ -909,6 +941,8 @@ stderr:
 |     --force                 Overwrite generated files that were edited by hand.
 |     --adopt                 Keep an existing AGENTS.md as the project block.
 |     --[no-]compile-guard    Deprecated, does nothing: hooks run dashcrew guard from PATH.
+|     --upgrade               On a release line, take this dashcrew's catalog instead of holding its changes.
+|     --after-merge           Render fresh the generated files that carry merge conflict markers or disagree with the lock.
 | 
 | Run "dashcrew help" to see global options.
 files: (unchanged)
@@ -1052,6 +1086,8 @@ stderr:
 |     --force                 Overwrite generated files that were edited by hand.
 |     --adopt                 Keep an existing AGENTS.md as the project block.
 |     --[no-]compile-guard    Deprecated, does nothing: hooks run dashcrew guard from PATH.
+|     --upgrade               On a release line, take this dashcrew's catalog instead of holding its changes.
+|     --after-merge           Render fresh the generated files that carry merge conflict markers or disagree with the lock.
 | 
 | Run "dashcrew help" to see global options.
 files: (unchanged)
@@ -1069,6 +1105,8 @@ stderr:
 |     --force                 Overwrite generated files that were edited by hand.
 |     --adopt                 Keep an existing AGENTS.md as the project block.
 |     --[no-]compile-guard    Deprecated, does nothing: hooks run dashcrew guard from PATH.
+|     --upgrade               On a release line, take this dashcrew's catalog instead of holding its changes.
+|     --after-merge           Render fresh the generated files that carry merge conflict markers or disagree with the lock.
 | 
 | Run "dashcrew help" to see global options.
 files: (unchanged)
@@ -1101,6 +1139,8 @@ stderr:
 |     --force                 Overwrite generated files that were edited by hand.
 |     --adopt                 Keep an existing AGENTS.md as the project block.
 |     --[no-]compile-guard    Deprecated, does nothing: hooks run dashcrew guard from PATH.
+|     --upgrade               On a release line, take this dashcrew's catalog instead of holding its changes.
+|     --after-merge           Render fresh the generated files that carry merge conflict markers or disagree with the lock.
 | 
 | Run "dashcrew help" to see global options.
 files: (unchanged)
@@ -1118,6 +1158,8 @@ stderr:
 |     --force                 Overwrite generated files that were edited by hand.
 |     --adopt                 Keep an existing AGENTS.md as the project block.
 |     --[no-]compile-guard    Deprecated, does nothing: hooks run dashcrew guard from PATH.
+|     --upgrade               On a release line, take this dashcrew's catalog instead of holding its changes.
+|     --after-merge           Render fresh the generated files that carry merge conflict markers or disagree with the lock.
 | 
 | Run "dashcrew help" to see global options.
 files: (unchanged)
@@ -1145,6 +1187,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   release     Release lines from project.release_lines. Reads git only.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
@@ -1171,6 +1214,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   release     Release lines from project.release_lines. Reads git only.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
@@ -1209,6 +1253,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   release     Release lines from project.release_lines. Reads git only.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
@@ -1235,6 +1280,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   release     Release lines from project.release_lines. Reads git only.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
@@ -1260,6 +1306,7 @@ stdout:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   release     Release lines from project.release_lines. Reads git only.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
@@ -1287,6 +1334,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   release     Release lines from project.release_lines. Reads git only.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
@@ -1344,6 +1392,9 @@ stderr:
 |                  (defaults to ".")
 |     --pr-body    File holding the PR description; a pull_request workflow supplies it from the event.
 |     --base       Lint the commits of <base>..HEAD; a pull_request workflow supplies the range from the event.
+|     --ports      Only check that each fix of an older release line reached the newer one (exit 1 if not).
+|     --from       With --ports: the older line (a version, a line branch or main); default every adjacent pair.
+|     --to         With --ports: the newer line; default the line after --from.
 | 
 | Run "dashcrew help" to see global options.
 files: (unchanged)
@@ -1360,6 +1411,9 @@ stderr:
 |                  (defaults to ".")
 |     --pr-body    File holding the PR description; a pull_request workflow supplies it from the event.
 |     --base       Lint the commits of <base>..HEAD; a pull_request workflow supplies the range from the event.
+|     --ports      Only check that each fix of an older release line reached the newer one (exit 1 if not).
+|     --from       With --ports: the older line (a version, a line branch or main); default every adjacent pair.
+|     --to         With --ports: the newer line; default the line after --from.
 | 
 | Run "dashcrew help" to see global options.
 files: (unchanged)
@@ -1376,6 +1430,9 @@ stderr:
 |                  (defaults to ".")
 |     --pr-body    File holding the PR description; a pull_request workflow supplies it from the event.
 |     --base       Lint the commits of <base>..HEAD; a pull_request workflow supplies the range from the event.
+|     --ports      Only check that each fix of an older release line reached the newer one (exit 1 if not).
+|     --from       With --ports: the older line (a version, a line branch or main); default every adjacent pair.
+|     --to         With --ports: the newer line; default the line after --from.
 | 
 | Run "dashcrew help" to see global options.
 files: (unchanged)
@@ -1392,6 +1449,9 @@ stderr:
 |                  (defaults to ".")
 |     --pr-body    File holding the PR description; a pull_request workflow supplies it from the event.
 |     --base       Lint the commits of <base>..HEAD; a pull_request workflow supplies the range from the event.
+|     --ports      Only check that each fix of an older release line reached the newer one (exit 1 if not).
+|     --from       With --ports: the older line (a version, a line branch or main); default every adjacent pair.
+|     --to         With --ports: the newer line; default the line after --from.
 | 
 | Run "dashcrew help" to see global options.
 files: (unchanged)

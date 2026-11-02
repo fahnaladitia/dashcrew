@@ -1,17 +1,20 @@
 ---
 target: skill/branching
-rules: [branching.verify-no-upstream, branching.unset-wrong-upstream, branching.upstream-set-by-user, branching.no-upstream-to-base, branching.no-pull-unverified-upstream]
+rules: [branching.ask-release, branching.record-release, branching.verify-no-upstream, branching.unset-wrong-upstream, branching.upstream-set-by-user, branching.no-upstream-to-base, branching.no-pull-unverified-upstream]
 ---
 # Branching
 
 ## Create
 
 1. Propose 3 names, for example `{{project.branch_prefix.feat}}order-history-filter`, `{{project.branch_prefix.fix}}order-total-rounding`, `{{project.branch_prefix.hotfix}}profile-page-null-avatar`.
-2. Ask for the base. Features and fixes usually fork from the active development branch, hotfixes from the release or main branch, but the user decides.
+2. Ask for the base. Features and fixes usually fork from the active development branch, hotfixes from the release or main branch, but the user decides.{{#has_release_lines}} Ask in the same question which release the task ships in (step 0 `Release:`), or none; `dashcrew release lines` lists the lines.{{/has_release_lines}}
 3. `git status`: if the tree is dirty, show the changes and ask before switching.
 4. `git checkout --no-track -b <name> <base>` (or `git branch --no-track <name> <base>`). `git checkout -b --no-track ...` is rejected as an invalid branch name.
 5. `git branch --show-current` prints the new name.
 6. `git rev-parse --abbrev-ref @{u}` must fail, and `git status -sb` must print the branch name alone: no `...origin/...`, no `[ahead N]`.
+{{#has_release_lines}}
+7. With a release, record it: `git config branch.<name>.dashcrew-release <version>`. It is local branch config, never committed; `sync` then keeps the toolkit at the line's version, and the plan goes to `{{paths.plans}}/<version>/<task-slug>/`.
+{{/has_release_lines}}
 
 ## Why no tracking
 

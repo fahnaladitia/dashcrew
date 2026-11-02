@@ -1,0 +1,113 @@
+# release lines
+
+=== step 1: dashcrew "help" "release"
+exit: 0
+stdout:
+| Release lines from project.release_lines. Reads git only.
+| 
+| Usage: dashcrew release <subcommand> [arguments]
+| -h, --help    Print this usage information.
+| 
+| Available subcommands:
+|   lines    List the release and hotfix lines oldest first, then the main line, with their head commits,
+|   status   Regenerate <plans>/<version>/README.md, the release ledger: the task folders with their branch
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 2: dashcrew "release" "lines" "--help"
+exit: 0
+stdout:
+| List the release and hotfix lines oldest first, then the main line, with their head commits,
+| and the line of the current branch with how it was found.
+| 
+| Usage: dashcrew release lines [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml.
+|                  (defaults to ".")
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 3: dashcrew "release" "lines"
+exit: 0
+stdout:
+| lines (oldest first):
+|   2.4.0  release/2.4.0         d0dc25f
+|   2.4.5  hotfix/2.4.5          4cd78e4
+|   2.5.0  origin/release/2.5.0  229dd83
+|   main   develop               229dd83
+| current: develop is the main line
+stderr: (empty)
+files: (unchanged)
+
+=== step 4: dashcrew "release" "lines"
+(after the case's setup for this step)
+exit: 0
+stdout:
+| lines (oldest first):
+|   2.4.0  release/2.4.0         d0dc25f
+|   2.4.5  hotfix/2.4.5          4cd78e4
+|   2.5.0  origin/release/2.5.0  229dd83
+|   main   develop               229dd83
+| current: release/2.4.0 is the release line 2.4.0
+stderr: (empty)
+files: (unchanged)
+
+=== step 5: dashcrew "release" "lines"
+(after the case's setup for this step)
+exit: 0
+stdout:
+| lines (oldest first):
+|   2.4.0  release/2.4.0         d0dc25f
+|   2.4.5  hotfix/2.4.5          4cd78e4
+|   2.5.0  origin/release/2.5.0  229dd83
+|   main   develop               229dd83
+| current: fix/recorded records release 2.4.5 (branch.fix/recorded.dashcrew-release), line hotfix/2.4.5
+stderr: (empty)
+files: (unchanged)
+
+=== step 6: dashcrew "release" "lines" "-p" "w"
+dir: .
+(after the case's setup for this step)
+exit: 0
+stdout:
+| lines (oldest first):
+|   2.4.0  release/2.4.0         d0dc25f
+|   2.4.5  hotfix/2.4.5          4cd78e4
+|   2.5.0  origin/release/2.5.0  229dd83
+|   main   develop               229dd83
+| current: fix/guess is nearest to release/2.4.0 by merge-base, a guess; record it with git config branch.fix/guess.dashcrew-release 2.4.0
+stderr: (empty)
+files: (unchanged)
+
+=== step 7: dashcrew "release" "lines"
+(after the case's setup for this step)
+exit: 0
+stdout:
+| lines (oldest first):
+|   2.4.0  release/2.4.0         d0dc25f
+|   2.4.5  hotfix/2.4.5          4cd78e4
+|   2.5.0  origin/release/2.5.0  229dd83
+|   main   develop               229dd83
+| current: detached HEAD: no line
+stderr: (empty)
+files: (unchanged)
+
+=== step 8: dashcrew "release" "lines"
+(after the case's setup for this step)
+exit: 1
+stdout: (empty)
+stderr:
+| No release_lines in .ai/project.yaml; add project.release_lines: { main, release, hotfix } first.
+files: (unchanged)
+
+=== step 9: dashcrew "release" "lines"
+(after the case's setup for this step)
+exit: 1
+stdout: (empty)
+stderr:
+| project.yaml project.release_lines.release: needs a named group version, e.g. release/(?P<version>[0-9]+\.[0-9]+\.[0-9]+)
+files: (unchanged)

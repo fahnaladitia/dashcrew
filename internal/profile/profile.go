@@ -97,6 +97,9 @@ type Profile struct {
 	CI *omap.Map[any]
 	// Commit is `project.commit` with its defaults; it is kept out of Project, so templates never see it.
 	Commit *Commit
+	// ReleaseLines is `project.release_lines`; nil without it. Kept out of Project like Commit; templates see only
+	// `has_release_lines`, which gates the release text.
+	ReleaseLines *ReleaseLines
 	// Knowledge is the shared knowledge repo; nil when the profile has no `knowledge` key. Templates see only
 	// `has_knowledge`, which `when:` gates on, so a profile without it renders as before.
 	Knowledge *Knowledge
@@ -202,6 +205,10 @@ func Parse(text string, known KnownOptions) (*Profile, error) {
 	if profile.Commit, err = parseCommit(profile.Project); err != nil {
 		return nil, err
 	}
+	if profile.ReleaseLines, err = parseReleaseLines(profile.Project); err != nil {
+		return nil, err
+	}
+	profile.Commit.PortTrailers = profile.ReleaseLines != nil
 	if profile.Policy, err = merge("policy", policyDefaults(), root.Value("policy"), true); err != nil {
 		return nil, err
 	}
@@ -449,17 +456,18 @@ func (p *Profile) ToContext() map[string]any {
 		agents[i] = agent
 	}
 	return map[string]any{
-		"agents":          agents,
-		"language":        p.Language,
-		"stack":           stack,
-		"stack_other":     others,
-		"has_stack_other": len(others) > 0,
-		"has_knowledge":   p.Knowledge != nil,
-		"project":         p.Project,
-		"policy":          p.Policy,
-		"paths":           p.Paths,
-		"ci":              p.CI,
-		"build":           map[string]any{"flavors": buildFlavors, "has_flavors": len(buildFlavors) > 0},
+		"agents":            agents,
+		"language":          p.Language,
+		"stack":             stack,
+		"stack_other":       others,
+		"has_stack_other":   len(others) > 0,
+		"has_knowledge":     p.Knowledge != nil,
+		"has_release_lines": p.ReleaseLines != nil,
+		"project":           p.Project,
+		"policy":            p.Policy,
+		"paths":             p.Paths,
+		"ci":                p.CI,
+		"build":             map[string]any{"flavors": buildFlavors, "has_flavors": len(buildFlavors) > 0},
 	}
 }
 

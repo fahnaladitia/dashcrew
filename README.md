@@ -26,7 +26,7 @@ core/ + packs/ + platforms/ (shipped)  --+
 
 - **Rules** go into one `AGENTS.md`. Your own rules live in its project block, which `sync` never rewrites.
 - **One agent plans and builds.** The main session runs the chain: step 0, then `plan`, `tdd`, `code-review` and `verify` as the task's size tier needs. Skills, not personas, carry the expertise.
-- **Skills and workflows** (`plan`, `tdd`, `code-review`, `verify`, `learn`, `audit`, `worktree`, `build-fix`) become each agent's skill format. AGENTS.md carries a generated skill index; see [Choosing skills](#choosing-skills).
+- **Skills and workflows** (`plan`, `tdd`, `code-review`, `verify`, `learn`, `audit`, `worktree`, `build-fix`, and `port` with [release lines](#release-lines)) become each agent's skill format. AGENTS.md carries a generated skill index; see [Choosing skills](#choosing-skills).
 - **Two subagents** remain, both read-only: `reviewer` (independent review of a large plan and of the diff) and `explorer` (maps many files to `file:line` for `plan` and `audit`).
 - **Platforms** hold everything that belongs to one stack: commands, lifecycle rules, doc comments, pack families. See [Platforms](#platforms).
 - **The guard** is `dashcrew guard`, a subcommand of the same binary, that every agent's pre-tool hook reaches through the committed shim `.ai/bin/guard`. It reads the policy in `.ai/guard.json` and blocks the commands and writes listed in [Guard](#guard).
@@ -107,6 +107,7 @@ ci: { github: true, dashcrew_ref: <commit or tag> }
 | `project.commit.body` | `optional` | `optional`, `required` or `none` |
 | `project.commit.trailers` | none | trailers allowed on top of `Co-authored-by`, `Signed-off-by`, `Reviewed-by` and the ticket trailer |
 | `project.commit.allow_email_trailers` | none | the only trailers whose value may hold an email address (DCO `Signed-off-by`); an email anywhere else fails lint |
+| `project.release_lines` | not set | `{main: <branch>, release: <regex>, hotfix: <regex>, check_ports: <bool>}`: the main line and the patterns of release and hotfix lines; see [Release lines](#release-lines) |
 | `policy.agent_commit` | `false` | `true` lets the agent commit; push stays blocked |
 | `policy.formatter` | `false` | `true` allows `dart format` on changed files only |
 | `policy.dartdoc_max_lines` | `3` | hard cap per documented unit |
@@ -228,8 +229,10 @@ Agent checks run only for the agents in the profile. Each line starts with `ok`,
 | `-p, --project` | `.` | project root |
 | `--pr-body <file>` | none | the PR description to check; in a pull request workflow the event supplies it |
 | `--base <branch>` | none | lint the commits of `<base>..HEAD`; in a pull request workflow the event's base and head supply the range |
+| `--ports` | off | only the port check of [release lines](#release-lines); runs alone, without `--pr-body` or `--base` |
+| `--from <line>`, `--to <line>` | every adjacent pair | with `--ports`: the older and the newer line, each a version, a line branch or `main` |
 
-Read-only; exit 1 on any failure, with `::error` annotations in GitHub Actions. It runs the toolkit checks of `doctor` that need no agent or guard binary, then `pr-sections` (every heading of `.github/pull_request_template.md` in the PR body) and `commits` (`dashcrew commit lint` on every commit of the PR but merges; skipped without a base).
+Read-only; exit 1 on any failure, with `::error` annotations in GitHub Actions. It runs the toolkit checks of `doctor` that need no agent or guard binary, then `pr-sections` (every heading of `.github/pull_request_template.md` in the PR body) and `commits` (`dashcrew commit lint` on every commit of the PR but merges; skipped without a base). With `release_lines.check_ports: true` it adds `ports`, the check of `--ports` over every adjacent pair of lines.
 
 ### `dashcrew commit`
 
@@ -237,8 +240,17 @@ Commit messages in the pattern of `project.commit`. Neither subcommand commits; 
 
 | Subcommand | |
 |---|---|
-| `suggest [--subject <s>] [--body <b>] [--type <t>] [--scope <s>] [--json]` | prints `git add -- <files>` with the changed tracked files listed one by one, and `git commit -m ...` quoted for bash and zsh. Type, scope and ticket come from the branch and the files; untracked files are listed apart, never added. With a verify record it says which files changed after the last verify. With `--subject` the message is linted; a problem exits 1. Never shows an email address from the branch or the git config |
+| `suggest [--subject <s>] [--body <b>] [--type <t>] [--scope <s>] [--ported-from <sha>[,<sha>...]] [--json]` | prints `git add -- <files>` with the changed tracked files listed one by one, and `git commit -m ...` quoted for bash and zsh. Type, scope and ticket come from the branch and the files; untracked files are listed apart, never added. With a verify record it says which files changed after the last verify. `--ported-from` adds one `Ported-from:` trailer per commit, after the ticket trailer. With `--subject` the message is linted; a problem exits 1. Never shows an email address from the branch or the git config |
 | `lint <message> \| - \| --range <base>..<head>` | checks the pattern, type, subject length, body rule, trailers, email addresses (`name@host.tld`, also inside `<...>`; `@mention` and image suffixes such as `icon@2x.png` are not addresses) and AI attribution (generated-with footers, AI co-author trailers, robot lines). One line per problem, exit 1 |
+
+### `dashcrew release`
+
+Needs `project.release_lines`; both subcommands take `-p, --project`.
+
+| Subcommand | |
+|---|---|
+| `lines` | the release and hotfix lines oldest first, then the main line, with their head commits, and how the current branch resolves |
+| `status <version>` | regenerates `<plans>/<version>/README.md`, the release ledger, and prints it. Writes only that file and runs no git write command |
 
 ### `dashcrew verify record`
 
@@ -359,6 +371,37 @@ A team can keep its product knowledge (how a flow works, a contract, a trap, a d
 **MCP server.** `dashcrew knowledge serve [--clone <dir>]` is a stdio MCP server with three tools: `knowledge_search` (BM25 over title, headings and body; page, title, snippet, score), `knowledge_read` (the page and its verified markers) and `knowledge_sources` (each code pointer as found, missing or unchecked). Its index lives in memory and is rebuilt when the clone's HEAD moves. `sync` registers it as `dashcrew-knowledge` in `.mcp.json`, `.codex/config.toml` and `.agents/mcp_config.json`, and removes it when `knowledge` is dropped. AGENTS.md, the `explorer` and the `plan` workflow tell agents to read the knowledge before planning and to check a page's code pointers before relying on it.
 
 dashcrew never commits, pushes or resets the knowledge repo; every change to it goes through a member's own pull request.
+
+## Release lines
+
+For teams that build two releases at once and cut patch lines while both are open. Set the lines in the profile; the patterns are the team's own branch names, each with a named group `version`, matched against the whole branch name:
+
+```yaml
+project:
+  release_lines:
+    main: develop
+    release: 'release/(?P<version>[0-9]+\.[0-9]+\.[0-9]+)'
+    hotfix: 'hotfix/(?P<version>[0-9]+\.[0-9]+\.[0-9]+)'
+    check_ports: false   # true runs the port check in dashcrew check (CI)
+```
+
+**Lines.** `dashcrew release lines` lists local and remote-tracking line branches ordered by version (release before hotfix on a tie), then the main line. A branch resolves as the main line, then a line by its name, then the release it records in `git config branch.<name>.dashcrew-release`, then the nearest line by merge-base, shown as a guess. Only a line by name or a recorded release protects a branch.
+
+**A task knows its release.** Step 0 gains `Release: <version> | none`, and the `branching` skill asks for it with the base and records it with `git config branch.<name>.dashcrew-release <version>`, local config the guard allows and nothing commits. The step 0 line, the `port` workflow and the release text in `branching`, `prompt-polish`, `plan`, `pr-description` and `learn` render only when `release_lines` is set.
+
+**Toolkit version per line.** On a protected branch without `--upgrade`, when the lock's version or catalog digest is older or different, `sync` checks each differing file on its own: a file is written as profile-driven when rendering the lock's profile with the current catalog reproduces its locked hash; otherwise it is held as catalog-driven. Held files mean exit 1, with the two ways forward: `dashcrew sync --upgrade` on the line, or upgrade on the main line and merge it down. With `release_lines` set the lock records `inputs` (catalog digest, profile hash). `doctor`'s `release-line` check compares the line's toolkit with the main line's. Limits: the catalog digest covers only the built-in catalog, and adapter config merges (`.mcp.json`, `settings.json`) are not held.
+
+**Merges between lines.** `doctor` and `check` report generated files with conflict markers or out of step with the lock. `dashcrew sync --after-merge` refuses a conflicted profile, rebuilds a conflicted lock from our side plus the files only their side has, renders fresh the owned files that are conflicted or drifted, and prints the `git add -- ...` line. It never stages or commits, and never touches files dashcrew does not own.
+
+**Plans and the ledger.** A task with a release plans in `<plans>/<release>/<task>/`; one without stays in `<plans>/<task>/`. `dashcrew release status <version>` regenerates `<plans>/<version>/README.md`: each task folder with its branch (a local branch named `<task>` or ending in `/<task>`, one recording the release first) and PR description path; the commits on the line since the previous release's line or version tag (`2.4.0` or `v2.4.0`) that carry `Ported-from:`; and the pending ports into and out of the line.
+
+**Ports.** With `release_lines` set, `commit lint` allows the trailers `Ported-from: <sha>` (7 to 40 hex characters) and `Port: yes`. `dashcrew check --ports` takes every fix of the older line since its branch point (the newest commit of its history on the main line's first-parent chain, so merging the line back does not move it): commits whose type is `fix` in the commit pattern, plus any commit with `Port: yes`, minus fixes reverted on that line. Each must reach the newer line, found in this order: merged (in its history), a `Ported-from:` trailer, a `cherry-pick -x` note, an equal `git patch-id --stable`. A port of a port counts, since the trailers and notes chain back to the original. A found fix is lost when a commit on the newer line says `This reverts commit <sha>` of it and is not reverted itself. It prints one line per fix, a summary, and exits 1 when any is missing or lost. Without `--from` and `--to` it checks every adjacent pair up to the main line, which covers older lines through the newer ones. A fast-forward merge of a line into the main line moves its branch point, and a CI checkout needs `fetch-depth: 0` with every line fetched.
+
+**The `port` workflow.** The main session takes a merged range or PR on one line and the target lines (default every newer line, then main), creates one worktree per target with `dashcrew worktree create`, and prints the merge for the member to run: `git merge --no-ff --no-commit -X find-renames <source line>` by default, `git cherry-pick -x --no-commit` only with a stated reason. The guard keeps merge and cherry-pick the user's in every policy. Conflicts are listed with renamed paths, `verify` runs scoped per target, each target gets its own PR description naming the origin, and the commit command comes from `dashcrew commit suggest --ported-from <sha>`. The member commits and pushes.
+
+**Knowledge.** Pages describe the main line. A version-specific part is tagged in place, such as `(since 2.5.0)` or `(2.4 only)`; never a folder or page per version. The knowledge-gated `learn` text says so when `release_lines` is set.
+
+Not done: creating, tagging or deleting release branches; pushing, merging or opening PRs; version folders for code, generated files or knowledge; automatic ports on merge; releases across repos.
 
 ## Troubleshooting
 
