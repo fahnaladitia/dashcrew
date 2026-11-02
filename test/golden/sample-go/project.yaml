@@ -1,0 +1,7 @@
+# Synthetic profile: a Go service set up with `dashcrew platform new go`, with chi and pgx, for Claude Code and Codex.
+toolkit: 1
+platform: go
+agents: [claude-code, codex]
+stack:
+  http: chi
+  db: pgx

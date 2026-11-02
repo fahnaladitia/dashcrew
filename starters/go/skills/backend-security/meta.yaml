@@ -1,0 +1,3 @@
+description: Security checklist for a Go backend - queries, authorization on handlers, secrets in config, migrations.
+when_to_use: When the change adds or edits a handler, a query, a migration, configuration, or anything that reads credentials.
+review: true

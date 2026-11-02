@@ -11,6 +11,7 @@ import (
 	"github.com/fahnaladitia/dashcrew/internal/knowledge"
 	"github.com/fahnaladitia/dashcrew/internal/omap"
 	"github.com/fahnaladitia/dashcrew/internal/profile"
+	"github.com/fahnaladitia/dashcrew/internal/version"
 	"github.com/fahnaladitia/dashcrew/internal/yamlutil"
 )
 
@@ -31,6 +32,10 @@ type Policy struct {
 	// KnowledgeClone is the knowledge clone as `~/.dashcrew/knowledge/<name>`; empty without `knowledge`. Writes
 	// whose real path is inside it are allowed only under `inbox/`.
 	KnowledgeClone string
+	// BlockCommands, BlockSQL and BlockMigrations come from the platform's `guard:` key (P10); empty without one.
+	BlockCommands   [][]string
+	BlockSQL        SQLBlock
+	BlockMigrations MigrationBlock
 
 	// knowledge is the hook's folder and KnowledgeClone resolved on this machine; Run sets it (see at). Without it
 	// the write rules read paths as text only, as the Dart guard did.
@@ -83,7 +88,7 @@ func CompilePolicy(p *profile.Profile, c *catalog.Catalog) Policy {
 	if p.Knowledge != nil {
 		clone = knowledge.PolicyClonePath(p.Knowledge.Name)
 	}
-	return Policy{
+	policy := Policy{
 		KnowledgeClone:   clone,
 		BlockedGit:       blocked,
 		BlockFormatters:  p.Policy.Value("formatter") != true,
@@ -92,6 +97,32 @@ func CompilePolicy(p *profile.Profile, c *catalog.Catalog) Policy {
 		ForbiddenImports: forbiddenImports,
 		LocalPackages:    localPackages,
 	}
+	if g := c.PlatformFor(p).Guard; !g.Empty() {
+		policy.BlockCommands = g.Commands
+		policy.BlockSQL = SQLBlock{Clients: g.SQLClients, Statements: g.SQLStatements}
+		policy.BlockMigrations = MigrationBlock{Tools: g.MigrationTools, LocalHosts: g.LocalHosts}
+	}
+	return policy
+}
+
+// SQLBlock blocks the statements, as whole words in any case, in the SQL given to a client.
+type SQLBlock struct{ Clients, Statements []string }
+
+// MigrationBlock blocks a migration tool run whose connection string names a host outside LocalHosts.
+type MigrationBlock struct{ Tools, LocalHosts []string }
+
+// Minimum is the oldest dashcrew whose guard enforces p: version.BackendGuardMinimum with backend rules, else
+// version.GuardMinimum. Sync writes it into the shim and the lock.
+func (p Policy) Minimum() string {
+	if p.HasBackendRules() {
+		return version.BackendGuardMinimum
+	}
+	return version.GuardMinimum
+}
+
+// HasBackendRules is true when the policy holds a rule a dashcrew older than version.BackendGuardMinimum ignores.
+func (p Policy) HasBackendRules() bool {
+	return len(p.BlockCommands) > 0 || len(p.BlockSQL.Clients) > 0 || len(p.BlockMigrations.Tools) > 0
 }
 
 // ToJSON is the `.ai/guard.json` object: blocked git subcommands and role names sorted.
@@ -122,7 +153,76 @@ func (p Policy) ToJSON() *omap.Map[any] {
 	if p.KnowledgeClone != "" {
 		object.Set("knowledge_clone", p.KnowledgeClone)
 	}
+	if len(p.BlockCommands) > 0 {
+		commands := make([]any, len(p.BlockCommands))
+		for i, words := range p.BlockCommands {
+			commands[i] = toAny(words)
+		}
+		object.Set("block_commands", commands)
+	}
+	if len(p.BlockSQL.Clients) > 0 {
+		object.Set("block_sql", omap.Of[any]("clients", toAny(p.BlockSQL.Clients), "statements", toAny(p.BlockSQL.Statements)))
+	}
+	if len(p.BlockMigrations.Tools) > 0 {
+		object.Set("block_migrations", omap.Of[any]("tools", toAny(p.BlockMigrations.Tools), "local_hosts", toAny(p.BlockMigrations.LocalHosts)))
+	}
 	return object
+}
+
+// backendRulesOf reads the optional `block_commands`, `block_sql` and `block_migrations`; a value of the wrong
+// shape is an error, which lets the call through like every other broken policy.
+func backendRulesOf(object *omap.Map[any], p *Policy) error {
+	if raw := object.Value("block_commands"); raw != nil {
+		list, ok := raw.([]any)
+		if !ok {
+			return errors.New("block_commands is not a list")
+		}
+		for _, item := range list {
+			words, ok := stringItems(item)
+			if !ok || len(words) == 0 {
+				return errors.New("block_commands holds an entry that is not a list of strings")
+			}
+			p.BlockCommands = append(p.BlockCommands, words)
+		}
+	}
+	section := func(key, first, second string) ([]string, []string, error) {
+		raw := object.Value(key)
+		if raw == nil {
+			return nil, nil, nil
+		}
+		m, ok := raw.(*omap.Map[any])
+		if !ok {
+			return nil, nil, errors.New(key + " is not an object")
+		}
+		a, okA := stringItems(m.Value(first))
+		b, okB := stringItems(m.Value(second))
+		if !okA || !okB {
+			return nil, nil, errors.New(key + " holds a value that is not a list of strings")
+		}
+		return a, b, nil
+	}
+	var err error
+	if p.BlockSQL.Clients, p.BlockSQL.Statements, err = section("block_sql", "clients", "statements"); err != nil {
+		return err
+	}
+	p.BlockMigrations.Tools, p.BlockMigrations.LocalHosts, err = section("block_migrations", "tools", "local_hosts")
+	return err
+}
+
+func stringItems(value any) ([]string, bool) {
+	list, ok := value.([]any)
+	if !ok {
+		return nil, false
+	}
+	out := make([]string, 0, len(list))
+	for _, item := range list {
+		text, ok := item.(string)
+		if !ok {
+			return nil, false
+		}
+		out = append(out, text)
+	}
+	return out, true
 }
 
 // knowledgeCloneOf is the optional `knowledge_clone` of a policy object; a value that is not a string is an error.
@@ -198,7 +298,11 @@ func PolicyFromJSON(text string) (Policy, error) {
 	if err != nil {
 		return Policy{}, err
 	}
-	return Policy{BlockedGit: blocked, BlockFormatters: blockFormatters, PlansDir: plansDir, RoleCapability: roles, ForbiddenImports: forbidden, LocalPackages: local, KnowledgeClone: clone}, nil
+	policy := Policy{BlockedGit: blocked, BlockFormatters: blockFormatters, PlansDir: plansDir, RoleCapability: roles, ForbiddenImports: forbidden, LocalPackages: local, KnowledgeClone: clone}
+	if err := backendRulesOf(object, &policy); err != nil {
+		return Policy{}, err
+	}
+	return policy, nil
 }
 
 func stringsOf(object *omap.Map[any], key string) ([]string, error) {

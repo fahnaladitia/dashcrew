@@ -1,0 +1,27 @@
+# Starter from dashcrew {{version}}: the Go platform of this repository. Edit every file in this folder to match the
+# code here (layer names, folders, libraries); dashcrew never overwrites it.
+description: Go services and command-line tools.
+detect: [go.mod]
+commands:
+  analyze: go vet
+  test: go test ./...
+  test_scoped: go test
+  deps: go mod download
+  format: gofmt -l
+link: go.work
+doc_comment: Go doc comments
+guard:
+  commands:
+    - [terraform, apply]
+    - [terraform, destroy]
+    - [kubectl, apply]
+    - [kubectl, delete]
+    - [helm, install]
+    - [helm, upgrade]
+    - [helm, uninstall]
+  sql:
+    clients: [psql, mysql, mariadb, sqlite3]
+    statements: [DROP, TRUNCATE]
+  migrations:
+    tools: [goose, migrate, atlas]
+    local_hosts: [localhost, 127.0.0.1, "::1"]

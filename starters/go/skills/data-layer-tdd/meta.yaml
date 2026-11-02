@@ -1,0 +1,2 @@
+description: Test cases and patterns for Go services and repositories - table-driven tests, hand-written fakes, store tests.
+when_to_use: Before writing or changing a service, a repository, a handler's mapping of errors, or a query.

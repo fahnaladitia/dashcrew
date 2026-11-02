@@ -100,6 +100,8 @@ type Rendered struct {
 	Knowledge *profile.Knowledge
 	// Profile is the parsed profile the files were rendered from.
 	Profile *profile.Profile
+	// GuardMinimum is the oldest dashcrew the shim accepts for this policy (see guard.Policy.Minimum).
+	GuardMinimum string
 }
 
 // Result is what one Run changed. Notes are one-time information, such as P4MigrationNote; never a problem to fix.
@@ -292,7 +294,7 @@ func (s Sync) RunWith(opts Options) (*Result, error) {
 			hashes.Set(path, FileHash(path, files.Value(path)))
 		}
 	}
-	toolkit := lockToolkit{version: current, guardMinimum: version.GuardMinimum, catalog: s.Catalog.Digest}
+	toolkit := lockToolkit{version: current, guardMinimum: rendered.GuardMinimum, catalog: s.Catalog.Digest}
 	if lineHold != nil {
 		toolkit.version, _ = lock.Value("dashcrew_version").(string)
 		if toolkit.version == "" {
@@ -485,14 +487,15 @@ func (s Sync) Render(adopt bool, warnings *[]string) (*Rendered, error) {
 	if err != nil {
 		return nil, err
 	}
-	policy, err := dartjson.EncodeIndent(guard.CompilePolicy(p, c.ResolvedFor(p.Platform)).ToJSON(), "  ")
+	compiled := guard.CompilePolicy(p, c.ResolvedFor(p.Platform))
+	policy, err := dartjson.EncodeIndent(compiled.ToJSON(), "  ")
 	if err != nil {
 		return nil, err
 	}
 	files := omap.New[string]()
 	files.Set("AGENTS.md", agentsMd)
 	files.Set(GuardPolicyPath, policy+"\n")
-	files.Set(guard.ShimPath, guard.Shim(version.GuardMinimum))
+	files.Set(guard.ShimPath, guard.Shim(compiled.Minimum()))
 	for _, target := range targets {
 		if target.Target != "pr_template" {
 			continue
@@ -529,7 +532,7 @@ func (s Sync) Render(adopt bool, warnings *[]string) (*Rendered, error) {
 			files.Set(path, content)
 		}
 	}
-	return &Rendered{Files: files, Packs: packs, Adapters: agentAdapters, Knowledge: p.Knowledge, Profile: p}, nil
+	return &Rendered{Files: files, Packs: packs, Adapters: agentAdapters, Knowledge: p.Knowledge, Profile: p, GuardMinimum: compiled.Minimum()}, nil
 }
 
 // ownedByDashcrew is true when path is missing, in the lock, or starts with marker.

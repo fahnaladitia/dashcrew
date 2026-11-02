@@ -1,0 +1,76 @@
+{
+  "schema": 1,
+  "blocked_git": [
+    "cherry-pick",
+    "commit",
+    "merge",
+    "push",
+    "rebase",
+    "reset",
+    "revert",
+    "stash",
+    "tag"
+  ],
+  "block_formatters": true,
+  "plans_dir": ".ai/plans",
+  "role_capability": {
+    "explorer": "read",
+    "reviewer": "read"
+  },
+  "forbidden_imports": [],
+  "local_packages": [],
+  "block_commands": [
+    [
+      "terraform",
+      "apply"
+    ],
+    [
+      "terraform",
+      "destroy"
+    ],
+    [
+      "kubectl",
+      "apply"
+    ],
+    [
+      "kubectl",
+      "delete"
+    ],
+    [
+      "helm",
+      "install"
+    ],
+    [
+      "helm",
+      "upgrade"
+    ],
+    [
+      "helm",
+      "uninstall"
+    ]
+  ],
+  "block_sql": {
+    "clients": [
+      "psql",
+      "mysql",
+      "mariadb",
+      "sqlite3"
+    ],
+    "statements": [
+      "DROP",
+      "TRUNCATE"
+    ]
+  },
+  "block_migrations": {
+    "tools": [
+      "goose",
+      "migrate",
+      "atlas"
+    ],
+    "local_hosts": [
+      "localhost",
+      "127.0.0.1",
+      "::1"
+    ]
+  }
+}

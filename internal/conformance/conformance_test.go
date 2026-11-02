@@ -8,8 +8,10 @@ import (
 	"strings"
 	"testing"
 
+	embedded "github.com/fahnaladitia/dashcrew"
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
 	"github.com/fahnaladitia/dashcrew/internal/doctor"
+	"github.com/fahnaladitia/dashcrew/internal/starter"
 	"github.com/fahnaladitia/dashcrew/internal/sync"
 )
 
@@ -26,6 +28,7 @@ var samples = []string{
 	"sample-knowledge",
 	"sample-release-lines",
 	"sample-links",
+	"sample-go",
 }
 
 // update rewrites the goldens from the current output instead of comparing:
@@ -108,6 +111,12 @@ func TestGoldenSamplesAreByteIdentical(t *testing.T) {
 			copyInto(t, map[string]string{".ai/project.yaml": string(profileYaml)}, project)
 			for _, folder := range []string{"packs", "platforms"} {
 				copyInto(t, tree(t, filepath.Join(fixture, folder)), filepath.Join(project, ".ai", folder))
+			}
+			// A fixture with a `starter` file takes its platform from the embedded starter, so the two never drift.
+			if name, err := os.ReadFile(filepath.Join(fixture, "starter")); err == nil {
+				if _, err := starter.Write(embedded.StartersFS, strings.TrimSpace(string(name)), project, "0.0.0"); err != nil {
+					t.Fatal(err)
+				}
 			}
 
 			// Home has no knowledge clone, so a profile with knowledge takes the warning path on every machine.

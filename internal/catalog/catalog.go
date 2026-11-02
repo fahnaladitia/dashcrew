@@ -94,6 +94,8 @@ type PlatformSpec struct {
 	Commands   *omap.Map[any]
 	Link       *string
 	DocComment *string
+	// Guard is the platform's `guard:` key; nil without one.
+	Guard *profile.PlatformGuard
 	// McpServers in declaration order.
 	McpServers *omap.Map[McpServer]
 	// Fragments outside `packs/`; one at the same path as a core fragment replaces it.
@@ -104,7 +106,7 @@ type PlatformSpec struct {
 	FromProject bool
 }
 
-var platformKeys = []string{"description", "detect", "commands", "link", "doc_comment", "mcp_servers"}
+var platformKeys = []string{"description", "detect", "commands", "link", "doc_comment", "mcp_servers", "guard"}
 
 func stringOrNil(value *string) any {
 	if value == nil {
@@ -349,6 +351,7 @@ func (c *Catalog) PlatformFor(p *profile.Profile) *PlatformSpec {
 			link := p.PlatformConfig.Link
 			spec.Link = &link
 		}
+		spec.Guard = p.PlatformConfig.Guard
 		return spec
 	}
 	if spec := c.Platforms[p.Platform]; spec != nil {
@@ -784,7 +787,14 @@ func loadPlatform(fsys fs.FS, dir string, fromProject bool) (*PlatformSpec, erro
 	if err != nil {
 		return nil, err
 	}
+	guard, err := profile.ParsePlatformGuard(yaml.Value("guard"), func(key, message string) error {
+		return fail(manifest, key+": "+message)
+	})
+	if err != nil {
+		return nil, err
+	}
 	return &PlatformSpec{
+		Guard:       guard,
 		Name:        name,
 		Root:        dir,
 		Description: texts["description"],

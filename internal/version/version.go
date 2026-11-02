@@ -20,6 +20,10 @@ const Unstamped = "0.0.1"
 // Raise it when `.ai/guard.json` needs a newer guard; sync writes it into the shim and the lock.
 const GuardMinimum = "0.1.0"
 
+// BackendGuardMinimum is the oldest dashcrew that enforces a platform's `guard:` rules (P10). A project whose policy
+// holds them requires it; an older guard would ignore them without a word.
+const BackendGuardMinimum = "0.2.0"
+
 // Current is the stamped Version, else the module version of a `go install <module>@<version>` build, else
 // Unstamped. A leading `v` is dropped.
 func Current() string {

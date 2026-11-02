@@ -849,3 +849,22 @@ func TestFileHashIgnoresTheAgentsMdProjectBlockOnly(t *testing.T) {
 		t.Error("an end before the begin is not a block")
 	}
 }
+
+func TestBackendGuardRulesRaiseTheGuardMinimumForThatProjectOnly(t *testing.T) {
+	const other = "toolkit: 1\nagents: [claude-code]\nplatform: other\nplatform_config:\n  detect: [go.mod]\n" +
+		"  commands: { analyze: a, test: b, test_scoped: c, deps: d }\n"
+	for _, c := range []struct{ profile, want string }{
+		{other, "0.1.0"},
+		{other + "  guard: { commands: [[terraform, apply]] }\n", "0.2.0"},
+	} {
+		s, project := newProject(t, c.profile)
+		if _, err := s.Run(false, false); err != nil {
+			t.Fatal(err)
+		}
+		shim, _ := os.ReadFile(filepath.Join(project, ".ai", "bin", "guard"))
+		lock, _ := os.ReadFile(filepath.Join(project, ".ai", "lock.json"))
+		if !strings.Contains(string(shim), "need="+c.want+"\n") || !strings.Contains(string(lock), `"guard_min_version": "`+c.want+`"`) {
+			t.Errorf("want %s:\nshim %s\nlock %s", c.want, shim, lock)
+		}
+	}
+}

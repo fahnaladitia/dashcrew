@@ -1,0 +1,2 @@
+description: sqlc-generated queries (on pgx or database/sql).
+params: {}
