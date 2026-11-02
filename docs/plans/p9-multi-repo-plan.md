@@ -128,4 +128,5 @@ project:
 - [x] M2 guard per path: `internal/guard/projects.go`; corpus outcomes unchanged; new cases in `projects_test.go`.
 - [x] M3 check links: `internal/deps`, `check` adds `links`, `check --links`.
 - [x] M4 catalog text: fragments gated with `when: { has_links: true }` in branching, pr-description, verify and the PR template; AGENTS.md unchanged (test); golden `sample-links`.
-- [ ] Live: one cross-repo task on two sample repos (a package and an app), git ref then hosted.
+- [x] Live (2 Nov, local bare remote, dev build 0.2.0-dev): link add/ls/remove, doctor info, check --links on tag, branch, commit on main, commit only on a branch and an unknown ref, guard per path through the shim (9 cases). Found: `pub get` under a link rewrites `pubspec.lock` to a path, which check passed; fixed (check refuses it, link add notes it, branching skill unlinks before the commit command).
+- [ ] Hosted (private package server) and a real private GitHub dependency, when one exists.

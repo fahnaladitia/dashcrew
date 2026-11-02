@@ -41,7 +41,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-+ w/.ai/lock.json  -rw-r--r-- sha256:6e02f78023db8b7f
++ w/.ai/lock.json  -rw-r--r-- sha256:cb68031abbf37a96
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
@@ -53,7 +53,7 @@ files:
 + w/.claude/skills/audit  dir
 + w/.claude/skills/audit/SKILL.md  -rw-r--r-- sha256:f1d546184756c826
 + w/.claude/skills/branching  dir
-+ w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:aad8d0424912a0dd
++ w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:f9d11e7ea9c01586
 + w/.claude/skills/build-fix  dir
 + w/.claude/skills/build-fix/SKILL.md  -rw-r--r-- sha256:43296f00548ded28
 + w/.claude/skills/code-review  dir

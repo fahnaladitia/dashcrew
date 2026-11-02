@@ -68,6 +68,9 @@ func linkCommand(cli cliIO) *command {
 		if r.flag("deps") {
 			cli.out("deps: " + l.Deps())
 		}
+		if name, _ := l.File(); name == "pubspec_overrides.yaml" {
+			cli.out("note: pubspec.lock now resolves " + r.rest[0] + " from that path; dashcrew link remove restores it, and check --links refuses it until then")
+		}
 		return 0, nil
 	}
 

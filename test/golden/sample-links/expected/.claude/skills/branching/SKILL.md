@@ -36,4 +36,5 @@ A task that changes a dependency listed in `project.links` together with a repo 
 
 - Use the same branch name in every repo the task touches, each created from that repo's own base.
 - Point the user's repo at the dependency's checkout with `dashcrew link add <package> <path>`. It writes a git-excluded file; never commit it, and never edit the manifest's git ref or path to reach local work.
+- While linked, the lock file may resolve the dependency from that path (pub does). Run `dashcrew link remove` before the commit command, so the lock goes back to the committed ref.
 - Merge order is dependency first. The dependent PR names the dependency's PR or tag under `## Dependencies`, and `dashcrew check --links` fails it until the dependency is merged or released.
