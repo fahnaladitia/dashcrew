@@ -190,4 +190,7 @@ AGENTS.md gets one short line in the toolkit section: when `knowledge` is config
   - `explorer` and `plan` get knowledge-gated lines. README gains a "Shared knowledge" section.
   - Only `sample-knowledge` changed among the goldens (antigravity was added to its profile). 23 new tests. The full suite passes in about 23 s.
 
-P5 is complete in code. Left: the live check in "How we check" (`knowledge init` a private test repo, pull, retro, review, then ask the agent).
+P5 is complete in code. Live check (2 Nov, private GitHub repo `shop-knowledge`, sample `shop-api`, dashcrew 0.2.0 from brew):
+- Done: `knowledge init`, `knowledge pull` over GitHub auth, `sync` (link, `.gitignore`, MCP registration; `~` in the server args resolves), the MCP server answering over stdio, doctor `knowledge` and `knowledge-stale` ok. An agent wrote seven proposals from existing work, writing only in `inbox/`; `knowledge review` accepted them into `features/orders.md` and `repos/shop-api.md`; `knowledge doctor` checked 44 pointers, none stale; the pages reached `main` through a PR on the knowledge repo.
+- Found and fixed: all seven proposals were first refused as malformed, because the skill's example said `target: <page slug: features/<slug>.md ...>` and the agent wrote the path; and the new pages kept the template's five empty headings above the proposals' own sections. The parser now takes a matching page path, the skill asks for the slug and an existing section, and a page created in a review run is pruned of empty sections.
+- Left: ask the agent a question the pages answer, and check it used `knowledge_search` or the files and verified the pointers; one task run to its retro.

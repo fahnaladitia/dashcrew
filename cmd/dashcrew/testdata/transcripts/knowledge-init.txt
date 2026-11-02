@@ -15,7 +15,7 @@ stdout:
 stderr: (empty)
 files:
 + w/kb  dir
-+ w/kb/README.md  -rw-r--r-- sha256:fe33fdcdc6520cae
++ w/kb/README.md  -rw-r--r-- sha256:02d56db3f83df194
 + w/kb/features  dir
 + w/kb/features/.gitkeep  -rw-r--r-- sha256:e3b0c44298fc1c14
 + w/kb/inbox  dir
@@ -50,7 +50,7 @@ stdout:
 | note: commit it in a new git repo, push it, then set knowledge.repo in each project's .ai/project.yaml.
 stderr: (empty)
 files:
-+ w/empty/README.md  -rw-r--r-- sha256:fe33fdcdc6520cae
++ w/empty/README.md  -rw-r--r-- sha256:02d56db3f83df194
 + w/empty/features  dir
 + w/empty/features/.gitkeep  -rw-r--r-- sha256:e3b0c44298fc1c14
 + w/empty/inbox  dir

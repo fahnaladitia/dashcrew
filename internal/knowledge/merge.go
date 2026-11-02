@@ -114,3 +114,72 @@ func NewPage(template string, p Proposal) string {
 	}
 	return strings.Join(out, "\n") + "\n"
 }
+
+// PruneEmptySections drops the level 2 and deeper headings that have nothing under them before the next heading of
+// the same or a higher level: the template's headings no proposal filled. Front matter, the title and fenced code
+// stay as they are.
+func PruneEmptySections(text string) string {
+	lines := strings.Split(strings.ReplaceAll(text, "\r\n", "\n"), "\n")
+	start := 0
+	if len(lines) > 0 && lines[0] == "---" {
+		for i := 1; i < len(lines); i++ {
+			if lines[i] == "---" {
+				start = i + 1
+				break
+			}
+		}
+	}
+	levels := make([]int, len(lines))
+	openFence := ""
+	for i := start; i < len(lines); i++ {
+		if match := fence.FindStringSubmatch(lines[i]); match != nil {
+			if openFence == "" {
+				openFence = match[1]
+			} else if openFence == match[1] {
+				openFence = ""
+			}
+			continue
+		}
+		if openFence == "" {
+			if match := heading.FindStringSubmatch(lines[i]); match != nil {
+				levels[i] = len(match[1])
+			}
+		}
+	}
+	drop := make([]bool, len(lines))
+	for i := len(lines) - 1; i >= start; i-- {
+		if levels[i] < 2 {
+			continue
+		}
+		empty := true
+		for j := i + 1; j < len(lines); j++ {
+			if levels[j] > 0 && levels[j] <= levels[i] {
+				break
+			}
+			if drop[j] || strings.TrimSpace(lines[j]) == "" {
+				continue
+			}
+			empty = false
+			break
+		}
+		if empty {
+			for j := i; j < len(lines); j++ {
+				if j > i && levels[j] > 0 && levels[j] <= levels[i] {
+					break
+				}
+				drop[j] = true
+			}
+		}
+	}
+	var out []string
+	for i, line := range lines {
+		if drop[i] {
+			continue
+		}
+		if strings.TrimSpace(line) == "" && len(out) > 0 && strings.TrimSpace(out[len(out)-1]) == "" {
+			continue
+		}
+		out = append(out, line)
+	}
+	return strings.TrimRight(strings.Join(out, "\n"), "\n") + "\n"
+}

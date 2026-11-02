@@ -42,7 +42,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-+ w/.ai/lock.json  -rw-r--r-- sha256:f232246b311fd166
++ w/.ai/lock.json  -rw-r--r-- sha256:4428bb55f94c89c3
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
@@ -152,7 +152,7 @@ stderr:
 |   dashcrew sync --upgrade (the upgrade lands on this line), or
 |   upgrade on the main line develop (dashcrew sync there, commit) and merge it down to this line.
 files:
-~ w/.ai/lock.json  -rw-r--r-- sha256:e053663e44f97785
+~ w/.ai/lock.json  -rw-r--r-- sha256:e0d448939b761291
 ~ w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:90081279a81f5463
 
 === step 5: dashcrew "sync" "--upgrade"
@@ -161,7 +161,7 @@ stdout:
 | wrote   AGENTS.md
 stderr: (empty)
 files:
-~ w/.ai/lock.json  -rw-r--r-- sha256:2ab2909bf5e129b2
+~ w/.ai/lock.json  -rw-r--r-- sha256:d4f8a5eeba011c54
 ~ w/AGENTS.md  -rw-r--r-- sha256:b613d9f473c41236
 
 === step 6: dashcrew "sync"
@@ -191,5 +191,5 @@ stdout:
 | wrote   AGENTS.md
 stderr: (empty)
 files:
-~ w/.ai/lock.json  -rw-r--r-- sha256:f232246b311fd166
+~ w/.ai/lock.json  -rw-r--r-- sha256:4428bb55f94c89c3
 ~ w/AGENTS.md  -rw-r--r-- sha256:c997e30a794dd6ae

@@ -1,6 +1,7 @@
 package knowledge
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -64,6 +65,26 @@ func TestParseProposalRejectsMalformedProposals(t *testing.T) {
 		_, err := ParseProposal(text)
 		if err == nil || !strings.Contains(err.Error(), want) {
 			t.Errorf("%q: %v, want %q", text, err, want)
+		}
+	}
+}
+
+func TestProposalTargetAsAPagePath(t *testing.T) {
+	const front = "---\nkind: %s\ntarget: %s\nrepo: shop-api\nbranch: main\ncommit: abcdef1\n---\n\n## Cancel\n\nAtomic.\n"
+	for _, c := range []struct{ kind, target, want, err string }{
+		{"feature", "orders", "orders", ""},
+		{"feature", "features/orders.md", "orders", ""},
+		{"feature", "features/orders", "orders", ""},
+		{"repo", "repos/shop-api.md", "shop-api", ""},
+		{"repo", "features/orders.md", "", "target: features/orders.md is a feature page, but kind is repo"},
+		{"feature", "docs/orders.md", "", "target: expected a page slug"},
+	} {
+		p, err := ParseProposal(fmt.Sprintf(front, c.kind, c.target))
+		switch {
+		case c.err != "" && (err == nil || !strings.Contains(err.Error(), c.err)):
+			t.Errorf("%s %s: error %v, want %q", c.kind, c.target, err, c.err)
+		case c.err == "" && (err != nil || p.Target != c.want):
+			t.Errorf("%s %s: target %q, %v", c.kind, c.target, p.Target, err)
 		}
 	}
 }

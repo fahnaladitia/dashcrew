@@ -85,7 +85,7 @@ files:
 + w/.agents/skills/code-review  dir
 + w/.agents/skills/code-review/SKILL.md  -rw-r--r-- sha256:59fbaf9c51a0e6bc
 + w/.agents/skills/continuous-learning  dir
-+ w/.agents/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:0f4b7971aef8df16
++ w/.agents/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:396e0b9d2d868a9e
 + w/.agents/skills/data-layer-tdd  dir
 + w/.agents/skills/data-layer-tdd/SKILL.md  -rw-r--r-- sha256:b05e453a7d2a9d54
 + w/.agents/skills/design-fidelity  dir
@@ -129,7 +129,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:1cf48fb4beea6249
-+ w/.ai/lock.json  -rw-r--r-- sha256:3d7bc5277df2dc41
++ w/.ai/lock.json  -rw-r--r-- sha256:4c9fef0043ffd03d
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:ac4fca699a608a65
@@ -147,7 +147,7 @@ files:
 + w/.claude/skills/code-review  dir
 + w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:feda66879450b2c8
 + w/.claude/skills/continuous-learning  dir
-+ w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:2c7c8bc7dca118b2
++ w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:b128f630973c9956
 + w/.claude/skills/data-layer-tdd  dir
 + w/.claude/skills/data-layer-tdd/SKILL.md  -rw-r--r-- sha256:eb183dbb402be1e3
 + w/.claude/skills/design-fidelity  dir

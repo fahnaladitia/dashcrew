@@ -388,7 +388,14 @@ A team can keep its product knowledge (how a flow works, a contract, a trap, a d
 
 **Guard rule.** Agents read the whole clone but write only `.ai/knowledge/inbox/`. The guard checks the real path, so a write through the link, the absolute clone path, `..` or another symlink is blocked the same way, for edits, patches and shell redirections.
 
-**Retro and review.** With `knowledge` set, `learn` turns each product lesson into one proposal in `inbox/` (a standing instruction for agents goes to `.ai/packs/` instead). `dashcrew knowledge review` walks the inbox oldest first: accept merges the proposal into its page with a verified marker (making the page when needed), edit opens `$EDITOR`, skip or delete. It then regenerates `README.md` and prints the `git` commands to open a pull request on the knowledge repo.
+**Retro and review.** With `knowledge` set, `learn` turns each product lesson into one proposal in `inbox/` (a standing instruction for agents goes to `.ai/packs/` instead). `dashcrew knowledge review` walks the inbox oldest first: accept merges the proposal into its page with a verified marker (making the page when needed), edit opens `$EDITOR`, skip or delete. It then regenerates `README.md` and prints the `git` commands to open a pull request on the knowledge repo. A page it creates keeps only the sections a proposal filled, and a `target` written as the page path (`features/orders.md`) is read as its slug.
+
+**Team flow.** Two members accepting into the same page conflict on its lines and on `README.md`. Keep page edits in one place:
+
+1. Members open pull requests on the knowledge repo that add only `inbox/` files. Each file has its own dated name, so these never conflict.
+2. One member at a time (a lead, or a rota) runs `dashcrew knowledge pull` and `dashcrew knowledge review` on the main branch and opens one pull request with the merged pages, where duplicate facts also show.
+
+`knowledge review` fetches first and stops when the clone is behind its upstream (`--no-fetch` skips it); offline, or on a branch with no upstream, it only warns. On a conflict anyway: take either side of `README.md` and run `knowledge review` with an empty inbox to rebuild the index; merge a page by hand, keeping both sides' verified markers, then run `knowledge doctor`.
 
 **Staleness.** `dashcrew knowledge doctor` reports code pointers whose path is gone at HEAD (for the current project and sibling folders), proposals waiting over 14 days, and pages with no verified marker in 180 days. It edits nothing, and exits 1 only on a stale pointer. `dashcrew doctor` runs it as the `knowledge-stale` check.
 

@@ -88,9 +88,15 @@ func ParseProposal(text string) (Proposal, error) {
 			return Proposal{}, errors.New(key + ": required")
 		}
 	}
-	switch {
-	case p.Kind != "feature" && p.Kind != "repo":
+	if p.Kind != "feature" && p.Kind != "repo" {
 		return Proposal{}, errors.New("kind: expected feature or repo")
+	}
+	slug, slugErr := pageSlug(p.Kind, p.Target)
+	if slugErr != nil {
+		return Proposal{}, slugErr
+	}
+	p.Target = slug
+	switch {
 	case !slugPattern.MatchString(p.Target):
 		return Proposal{}, errors.New("target: expected a page slug of letters, digits, '.', '_' or '-'")
 	case !slugPattern.MatchString(p.Repo):
@@ -134,4 +140,21 @@ func contains(list []string, value string) bool {
 		}
 	}
 	return false
+}
+
+// pageSlug is target as a slug. A page path (`features/orders.md`, `repos/shop-api.md`) is reduced to its slug when
+// its folder matches kind, since agents write it that way; the other folder is an error.
+func pageSlug(kind, target string) (string, error) {
+	folders := map[string]string{"feature": "features/", "repo": "repos/"}
+	for k, folder := range folders {
+		rest, ok := strings.CutPrefix(target, folder)
+		if !ok {
+			continue
+		}
+		if k != kind {
+			return "", errors.New("target: " + target + " is a " + k + " page, but kind is " + kind)
+		}
+		return strings.TrimSuffix(rest, ".md"), nil
+	}
+	return target, nil
 }

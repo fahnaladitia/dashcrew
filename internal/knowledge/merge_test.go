@@ -55,3 +55,14 @@ func TestNewPageKeepsTheTemplateFrontMatterAndHeadings(t *testing.T) {
 		t.Errorf("repo page title %q", Parse(got).Title)
 	}
 }
+
+func TestPruneEmptySections(t *testing.T) {
+	page := "---\ntitle: Orders\n---\n\n# Orders\n\n## Purpose\n\n## Entry points\n\n- `a:b:1`\n\n## Decisions\n\n### Why\n\n## Gotchas\n\n```md\n## Not a heading\n```\n\n## Cancel\n\nAtomic. <!-- verified a@1234567 2026-01-01 -->\n"
+	want := "---\ntitle: Orders\n---\n\n# Orders\n\n## Entry points\n\n- `a:b:1`\n\n## Gotchas\n\n```md\n## Not a heading\n```\n\n## Cancel\n\nAtomic. <!-- verified a@1234567 2026-01-01 -->\n"
+	if got := PruneEmptySections(page); got != want {
+		t.Errorf("got\n%s\nwant\n%s", got, want)
+	}
+	if got := PruneEmptySections(want); got != want {
+		t.Errorf("pruning twice changed the page:\n%s", got)
+	}
+}

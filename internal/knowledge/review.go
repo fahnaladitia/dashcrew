@@ -64,15 +64,30 @@ func (r Review) Run() (ReviewResult, error) {
 	if len(proposals) == 0 {
 		r.Out("inbox/ is empty")
 	}
+	// created are the pages this run made from the template; their sections no proposal filled are pruned.
+	var created []string
 	for i, path := range proposals {
 		label := "[" + strconv.Itoa(i+1) + "/" + strconv.Itoa(len(proposals)) + "] " + path
-		done, err := r.review(label, path, date, &result)
+		done, err := r.review(label, path, date, &result, &created)
 		if err != nil {
 			return result, err
 		}
 		if !done {
 			r.Out("no more answers; " + plural(len(proposals)-i, "proposal") + " left in inbox/")
 			break
+		}
+	}
+
+	for _, page := range created {
+		path := filepath.Join(r.Clone, filepath.FromSlash(page))
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return result, err
+		}
+		if pruned := PruneEmptySections(string(data)); pruned != string(data) {
+			if err := os.WriteFile(path, []byte(pruned), 0o644); err != nil {
+				return result, err
+			}
 		}
 	}
 
@@ -100,7 +115,7 @@ func (r Review) Run() (ReviewResult, error) {
 }
 
 // review asks about one proposal until it is accepted, skipped, deleted or found malformed; false at the end of input.
-func (r Review) review(label, path, date string, result *ReviewResult) (bool, error) {
+func (r Review) review(label, path, date string, result *ReviewResult, created *[]string) (bool, error) {
 	file := filepath.Join(r.Clone, filepath.FromSlash(path))
 	for {
 		data, err := os.ReadFile(file)
@@ -125,9 +140,12 @@ func (r Review) review(label, path, date string, result *ReviewResult) (bool, er
 			}
 			switch strings.ToLower(strings.TrimSpace(answer)) {
 			case "a", "accept":
-				message, err := r.accept(p, date)
+				message, isNew, err := r.accept(p, date)
 				if err != nil {
 					return false, err
+				}
+				if isNew {
+					*created = append(*created, p.PagePath())
 				}
 				if err := os.Remove(file); err != nil {
 					return false, err
@@ -163,10 +181,10 @@ func (r Review) review(label, path, date string, result *ReviewResult) (bool, er
 	}
 }
 
-// accept merges p into its page, creating the page from the template when it is missing.
-func (r Review) accept(p Proposal, date string) (string, error) {
+// accept merges p into its page, creating the page from the template when it is missing; created tells which.
+func (r Review) accept(p Proposal, date string) (message string, created bool, err error) {
 	page := filepath.Join(r.Clone, filepath.FromSlash(p.PagePath()))
-	var text, message string
+	var text string
 	data, err := os.ReadFile(page)
 	switch {
 	case err == nil:
@@ -179,17 +197,18 @@ func (r Review) accept(p Proposal, date string) (string, error) {
 			template, err, source = []byte(pageTemplate), nil, "the built-in template"
 		}
 		if err != nil {
-			return "", err
+			return "", false, err
 		}
 		text = NewPage(string(template), p)
 		message = "created " + p.PagePath() + " from " + source + ", merged under ## " + p.Heading
+		created = true
 		if err := os.MkdirAll(filepath.Dir(page), 0o755); err != nil {
-			return "", err
+			return "", false, err
 		}
 	default:
-		return "", err
+		return "", false, err
 	}
-	return message, os.WriteFile(page, []byte(Merge(text, p, date)), 0o644)
+	return message, created, os.WriteFile(page, []byte(Merge(text, p, date)), 0o644)
 }
 
 // updateReadme rewrites the index in README.md; true when it changed.

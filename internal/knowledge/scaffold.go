@@ -39,6 +39,8 @@ dashcrew links a local clone of this repo into each project as ` + "`.ai/knowled
 - Agents write only under ` + "`inbox/`" + `, and under ` + "`specs/`" + ` to new files and files whose status is draft or review;
   the dashcrew guard blocks every other write into the clone.
 - Pages in ` + "`features/` and `repos/`" + ` change through review and a pull request.
+- Members open pull requests that add only ` + "`inbox/`" + ` files; one member at a time runs ` + "`dashcrew knowledge pull`" + `
+  and ` + "`dashcrew knowledge review`" + ` on the main branch, so two reviews never edit the same page at once.
 - A spec is approved by the merged pull request that sets ` + "`status: approved`" + `. It changes again only after a member
   runs ` + "`dashcrew spec revise`" + `.
 

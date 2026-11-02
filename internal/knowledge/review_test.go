@@ -91,7 +91,9 @@ func TestReviewWalksTheInboxOldestFirst(t *testing.T) {
 		t.Errorf("share.md\n%s", share)
 	}
 	tags := Parse(read(t, filepath.Join(clone, "features/tags.md")))
-	if tags.Title != "Tags" || !strings.Contains(tags.Body, "# Tags\n\n## Purpose\n\nTags group notes. <!-- verified notes-api@1a2b3c4 2026-03-01 -->\n\n## Entry points\n\n## State") {
+	// A page made in this run keeps only the sections a proposal filled.
+	if tags.Title != "Tags" || !strings.HasSuffix(tags.Body, "# Tags\n\n## Purpose\n\nTags group notes. <!-- verified notes-api@1a2b3c4 2026-03-01 -->\n") ||
+		strings.Contains(tags.Body, "## Entry points") {
 		t.Errorf("tags.md\n%s", tags.Body)
 	}
 	repo := read(t, filepath.Join(clone, "repos/notes-api.md"))
