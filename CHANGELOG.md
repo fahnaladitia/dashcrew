@@ -1,3 +1,8 @@
+## Unreleased
+
+- Knowledge (found in the P5 live run): a proposal's `target` may be written as the page path (`features/orders.md`, `repos/shop-api.md`) when its folder matches `kind`; the learn skill now asks for the slug and a section the page has. A page `knowledge review` creates keeps only the sections a proposal filled, instead of the template's empty headings.
+- `knowledge review` fetches first and stops when the clone is behind its upstream, so a review on stale pages does not turn into a conflicting pull request (`--no-fetch` skips it; offline it only warns). The README and the knowledge repo's own README describe the team flow: members send `inbox/` files, one member reviews at a time.
+
 ## 0.2.0
 
 Upgrade note: a project whose platform declares `guard:` rules requires dashcrew 0.2.0 in its guard shim after `dashcrew sync`; every teammate on that project upgrades first. Other projects keep accepting 0.1.x.

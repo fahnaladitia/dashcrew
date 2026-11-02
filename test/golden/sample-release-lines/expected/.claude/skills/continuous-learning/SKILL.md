@@ -61,15 +61,15 @@ A product lesson goes to `.ai/knowledge/inbox/<yyyy-mm-dd>-<slug>.md`, one lesso
 ```markdown
 ---
 kind: feature | repo
-target: <page slug: features/<slug>.md or repos/<slug>.md>
+target: <page slug, such as orders: the page is features/<slug>.md or repos/<slug>.md by kind>
 repo: <repo the lesson is about>
 branch: <current branch>
 commit: <current commit>
 ---
 
-## <short heading>
+## <the page section it belongs to>
 
 <the fact and why it holds, with code pointers as `<repo>:<path>:<line>`>
 ```
 
-Grep `.ai/knowledge/` for the page first and reuse its slug. Write nowhere else in `.ai/knowledge/`.
+Grep `.ai/knowledge/` for the page first and reuse its slug and a section it already has. A new page is made from `templates/page.md`: Purpose, Entry points, State and endpoints, Decisions, Gotchas; any other heading becomes a new section. Write nowhere else in `.ai/knowledge/`.

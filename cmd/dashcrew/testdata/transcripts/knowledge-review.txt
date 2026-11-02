@@ -5,13 +5,15 @@ exit: 0
 stdout:
 | Walk the inbox/ proposals oldest first and accept, edit, skip or delete each.
 | Accept merges a proposal into its page. Then the README.md index is rewritten and the git commands for a pull
-| request are printed; it never runs git.
+| request are printed. It fetches first and stops when the clone is behind; it never commits, pulls or pushes.
 | 
 | Usage: dashcrew knowledge review [arguments]
-| -h, --help       Print this usage information.
-| -p, --project    Project root holding .ai/project.yaml.
-|                  (defaults to ".")
-|     --clone      Knowledge clone to review; defaults to the profile's ~/.dashcrew/knowledge/<name>.
+| -h, --help          Print this usage information.
+| -p, --project       Project root holding .ai/project.yaml.
+|                     (defaults to ".")
+|     --clone         Knowledge clone to review; defaults to the profile's ~/.dashcrew/knowledge/<name>.
+|     --[no-]fetch    Fetch the clone's remote first and stop when the clone is behind it.
+|                     (defaults to on)
 | 
 | Run "dashcrew help" to see global options.
 stderr: (empty)
@@ -62,16 +64,17 @@ stdout:
 |   git -C <root>/home/.dashcrew/knowledge/notes add -A
 |   git -C <root>/home/.dashcrew/knowledge/notes commit -m "knowledge: review inbox 2026-03-01"
 |   git -C <root>/home/.dashcrew/knowledge/notes push -u origin knowledge-review-2026-03-01
-stderr: (empty)
+stderr:
+| warning: could not fetch the knowledge clone (<root>/home/.dashcrew/knowledge/notes is not a git clone; move it away and run dashcrew knowledge pull); reviewing it as it is
 files:
-~ home/.dashcrew/knowledge/notes/README.md  -rw-r--r-- sha256:2aea3b0890cc2c44
+~ home/.dashcrew/knowledge/notes/README.md  -rw-r--r-- sha256:e10d8a9f6553682b
 ~ home/.dashcrew/knowledge/notes/features/share.md  -rw-r--r-- sha256:492b0db844202082
-+ home/.dashcrew/knowledge/notes/features/tags.md  -rw-r--r-- sha256:0cc13cf66c7a5352
++ home/.dashcrew/knowledge/notes/features/tags.md  -rw-r--r-- sha256:5a3e5bb4803a5517
 - home/.dashcrew/knowledge/notes/inbox/2026-02-01-expiry.md
 - home/.dashcrew/knowledge/notes/inbox/2026-02-02-tags.md
 - home/.dashcrew/knowledge/notes/inbox/2026-02-04-setup.md
 - home/.dashcrew/knowledge/notes/inbox/2026-02-06-noise.md
-+ home/.dashcrew/knowledge/notes/repos/notes-api.md  -rw-r--r-- sha256:45b12d26b431ae67
++ home/.dashcrew/knowledge/notes/repos/notes-api.md  -rw-r--r-- sha256:34c53ef8bfbad97f
 
 === step 3: dashcrew "knowledge" "review"
 env: SOURCE_DATE_EPOCH=1772323200
@@ -85,7 +88,8 @@ stdout:
 | no more answers; 1 proposal left in inbox/
 | accepted 0, skipped 0, deleted 0, malformed 1
 | nothing to commit
-stderr: (empty)
+stderr:
+| warning: could not fetch the knowledge clone (<root>/home/.dashcrew/knowledge/notes is not a git clone; move it away and run dashcrew knowledge pull); reviewing it as it is
 files: (unchanged)
 
 === step 4: dashcrew "knowledge" "review"
@@ -103,7 +107,8 @@ stdout:
 | skipped
 | accepted 0, skipped 1, deleted 0, malformed 1
 | nothing to commit
-stderr: (empty)
+stderr:
+| warning: could not fetch the knowledge clone (<root>/home/.dashcrew/knowledge/notes is not a git clone; move it away and run dashcrew knowledge pull); reviewing it as it is
 files: (unchanged)
 
 === step 5: dashcrew "knowledge" "review" "--clone" "../home/.dashcrew/knowledge/notes/"
@@ -123,7 +128,8 @@ stdout:
 |   git -C ../home/.dashcrew/knowledge/notes add -A
 |   git -C ../home/.dashcrew/knowledge/notes commit -m "knowledge: review inbox 2026-03-01"
 |   git -C ../home/.dashcrew/knowledge/notes push -u origin knowledge-review-2026-03-01
-stderr: (empty)
+stderr:
+| warning: could not fetch the knowledge clone (../home/.dashcrew/knowledge/notes is not a git clone; move it away and run dashcrew knowledge pull); reviewing it as it is
 files:
 - home/.dashcrew/knowledge/notes/inbox/2026-02-05-later.md
 
@@ -132,5 +138,6 @@ env: SOURCE_DATE_EPOCH=1772323200
 exit: 1
 stdout: (empty)
 stderr:
+| warning: could not fetch the knowledge clone (../nope is not a git clone; move it away and run dashcrew knowledge pull); reviewing it as it is
 | ../nope has no inbox/; is it a knowledge clone? Run dashcrew knowledge pull
 files: (unchanged)

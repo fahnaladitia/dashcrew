@@ -619,6 +619,26 @@ func worktreeCommand(cli cliIO) *command {
 	return branch
 }
 
+// reviewFreshness fetches the clone and says why review must not start: a clone behind its upstream would be reviewed
+// on stale pages, and its pull request would conflict with the merged ones. A failed fetch (offline, no remote) or a
+// branch without an upstream only warns.
+func reviewFreshness(cli cliIO, clone string) string {
+	if err := knowledge.Fetch(clone); err != nil {
+		fmt.Fprintln(cli.stderr, "warning: could not fetch the knowledge clone ("+strings.TrimSpace(err.Error())+"); reviewing it as it is")
+		return ""
+	}
+	behind, err := knowledge.Behind(clone)
+	if err != nil {
+		fmt.Fprintln(cli.stderr, "warning: the knowledge clone's branch has no upstream; review on the main branch after dashcrew knowledge pull")
+		return ""
+	}
+	if behind > 0 {
+		return "the knowledge clone is " + strconv.Itoa(behind) + " commit(s) behind its upstream; run dashcrew knowledge pull, then review " +
+			"(--no-fetch reviews it as it is)"
+	}
+	return ""
+}
+
 func knowledgeCommand(cli cliIO) *command {
 	branch := newCommand("knowledge", "Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.")
 
@@ -664,13 +684,19 @@ func knowledgeCommand(cli cliIO) *command {
 
 	review := newCommand("review", "Walk the inbox/ proposals oldest first and accept, edit, skip or delete each.\n"+
 		"Accept merges a proposal into its page. Then the README.md index is rewritten and the git commands for a pull\n"+
-		"request are printed; it never runs git.")
+		"request are printed. It fetches first and stops when the clone is behind; it never commits, pulls or pushes.")
 	review.option("project", "p", "Project root holding .ai/project.yaml.", ptr("."))
 	review.option("clone", "", "Knowledge clone to review; defaults to the profile's ~/.dashcrew/knowledge/<name>.", nil)
+	review.flag("fetch", "", "Fetch the clone's remote first and stop when the clone is behind it.", true, true)
 	review.run = func(r *results) (int, error) {
 		clone, _, err := knowledgeClone(r)
 		if err != nil {
 			return 0, err
+		}
+		if r.flag("fetch") {
+			if stop := reviewFreshness(cli, clone); stop != "" {
+				return 0, &exitError{1, stop}
+			}
 		}
 		terminal := isTerminal(stdin)
 		reader := bufio.NewReader(stdin)

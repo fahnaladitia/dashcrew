@@ -44,7 +44,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:36bfb1be82c0b298
-+ w/.ai/lock.json  -rw-r--r-- sha256:a800e86a3ec45ebd
++ w/.ai/lock.json  -rw-r--r-- sha256:96c35bcaabaaa63c
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:ac4fca699a608a65
@@ -62,7 +62,7 @@ files:
 + w/.claude/skills/code-review  dir
 + w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:feda66879450b2c8
 + w/.claude/skills/continuous-learning  dir
-+ w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:2c7c8bc7dca118b2
++ w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:b128f630973c9956
 + w/.claude/skills/data-layer-tdd  dir
 + w/.claude/skills/data-layer-tdd/SKILL.md  -rw-r--r-- sha256:eb183dbb402be1e3
 + w/.claude/skills/design-fidelity  dir
@@ -160,7 +160,7 @@ stdout:
 stderr: (empty)
 files:
 + w/.ai/knowledge  link -> <root>/home/.dashcrew/knowledge/notes
-~ w/.ai/lock.json  -rw-r--r-- sha256:25036270dedaf1ae
+~ w/.ai/lock.json  -rw-r--r-- sha256:9faad3e5e5335fa4
 
 === step 6: dashcrew "sync"
 exit: 0
@@ -223,7 +223,7 @@ stdout:
 | up to date
 stderr: (empty)
 files:
-~ w/.ai/lock.json  -rw-r--r-- sha256:6906099ff24f5c4b
+~ w/.ai/lock.json  -rw-r--r-- sha256:909d67e98a4d2a02
 
 === step 14: dashcrew "doctor" "--fetch"
 (after the case's setup for this step)
