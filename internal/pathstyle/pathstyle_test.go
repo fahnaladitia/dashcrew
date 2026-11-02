@@ -3,6 +3,7 @@ package pathstyle
 import (
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 )
 
@@ -60,7 +61,9 @@ func TestVolumeAndIsAbs(t *testing.T) {
 			t.Errorf("Windows.IsAbs(%q) = %v, want %v", c.path, got, c.abs)
 		}
 		if runtime.GOOS == "windows" {
-			if got := filepath.VolumeName(c.path); got != c.volume {
+			// The standard library writes a UNC volume with backslashes whatever the input used;
+			// Windows treats both separators alike, so compare with them unified.
+			if got := filepath.VolumeName(c.path); strings.ReplaceAll(got, `\`, "/") != strings.ReplaceAll(c.volume, `\`, "/") {
 				t.Errorf("filepath.VolumeName(%q) = %q, the table says %q", c.path, got, c.volume)
 			}
 			if got := filepath.IsAbs(c.path); got != c.abs {

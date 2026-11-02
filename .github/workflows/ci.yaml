@@ -16,9 +16,6 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-    # Windows is not supported yet (the guard shim needs a POSIX sh) and its run is not verified locally,
-    # so a failure there is reported without failing the workflow.
-    continue-on-error: ${{ matrix.os == 'windows-latest' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
