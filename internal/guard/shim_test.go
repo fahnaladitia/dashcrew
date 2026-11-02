@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -27,6 +28,9 @@ func TestShimIsTheOneTheGoldensRecord(t *testing.T) {
 // posixShells are the POSIX shells on this machine the shim is run with: sh, plus dash when installed.
 func posixShells(t *testing.T) []string {
 	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("the guard shim is a POSIX sh script; Windows is not supported yet")
+	}
 	sh, err := exec.LookPath("sh")
 	if err != nil {
 		t.Skip("no sh")
@@ -87,6 +91,9 @@ func (f shimFixture) versionCalls() int {
 
 func newShimFixture(t *testing.T) shimFixture {
 	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("the guard shim is a POSIX sh script; Windows is not supported yet")
+	}
 	dir := t.TempDir()
 	f := shimFixture{dir: dir, shim: filepath.Join(dir, "guard"), bin: filepath.Join(dir, "bin"), tools: filepath.Join(dir, "tools")}
 	for _, folder := range []string{f.bin, f.tools, filepath.Join(dir, "home")} {

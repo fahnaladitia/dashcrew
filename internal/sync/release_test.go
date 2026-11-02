@@ -297,11 +297,11 @@ func TestAfterMergeRefusesAConflictedProfile(t *testing.T) {
 
 func TestHasConflictMarkers(t *testing.T) {
 	for text, want := range map[string]bool{
-		"<<<<<<< HEAD\na\n=======\nb\n>>>>>>> other\n": true,
+		"<<<<<<< HEAD\na\n=======\nb\n>>>>>>> other\n":               true,
 		"<<<<<<< HEAD\na\n||||||| base\n=======\nb\n>>>>>>> other\n": true,
-		"a <<<<<<< b\n>>>>>>> c\n": false,
-		"<<<<<<< HEAD\nonly the start\n": false,
-		"plain\n": false,
+		"a <<<<<<< b\n>>>>>>> c\n":                                   false,
+		"<<<<<<< HEAD\nonly the start\n":                             false,
+		"plain\n":                                                    false,
 	} {
 		if got := HasConflictMarkers(text); got != want {
 			t.Errorf("%q: %v", text, got)

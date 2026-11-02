@@ -3,6 +3,7 @@ package doctor
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	stdsync "sync"
@@ -101,6 +102,9 @@ func (f *fixture) installGuard() { f.installDashcrew(version.GuardMinimum, 2) }
 
 func (f *fixture) writeBin(script string) {
 	f.t.Helper()
+	if runtime.GOOS == "windows" {
+		f.t.Skip("the stand-in dashcrew is a POSIX sh script")
+	}
 	path := filepath.Join(f.bin, "dashcrew")
 	writeFile(f.t, path, script)
 	if err := os.Chmod(path, 0o755); err != nil {

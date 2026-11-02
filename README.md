@@ -44,6 +44,8 @@ go install github.com/fahnaladitia/dashcrew/cmd/dashcrew@latest
 
 `dashcrew --version` prints the version. A team pins one: `brew` installs the latest release, and `go install ...@v0.1.0` (or a commit) a fixed one. The guard shim needs dashcrew 0.1.0 or newer on `PATH`.
 
+Both routes need a tagged release. Until `v0.1.0` exists, a build from `main` reports a `v0.0.0-...` pre-release version, and the guard shim refuses it, so agents cannot run tool calls in a synced project.
+
 Before 0.1.0, dashcrew was a Dart package installed with `dart pub global activate`. That install has no `dashcrew guard`, so the shim refuses every tool call while it is first on `PATH`, and `doctor` warns about it (see [Troubleshooting](#troubleshooting)).
 
 ## Quick start
@@ -461,7 +463,7 @@ P4 makes dashcrew skill-first. A project synced by an earlier dashcrew migrates 
 
 ## Development
 
-Requires Go 1.26 or later. The only dependency is `go.yaml.in/yaml/v3`.
+Requires Go 1.26 or later (`go.mod` pins the toolchain). Direct dependencies: `go.yaml.in/yaml/v3` and `github.com/modelcontextprotocol/go-sdk`.
 
 ```bash
 go vet ./...
@@ -477,7 +479,15 @@ Goldens:
 
 `test/golden/sample-migrate-p3/p3/` is a frozen pre-P4 output that the migration test syncs over; it is never rewritten. The output format (JSON layout, YAML scalars, Mustache rendering, help text) is the one the earlier Dart engine wrote, so a project sees no diff after upgrading.
 
-CI runs `go vet` and `go test` on every push. Releases are cut by pushing a `v*` tag: `.github/workflows/release.yaml` runs goreleaser (`.goreleaser.yaml`), which stamps the version, builds darwin, linux and windows for amd64 and arm64, publishes a GitHub Release and updates the Homebrew formula in `fahnaladitia/homebrew-tap`. Contributor rules for AI agents are in [AGENTS.md](AGENTS.md).
+CI runs `go vet` and `go test` on Linux, macOS and Windows (Windows is allowed to fail until it is supported), plus `gofmt`, `go test -race`, `govulncheck` and CodeQL, on every push to `main` and every pull request. Releases are cut by pushing a `v*` tag: `.github/workflows/release.yaml` runs goreleaser (`.goreleaser.yaml`), which stamps the version, builds darwin, linux and windows for amd64 and arm64, publishes a GitHub Release and updates the Homebrew formula in `fahnaladitia/homebrew-tap`. Contributor rules for AI agents are in [AGENTS.md](AGENTS.md).
+
+## Security
+
+Report a vulnerability privately; see [SECURITY.md](SECURITY.md).
+
+## Contributing
+
+Build, test, goldens and the commit pattern are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

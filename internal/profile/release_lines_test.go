@@ -54,15 +54,15 @@ func TestReleaseLinesCheckPortsDefaultsToOffAndHotfixIsOptional(t *testing.T) {
 func TestReleaseLinesErrors(t *testing.T) {
 	const head = "toolkit: 1\nagents: [claude-code]\nproject: { release_lines: "
 	for yaml, want := range map[string]string{
-		"x }":                                                  "project.yaml project.release_lines: expected a map with main, release, hotfix and check_ports",
+		"x }": "project.yaml project.release_lines: expected a map with main, release, hotfix and check_ports",
 		"{ main: m, release: 'r/(?P<version>.+)', other: 1 } }": "project.yaml project.release_lines.other: unknown key",
-		"{ release: 'r/(?P<version>.+)' } }":                   "project.yaml project.release_lines.main: required, the main line's branch name",
-		"{ main: '', release: 'r/(?P<version>.+)' } }":         "project.yaml project.release_lines.main: required, the main line's branch name",
-		"{ main: m } }":                                        "project.yaml project.release_lines: needs release or hotfix, a regular expression with a named group (?P<version>...)",
-		"{ main: m, release: 'r/(.+)' } }":                     "project.yaml project.release_lines.release: needs a named group version, e.g. release/(?P<version>[0-9]+\\.[0-9]+\\.[0-9]+)",
-		"{ main: m, hotfix: 'h/(?P<v>.+)' } }":                 "project.yaml project.release_lines.hotfix: needs a named group version, e.g. hotfix/(?P<version>[0-9]+\\.[0-9]+\\.[0-9]+)",
-		"{ main: m, release: 'r/(?P<version>[0-9' } }":         "project.yaml project.release_lines.release: invalid regular expression: error parsing regexp: missing closing ]: `[0-9`",
-		"{ main: m, release: 1 } }":                            "project.yaml project.release_lines.release: expected a regular expression with a named group (?P<version>...)",
+		"{ release: 'r/(?P<version>.+)' } }":                    "project.yaml project.release_lines.main: required, the main line's branch name",
+		"{ main: '', release: 'r/(?P<version>.+)' } }":          "project.yaml project.release_lines.main: required, the main line's branch name",
+		"{ main: m } }":                                                 "project.yaml project.release_lines: needs release or hotfix, a regular expression with a named group (?P<version>...)",
+		"{ main: m, release: 'r/(.+)' } }":                              "project.yaml project.release_lines.release: needs a named group version, e.g. release/(?P<version>[0-9]+\\.[0-9]+\\.[0-9]+)",
+		"{ main: m, hotfix: 'h/(?P<v>.+)' } }":                          "project.yaml project.release_lines.hotfix: needs a named group version, e.g. hotfix/(?P<version>[0-9]+\\.[0-9]+\\.[0-9]+)",
+		"{ main: m, release: 'r/(?P<version>[0-9' } }":                  "project.yaml project.release_lines.release: invalid regular expression: error parsing regexp: missing closing ]: `[0-9`",
+		"{ main: m, release: 1 } }":                                     "project.yaml project.release_lines.release: expected a regular expression with a named group (?P<version>...)",
 		"{ main: m, release: 'r/(?P<version>.+)', check_ports: yes } }": "project.yaml project.release_lines.check_ports: expected true or false",
 	} {
 		if got := parseError(t, head+yaml+"\n").Error(); got != want {

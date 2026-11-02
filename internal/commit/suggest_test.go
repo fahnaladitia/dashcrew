@@ -3,6 +3,7 @@ package commit
 import (
 	"os/exec"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -88,6 +89,9 @@ func TestSuggestWithSubjectQuotesAndLints(t *testing.T) {
 // shellWords lets bash split a command line and prints each word NUL-terminated.
 func shellWords(t *testing.T, line string) []string {
 	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("the suggested command is quoted for bash and zsh, which this test needs")
+	}
 	out, err := exec.Command("bash", "--norc", "--noprofile", "-c", "printf '%s\\0' "+line).Output()
 	if err != nil {
 		t.Fatal(err)

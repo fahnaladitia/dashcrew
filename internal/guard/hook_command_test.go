@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/fahnaladitia/dashcrew/internal/adapters"
@@ -17,6 +18,9 @@ const dartHookCommandTests = 3
 // hookProject is a git repo whose `.ai/bin/guard` is a stub that records its arguments and blocks.
 func hookProject(t *testing.T) (root, calls string) {
 	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("hook commands run through sh, and the guard stub is a POSIX sh script")
+	}
 	root, err := filepath.EvalSymlinks(t.TempDir())
 	if err != nil {
 		t.Fatal(err)

@@ -85,6 +85,9 @@ func repoRoot(t *testing.T) string {
 
 func setUpCLI(t *testing.T) cliEnvironment {
 	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("the transcripts use POSIX sh stubs (gh, $EDITOR) and Unix paths")
+	}
 	repo := repoRoot(t)
 	work, err := filepath.EvalSymlinks(t.TempDir())
 	if err != nil {

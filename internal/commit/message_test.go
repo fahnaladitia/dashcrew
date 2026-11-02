@@ -3,6 +3,7 @@ package commit
 import (
 	"os/exec"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -187,6 +188,9 @@ var quoteCases = []string{
 }
 
 func TestQuoteRoundTripsThroughTheShells(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Quote targets POSIX shells, which this test runs")
+	}
 	for _, shell := range [][]string{{"sh", "-c"}, {"bash", "--norc", "--noprofile", "-c"}, {"zsh", "-f", "-c"}} {
 		if _, err := exec.LookPath(shell[0]); err != nil {
 			t.Logf("%s not installed", shell[0])

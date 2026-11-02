@@ -43,4 +43,14 @@ Already fine: secret scanning and push protection are on; default workflow permi
 
 ## Progress
 
-Not started.
+- Repo changes done (2 Nov).
+  - `toolchain go1.26.10`. govulncheck finds 0 reachable vulnerabilities. One unreached Windows-only issue remains in golang.org/x/sys v0.41.0, fixed in v0.44.0; it is left to Dependabot.
+  - Actions are pinned to SHAs: checkout v5.1.0, setup-go v6.5.0, goreleaser-action v6.4.0, codeql-action v4.39.0. `persist-credentials: false` everywhere.
+  - `ci.yaml` (`contents: read`):
+    - `test` on ubuntu, macos and windows, with `fail-fast: false`. Windows has `continue-on-error`, and tests that need `sh` skip there with a reason;
+    - `gofmt`, `race` and `govulncheck` jobs.
+  - `codeql.yml`. `release.yaml`: `permissions: {}` at the top, `contents: write` only on the job.
+  - Files: `.github/dependabot.yml`, SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md, issue templates and a PR template. Two files reformatted.
+  - Wiki skeleton (9 pages) written outside the repo for the maintainer.
+  - Unverified until pushed: Windows CI, CodeQL, the Dependabot `cooldown` key, and the release workflow.
+- GitHub settings: not done (the maintainer's).

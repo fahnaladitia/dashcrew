@@ -1,0 +1,65 @@
+name: Bug report
+description: dashcrew did something wrong or unexpected.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A security problem, including a way around the guard that the README does not list, goes through [SECURITY.md](https://github.com/fahnaladitia/dashcrew/blob/main/SECURITY.md), not here.
+        Leave out company names, internal domains and private paths; a minimal sample project is best.
+  - type: input
+    id: version
+    attributes:
+      label: dashcrew version
+      description: Output of `dashcrew --version`.
+      placeholder: dashcrew 0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: OS
+      options: [macOS, Linux, Windows, other]
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options: [init, sync, guard, doctor, check, commit, release, spec, knowledge, worktree, generated files, other]
+    validations:
+      required: true
+  - type: dropdown
+    id: agents
+    attributes:
+      label: Agents involved
+      multiple: true
+      options: [Claude Code, Codex, Antigravity, none]
+  - type: textarea
+    id: profile
+    attributes:
+      label: Profile
+      description: The relevant part of `.ai/project.yaml`.
+      render: yaml
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Commands in order. For the guard, the hook JSON and the policy.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual
+      description: Output and exit code; `dashcrew doctor` output helps.
+      render: text
+    validations:
+      required: true
