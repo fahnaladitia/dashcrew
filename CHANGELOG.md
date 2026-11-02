@@ -1,14 +1,16 @@
-## Unreleased
+## 0.2.0
 
-- Tracker (P11): a `github` tracker pack for GitHub Issues, with status in a Projects field (`mode: project`) or in labels (`mode: labels`), PRs linked with `Refs #<n>` by default. With any tracker, the `branching` and `pr-create` skills carry the status flow as explicit steps; AGENTS.md is unchanged.
-- The output rule names placeholder words too (`OWNER`, as well as `<x>`): a command handed to the user holds real values, or the agent asks first. Found in the P10 live run.
-- Go as a second platform (P10), as a starter rather than a built-in: `dashcrew platform new go` writes `.ai/platforms/go/` (rules, review skill, service skills, http and db packs, `link: go.work`) for the team to own and edit. `init` mentions it on a Go module.
-- Platforms may declare backend guard rules with a `guard:` key (`commands`, `sql`, `migrations`): deploy and infrastructure commands, `DROP`/`TRUNCATE` through SQL clients, and migrations against a non-local host are blocked for agents. A project whose policy has them requires dashcrew 0.2.0 in the shim and the lock; other projects keep 0.1.0.
+Upgrade note: a project whose platform declares `guard:` rules requires dashcrew 0.2.0 in its guard shim after `dashcrew sync`; every teammate on that project upgrades first. Other projects keep accepting 0.1.x.
+
 - Multi-repo work (P9), for any layout and any way an app consumes a dependency. `project.links` lists the dependencies a task may point at a local checkout. `dashcrew link add/ls/remove` writes the platform's link file (`pubspec_overrides.yaml`, or `go.work` through `platform_config.link`) after checking the package name, and excludes it from git; `doctor` reports a link file git would commit, a committed one, missing checkouts, and linked checkouts on another branch (info).
 - The guard checks a file under the policy of the dashcrew project holding its real path, so a linked dependency keeps its own rules. A hook running in a folder above several projects checks shell commands under all of their policies.
 - `dashcrew check` adds `links` with `project.links`: a git ref must be a tag or a commit on the dependency's default branch, a path must stay in the repository, a local Go `replace` and a committed link file are refused, and an unreachable dependency repository fails. `check --links` runs it alone.
 - `check --links` refuses a `pubspec.lock` that resolves a linked package from a path, as `pub get` writes it while the link is active (found in the P9 live run); `link add` says so, and the branching skill runs `dashcrew link remove` before the commit command.
 - With `project.links`, the branching, pr-description and verify skills get the cross-repo steps and the PR template a `## Dependencies` section. AGENTS.md does not change.
+- Go as a second platform (P10), as a starter rather than a built-in: `dashcrew platform new go` writes `.ai/platforms/go/` (rules, review skill, service skills, http and db packs, `link: go.work`) for the team to own and edit. `init` mentions it on a Go module.
+- Platforms may declare backend guard rules with a `guard:` key (`commands`, `sql`, `migrations`): deploy and infrastructure commands, `DROP`/`TRUNCATE` through SQL clients, and migrations against a non-local host are blocked for agents. A project whose policy has them requires dashcrew 0.2.0 in the shim and the lock; other projects keep 0.1.0.
+- Tracker (P11): a `github` tracker pack for GitHub Issues, with status in a Projects field (`mode: project`) or in labels (`mode: labels`), PRs linked with `Refs #<n>` by default. With any tracker, the `branching` and `pr-create` skills carry the status flow as explicit steps; AGENTS.md is unchanged.
+- The output rule names placeholder words too (`OWNER`, as well as `<x>`): a command handed to the user holds real values, or the agent asks first. Found in the P10 live run.
 
 ## 0.1.1
 
