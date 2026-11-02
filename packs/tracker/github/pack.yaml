@@ -1,0 +1,12 @@
+description: GitHub Issues as the task tracker, with status in a Projects field or in issue labels, written only per the status flow or on request.
+params:
+  mode: project
+  project_owner: null
+  project_number: null
+  status_field: Status
+  status_start: In Progress
+  status_review: In Review
+  label_start: "status: in progress"
+  label_review: "status: in review"
+  pr_link: Refs
+  comment_max_chars: 1000

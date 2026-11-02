@@ -1,5 +1,6 @@
 ## Unreleased
 
+- Tracker (P11): a `github` tracker pack for GitHub Issues, with status in a Projects field (`mode: project`) or in labels (`mode: labels`), PRs linked with `Refs #<n>` by default. With any tracker, the `branching` and `pr-create` skills carry the status flow as explicit steps; AGENTS.md is unchanged.
 - The output rule names placeholder words too (`OWNER`, as well as `<x>`): a command handed to the user holds real values, or the agent asks first. Found in the P10 live run.
 - Go as a second platform (P10), as a starter rather than a built-in: `dashcrew platform new go` writes `.ai/platforms/go/` (rules, review skill, service skills, http and db packs, `link: go.work`) for the team to own and edit. `init` mentions it on a Go module.
 - Platforms may declare backend guard rules with a `guard:` key (`commands`, `sql`, `migrations`): deploy and infrastructure commands, `DROP`/`TRUNCATE` through SQL clients, and migrations against a non-local host are blocked for agents. A project whose policy has them requires dashcrew 0.2.0 in the shim and the lock; other projects keep 0.1.0.

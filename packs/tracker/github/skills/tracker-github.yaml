@@ -1,0 +1,2 @@
+description: Read GitHub issues, and set their status (Projects field or labels) or post PR links only through the documented status flow.
+when_to_use: When a task arrives as a GitHub issue number or URL, or a PR for such an issue is created.

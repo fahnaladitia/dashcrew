@@ -29,6 +29,7 @@ var samples = []string{
 	"sample-release-lines",
 	"sample-links",
 	"sample-go",
+	"sample-github-tracker",
 }
 
 // update rewrites the goldens from the current output instead of comparing:

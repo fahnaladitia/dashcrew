@@ -42,7 +42,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-+ w/.ai/lock.json  -rw-r--r-- sha256:820a005fa017bf78
++ w/.ai/lock.json  -rw-r--r-- sha256:f232246b311fd166
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
@@ -113,7 +113,7 @@ stdout:
 | wrote   .claude/skills/branching/SKILL.md
 stderr: (empty)
 files:
-~ w/.ai/lock.json  -rw-r--r-- sha256:8b2dbed52c94046a
+~ w/.ai/lock.json  -rw-r--r-- sha256:2ab2909bf5e129b2
 ~ w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:90081279a81f5463
 ~ w/AGENTS.md  -rw-r--r-- sha256:b613d9f473c41236
 
@@ -126,7 +126,7 @@ stdout:
 | wrote   .claude/skills/port/SKILL.md
 stderr: (empty)
 files:
-~ w/.ai/lock.json  -rw-r--r-- sha256:2d90100c6ba135cf
+~ w/.ai/lock.json  -rw-r--r-- sha256:1a64b00d06e1d382
 ~ w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:3bbe4d8daedfee24
 ~ w/.claude/skills/port/SKILL.md  -rw-r--r-- sha256:56a940588700e998
 ~ w/AGENTS.md  -rw-r--r-- sha256:c53eb06d9fc23201
@@ -168,7 +168,7 @@ stdout:
 |   git add -- .ai/lock.json .claude/skills/branching/SKILL.md AGENTS.md
 stderr: (empty)
 files:
-~ w/.ai/lock.json  -rw-r--r-- sha256:6b21c94084844d0b
+~ w/.ai/lock.json  -rw-r--r-- sha256:62c0fc90a9bac634
 ~ w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:13ee2887a6ce0a2a
 ~ w/AGENTS.md  -rw-r--r-- sha256:9369c52a8d399453
 

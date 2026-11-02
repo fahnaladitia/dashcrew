@@ -155,12 +155,14 @@ The `flutter` platform ships these families; `tracker` and `design` are shared b
 | `storage` | `hive`, `shared_preferences`, `sqflite`, `none` | access through repositories, migrations |
 | `test` | `manual-fakes`, `mocktail`, `mockito`, `none` | mocking conventions |
 | `analytics` | `posthog`, `firebase`, `mixpanel`, `none` | ask-before-tracking, facade-only imports |
-| `tracker` | `clickup`, `none` | task status flow |
+| `tracker` | `clickup`, `github` (param `mode`: `project` or `labels`), `none` | task status flow: start when the branch exists, review with the PR link when the PR exists, only for work that started from a task |
 | `qa` | `semantics-identifier` | QA identifier rules |
 | `design` | `figma`, `none` | design-to-code skill (`figma-design`) |
 
 Every family also takes `{use: other, name: <package>}` for a library without a pack.
 Pack params and their defaults are in `pack.yaml` of each pack (`platforms/flutter/packs/<family>/<option>/` or `packs/<family>/<option>/`); set them in the map form (`state: {use: bloc, shared_dir: lib/shared/blocs/}`).
+
+**GitHub tracker.** `tracker: {use: github, project_owner: <owner>, project_number: <n>}` keeps status in the Project's single-select `Status` field (`In Progress`, `In Review`; params `status_field`, `status_start`, `status_review`). A new GitHub Project's built-in `Status` has Todo, In Progress and Done: add an `In Review` option to it rather than a second field, since GitHub's workflows set `Status` when an item is added and a board grouped by `Status` would not show a second field's value; `mode: labels` uses issue labels instead (`label_start`, `label_review`). The PR body links the issue with `pr_link` (`Refs` by default, so merging never closes the issue unasked; set `Closes` to close it). Projects need gh 2.31 or newer and the `project` scope (`gh auth refresh -s project`); `doctor` warns with `tracker` when the `gh` on PATH has no `gh project`. The agent never creates a Project, field, option or label; a missing one stops the flow with a question. With any tracker, the `branching` and `pr-create` skills carry the flow's two steps.
 
 **Project packs.** Put your own packs in `.ai/packs/<family>/<option>/`, in the same format. One with a shipped name replaces it; a new family (`architecture/clean`) becomes a valid `stack` key for that project. See [docs/catalog-format.md](docs/catalog-format.md).
 

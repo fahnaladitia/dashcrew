@@ -585,3 +585,41 @@ func TestLinksAddTextOnlyOutsideAgentsMd(t *testing.T) {
 		}
 	}
 }
+
+// TestTrackerStepsLiveInSkillsOnly pins P11 T0: with a tracker pack the branching and pr-create skills carry the
+// tracker step, naming the pack's skill; without one they do not, and AGENTS.md never carries the step.
+func TestTrackerStepsLiveInSkillsOnly(t *testing.T) {
+	const base = "toolkit: 1\nagents: [claude-code]\n"
+	off := renderShipped(t, base+"stack: { tracker: none }\n")
+	on := renderShipped(t, base+"stack: { tracker: clickup }\n")
+	for _, c := range []struct{ target, text string }{
+		{"skill/branching", "set the task to its start status as the `tracker-clickup` skill says"},
+		{"skill/pr-create", "set its review status and post the PR comment, both, as the `tracker-clickup` skill says"},
+	} {
+		if !strings.Contains(targetContent(t, on, c.target), c.text) {
+			t.Errorf("%s lacks %q", c.target, c.text)
+		}
+		if strings.Contains(targetContent(t, off, c.target), "## Tracker task") {
+			t.Errorf("%s has the tracker step without a tracker", c.target)
+		}
+	}
+	if strings.Contains(targetContent(t, on, "agents_md"), "## Tracker task") {
+		t.Error("AGENTS.md carries the tracker step")
+	}
+}
+
+// TestGithubTrackerLabelsMode pins the labels mode of the GitHub tracker pack, with its params overridden.
+func TestGithubTrackerLabelsMode(t *testing.T) {
+	rendered := renderShipped(t, "toolkit: 1\nagents: [claude-code]\nstack:\n  tracker: { use: github, mode: labels, label_start: wip, pr_link: Closes }\n")
+	agents, skill := targetContent(t, rendered, "agents_md"), targetContent(t, rendered, "skill/tracker-github")
+	for _, want := range []string{"Commands (mode `labels`): skill `tracker-github`.", "body has `Closes #<n>`"} {
+		if !strings.Contains(agents, want) {
+			t.Errorf("AGENTS.md lacks %q", want)
+		}
+	}
+	for _, want := range []string{"keeps issue status in mode `labels`", "`gh issue edit <n> --add-label \"wip\"`", "--remove-label \"wip\" --add-label \"status: in review\""} {
+		if !strings.Contains(skill, want) {
+			t.Errorf("tracker-github lacks %q", want)
+		}
+	}
+}

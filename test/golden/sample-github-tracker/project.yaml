@@ -1,0 +1,5 @@
+# Synthetic profile: a team that tracks tasks as GitHub issues with status in a Projects field.
+toolkit: 1
+agents: [claude-code]
+stack:
+  tracker: { use: github, project_owner: shop-team, project_number: 3 }

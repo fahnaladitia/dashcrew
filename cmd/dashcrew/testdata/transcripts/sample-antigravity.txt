@@ -86,7 +86,7 @@ files:
 + w/.agents/skills/audit  dir
 + w/.agents/skills/audit/SKILL.md  -rw-r--r-- sha256:4a486951627c6ceb
 + w/.agents/skills/branching  dir
-+ w/.agents/skills/branching/SKILL.md  -rw-r--r-- sha256:7975aaf2b2c3367c
++ w/.agents/skills/branching/SKILL.md  -rw-r--r-- sha256:e7bc4682f586625a
 + w/.agents/skills/build-fix  dir
 + w/.agents/skills/build-fix/SKILL.md  -rw-r--r-- sha256:875dfa07def54fe2
 + w/.agents/skills/code-review  dir
@@ -112,7 +112,7 @@ files:
 + w/.agents/skills/plan  dir
 + w/.agents/skills/plan/SKILL.md  -rw-r--r-- sha256:8a1644d55b93fd41
 + w/.agents/skills/pr-create  dir
-+ w/.agents/skills/pr-create/SKILL.md  -rw-r--r-- sha256:88b181afa8381177
++ w/.agents/skills/pr-create/SKILL.md  -rw-r--r-- sha256:351f5e09960db3ca
 + w/.agents/skills/pr-description  dir
 + w/.agents/skills/pr-description/SKILL.md  -rw-r--r-- sha256:7f02b7f17b8ea8e8
 + w/.agents/skills/prompt-polish  dir
@@ -136,7 +136,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-+ w/.ai/lock.json  -rw-r--r-- sha256:7a6a9cc5ba418cd3
++ w/.ai/lock.json  -rw-r--r-- sha256:d3f608ee7bdb86e3
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
@@ -148,7 +148,7 @@ files:
 + w/.claude/skills/audit  dir
 + w/.claude/skills/audit/SKILL.md  -rw-r--r-- sha256:85299bb49f5b2a48
 + w/.claude/skills/branching  dir
-+ w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:8b93b9328ded4711
++ w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:819a97ff0e04f7d3
 + w/.claude/skills/build-fix  dir
 + w/.claude/skills/build-fix/SKILL.md  -rw-r--r-- sha256:43296f00548ded28
 + w/.claude/skills/code-review  dir
@@ -174,7 +174,7 @@ files:
 + w/.claude/skills/plan  dir
 + w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:dcbd991edef57238
 + w/.claude/skills/pr-create  dir
-+ w/.claude/skills/pr-create/SKILL.md  -rw-r--r-- sha256:e534b517a93d2650
++ w/.claude/skills/pr-create/SKILL.md  -rw-r--r-- sha256:06bf29082105789c
 + w/.claude/skills/pr-description  dir
 + w/.claude/skills/pr-description/SKILL.md  -rw-r--r-- sha256:7992498f4157debe
 + w/.claude/skills/prompt-polish  dir
