@@ -59,8 +59,8 @@
     ".codex/agents/explorer.toml": "b45965989f03244c5f2cc32493f71aeb3026aa747a52b705836ce67b95c7566f",
     ".codex/agents/reviewer.toml": "ea588ab99f8c93a42b9f6742749096ceee18c5c94be0e90b8657a0220a7ebf51",
     ".github/pull_request_template.md": "d04513360a2435b2a27fa0e0218d96c66c1a787a82ef950ea445f63073c982b9",
-    ".github/workflows/dashcrew.yml": "3a9321469d994a5d6e281cb25e75f685cd3a5b08a97c2199f8a2a5234b31ea4e",
-    "AGENTS.md": "3a63308a82afd414613dacd98255953f9dd0e07b0623918eb6cb9c691201fa8f",
+    ".github/workflows/dashcrew.yml": "57315ee3322f6cda100a11a4293c7d84a05b24c641198f6182963be8197387aa",
+    "AGENTS.md": "99c88d624d211a224f698017a46f85388a523b288c25d59d07fefd01fc08be36",
     "CLAUDE.md": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49"
   },
   "packs": {

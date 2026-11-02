@@ -162,6 +162,7 @@ func TestErrorPaths(t *testing.T) {
 		{"flavor entrypoint as a list", "toolkit: 1\nagents: [claude-code]\nproject: { flavors: { dev: [a] } }\n", "project.flavors.dev"},
 		{"empty flavor entrypoint", "toolkit: 1\nagents: [claude-code]\nproject: { flavors: { dev: '' } }\n", "project.flavors.dev"},
 		{"github without a ref", "toolkit: 1\nagents: [claude-code]\nci: { github: true }\n", "ci.dashcrew_ref"},
+		{"github with a commit ref", "toolkit: 1\nagents: [claude-code]\nci: { github: true, dashcrew_ref: 4c200c3 }\n", "ci.dashcrew_ref"},
 		{"unknown ci key", "toolkit: 1\nagents: [claude-code]\nci: { gitlab: true }\n", "ci.gitlab"},
 	}
 	for _, c := range cases {
@@ -191,7 +192,8 @@ func TestErrorMessagesMatchTheDartEngine(t *testing.T) {
 		{"toolkit: 1\nagents: [claude-code]\npolicy: [a]\n", "project.yaml policy: expected a map"},
 		{"toolkit: 1\nagents: [claude-code]\nproject: { flavors: [dev] }\n", "project.yaml project.flavors: expected a map of flavor name to entrypoint"},
 		{"toolkit: 1\nagents: [claude-code]\nproject: { flavors: { dev: '' } }\n", "project.yaml project.flavors.dev: expected the entrypoint path, e.g. lib/main_dev.dart"},
-		{"toolkit: 1\nagents: [claude-code]\nci: { github: true }\n", "project.yaml ci.dashcrew_ref: required with github: true, the dashcrew commit or tag CI installs"},
+		{"toolkit: 1\nagents: [claude-code]\nci: { github: true }\n", "project.yaml ci.dashcrew_ref: required with github: true, the dashcrew release tag CI installs, such as v0.1.0"},
+		{"toolkit: 1\nagents: [claude-code]\nci: { github: true, dashcrew_ref: main }\n", `project.yaml ci.dashcrew_ref: "main" is not a release tag v0.1.0 or newer; CI installs dashcrew with go install, where a branch moves and a commit before v0.1.0 has no Go module`},
 		{"toolkit: 1\nagents: [claude-code]\nplatform: other\n", "project.yaml platform_config: required with platform: other, a map of detect and commands"},
 		{"toolkit: 1\nagents: [claude-code]\nplatform: other\nplatform_config: [a]\n", "project.yaml platform_config: expected a map of detect and commands"},
 		{"toolkit: 1\nagents: [claude-code]\nplatform_config: {}\n", "project.yaml platform_config: allowed only with platform: other"},
@@ -279,8 +281,23 @@ func TestCIDefaultsToOffAndGithubNeedsARef(t *testing.T) {
 	if !reflect.DeepEqual(plain(profile.CI), map[string]any{"github": false, "dashcrew_ref": nil}) {
 		t.Errorf("ci %v", plain(profile.CI))
 	}
-	if ref := parse(t, "toolkit: 1\nagents: [claude-code]\nci: { github: true, dashcrew_ref: 0123abc }\n").CI.Value("dashcrew_ref"); ref != "0123abc" {
+	if ref := parse(t, "toolkit: 1\nagents: [claude-code]\nci: { github: true, dashcrew_ref: v0.1.0 }\n").CI.Value("dashcrew_ref"); ref != "v0.1.0" {
 		t.Errorf("dashcrew_ref %#v", ref)
+	}
+	if ref := parse(t, "toolkit: 1\nagents: [claude-code]\nci: { github: false, dashcrew_ref: main }\n").CI.Value("dashcrew_ref"); ref != "main" {
+		t.Errorf("a ref without github is not checked, got %#v", ref)
+	}
+}
+
+func TestIsReleaseTag(t *testing.T) {
+	for ref, want := range map[string]bool{
+		"v0.1.0": true, "v0.2.0-rc.1": true, "v1.0.0": true,
+		"0.1.0": false, "v0.0.9": false, "v0.1.0-rc.1": false, "v0.1.0+build": false, "v0.1": false,
+		"4c200c3": false, "main": false, "": false,
+	} {
+		if got := IsReleaseTag(ref); got != want {
+			t.Errorf("IsReleaseTag(%q) = %v, want %v", ref, got, want)
+		}
 	}
 }
 

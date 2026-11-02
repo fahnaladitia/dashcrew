@@ -14,4 +14,4 @@ stack:
   design: none
 project:
   base_branches: [main, develop]
-ci: { github: true, dashcrew_ref: 0123abc }
+ci: { github: true, dashcrew_ref: v0.1.0 }

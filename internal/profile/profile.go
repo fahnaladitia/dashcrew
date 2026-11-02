@@ -4,9 +4,11 @@ package profile
 import (
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/fahnaladitia/dashcrew/internal/omap"
+	"github.com/fahnaladitia/dashcrew/internal/version"
 	"github.com/fahnaladitia/dashcrew/internal/yamlutil"
 )
 
@@ -332,11 +334,26 @@ func parseCI(value any) (*omap.Map[any], error) {
 	if err != nil {
 		return nil, err
 	}
+	if ci.Value("github") != true {
+		return ci, nil
+	}
 	ref, isString := ci.Value("dashcrew_ref").(string)
-	if ci.Value("github") == true && (!isString || ref == "") {
-		return nil, fail("ci.dashcrew_ref", "required with github: true, the dashcrew commit or tag CI installs")
+	if !isString || ref == "" {
+		return nil, fail("ci.dashcrew_ref", "required with github: true, the dashcrew release tag CI installs, such as v"+version.GuardMinimum)
+	}
+	if !IsReleaseTag(ref) {
+		return nil, fail("ci.dashcrew_ref", strconv.Quote(ref)+" is not a release tag v"+version.GuardMinimum+" or newer; "+
+			"CI installs dashcrew with go install, where a branch moves and a commit before v"+version.GuardMinimum+" has no Go module")
 	}
 	return ci, nil
+}
+
+// IsReleaseTag is true for `v<major>.<minor>.<patch>` (optional pre-release) not older than the guard minimum: the
+// refs `ci.dashcrew_ref` accepts.
+func IsReleaseTag(ref string) bool {
+	semantic, ok := strings.CutPrefix(ref, "v")
+	return ok && !strings.Contains(semantic, "+") && version.IsSemantic(semantic) &&
+		version.Compare(semantic, version.GuardMinimum) >= 0
 }
 
 var knowledgeName = regexp.MustCompile(`^[A-Za-z0-9._-]+$`)

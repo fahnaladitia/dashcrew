@@ -85,7 +85,7 @@ policy:
   tier_gates: true
   terse_prompts: false
 paths: { plans: .ai/plans, audits: .ai/audits, pr: .ai/pr, memory: .ai/memory }
-ci: { github: true, dashcrew_ref: <commit or tag> }
+ci: { github: true, dashcrew_ref: v0.1.0 }
 ```
 
 | Key | Default | Effect |
@@ -117,7 +117,7 @@ ci: { github: true, dashcrew_ref: <commit or tag> }
 | `policy.terse_prompts` | `false` | agents answer short and blunt |
 | `paths.*` | `.ai/plans`, `.ai/audits`, `.ai/pr`, `.ai/memory` | where plans, audits, PR descriptions and project memory live |
 | `ci.github` | `false` | write `.github/workflows/dashcrew.yml`, which runs `dashcrew check` on every pull request; see [Merge gate on GitHub](#merge-gate-on-github) |
-| `ci.dashcrew_ref` | none | dashcrew commit or tag that workflow installs; required with `ci.github` |
+| `ci.dashcrew_ref` | none | dashcrew release tag that workflow installs, `v0.1.0` or newer; required with `ci.github`. A commit or branch is refused |
 | `knowledge` | not set | `{repo: <git url or path>, name: <folder>}`: the team's shared knowledge repo; see [Shared knowledge](#shared-knowledge) |
 
 ## Platforms
@@ -307,7 +307,7 @@ Claude Code and Codex get exit code 2 with the reason on stderr; Antigravity get
 
 The plan is confirmed in the session by the task owner; the team reviews in the pull request, where this gate holds. GitHub is the only infrastructure.
 
-1. Set `ci: { github: true, dashcrew_ref: <commit or tag> }` and run `dashcrew sync`. Commit `.github/workflows/dashcrew.yml`. The workflow sets up Go and runs `go install github.com/fahnaladitia/dashcrew/cmd/dashcrew@<dashcrew_ref>`, then `dashcrew check`.
+1. Set `ci: { github: true, dashcrew_ref: v0.1.0 }` (a release tag, `v0.1.0` or newer) and run `dashcrew sync`. Commit `.github/workflows/dashcrew.yml`. The workflow sets up Go and runs `go install github.com/fahnaladitia/dashcrew/cmd/dashcrew@<dashcrew_ref>`, then `dashcrew check`.
 2. In the repository settings, add a branch protection rule (or ruleset) for your base branches that requires the status check `check` from the `dashcrew check` workflow.
 3. Every pull request then needs a current toolkit, every heading of the PR template, and commits that pass `dashcrew commit lint`. Failures show as annotations on the PR. The workflow checks out the full history (`fetch-depth: 0`) so the PR's commits can be read.
 

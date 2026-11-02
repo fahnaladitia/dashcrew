@@ -185,15 +185,15 @@ Trivial and small run without a plan or another stop. Standard and large stop af
 
 ## Debugging
 
-- Read the relevant code before saying anything about a bug.
+- Read the code before saying anything about a bug.
 - In one pass, state what you found, where, and the fix.
-- If the cause is unclear, or an error disappeared without a known reason, say so. Never guess, never claim it fixed.
+- If the cause is unclear, or an error vanished unexplained, say so. Never guess or claim it fixed.
 
 ## Output format
 
-- No em dashes, smart quotes or decorative Unicode: plain hyphens and straight quotes. Natural-language characters are fine.
-- Code output must be copy-paste safe.
-- Never echo raw tool output or narrate; show only the code that changed.
+- No em dashes, smart quotes or decorative Unicode: plain hyphens and straight quotes.
+- Code output must be copy-paste safe: no `<placeholder>` in a command, which a shell reads as a redirect.
+- Never echo raw tool output or narrate; show only changed code.
 
 ## Red flags
 

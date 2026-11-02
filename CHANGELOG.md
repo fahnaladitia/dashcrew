@@ -1,4 +1,9 @@
-## 0.1.0 (unreleased)
+## 0.1.1 (unreleased)
+
+- `ci.dashcrew_ref` must be a release tag, `v0.1.0` or newer. A commit or branch is refused when the profile is read, because CI installs dashcrew with `go install`: a branch moves, and a commit from before 0.1.0 has no Go module, so the workflow failed before `dashcrew check` ran. A project migrated from 0.0.1 still holding a commit gets the error from `sync` and `doctor` with the fix.
+- The output rule now says what copy-paste safe means: no `<placeholder>` in a command the user runs, since a shell reads `<` as a redirect and the whole block fails. Paid for by shorter wording in the same section; the heaviest AGENTS.md is 6 bytes smaller.
+
+## 0.1.0
 
 - The engine is Go: one static binary per OS with the catalog built in, installed with `brew install fahnaladitia/tap/dashcrew` or `go install`. Output is byte-identical to the Dart engine of 0.0.1.
 - Removed: the Dart engine (`lib/`, `bin/`, `pubspec.yaml`) and the `dart pub global activate` install. An old Dart install still on `PATH` is refused by the guard shim and reported by `doctor`.

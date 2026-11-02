@@ -61,7 +61,7 @@
     ".codex/agents/explorer.toml": "ff8631e1ed14ab7e79a05a715dfbf37bc7dcbea80dda1d49ff9a7a8dc06ca3c6",
     ".codex/agents/reviewer.toml": "443d4e4fa7df663e4bcf02c972cc3870f33e9ba4e1630845563dc31af6bbe3f0",
     ".github/pull_request_template.md": "62399ed678218b8c8c1a474de439efe5e61053333d60b49bbfa5e3794daef52e",
-    "AGENTS.md": "1d9d844b5e7e40dfe589e0f7e3fe3697db2805be9c60f30c226c58a3f3365888",
+    "AGENTS.md": "d6939cf0bd29e845a1f6bae66dbd7102935c4cde4170c80d562e9a808d5cb45f",
     "CLAUDE.md": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49"
   },
   "packs": {},
@@ -82,7 +82,7 @@
     "state": "missing"
   },
   "inputs": {
-    "catalog": "eb869633c528ede823c1acb51a7c39f16dbb42da9ca1a61e6a2b65937e071ec6",
+    "catalog": "a829158cca5597d62c288f9053b03da54bb960ff39ec325e7fd30d765d87c004",
     "profile": "405bb53fb3d8afcef842660afa99ab4c9611b417d2ed81b31d77158eb97dd75d"
   }
 }

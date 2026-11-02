@@ -74,7 +74,7 @@ files:
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:36bfb1be82c0b298
 + w/.ai/knowledge  link -> <root>/home/.dashcrew/knowledge/notes
-+ w/.ai/lock.json  -rw-r--r-- sha256:17c9d0989e8e4297
++ w/.ai/lock.json  -rw-r--r-- sha256:f9f44bc5476b9520
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:ac4fca699a608a65
@@ -135,7 +135,7 @@ files:
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
 + w/.gitignore  -rw-r--r-- sha256:3a003918a77c43a0
 + w/.mcp.json  -rw-r--r-- sha256:af388c2fd3ed6bef
-+ w/AGENTS.md  -rw-r--r-- sha256:7ed3debd0b6c5506
++ w/AGENTS.md  -rw-r--r-- sha256:93325165f1ff7c10
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 4: dashcrew "doctor"
@@ -156,7 +156,7 @@ stdout:
 | warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
 | ok    knowledge       linked to ~/.dashcrew/knowledge/notes, last pull unknown
 | warn  knowledge-stale 1 stale pointer, 1 old proposal, 2 unverified pages; run dashcrew knowledge doctor
-| ok    agents-md-size  AGENTS.md 16093 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16087 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)

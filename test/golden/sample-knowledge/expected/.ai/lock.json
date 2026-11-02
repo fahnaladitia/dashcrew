@@ -61,7 +61,7 @@
     ".codex/agents/explorer.toml": "ff8631e1ed14ab7e79a05a715dfbf37bc7dcbea80dda1d49ff9a7a8dc06ca3c6",
     ".codex/agents/reviewer.toml": "443d4e4fa7df663e4bcf02c972cc3870f33e9ba4e1630845563dc31af6bbe3f0",
     ".github/pull_request_template.md": "62399ed678218b8c8c1a474de439efe5e61053333d60b49bbfa5e3794daef52e",
-    "AGENTS.md": "4bb802b5756921af53ec2ea7736cdb70d903140cacaed18ef550aacd2376409f",
+    "AGENTS.md": "a32cc40ad810b308ba39c55119f29c4f6dff4c5b755d4ab9046e1dc28d13834c",
     "CLAUDE.md": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49"
   },
   "packs": {},

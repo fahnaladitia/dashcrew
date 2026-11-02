@@ -649,7 +649,7 @@ func TestGithubWorkflowPinsMatchTheRepoCI(t *testing.T) {
 }
 
 func TestGithubWorkflow(t *testing.T) {
-	const ciProfile = "toolkit: 1\nagents: [claude-code]\nci: { github: true, dashcrew_ref: 0123abc }\n"
+	const ciProfile = "toolkit: 1\nagents: [claude-code]\nci: { github: true, dashcrew_ref: v0.1.0 }\n"
 
 	t.Run("ci.github writes a workflow that runs dashcrew check at the pinned ref", func(t *testing.T) {
 		s, project := newProject(t, ciProfile)
@@ -671,7 +671,7 @@ func TestGithubWorkflow(t *testing.T) {
 				runs = append(runs, command)
 			}
 		}
-		if !reflect.DeepEqual(runs, []string{"go install github.com/fahnaladitia/dashcrew/cmd/dashcrew@0123abc", "dashcrew check"}) {
+		if !reflect.DeepEqual(runs, []string{"go install github.com/fahnaladitia/dashcrew/cmd/dashcrew@v0.1.0", "dashcrew check"}) {
 			t.Errorf("runs %v", runs)
 		}
 		if !strings.Contains(text, "uses: actions/setup-go@") {
@@ -822,7 +822,7 @@ func TestProfileErrorsAndAMissingProfile(t *testing.T) {
 }
 
 func TestRenderedFilesKeepTheDartOrder(t *testing.T) {
-	s, _ := newProject(t, "toolkit: 1\nagents: [claude-code]\nci: { github: true, dashcrew_ref: main }\n")
+	s, _ := newProject(t, "toolkit: 1\nagents: [claude-code]\nci: { github: true, dashcrew_ref: v0.1.0 }\n")
 
 	rendered, err := s.Render(false, nil)
 	if err != nil {

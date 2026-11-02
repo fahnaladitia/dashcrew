@@ -108,7 +108,7 @@ files:
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:36bfb1be82c0b298
 + w/.ai/knowledge  link -> <root>/home/.dashcrew/knowledge/notes
-+ w/.ai/lock.json  -rw-r--r-- sha256:eea2511c87e2ae17
++ w/.ai/lock.json  -rw-r--r-- sha256:6c81d298edca002a
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:ac4fca699a608a65
@@ -169,7 +169,7 @@ files:
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
 + w/.gitignore  -rw-r--r-- sha256:3a003918a77c43a0
 + w/.mcp.json  -rw-r--r-- sha256:af388c2fd3ed6bef
-+ w/AGENTS.md  -rw-r--r-- sha256:7ed3debd0b6c5506
++ w/AGENTS.md  -rw-r--r-- sha256:93325165f1ff7c10
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 7: dashcrew "doctor"
@@ -191,7 +191,7 @@ stdout:
 | ok    knowledge       linked to ~/.dashcrew/knowledge/notes, last pull unknown
 | ok    knowledge-stale no stale pointers, old proposals or unverified pages
 | warn  spec            specs/1.4.0/notes-sync@rev1: spec moved to rev 2; re-read it
-| ok    agents-md-size  AGENTS.md 16093 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16087 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)

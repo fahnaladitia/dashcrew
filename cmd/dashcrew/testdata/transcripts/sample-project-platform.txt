@@ -40,7 +40,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-+ w/.ai/lock.json  -rw-r--r-- sha256:3fa2fdc5e47c1d0f
++ w/.ai/lock.json  -rw-r--r-- sha256:b12a4b7a40b08bb3
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
@@ -96,7 +96,7 @@ files:
 + w/.github  dir
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
 + w/.mcp.json  -rw-r--r-- sha256:d8e397af03b5b032
-+ w/AGENTS.md  -rw-r--r-- sha256:a0229f632ea7a6d4
++ w/AGENTS.md  -rw-r--r-- sha256:dfc7b78ea6cc5daf
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 2: dashcrew "sync" "-p" "."
@@ -145,7 +145,7 @@ stdout:
 | ok    claude-md       CLAUDE.md imports AGENTS.md
 | ok    mcp             defined: 
 | warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
-| ok    agents-md-size  AGENTS.md 14559 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 14553 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)
@@ -166,7 +166,7 @@ stdout:
 | ok    claude-md       CLAUDE.md imports AGENTS.md
 | ok    mcp             defined: 
 | warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
-| ok    agents-md-size  AGENTS.md 14559 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 14553 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)
@@ -181,7 +181,7 @@ stdout:
 | ok    drift           30 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 14559 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 14553 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | skip  pr-sections     no PR body; pass --pr-body <file> or run on a pull_request event
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
@@ -199,7 +199,7 @@ stdout:
 | ok    drift           30 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 14559 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 14553 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | fail  pr-sections     missing: ## Changes, ## Affected files, ## Testing, ## Notes / not done (write "None" under a heading that does not apply)
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
@@ -217,7 +217,7 @@ stdout:
 | ok    drift           30 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 14559 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 14553 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | fail  pr-sections     missing: ## Changes, ## Affected files, ## Testing, ## Notes / not done (write "None" under a heading that does not apply)
 | ::error title=dashcrew pr-sections::missing: ## Changes, ## Affected files, ## Testing, ## Notes / not done (write "None" under a heading that does not apply)
@@ -236,7 +236,7 @@ stdout:
 | ok    drift           30 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 14559 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 14553 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | ok    pr-sections     5 required sections present
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
