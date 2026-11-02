@@ -42,7 +42,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-+ w/.ai/lock.json  -rw-r--r-- sha256:96b9541211ee5bd8
++ w/.ai/lock.json  -rw-r--r-- sha256:820a005fa017bf78
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
@@ -102,7 +102,7 @@ files:
 + w/.github  dir
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
 + w/.mcp.json  -rw-r--r-- sha256:745dcf12d577148c
-+ w/AGENTS.md  -rw-r--r-- sha256:2f84679eb54b0fc0
++ w/AGENTS.md  -rw-r--r-- sha256:c997e30a794dd6ae
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 2: dashcrew "sync"
@@ -113,9 +113,9 @@ stdout:
 | wrote   .claude/skills/branching/SKILL.md
 stderr: (empty)
 files:
-~ w/.ai/lock.json  -rw-r--r-- sha256:7e7677ff9d556d59
+~ w/.ai/lock.json  -rw-r--r-- sha256:8b2dbed52c94046a
 ~ w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:90081279a81f5463
-~ w/AGENTS.md  -rw-r--r-- sha256:a91695cad6d88f26
+~ w/AGENTS.md  -rw-r--r-- sha256:b613d9f473c41236
 
 === step 3: dashcrew "sync"
 (after the case's setup for this step)
@@ -126,10 +126,10 @@ stdout:
 | wrote   .claude/skills/port/SKILL.md
 stderr: (empty)
 files:
-~ w/.ai/lock.json  -rw-r--r-- sha256:9d68a8820c0867ed
+~ w/.ai/lock.json  -rw-r--r-- sha256:2d90100c6ba135cf
 ~ w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:3bbe4d8daedfee24
 ~ w/.claude/skills/port/SKILL.md  -rw-r--r-- sha256:56a940588700e998
-~ w/AGENTS.md  -rw-r--r-- sha256:f0320531fdfbd2b0
+~ w/AGENTS.md  -rw-r--r-- sha256:c53eb06d9fc23201
 
 === step 4: dashcrew "check"
 (after the case's setup for this step)
@@ -142,7 +142,7 @@ stdout:
 | fail  drift           conflict markers: .claude/skills/branching/SKILL.md, AGENTS.md (dashcrew sync --after-merge renders them fresh; stage and commit what it lists)
 | skip  stale           needs a valid profile and the lock
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16254 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16260 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | skip  pr-sections     no PR body; pass --pr-body <file> or run on a pull_request event
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
@@ -168,9 +168,9 @@ stdout:
 |   git add -- .ai/lock.json .claude/skills/branching/SKILL.md AGENTS.md
 stderr: (empty)
 files:
-~ w/.ai/lock.json  -rw-r--r-- sha256:686442cbc8cb5107
+~ w/.ai/lock.json  -rw-r--r-- sha256:6b21c94084844d0b
 ~ w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:13ee2887a6ce0a2a
-~ w/AGENTS.md  -rw-r--r-- sha256:617a5b06b847fd68
+~ w/AGENTS.md  -rw-r--r-- sha256:9369c52a8d399453
 
 === step 7: dashcrew "check"
 exit: 0
@@ -182,7 +182,7 @@ stdout:
 | ok    drift           32 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16146 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16152 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | skip  pr-sections     no PR body; pass --pr-body <file> or run on a pull_request event
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
