@@ -1,0 +1,2 @@
+description: Fiber web framework (on fasthttp, not net/http).
+params: {}

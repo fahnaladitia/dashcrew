@@ -33,6 +33,8 @@ type PlatformConfig struct {
 	Detect []string
 	// Link is the override file `dashcrew link` writes, one of LinkFiles; empty when not set.
 	Link string
+	// Guard is the platform's `guard:` key; nil without one.
+	Guard *PlatformGuard
 	// Commands holds PlatformCommands then OptionalPlatformCommands, in that order; a missing format is nil.
 	Commands *omap.Map[any]
 }
@@ -248,7 +250,7 @@ func parsePlatformConfig(platform string, value any) (*PlatformConfig, error) {
 		return nil, fail("platform_config", "expected a map of detect and commands")
 	}
 	for _, key := range config.Keys() {
-		if key != "detect" && key != "commands" && key != "link" {
+		if key != "detect" && key != "commands" && key != "link" && key != "guard" {
 			return nil, fail("platform_config."+key, "unknown key")
 		}
 	}
@@ -270,7 +272,13 @@ func parsePlatformConfig(platform string, value any) (*PlatformConfig, error) {
 		}
 		link = text
 	}
-	return &PlatformConfig{Detect: detect, Commands: commands, Link: link}, nil
+	guard, err := ParsePlatformGuard(config.Value("guard"), func(key, message string) error {
+		return fail("platform_config."+key, message)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &PlatformConfig{Detect: detect, Commands: commands, Link: link, Guard: guard}, nil
 }
 
 // StringList returns value as a list of non-empty strings; false when it is not a list or holds anything else.

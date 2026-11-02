@@ -99,6 +99,9 @@ func LoadPolicy(value any) (Policy, error) {
 	if p.KnowledgeClone, err = knowledgeCloneOf(object); err != nil {
 		return Policy{}, err
 	}
+	if err := backendRulesOf(object, &p); err != nil {
+		return Policy{}, err
+	}
 	return p, nil
 }
 
@@ -162,6 +165,9 @@ func evaluateShell(script string, argv []string, p Policy) Decision {
 			return decision
 		}
 	}
+	if decision := evaluateBackend(script, argv, p); decision.Blocked {
+		return decision
+	}
 	if p.knowledge != nil && len(p.knowledge.roots) > 0 {
 		return p.knowledge.shellWrites(script, argv)
 	}
@@ -196,6 +202,9 @@ func checkCommand(argv []string, p Policy) Decision {
 		if sub, ok := gitSubcommand(argv); ok && p.BlockedGit[sub] {
 			return Block("git " + sub + " is reserved for the user. Ask them to run it.")
 		}
+	}
+	if reason := blockedCommand(argv, p); reason != "" {
+		return Block(reason)
 	}
 	if p.BlockFormatters && len(argv) > 1 {
 		sub := argv[1]

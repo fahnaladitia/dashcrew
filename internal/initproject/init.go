@@ -105,6 +105,9 @@ func (in Init) Run(yes, force bool, remoteBranches []string, ask Ask, out func(s
 			expected = append(expected, name+" ("+strings.Join(c.Platforms[name].Detect, ", ")+")")
 		}
 		out("  platform: none of " + strings.Join(expected, ", "))
+		if isFile(filepath.Join(in.ProjectDir, "go.mod")) {
+			out("  tip: this is a Go module; dashcrew platform new go writes a Go platform for this repo to edit, then run dashcrew sync")
+		}
 	}
 
 	var platform string

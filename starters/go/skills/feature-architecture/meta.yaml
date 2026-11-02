@@ -1,0 +1,2 @@
+description: Decide a feature's structure in a Go service before implementation - packages, layers, interfaces, errors, transactions and goroutines.
+when_to_use: For a new endpoint, service or package, or a change across two or more layers.

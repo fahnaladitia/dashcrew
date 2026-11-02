@@ -12,5 +12,5 @@ rules: [debug.read-before-speculate, debug.one-pass, debug.unclear-say-so, forma
 ## Output format
 
 - No em dashes, smart quotes or decorative Unicode: plain hyphens and straight quotes.
-- Code output must be copy-paste safe: no `<placeholder>` in a command, which a shell reads as a redirect.
+- Code output must be copy-paste safe: a command holds real values, no `<x>` or `OWNER` placeholders; ask first.
 - Never echo raw tool output or narrate; show only changed code.

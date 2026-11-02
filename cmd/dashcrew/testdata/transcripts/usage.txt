@@ -19,6 +19,7 @@ stdout:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
+|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -48,6 +49,7 @@ stdout:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
+|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -77,6 +79,7 @@ stdout:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
+|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -106,6 +109,7 @@ stdout:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
+|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -309,6 +313,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
+|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -338,6 +343,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
+|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -367,6 +373,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
+|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -714,6 +721,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
+|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -748,6 +756,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
+|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -781,6 +790,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
+|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -815,6 +825,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
+|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -848,6 +859,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
+|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -1217,6 +1229,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
+|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -1246,6 +1259,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
+|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -1287,6 +1301,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
+|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -1316,6 +1331,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
+|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -1344,6 +1360,7 @@ stdout:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
+|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -1374,6 +1391,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
+|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.

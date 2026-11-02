@@ -135,8 +135,10 @@ The profile's `platform` picks one. Every stack works at the first level; the ot
 platform: other
 platform_config:
   detect: [go.mod]
-  commands: { analyze: go vet ./..., test: go test ./..., test_scoped: go test, deps: go mod download, format: gofmt -w }
+  commands: { analyze: go vet, test: go test ./..., test_scoped: go test, deps: go mod download, format: gofmt -l }
 ```
+
+**Starters.** `dashcrew platform new go [--http nethttp|chi|gin|echo|fiber|none] [--db pgx|sqlc|gorm|none]` writes a project platform for a Go service into `.ai/platforms/go/`: Go rules (context, error wrapping, goroutine ownership, `gofmt -l` as a check), backend architecture, security and testing rules in place of the app-oriented core ones, a `backend-security` review skill, the `data-layer-tdd` and `feature-architecture` skills for services, packs for the HTTP framework and the database layer, `link: go.work`, and the backend `guard:` rules. The packs default to what `go.mod` (and a `sqlc.yaml`) names. Without `.ai/project.yaml` it writes one; with one, it prints the keys to set. The folder is the team's from then on: dashcrew never overwrites it, so rename the layers and edit the rules to match the code. `init` points at the starter when it finds a `go.mod` and no matching platform.
 
 A project platform with a built-in name replaces it whole. The format is in [docs/catalog-format.md](docs/catalog-format.md#platforms).
 
@@ -309,6 +311,8 @@ Each agent's pre-tool hook sends the tool call to `.ai/bin/guard`, which blocks:
 - a `gh` command whose arguments contain `/approve`: approvals are the user's, on whatever approval flow a team keeps on GitHub.
 
 Claude Code and Codex get exit code 2 with the reason on stderr; Antigravity gets `{"decision": "deny", "reason": ...}` on stdout.
+
+**Backend rules.** A platform may add a `guard:` key, in its `platform.yaml` or in `platform_config`: `commands` (a program and the words after it, options skipped, such as `[terraform, apply]` or `[kubectl, delete]`), `sql` (`clients` such as `psql`, and `statements` such as `DROP`, matched as whole words in any case in the script that runs the client, so `-c`, heredocs, here-strings and pipes are covered) and `migrations` (`tools` such as `goose`, blocked when a connection string in an argument or a `VAR=` assignment names a host outside `local_hosts`, by default `localhost`, `127.0.0.1` and `::1`; Unix sockets are local). Not seen: SQL in a file (`psql -f`) and a connection string read from the environment or a config file. A project whose policy has these rules records `guard_min_version` 0.2.0, so the shim refuses an older dashcrew that would ignore them; other projects keep 0.1.0.
 
 **Several repos.** A file the agent writes is checked under the `.ai/guard.json` of the nearest dashcrew project holding its real path, so a dependency reached through `dashcrew link`, a symbolic link or an absolute path keeps its own rules, and the app's rules do not leak into it. When the hook runs in a folder that is no project but holds projects one level down, a shell command is blocked when any of their policies blocks it, and a file under the project holding it; with no project below, nothing changes. A policy passed as a file outside any project keeps the single-policy check.
 
