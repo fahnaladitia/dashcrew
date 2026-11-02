@@ -18,7 +18,7 @@ The main session writes the plan for tier standard and large. No implementation 
 
 - Restate the requirement in your own words.
 - Add no feature the step 0 block did not confirm.
-- List every ambiguity as an explicit assumption.
+- List every ambiguity: one the code settles is an assumption; one only the user can settle goes on the plan's `Questions:` line.
 
 ## Search first
 
@@ -131,10 +131,12 @@ Self-gate before closing. The verdict is NO-GO when any criterion below holds. D
 - A design or approach choice needs a user decision.
 - The scope grew beyond the step 0 block.
 - A step 0 decision the plan depends on is missing.
+- The `Questions:` line is not `none`: a question found while planning is asked before any code, on every tier.
 
 Display the whole plan in chat as plain text, ending with:
 
 ```
+Questions: <each question only the user can settle, found while planning, or none>
 Verdict: GO | NO-GO
 Reason: <the criterion that failed, or "all criteria pass">
 ```

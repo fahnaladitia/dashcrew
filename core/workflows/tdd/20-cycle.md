@@ -6,6 +6,7 @@ rules:
   - tdd.green-minimal
   - tdd.refactor-only-green
   - tdd.one-test-one-behavior
+  - tdd.stop-on-disagreement
 ---
 ## Cycle
 
@@ -32,6 +33,16 @@ Run the cycle per plan stage (mapper, state, UI), not per test.
 
 - Refactor only while the tests are green.
 - Touch only lines that belong to the task; do not tidy the file's style.
+
+### When the code disagrees
+
+Stop and ask, showing what you found, before acting on it, when:
+
+- the code, a contract or a test contradicts the plan or the spec (a decision, a contract, a criterion);
+- a criterion turns out to read two ways;
+- the task needs a file or a change the plan does not list.
+
+Never settle it silently. The answer goes into the plan; against a spec it becomes a declared departure.
 
 ### Run budget
 

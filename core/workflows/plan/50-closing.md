@@ -3,12 +3,14 @@ target: workflow/plan
 order: 50
 rules:
   - plan.display-verdict
+  - plan.questions-line
   - plan.no-code-before-yes
   - plan.reviewer-large-only
 ---
 Display the whole plan in chat as plain text, ending with:
 
 ```
+Questions: <each question only the user can settle, found while planning, or none>
 Verdict: GO | NO-GO
 Reason: <the criterion that failed, or "all criteria pass">
 ```

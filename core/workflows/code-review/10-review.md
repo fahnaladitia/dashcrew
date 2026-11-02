@@ -14,6 +14,7 @@ rules:
   - review.spec-axis
   - review.scope-checks
   - review.after-verdict
+  - review.ask-reviewer-questions
 ---
 # code-review
 
@@ -56,5 +57,5 @@ When a code graph tool is connected, it measures the impact radius before readin
 ## After the verdict
 
 - Fix every BLOCKER and HIGH, then run the `reviewer` again on the rework diff only.
-- MEDIUM and LOW go to the PR notes; ask the user about them once, as one list.
+- MEDIUM and LOW findings, and the open questions the reviewer raised, go to the user once, as one list; what stays open goes to the PR notes.
 - A second BLOCK goes to the user as a decision, never into a third round.

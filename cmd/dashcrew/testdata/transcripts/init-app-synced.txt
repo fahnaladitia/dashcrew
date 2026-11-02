@@ -66,7 +66,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:6e49145e22846dfb
-+ w/.ai/lock.json  -rw-r--r-- sha256:4ad309053f6e7fab
++ w/.ai/lock.json  -rw-r--r-- sha256:2af38f0936556516
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
@@ -84,7 +84,7 @@ files:
 + w/.claude/skills/build-fix  dir
 + w/.claude/skills/build-fix/SKILL.md  -rw-r--r-- sha256:ccc036fa412ee508
 + w/.claude/skills/code-review  dir
-+ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:feda66879450b2c8
++ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:2d12aba3232cc779
 + w/.claude/skills/continuous-learning  dir
 + w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:698f498fdff18b66
 + w/.claude/skills/data-layer-tdd  dir
@@ -106,7 +106,7 @@ files:
 + w/.claude/skills/mobile-security  dir
 + w/.claude/skills/mobile-security/SKILL.md  -rw-r--r-- sha256:1bc29e41680bd49b
 + w/.claude/skills/plan  dir
-+ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:72616b56f91add11
++ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:a7ea69ed80fc742b
 + w/.claude/skills/pr-create  dir
 + w/.claude/skills/pr-create/SKILL.md  -rw-r--r-- sha256:e534b517a93d2650
 + w/.claude/skills/pr-description  dir
@@ -116,7 +116,7 @@ files:
 + w/.claude/skills/strategic-compact  dir
 + w/.claude/skills/strategic-compact/SKILL.md  -rw-r--r-- sha256:a866040ed09e6f37
 + w/.claude/skills/tdd  dir
-+ w/.claude/skills/tdd/SKILL.md  -rw-r--r-- sha256:1f84dbd25a9edb99
++ w/.claude/skills/tdd/SKILL.md  -rw-r--r-- sha256:435cc71bbf850a70
 + w/.claude/skills/verification-loop  dir
 + w/.claude/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:d54707cb287e4465
 + w/.claude/skills/verify  dir
@@ -128,7 +128,7 @@ files:
 + w/.github  dir
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:d04513360a2435b2
 + w/.mcp.json  -rw-r--r-- sha256:745dcf12d577148c
-+ w/AGENTS.md  -rw-r--r-- sha256:024cff2b9bc39c22
++ w/AGENTS.md  -rw-r--r-- sha256:dd3dc1143a340ac2
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 3: dashcrew "sync" "-p" "."

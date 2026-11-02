@@ -108,7 +108,7 @@ files:
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:36bfb1be82c0b298
 + w/.ai/knowledge  link -> <root>/home/.dashcrew/knowledge/notes
-+ w/.ai/lock.json  -rw-r--r-- sha256:1c92cc3e9a6f1490
++ w/.ai/lock.json  -rw-r--r-- sha256:fb10c3dae79fe05a
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:ac4fca699a608a65
@@ -124,7 +124,7 @@ files:
 + w/.claude/skills/build-fix  dir
 + w/.claude/skills/build-fix/SKILL.md  -rw-r--r-- sha256:43296f00548ded28
 + w/.claude/skills/code-review  dir
-+ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:feda66879450b2c8
++ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:2d12aba3232cc779
 + w/.claude/skills/continuous-learning  dir
 + w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:b128f630973c9956
 + w/.claude/skills/data-layer-tdd  dir
@@ -144,7 +144,7 @@ files:
 + w/.claude/skills/mobile-security  dir
 + w/.claude/skills/mobile-security/SKILL.md  -rw-r--r-- sha256:1bc29e41680bd49b
 + w/.claude/skills/plan  dir
-+ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:0d9ff18bafc648fc
++ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:305bbdc63ffa4b37
 + w/.claude/skills/pr-create  dir
 + w/.claude/skills/pr-create/SKILL.md  -rw-r--r-- sha256:e534b517a93d2650
 + w/.claude/skills/pr-description  dir
@@ -152,11 +152,11 @@ files:
 + w/.claude/skills/prompt-polish  dir
 + w/.claude/skills/prompt-polish/SKILL.md  -rw-r--r-- sha256:660592a6ccdf80a5
 + w/.claude/skills/spec  dir
-+ w/.claude/skills/spec/SKILL.md  -rw-r--r-- sha256:227b482afcb4c434
++ w/.claude/skills/spec/SKILL.md  -rw-r--r-- sha256:c519511e8e3e0560
 + w/.claude/skills/strategic-compact  dir
 + w/.claude/skills/strategic-compact/SKILL.md  -rw-r--r-- sha256:a866040ed09e6f37
 + w/.claude/skills/tdd  dir
-+ w/.claude/skills/tdd/SKILL.md  -rw-r--r-- sha256:caf317ee9e4fe00d
++ w/.claude/skills/tdd/SKILL.md  -rw-r--r-- sha256:609c68287a05c3e6
 + w/.claude/skills/verification-loop  dir
 + w/.claude/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:d54707cb287e4465
 + w/.claude/skills/verify  dir
@@ -169,7 +169,7 @@ files:
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
 + w/.gitignore  -rw-r--r-- sha256:3a003918a77c43a0
 + w/.mcp.json  -rw-r--r-- sha256:af388c2fd3ed6bef
-+ w/AGENTS.md  -rw-r--r-- sha256:820df20d178809f4
++ w/AGENTS.md  -rw-r--r-- sha256:c18d7d42b9d0d423
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 7: dashcrew "doctor"

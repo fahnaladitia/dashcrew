@@ -81,7 +81,7 @@ files:
 + w/.agents/skills/build-fix  dir
 + w/.agents/skills/build-fix/SKILL.md  -rw-r--r-- sha256:72ceb9890bd18a23
 + w/.agents/skills/code-review  dir
-+ w/.agents/skills/code-review/SKILL.md  -rw-r--r-- sha256:075a93892e4e0a9f
++ w/.agents/skills/code-review/SKILL.md  -rw-r--r-- sha256:05d4823eb44a0332
 + w/.agents/skills/continuous-learning  dir
 + w/.agents/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:8e75f35233aaf6c4
 + w/.agents/skills/data-layer-tdd  dir
@@ -97,7 +97,7 @@ files:
 + w/.agents/skills/learn  dir
 + w/.agents/skills/learn/SKILL.md  -rw-r--r-- sha256:8c96c8b944175d44
 + w/.agents/skills/plan  dir
-+ w/.agents/skills/plan/SKILL.md  -rw-r--r-- sha256:68b0b256ff4e9ce1
++ w/.agents/skills/plan/SKILL.md  -rw-r--r-- sha256:b3c2b5fec27430a8
 + w/.agents/skills/pr-create  dir
 + w/.agents/skills/pr-create/SKILL.md  -rw-r--r-- sha256:88b181afa8381177
 + w/.agents/skills/pr-description  dir
@@ -107,7 +107,7 @@ files:
 + w/.agents/skills/strategic-compact  dir
 + w/.agents/skills/strategic-compact/SKILL.md  -rw-r--r-- sha256:ef4f497b22288e0c
 + w/.agents/skills/tdd  dir
-+ w/.agents/skills/tdd/SKILL.md  -rw-r--r-- sha256:a4ee5e47163ed524
++ w/.agents/skills/tdd/SKILL.md  -rw-r--r-- sha256:0a749dc6107a556f
 + w/.agents/skills/verification-loop  dir
 + w/.agents/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:ae34512d591c4797
 + w/.agents/skills/verify  dir
@@ -119,7 +119,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:52606fcc3d47573e
-+ w/.ai/lock.json  -rw-r--r-- sha256:d461ea10f8cfc5f1
++ w/.ai/lock.json  -rw-r--r-- sha256:64f423d04c515960
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
@@ -135,7 +135,7 @@ files:
 + w/.claude/skills/build-fix  dir
 + w/.claude/skills/build-fix/SKILL.md  -rw-r--r-- sha256:891308d1d3f9aa12
 + w/.claude/skills/code-review  dir
-+ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:4c551b884002a3f7
++ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:9fb5bf1475a25bd3
 + w/.claude/skills/continuous-learning  dir
 + w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:698f498fdff18b66
 + w/.claude/skills/data-layer-tdd  dir
@@ -151,7 +151,7 @@ files:
 + w/.claude/skills/learn  dir
 + w/.claude/skills/learn/SKILL.md  -rw-r--r-- sha256:f5d260c1d5735b9e
 + w/.claude/skills/plan  dir
-+ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:cb1a7879fe7443fb
++ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:0f7ede2e26bc55ef
 + w/.claude/skills/pr-create  dir
 + w/.claude/skills/pr-create/SKILL.md  -rw-r--r-- sha256:e534b517a93d2650
 + w/.claude/skills/pr-description  dir
@@ -161,7 +161,7 @@ files:
 + w/.claude/skills/strategic-compact  dir
 + w/.claude/skills/strategic-compact/SKILL.md  -rw-r--r-- sha256:a866040ed09e6f37
 + w/.claude/skills/tdd  dir
-+ w/.claude/skills/tdd/SKILL.md  -rw-r--r-- sha256:0609fa59d4cdb173
++ w/.claude/skills/tdd/SKILL.md  -rw-r--r-- sha256:009757d2a1377fc0
 + w/.claude/skills/verification-loop  dir
 + w/.claude/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:055cbb8370ce869e
 + w/.claude/skills/verify  dir
@@ -178,7 +178,7 @@ files:
 + w/.github  dir
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
 + w/.mcp.json  -rw-r--r-- sha256:d8e397af03b5b032
-+ w/AGENTS.md  -rw-r--r-- sha256:0162d3a7a8f992a0
++ w/AGENTS.md  -rw-r--r-- sha256:2ebdd12502aea36f
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 2: dashcrew "sync" "-p" "."
