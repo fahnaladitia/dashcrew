@@ -43,3 +43,8 @@ Never run the checkout or the pull yourself. Never delete or suggest deleting th
 ## Merge
 
 Only when the user explicitly asks to merge a specific PR: show the PR number, base, `mergeStateStatus` and merge method, then ask "Merge PR #<n> into `<base>`? (yes / no)". Run the merge only on that yes.
+
+## Tracker task
+
+- The PR exists and the task came from the tracker: set its review status and post the PR comment, both, as the `tracker-clickup` skill says.
+- The PR was declined or is not created yet: the status stays, no comment, and the summary says so.

@@ -504,6 +504,7 @@ func (p *Profile) ToContext() map[string]any {
 		"has_knowledge":     p.Knowledge != nil,
 		"has_release_lines": p.ReleaseLines != nil,
 		"has_links":         len(p.Links) > 0,
+		"has_tracker":       hasTracker(p),
 		"project":           p.Project,
 		"policy":            p.Policy,
 		"paths":             p.Paths,
@@ -519,4 +520,10 @@ func contains(list []string, value string) bool {
 		}
 	}
 	return false
+}
+
+// hasTracker is true when the profile picks a tracker pack: a `tracker` choice that is neither none nor other.
+func hasTracker(p *Profile) bool {
+	choice, ok := p.Stack.Get("tracker")
+	return ok && choice.Option != "none" && choice.Option != OtherOption
 }

@@ -28,3 +28,7 @@ With git's default `branch.autoSetupMerge`, a branch created from a remote-track
 
 - The user sets the upstream exactly once, on the first push: `git push -u origin <branch>`. Never earlier, and never to a branch with a different name.
 - Never run or suggest `git pull` on a branch, or a base, whose upstream you have not verified.
+
+## Tracker task
+
+When the task came as a tracker id or URL: once the checks above pass, set the task to its start status as the `tracker-clickup` skill says, and keep old -> new for the summary. Without a tracker task there is nothing to do; never search the tracker for one.

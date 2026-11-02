@@ -167,6 +167,9 @@ func (d Doctor) checks(projectPacks Check) []Check {
 		if linksCheck, ok := d.links(); ok {
 			checks = append(checks, linksCheck)
 		}
+		if trackerCheck, ok := d.githubTracker(); ok {
+			checks = append(checks, trackerCheck)
+		}
 	}
 	checks = append(checks, d.agentsMdSize(AgentsMdLimitFor(agents)), d.gitignore())
 	if rosters, ok := d.handoffRosters(); ok {
