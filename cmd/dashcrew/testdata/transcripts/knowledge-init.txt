@@ -7,20 +7,27 @@ stdout:
 | wrote   kb/features/.gitkeep
 | wrote   kb/inbox/.gitkeep
 | wrote   kb/repos/.gitkeep
+| wrote   kb/specs/.gitkeep
 | wrote   kb/templates/page.md
+| wrote   kb/templates/prd.md
+| wrote   kb/templates/trd.md
 | note: commit it in a new git repo, push it, then set knowledge.repo in each project's .ai/project.yaml.
 stderr: (empty)
 files:
 + w/kb  dir
-+ w/kb/README.md  -rw-r--r-- sha256:18b38e9a8c2cc2cb
++ w/kb/README.md  -rw-r--r-- sha256:fe33fdcdc6520cae
 + w/kb/features  dir
 + w/kb/features/.gitkeep  -rw-r--r-- sha256:e3b0c44298fc1c14
 + w/kb/inbox  dir
 + w/kb/inbox/.gitkeep  -rw-r--r-- sha256:e3b0c44298fc1c14
 + w/kb/repos  dir
 + w/kb/repos/.gitkeep  -rw-r--r-- sha256:e3b0c44298fc1c14
++ w/kb/specs  dir
++ w/kb/specs/.gitkeep  -rw-r--r-- sha256:e3b0c44298fc1c14
 + w/kb/templates  dir
 + w/kb/templates/page.md  -rw-r--r-- sha256:228bb232ceb97b9a
++ w/kb/templates/prd.md  -rw-r--r-- sha256:2b0ce0641b451cfa
++ w/kb/templates/trd.md  -rw-r--r-- sha256:ea180e0230920d54
 
 === step 2: dashcrew "knowledge" "init" "kb"
 exit: 1
@@ -36,19 +43,26 @@ stdout:
 | wrote   empty/features/.gitkeep
 | wrote   empty/inbox/.gitkeep
 | wrote   empty/repos/.gitkeep
+| wrote   empty/specs/.gitkeep
 | wrote   empty/templates/page.md
+| wrote   empty/templates/prd.md
+| wrote   empty/templates/trd.md
 | note: commit it in a new git repo, push it, then set knowledge.repo in each project's .ai/project.yaml.
 stderr: (empty)
 files:
-+ w/empty/README.md  -rw-r--r-- sha256:18b38e9a8c2cc2cb
++ w/empty/README.md  -rw-r--r-- sha256:fe33fdcdc6520cae
 + w/empty/features  dir
 + w/empty/features/.gitkeep  -rw-r--r-- sha256:e3b0c44298fc1c14
 + w/empty/inbox  dir
 + w/empty/inbox/.gitkeep  -rw-r--r-- sha256:e3b0c44298fc1c14
 + w/empty/repos  dir
 + w/empty/repos/.gitkeep  -rw-r--r-- sha256:e3b0c44298fc1c14
++ w/empty/specs  dir
++ w/empty/specs/.gitkeep  -rw-r--r-- sha256:e3b0c44298fc1c14
 + w/empty/templates  dir
 + w/empty/templates/page.md  -rw-r--r-- sha256:228bb232ceb97b9a
++ w/empty/templates/prd.md  -rw-r--r-- sha256:2b0ce0641b451cfa
++ w/empty/templates/trd.md  -rw-r--r-- sha256:ea180e0230920d54
 
 === step 4: dashcrew "knowledge" "init" "kb/README.md"
 exit: 1
@@ -79,7 +93,7 @@ stderr:
 | -h, --help    Print this usage information.
 | 
 | Available subcommands:
-|   doctor   Report stale code pointers, proposals waiting over 14 days and pages not verified in 180 days.
+|   doctor   Report stale code pointers, proposals waiting over 14 days, pages not verified in 180 days and
 |   init     Write the knowledge repo layout into <dir>, which must be new or empty. Runs no git.
 |   pull     Clone the knowledge repo into ~/.dashcrew/knowledge/<name>, or fetch and fast-forward it. Never resets.
 |   review   Walk the inbox/ proposals oldest first and accept, edit, skip or delete each.

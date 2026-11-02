@@ -1,6 +1,6 @@
 ---
 target: skill/branching
-rules: [branching.ask-release, branching.record-release, branching.verify-no-upstream, branching.unset-wrong-upstream, branching.upstream-set-by-user, branching.no-upstream-to-base, branching.no-pull-unverified-upstream]
+rules: [branching.ask-release, branching.record-release, branching.record-spec, branching.verify-no-upstream, branching.unset-wrong-upstream, branching.upstream-set-by-user, branching.no-upstream-to-base, branching.no-pull-unverified-upstream]
 ---
 # Branching
 
@@ -15,6 +15,9 @@ rules: [branching.ask-release, branching.record-release, branching.verify-no-ups
 {{#has_release_lines}}
 7. With a release, record it: `git config branch.<name>.dashcrew-release <version>`. It is local branch config, never committed; `sync` then keeps the toolkit at the line's version, and the plan goes to `{{paths.plans}}/<version>/<task-slug>/`.
 {{/has_release_lines}}
+{{#has_knowledge}}
+{{#has_release_lines}}8{{/has_release_lines}}{{^has_release_lines}}7{{/has_release_lines}}. With a spec, record it: `git config branch.<name>.dashcrew-spec specs/<release>/<feature>@rev<n>`. It is local branch config, never committed; `dashcrew spec status` and `doctor` compare it with the knowledge clone.
+{{/has_knowledge}}
 
 ## Why no tracking
 

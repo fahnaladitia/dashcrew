@@ -16,13 +16,18 @@ var typicalCall = corpusCase{
 	args:  []string{"{policies}/default.json"},
 }
 
-// knowledgeCalls are typical calls under a policy with a knowledge clone (K2): the same Bash call, and a Write,
-// whose path the guard resolves to its real path.
+// knowledgeCalls are typical calls under a policy with a knowledge clone (K2): the same Bash call, a Write, whose
+// path the guard resolves to its real path, and a Write to a draft spec, whose status the guard reads (P7).
 var knowledgeCalls = []corpusCase{
 	{name: "typical-knowledge", stdin: typicalCall.stdin, args: []string{"{policies}/knowledge.json"}},
 	{name: "write-knowledge", args: []string{"{policies}/knowledge.json"},
 		stdin: `{"session_id":"s1","cwd":"{project}","hook_event_name":"PreToolUse","tool_name":"Write","tool_input":{"file_path":"lib/feature/a.dart","content":"void a() {}"}}`},
+	{name: "write-spec", args: []string{"{policies}/knowledge.json"},
+		stdin: `{"session_id":"s1","cwd":"{project}","hook_event_name":"PreToolUse","tool_name":"Write","tool_input":{"file_path":"{elsewhere}/` + draftSpec + `","content":"x"}}`},
 }
+
+// draftSpec is the spec file the write-spec call writes, under the clone in the corpus home folder.
+const draftSpec = ".dashcrew/knowledge/notes/specs/1.4.0/notes-sync/prd.md"
 
 // latencies runs the typical call n times through argv as a process, sorted.
 func latencies(t testing.TB, f corpusFolders, n int, argv ...string) []time.Duration {
@@ -66,6 +71,13 @@ func TestGuardLatency(t *testing.T) {
 	}
 	policy := strings.TrimSuffix(corpusPolicies["default"], "}") + `,"knowledge_clone":"~/.dashcrew/knowledge/notes"}`
 	if err := os.WriteFile(filepath.Join(f.policies, "knowledge.json"), []byte(policy), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	draft := filepath.Join(f.elsewhere, filepath.FromSlash(draftSpec))
+	if err := os.MkdirAll(filepath.Dir(draft), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(draft, []byte("---\ntitle: Notes sync\nfeature: notes-sync\nrelease: \"1.4.0\"\nstatus: draft\nrev: 1\n---\n"+strings.Repeat("- AC-1 x\n", 400)), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	for _, call := range knowledgeCalls {

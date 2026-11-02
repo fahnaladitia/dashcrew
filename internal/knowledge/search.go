@@ -46,17 +46,43 @@ type SearchIndex struct {
 }
 
 type searchDoc struct {
-	path, title string
-	repos       []string
-	terms       [fieldCount]map[string]int
-	length      [fieldCount]int
-	paragraphs  []string
+	path, title, kind string
+	repos             []string
+	terms             [fieldCount]map[string]int
+	length            [fieldCount]int
+	paragraphs        []string
 }
 
-// SearchHit is one ranked page; Snippet is its paragraph that matches the query best, markers removed.
+// SearchHit is one ranked page; Snippet is its paragraph that matches the query best, markers removed. Kind is
+// KindOf its path.
 type SearchHit struct {
-	Path, Title, Snippet string
-	Score                float64
+	Path, Title, Snippet, Kind string
+	Score                      float64
+}
+
+// Kinds of a page, named by the first folder of its path.
+const (
+	KindSpec    = "spec"
+	KindFeature = "feature"
+	KindRepo    = "repo"
+	KindOther   = "other"
+)
+
+// Kinds lists every kind, in the order the search tool documents them.
+var Kinds = []string{KindSpec, KindFeature, KindRepo, KindOther}
+
+// KindOf is the kind of a slash-separated path relative to the clone: specs/ spec, features/ feature, repos/ repo,
+// anything else other.
+func KindOf(path string) string {
+	switch first, _, _ := strings.Cut(path, "/"); first {
+	case "specs":
+		return KindSpec
+	case "features":
+		return KindFeature
+	case "repos":
+		return KindRepo
+	}
+	return KindOther
 }
 
 // NewSearchIndex indexes pages as Pages returns them.
@@ -64,7 +90,7 @@ func NewSearchIndex(pages []IndexedPage) *SearchIndex {
 	index := &SearchIndex{documents: map[string]int{}}
 	var total [fieldCount]int
 	for _, page := range pages {
-		doc := searchDoc{path: page.Path, title: page.Title, repos: page.Page.Repos}
+		doc := searchDoc{path: page.Path, title: page.Title, kind: KindOf(page.Path), repos: page.Page.Repos}
 		var headings []string
 		for _, h := range page.Page.Headings {
 			headings = append(headings, h.Text)
@@ -97,13 +123,18 @@ func NewSearchIndex(pages []IndexedPage) *SearchIndex {
 // Search returns at most limit pages that share a word with query, best first, ties by path. A non-empty repo
 // keeps only pages whose front matter `repos` names it.
 func (x *SearchIndex) Search(query, repo string, limit int) []SearchHit {
+	return x.SearchKind(query, repo, "", limit)
+}
+
+// SearchKind is Search that keeps only pages of kind when kind is not empty.
+func (x *SearchIndex) SearchKind(query, repo, kind string, limit int) []SearchHit {
 	terms := unique(tokens(query))
 	if len(terms) == 0 || limit <= 0 {
 		return nil
 	}
 	var hits []SearchHit
 	for _, doc := range x.docs {
-		if repo != "" && !contains(doc.repos, repo) {
+		if (repo != "" && !contains(doc.repos, repo)) || (kind != "" && doc.kind != kind) {
 			continue
 		}
 		score := 0.0
@@ -125,7 +156,7 @@ func (x *SearchIndex) Search(query, repo string, limit int) []SearchHit {
 			}
 		}
 		if score > 0 {
-			hits = append(hits, SearchHit{Path: doc.path, Title: doc.title, Snippet: x.snippet(doc, terms), Score: math.Round(score*1000) / 1000})
+			hits = append(hits, SearchHit{Path: doc.path, Title: doc.title, Kind: doc.kind, Snippet: x.snippet(doc, terms), Score: math.Round(score*1000) / 1000})
 		}
 	}
 	sort.SliceStable(hits, func(i, j int) bool {

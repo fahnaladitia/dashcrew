@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -139,4 +140,60 @@ func TestKnowledgeStaleCheckSummarizesKnowledgeDoctor(t *testing.T) {
 	writeFile(t, filepath.Join(clone, "features", "tags.md"), "---\ntitle: Tags\n---\n\n`"+repo+":lib/gone.go:3` `"+repo+":lib/also-gone.go:1`\n")
 	expect(t, f.knowledgeDoctor(now.AddDate(0, 0, 20), false), "knowledge-stale", Warn,
 		"2 stale pointers, 1 old proposal, 1 unverified page; run dashcrew knowledge doctor")
+}
+
+// specFixture is a synced knowledge project on branch feat/sync-client, committed on main, with a spec of notes-sync
+// at rev, status in the profile's clone.
+func specFixture(t *testing.T, status string, rev int) (*fixture, string) {
+	f := setup(t, knowledgeProfile)
+	clone := knowledge.CloneDir(f.home, "notes")
+	writeSpecFiles(t, clone, status, rev)
+	f.sync()
+	f.git("init", "-q", "-b", "main")
+	f.git("add", "-A")
+	f.git("commit", "-q", "-m", "chore: init")
+	f.git("checkout", "-q", "-b", "feat/sync-client")
+	return f, clone
+}
+
+func writeSpecFiles(t *testing.T, clone, status string, rev int) {
+	t.Helper()
+	for _, name := range []string{"prd.md", "trd.md"} {
+		writeFile(t, filepath.Join(clone, "specs", "1.4.0", "notes-sync", name), "---\ntitle: Notes sync\nfeature: notes-sync\n"+
+			"release: \"1.4.0\"\nstatus: "+status+"\nrev: "+strconv.Itoa(rev)+"\nrepos: [notes-app]\nowners: [product]\n---\n\n- AC-1 x\n")
+	}
+}
+
+func TestSpecCheckWarnsOnAnOlderRevisionOrADraftPastPlanning(t *testing.T) {
+	f, clone := specFixture(t, "approved", 2)
+	if _, ok := f.doctor()["spec"]; ok {
+		t.Error("spec check without a recorded spec")
+	}
+	f.git("config", "branch.feat/sync-client.dashcrew-spec", "specs/1.4.0/notes-sync@rev2")
+	expect(t, f.doctor(), "spec", OK, "specs/1.4.0/notes-sync@rev2, approved, current")
+
+	writeSpecFiles(t, clone, "review", 3)
+	expect(t, f.doctor(), "spec", Warn, "specs/1.4.0/notes-sync@rev2: spec moved to rev 3; re-read it")
+
+	f.git("config", "branch.feat/sync-client.dashcrew-spec", "specs/1.4.0/notes-sync@rev3")
+	writeSpecFiles(t, clone, "draft", 3)
+	expect(t, f.doctor(), "spec", OK, "draft, current")
+	f.write("lib/a.dart", "a\n")
+	f.git("add", "-A")
+	f.git("commit", "-q", "-m", "feat: a")
+	expect(t, f.doctor(), "spec", Warn, "spec is still draft while the branch has 1 commit past its base")
+
+	f.git("config", "branch.feat/sync-client.dashcrew-spec", "specs/1.4.0/missing@rev1")
+	expect(t, f.doctor(), "spec", Warn, "no spec at specs/1.4.0/missing in the knowledge clone")
+	f.git("config", "branch.feat/sync-client.dashcrew-spec", "notes-sync")
+	expect(t, f.doctor(), "spec", Warn, "branch.feat/sync-client.dashcrew-spec is notes-sync, not specs/<release>/<feature>@rev<n>")
+	f.git("config", "branch.feat/sync-client.dashcrew-spec", "none")
+	if _, ok := f.doctor()["spec"]; ok {
+		t.Error("spec check for none")
+	}
+	for _, check := range f.doctor() {
+		if check.Status == Fail && check.ID == "spec" {
+			t.Error("the spec check failed")
+		}
+	}
 }

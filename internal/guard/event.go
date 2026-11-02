@@ -197,7 +197,8 @@ var (
 )
 
 // AllFromHook is every event of one hook call: a Codex `apply_patch` gives one per file, an Antigravity
-// `toolCall` and any other tool one. A patch file's content is its added lines; a moved file is checked at its new path.
+// `toolCall` and any other tool one. A patch file's content is its added lines; a moved file is checked at its new path,
+// and its old path is checked as a write with no content, since the move removes it there.
 func AllFromHook(json *omap.Map[any]) ([]Event, error) {
 	if toolCall, ok := json.Value("toolCall").(*omap.Map[any]); ok {
 		event, err := antigravity(toolCall)
@@ -229,12 +230,33 @@ func AllFromHook(json *omap.Map[any]) ([]Event, error) {
 		return patchEvents(patch, role, true)
 	}
 	hardened, _ := patchEvents(patch, role, true)
-	for _, extra := range hardened {
+	for _, extra := range append(hardened, moveSources(patch, role)...) {
 		if !containsEvent(events, extra) {
 			events = append(events, extra)
 		}
 	}
 	return events, nil
+}
+
+// moveSources is the old path of every file a patch moves, as an event of the header's kind with no content. Header
+// lines are read as the hardened reading does, so a line ending in \r still names a source.
+func moveSources(patch string, role *string) []Event {
+	var events []Event
+	var source *Event
+	for _, line := range strings.Split(patch, "\n") {
+		line = strings.TrimSuffix(line, "\r")
+		if file := patchHeader.FindStringSubmatch(line); file != nil {
+			kind := Edit
+			if file[1] == "Add" {
+				kind = Write
+			}
+			source = &Event{Kind: kind, FilePath: dartTrim(file[2]), Role: role}
+		} else if patchMoveTo.MatchString(line) && source != nil {
+			events = append(events, *source)
+			source = nil
+		}
+	}
+	return events
 }
 
 // patchEvents reads the files of a patch as the Dart guard does, which fails on a `*** Move to:` before any file

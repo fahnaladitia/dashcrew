@@ -218,6 +218,7 @@ The guard hook: reads one tool call as hook JSON on stdin and answers per agent 
 | Claude Code | `hook`, `claude-md`, `mcp`, `skills` |
 | Codex | `codex-hook`, `codex-mcp`, `codex-skills-budget`, `codex-trust` |
 | Antigravity | `antigravity-hook`, `antigravity-mcp`, `antigravity-roles` |
+| Knowledge | `knowledge` (the link and the clone's last pull), `knowledge-stale`, `spec` (only when the branch records a spec; warns, never fails) |
 | Project | `agents-md-size`, `gitignore` (warns while `.ai/bin/` is ignored), `handoff-rosters` (only when found) |
 
 Agent checks run only for the agents in the profile. Each line starts with `ok`, `warn`, `fail`, `skip` or `info`; only `fail` sets exit 1. `info` reports something that needs no fix, such as `handoff-rosters`: `<plans>/*/handoff/00-roster.md` files left by the pre-P4 team flow.
@@ -368,9 +369,36 @@ A team can keep its product knowledge (how a flow works, a contract, a trap, a d
 
 **Staleness.** `dashcrew knowledge doctor` reports code pointers whose path is gone at HEAD (for the current project and sibling folders), proposals waiting over 14 days, and pages with no verified marker in 180 days. It edits nothing, and exits 1 only on a stale pointer. `dashcrew doctor` runs it as the `knowledge-stale` check.
 
-**MCP server.** `dashcrew knowledge serve [--clone <dir>]` is a stdio MCP server with three tools: `knowledge_search` (BM25 over title, headings and body; page, title, snippet, score), `knowledge_read` (the page and its verified markers) and `knowledge_sources` (each code pointer as found, missing or unchecked). Its index lives in memory and is rebuilt when the clone's HEAD moves. `sync` registers it as `dashcrew-knowledge` in `.mcp.json`, `.codex/config.toml` and `.agents/mcp_config.json`, and removes it when `knowledge` is dropped. AGENTS.md, the `explorer` and the `plan` workflow tell agents to read the knowledge before planning and to check a page's code pointers before relying on it.
+**MCP server.** `dashcrew knowledge serve [--clone <dir>]` is a stdio MCP server with three tools: `knowledge_search` (BM25 over title, headings and body of the pages and the spec files; page, kind, title, snippet, score, with an optional `kind` filter: `spec`, `feature`, `repo` or `other`, from the page's folder), `knowledge_read` (the page and its verified markers) and `knowledge_sources` (each code pointer as found, missing or unchecked). Its index lives in memory and is rebuilt when the clone's HEAD moves. `sync` registers it as `dashcrew-knowledge` in `.mcp.json`, `.codex/config.toml` and `.agents/mcp_config.json`, and removes it when `knowledge` is dropped. AGENTS.md, the `explorer` and the `plan` workflow tell agents to read the knowledge before planning and to check a page's code pointers before relying on it.
 
 dashcrew never commits, pushes or resets the knowledge repo; every change to it goes through a member's own pull request.
+
+## Specs
+
+With `knowledge` set, a large feature gets a PRD and a TRD in the knowledge repo before its tasks start, and every task says which revision it builds.
+
+**Format.** `specs/<release>/<feature>/prd.md` (problem, users, goals, scope, Not doing, acceptance criteria) and `trd.md` (impact per repo, contracts, data, rollout order, risks, decisions, open questions). `<release>` is a version, or `unreleased`. Both files carry front matter: `title`, `feature`, `release`, `status` (`draft`, `review`, `approved` or `superseded`), `rev` (from 1), `repos`, and `owners` as roles, never names or emails.
+
+**IDs.** `AC-n` (criteria), `C-n` (contracts) and `D-n` (decisions) start a list item or heading. They are never renumbered; a dropped one stays as `~~AC-3~~ dropped: <why>`. Every open question ends with `owner: <role>`.
+
+**Commands.**
+
+| Command | |
+|---|---|
+| `spec new <feature> [--release <v>] [--clone <dir>]` | writes both files from the repo's templates, `status: draft`, `rev: 1`; the release defaults to the branch's recorded one, else `unreleased`. Refuses an existing folder |
+| `spec lint [<path>] [--against <ref>]` | front matter, duplicate IDs, gaps in a new spec, unowned questions in an approved one; with `--against`, a vanished or renumbered ID and an approved file changed without a higher `rev`. Exit 1 on any problem. `knowledge doctor` runs it over `specs/` |
+| `spec revise <path>` | run by a member: moves an approved spec back to `review` with `rev` one higher in both files, and prints the `git` commands for the pull request |
+| `spec status [-p <dir>] [--clone <dir>]` | the spec the branch records against the clone's current `rev` and status, the ACs this repo's plans claim (plans under the plans path that name the spec folder), the ACs none claims, and the spec's other repos as not checked |
+
+**Guard rule.** Under `specs/`, agents write only new files and files whose status is `draft` or `review` (read from the first 2 KB). Approved and superseded files are blocked with a pointer to `dashcrew spec revise`, which agents may not run. A patch that moves or deletes a file is checked at the old path too, so a page or spec cannot be moved into the inbox. Approval is the merged knowledge-repo pull request in which a member set `status: approved`; there is no approve command.
+
+**Workflow.** The `spec` workflow (main session, outside the chain): one round of brainstorm questions, the PRD with `acceptance-criteria`, the TRD with `feature-architecture` and the platform's TRD sections, `spec lint`, then `status: review` and the `git` commands for the member.
+
+**Tasks follow the spec.** Step 0 gains `Spec: specs/<release>/<feature>@rev<n> | none`; with a spec, the success criteria are its ACs by ID. The `branching` skill records it with `git config branch.<name>.dashcrew-spec <value>`. The `plan` names the spec and revision, lists the ACs it covers, and states each departure from the TRD as `departs from D-n: <what and why>`; an undeclared one makes it NO-GO, and the `reviewer` reports a change against a decision or contract the plan did not declare as HIGH. An accepted departure is followed by a `spec revise` pull request, named in the summary.
+
+**Drift.** `doctor` warns, and never fails, when the recorded `rev` is older than the clone's ("spec moved to rev 4; re-read it") or when the spec is still `draft` while the branch has commits of its own (commits no other branch holds). After the feature ships, the knowledge-gated `learn` proposes its `features/<slug>.md` page through the inbox from the PRD's goals and the TRD's final decisions, with code pointers; a spec becomes `superseded` only when a newer spec replaces it.
+
+Not done: an approve command, specs outside the knowledge repo, syncing specs to a tracker, generating code or tests from a spec.
 
 ## Release lines
 

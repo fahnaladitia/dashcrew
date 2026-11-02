@@ -30,6 +30,7 @@ Turn the request into the step 0 block in AGENTS.md, print it in chat, and wait 
   - setup skills for an HTTP client, router or analytics product the project does not use
 - `Success criteria`: when the task has none, apply `acceptance-criteria`. Map each criterion to the test type that proves it, or `manual`.
 - `Branch`: 3 names per the branching rules, and the base question.
+- `Spec`: the spec the task builds, `specs/<release>/<feature>@rev<n>` with the current `rev` from `.ai/knowledge/specs/`, or `none`. With a spec, the success criteria are the ACs this task covers, by ID (`AC-2 <criterion> -> <test type>`); never renumber or add one.
 
 ## Confirmation
 

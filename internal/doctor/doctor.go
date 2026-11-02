@@ -158,6 +158,9 @@ func (d Doctor) checks(projectPacks Check) []Check {
 		if staleCheck, ok := d.knowledgeStale(); ok {
 			checks = append(checks, staleCheck)
 		}
+		if specCheck, ok := d.specDrift(); ok {
+			checks = append(checks, specCheck)
+		}
 		if lineCheck, ok := d.releaseLineCheck(lock, line); ok {
 			checks = append(checks, lineCheck)
 		}

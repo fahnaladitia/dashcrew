@@ -14,6 +14,7 @@ when_to_use: "When creating the branch, or when it tracks the wrong upstream."
 4. `git checkout --no-track -b <name> <base>` (or `git branch --no-track <name> <base>`). `git checkout -b --no-track ...` is rejected as an invalid branch name.
 5. `git branch --show-current` prints the new name.
 6. `git rev-parse --abbrev-ref @{u}` must fail, and `git status -sb` must print the branch name alone: no `...origin/...`, no `[ahead N]`.
+7. With a spec, record it: `git config branch.<name>.dashcrew-spec specs/<release>/<feature>@rev<n>`. It is local branch config, never committed; `dashcrew spec status` and `doctor` compare it with the knowledge clone.
 
 ## Why no tracking
 

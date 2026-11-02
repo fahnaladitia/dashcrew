@@ -48,7 +48,7 @@ func newCorpusFolders(t testing.TB) corpusFolders {
 }
 
 func (f corpusFolders) expand(text string) string {
-	return strings.NewReplacer("{project}", f.project, "{policies}", f.policies).Replace(text)
+	return strings.NewReplacer("{project}", f.project, "{policies}", f.policies, "{elsewhere}", f.elsewhere).Replace(text)
 }
 
 // collapse is expand reversed, so recorded outcomes do not name the temp folders.

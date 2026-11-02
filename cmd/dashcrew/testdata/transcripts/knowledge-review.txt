@@ -64,7 +64,7 @@ stdout:
 |   git -C <root>/home/.dashcrew/knowledge/notes push -u origin knowledge-review-2026-03-01
 stderr: (empty)
 files:
-~ home/.dashcrew/knowledge/notes/README.md  -rw-r--r-- sha256:b5e0a0105fec9dc9
+~ home/.dashcrew/knowledge/notes/README.md  -rw-r--r-- sha256:2aea3b0890cc2c44
 ~ home/.dashcrew/knowledge/notes/features/share.md  -rw-r--r-- sha256:492b0db844202082
 + home/.dashcrew/knowledge/notes/features/tags.md  -rw-r--r-- sha256:0cc13cf66c7a5352
 - home/.dashcrew/knowledge/notes/inbox/2026-02-01-expiry.md

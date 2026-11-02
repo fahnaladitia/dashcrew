@@ -33,13 +33,16 @@ func TestCommitCommandsAreAllowedWhileGitCommitStaysBlocked(t *testing.T) {
 	}
 }
 
-// Release lines (P6): recording a branch's release is local branch config, and the release and port checks only read
+// Release lines (P6) and specs (P7): recording a branch's release or spec is local branch config, and the release and port checks only read
 // git, so the agent may run them; the merge or cherry-pick a port needs stays the user's.
 func TestReleaseCommandsAreAllowedWhileMergeAndCherryPickStayBlocked(t *testing.T) {
 	for _, p := range []Policy{testPolicy(false, false), testPolicy(true, false)} {
 		for _, command := range []string{
 			"git config branch.fix/totals.dashcrew-release 2.4.5",
 			"git config --get branch.fix/totals.dashcrew-release",
+			"git config branch.fix/totals.dashcrew-spec specs/2.4.5/totals@rev2",
+			"git config --get branch.fix/totals.dashcrew-spec",
+			"dashcrew spec status -p .",
 			"dashcrew release lines",
 			"dashcrew release status 2.4.5",
 			"dashcrew check --ports --from 2.4.5 --to main",

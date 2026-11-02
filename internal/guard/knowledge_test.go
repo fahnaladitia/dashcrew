@@ -116,6 +116,8 @@ func TestKnowledgeWritesAreAllowedOnlyUnderInbox(t *testing.T) {
 		{"kb/inbox/x.md", false},
 		{"docs/alias/x.md", true},
 		{"docs/alias/../inbox/x.md", false},
+		{"docs/alias/../repos/x.md", true},
+		{"lib/../docs/alias/../README.md", true},
 		{"lib/a.dart", false},
 		{"docs/notes.md", false},
 	}
@@ -313,5 +315,153 @@ func TestRealPath(t *testing.T) {
 	}
 	if got := realPath(filepath.Join(loop, "x")); got == "" {
 		t.Error("a link loop gave no path")
+	}
+}
+
+// withSpecs adds specs to the fixture's clone: one file per status, a file without front matter, and a link from
+// the draft folder to the approved file.
+func (f knowledgeFixture) withSpecs(t *testing.T) knowledgeFixture {
+	t.Helper()
+	for path, status := range map[string]string{
+		"specs/1.4.0/notes-sync/prd.md": "draft", "specs/1.4.0/notes-sync/trd.md": "review",
+		"specs/1.3.0/todo/prd.md": "approved", "specs/1.3.0/todo/trd.md": "superseded",
+	} {
+		file := filepath.Join(f.clone, filepath.FromSlash(path))
+		if err := os.MkdirAll(filepath.Dir(file), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(file, []byte("---\ntitle: x\nstatus: "+status+"\nrev: 1\n---\n\n- AC-1 x\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(f.clone, "specs", "README.md"), []byte("# Specs\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(filepath.Join("..", "..", "1.3.0", "todo", "prd.md"), filepath.Join(f.clone, "specs", "1.4.0", "notes-sync", "old.md")); err != nil {
+		t.Fatal(err)
+	}
+	return f
+}
+
+func TestSpecWritesFollowTheFileStatus(t *testing.T) {
+	f := newKnowledgeFixture(t).withSpecs(t)
+	cases := []struct {
+		path   string
+		reason string
+	}{
+		{".ai/knowledge/specs/1.4.0/notes-sync/prd.md", ""},
+		{".ai/knowledge/specs/1.4.0/notes-sync/trd.md", ""},
+		{".ai/knowledge/specs/1.5.0/shop-cart/prd.md", ""},
+		{".ai/knowledge/specs/1.4.0/notes-sync/new.md", ""},
+		{".ai/knowledge/specs/1.3.0/todo/prd.md", specReason},
+		{".ai/knowledge/specs/1.3.0/todo/trd.md", specReason},
+		{".ai/knowledge/specs/README.md", specReason},
+		{".ai/knowledge/specs/1.3.0/todo", specReason},
+		{".ai/knowledge/specs", specReason},
+		{".ai/knowledge/specs/1.4.0/notes-sync/old.md", specReason},
+		{"{clone}/specs/1.4.0/notes-sync/prd.md", ""},
+		{"{clone}/specs/1.3.0/todo/prd.md", specReason},
+		{"{project}/.ai/knowledge/specs/1.3.0/todo/prd.md", specReason},
+		{"kb/specs/1.3.0/todo/prd.md", specReason},
+		{"kb/specs/1.4.0/notes-sync/prd.md", ""},
+		{".ai/knowledge/specs/1.4.0/notes-sync/../../1.3.0/todo/prd.md", specReason},
+		{".ai/knowledge/inbox/../specs/1.4.0/notes-sync/prd.md", ""},
+		{".ai/knowledge/specs/../features/share.md", knowledgeReason},
+		{"docs/alias/../specs/1.3.0/todo/trd.md", specReason},
+		{"docs/alias/../specs/1.4.0/notes-sync/trd.md", ""},
+		{".ai/knowledge/inbox/x.md", ""},
+		{".ai/knowledge/features/share.md", knowledgeReason},
+	}
+	for _, c := range cases {
+		for _, tool := range []string{"Write", "Edit"} {
+			got, reason := f.run(t, writePayload(tool, c.path, ""))
+			if got != (c.reason != "") || (got && !strings.Contains(reason, c.reason)) {
+				t.Errorf("%s %s: blocked %v (%s), want %q", tool, c.path, got, reason, c.reason)
+			}
+		}
+	}
+}
+
+func TestSpecPatchesAndShellWrites(t *testing.T) {
+	f := newKnowledgeFixture(t).withSpecs(t)
+	for patch, want := range map[string]bool{
+		"*** Begin Patch\n*** Add File: .ai/knowledge/specs/1.5.0/shop-cart/prd.md\n+x\n*** End Patch":     false,
+		"*** Begin Patch\n*** Update File: .ai/knowledge/specs/1.4.0/notes-sync/prd.md\n+x\n*** End Patch": false,
+		"*** Begin Patch\n*** Update File: .ai/knowledge/specs/1.3.0/todo/prd.md\n+x\n*** End Patch":       true,
+		"*** Begin Patch\n*** Delete File: kb/specs/1.3.0/todo/trd.md\n*** End Patch":                      true,
+	} {
+		got, reason := f.run(t, payloadJSON(map[string]any{"tool_name": "apply_patch", "tool_input": map[string]any{"command": patch}}))
+		if got != want {
+			t.Errorf("%q: blocked %v, want %v (%s)", patch, got, want, reason)
+		}
+	}
+	for command, want := range map[string]bool{
+		"echo x > .ai/knowledge/specs/1.5.0/shop-cart/prd.md":               false,
+		"echo x >> .ai/knowledge/specs/1.4.0/notes-sync/trd.md":             false,
+		"echo x >> .ai/knowledge/specs/1.3.0/todo/prd.md":                   true,
+		"sed -i 's/approved/review/' .ai/knowledge/specs/1.3.0/todo/prd.md": true,
+		"sed -i 's/a/b/' .ai/knowledge/specs/1.4.0/notes-sync/prd.md":       false,
+		"rm .ai/knowledge/specs/1.3.0/todo/trd.md":                          true,
+		"rm -rf .ai/knowledge/specs/1.3.0":                                  true,
+		"mv .ai/knowledge/specs/1.3.0/todo/prd.md /tmp/x":                   true,
+		"cp draft.md .ai/knowledge/specs/1.4.0/notes-sync/prd.md":           false,
+		"cd .ai/knowledge/specs/1.3.0/todo && echo x > prd.md":              true,
+		"cd .ai/knowledge/specs/1.4.0 && echo x > notes-sync/prd.md":        false,
+		"tee ~/.dashcrew/knowledge/notes/specs/1.3.0/todo/trd.md < x":       true,
+		"bash -c 'echo x > kb/specs/1.3.0/todo/prd.md'":                     true,
+		"dashcrew spec revise .ai/knowledge/specs/1.3.0/todo":               true,
+		"rtk dashcrew spec revise specs/1.3.0/todo":                         true,
+		"dashcrew spec lint .ai/knowledge/specs":                            false,
+		"dashcrew spec new shop-cart --release 1.5.0":                       false,
+		"mkdir -p .ai/knowledge/specs/1.5.0/shop-cart":                      false,
+		"cat .ai/knowledge/specs/1.3.0/todo/prd.md":                         false,
+		"echo x > .ai/knowledge/specs/1.4.0/notes-sync/old.md":              true,
+	} {
+		got, reason := f.run(t, bashPayload(command))
+		if got != want {
+			t.Errorf("%q: blocked %v, want %v (%s)", command, got, want, reason)
+		}
+		if got && strings.Contains(command, "specs/1.3.0") && !strings.Contains(command, "revise") && !strings.Contains(reason, specReason) {
+			t.Errorf("%q: reason %s", command, reason)
+		}
+	}
+	if _, reason := f.run(t, bashPayload("dashcrew spec revise .ai/knowledge/specs/1.3.0/todo")); !strings.Contains(reason, specReviseReason) {
+		t.Errorf("revise reason: %s", reason)
+	}
+}
+
+func TestSpecReasonNamesRevise(t *testing.T) {
+	if !strings.Contains(specReason, "dashcrew spec revise") {
+		t.Error(specReason)
+	}
+}
+
+// TestPatchMovesCheckTheSource pins that a moved file is removed from its old path: the source passes the same write
+// rules as the destination, so a protected page or spec cannot be moved into the inbox.
+func TestPatchMovesCheckTheSource(t *testing.T) {
+	f := newKnowledgeFixture(t).withSpecs(t)
+	for _, c := range []struct {
+		patch, reason string
+	}{
+		{"*** Begin Patch\n*** Update File: .ai/knowledge/specs/1.3.0/todo/prd.md\n*** Move to: .ai/knowledge/inbox/prd.md\n+x\n*** End Patch", specReason},
+		{"*** Begin Patch\r\n*** Update File: .ai/knowledge/specs/1.3.0/todo/prd.md\r\n*** Move to: .ai/knowledge/inbox/prd.md\r\n+x\r\n*** End Patch", specReason},
+		{"*** Begin Patch\n*** Update File: .ai/knowledge/features/share.md\n*** Move to: .ai/knowledge/inbox/share.md\n+x\n*** End Patch", knowledgeReason},
+		{"*** Begin Patch\n*** Update File: kb/features/share.md\n*** Move to: lib/share.md\n*** End Patch", knowledgeReason},
+		{"*** Begin Patch\n*** Update File: .ai/knowledge/inbox/a.md\n*** Move to: .ai/knowledge/inbox/b.md\n+x\n*** End Patch", ""},
+		{"*** Begin Patch\n*** Update File: .ai/knowledge/inbox/a.md\n*** Move to: .ai/knowledge/inbox/sub/a.md\n*** End Patch", ""},
+		{"*** Begin Patch\n*** Update File: .ai/knowledge/specs/1.4.0/notes-sync/prd.md\n*** Move to: .ai/knowledge/specs/1.4.0/notes-sync/old-prd.md\n*** End Patch", ""},
+		{"*** Begin Patch\n*** Update File: lib/a.md\n*** Move to: lib/b.md\n+x\n*** End Patch", ""},
+		{"*** Begin Patch\n*** Delete File: .ai/knowledge/specs/1.3.0/todo/prd.md\n*** End Patch", specReason},
+		{"*** Begin Patch\n*** Delete File: .ai/knowledge/specs/1.4.0/notes-sync/prd.md\n*** End Patch", ""},
+		{"*** Begin Patch\n*** Delete File: .ai/knowledge/inbox/x.md\n*** End Patch", ""},
+	} {
+		got, reason := f.run(t, payloadJSON(map[string]any{"tool_name": "apply_patch", "tool_input": map[string]any{"command": c.patch}}))
+		if got != (c.reason != "") || (got && !strings.Contains(reason, c.reason)) {
+			t.Errorf("%q: blocked %v (%s), want %q", c.patch, got, reason, c.reason)
+		}
+	}
+	if got, reason := f.run(t, payloadJSON(map[string]any{"tool_name": "apply_patch", "agent_type": "planner",
+		"tool_input": map[string]any{"command": "*** Begin Patch\n*** Add File: lib/a.md\n*** Move to: .ai/plans/a.md\n+x\n*** End Patch"}})); !got || !strings.Contains(reason, "may only write under .ai/plans/") {
+		t.Errorf("a planner moving a file out of lib/: %v %s", got, reason)
 	}
 }

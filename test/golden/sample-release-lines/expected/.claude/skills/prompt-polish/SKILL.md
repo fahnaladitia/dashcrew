@@ -31,6 +31,7 @@ Turn the request into the step 0 block in AGENTS.md, print it in chat, and wait 
 - `Success criteria`: when the task has none, apply `acceptance-criteria`. Map each criterion to the test type that proves it, or `manual`.
 - `Branch`: 3 names per the branching rules, and the base question.
 - `Release`: the version the task ships in, or `none`; ask it with the base. A fix on an older line is ported later with `port`.
+- `Spec`: the spec the task builds, `specs/<release>/<feature>@rev<n>` with the current `rev` from `.ai/knowledge/specs/`, or `none`. With a spec, the success criteria are the ACs this task covers, by ID (`AC-2 <criterion> -> <test type>`); never renumber or add one.
 
 ## Confirmation
 

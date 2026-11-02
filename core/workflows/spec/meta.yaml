@@ -1,0 +1,2 @@
+description: Write the PRD and TRD of a large feature in the knowledge repo before tasks start - one round of questions, criteria and decisions with IDs, lint, then a pull request the team approves by merging.
+argument_hint: "<feature> [--release <version>]"

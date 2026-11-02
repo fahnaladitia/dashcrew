@@ -1,6 +1,8 @@
 package guard
 
 import (
+	"errors"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -9,15 +11,24 @@ import (
 
 	"github.com/fahnaladitia/dashcrew/internal/guard/shell"
 	"github.com/fahnaladitia/dashcrew/internal/knowledge"
+	"github.com/fahnaladitia/dashcrew/internal/spec"
 )
 
-// The rules below are Go only (K2). Write paths are resolved to their real path, following symbolic links over
+// The rules below are Go only (K2, P7). Write paths are resolved to their real path, following symbolic links over
 // the part of the path that exists, before the write rules run. A write whose real path is inside the knowledge
-// clone is allowed only under its inbox, for every agent and capability; reading is never blocked.
+// clone is allowed only under its inbox, and under specs/ to a file that does not exist yet or whose front matter
+// status is draft or review, for every agent and capability; reading is never blocked.
 
-// knowledgeReason is the block reason of a write into the knowledge clone outside its inbox.
+// knowledgeReason is the block reason of a write into the knowledge clone outside its inbox and specs.
 const knowledgeReason = "The knowledge clone is read-only for agents except inbox/. " +
 	"Write a proposal under .ai/knowledge/inbox/ instead; pages change through review."
+
+// specReason is the block reason of a write under specs/ to a file that exists and is not draft or review.
+const specReason = "Under specs/, agents write only new files and files whose status is draft or review. " +
+	"An approved or superseded spec changes after a member runs dashcrew spec revise <folder>."
+
+// specReviseReason is the block reason of an agent running `dashcrew spec revise`.
+const specReviseReason = "dashcrew spec revise reopens an approved spec; a member runs it. Ask the user."
 
 // maxLinks is how many symbolic links realPath follows before it treats the rest of the path as plain names.
 const maxLinks = 40
@@ -141,35 +152,64 @@ func within(parent, child string) (string, bool) {
 }
 
 // expand is a path the agent wrote: `~/`, `$HOME/` and `${HOME}/` become the home folder, a relative path is
-// joined to dir.
+// joined to dir. Nothing is cleaned, so realPath still walks a `..` after a link as the kernel does.
 func (k *knowledgeRoots) expand(path, dir string) string {
+	path = filepath.FromSlash(path)
 	if k.home != "" {
 		for _, prefix := range []string{"~/", "$HOME/", "${HOME}/"} {
-			if rest, ok := strings.CutPrefix(path, prefix); ok {
-				path = filepath.Join(k.home, rest)
-				break
+			if rest, ok := strings.CutPrefix(path, filepath.FromSlash(prefix)); ok {
+				return k.home + string(filepath.Separator) + rest
 			}
 		}
 	}
-	return absolutePath(filepath.FromSlash(path), dir)
+	if filepath.IsAbs(path) {
+		return path
+	}
+	return dir + string(filepath.Separator) + path
 }
 
-// blocks is true when path, resolved from dir as the kernel would or after cleaning `..` first as some tools do,
-// is inside a knowledge root but is neither its inbox folder nor inside it.
-func (k *knowledgeRoots) blocks(path, dir string) bool {
+// blocks is the reason a write to path is refused, empty when it is allowed. path is resolved from dir as the
+// kernel would, and after cleaning `..` first as some tools do; inside a knowledge root it is allowed only in the
+// inbox, and under specs/ where specWritable says so.
+func (k *knowledgeRoots) blocks(path, dir string) string {
 	if len(k.roots) == 0 || path == "" {
-		return false
+		return ""
 	}
 	full := k.expand(path, dir)
 	for _, candidate := range []string{realPath(full), realPath(filepath.Clean(full))} {
 		for _, root := range k.roots {
 			relative, inside := within(root, candidate)
-			if inside && relative != knowledge.InboxDir && !strings.HasPrefix(relative, knowledge.InboxDir+"/") {
-				return true
+			switch {
+			case !inside || relative == knowledge.InboxDir || strings.HasPrefix(relative, knowledge.InboxDir+"/"):
+			case relative == spec.Dir || strings.HasPrefix(relative, spec.Dir+"/"):
+				if !specWritable(candidate) {
+					return specReason
+				}
+			default:
+				return knowledgeReason
 			}
 		}
 	}
-	return false
+	return ""
+}
+
+// specWritable is true for a path that does not exist yet, or a file whose front matter status, read from its first
+// 2 KB, is draft or review. A folder that exists is not writable: a command on it reaches every file inside.
+func specWritable(path string) bool {
+	file, err := os.Open(path)
+	if errors.Is(err, fs.ErrNotExist) {
+		return true
+	}
+	if err != nil {
+		return false
+	}
+	defer file.Close()
+	buffer := make([]byte, 2048)
+	n, err := io.ReadFull(file, buffer)
+	if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) && !errors.Is(err, io.EOF) {
+		return false
+	}
+	return spec.Writable(spec.StatusOf(buffer[:n]))
 }
 
 // appPath is the write path as the text rules read it, after resolving links: relative to the real working folder
@@ -195,9 +235,12 @@ func (k *knowledgeRoots) shellWrites(script string, argv []string) Decision {
 		collectArgv(argv, 0, &targets, &dirs, k)
 	}
 	for _, target := range targets {
+		if target == specReviseReason {
+			return Block(specReviseReason)
+		}
 		for _, dir := range dirs {
-			if k.blocks(target, dir) {
-				return Block(knowledgeReason)
+			if reason := k.blocks(target, dir); reason != "" {
+				return Block(reason)
 			}
 		}
 	}
@@ -228,6 +271,9 @@ func collectArgv(argv []string, depth int, targets, dirs *[]string, k *knowledge
 			}
 		}
 		*targets = append(*targets, commandWrites(program, inner.argv[1:])...)
+		if program == "dashcrew" && len(inner.argv) > 2 && inner.argv[1] == "spec" && inner.argv[2] == "revise" {
+			*targets = append(*targets, specReviseReason)
+		}
 	}
 	for _, script := range inner.scripts {
 		collectScript(script, depth+1, targets, dirs, k)

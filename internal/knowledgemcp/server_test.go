@@ -232,3 +232,38 @@ func TestNewRefusesAMissingClone(t *testing.T) {
 		t.Error("missing clone accepted")
 	}
 }
+
+func TestKnowledgeSearchGivesTheKindAndFiltersByIt(t *testing.T) {
+	clone, project := fixture(t)
+	write(t, clone, "specs/1.4.0/share-expiry/prd.md", "---\ntitle: Share expiry\nfeature: share-expiry\nstatus: approved\nrev: 1\n"+
+		"repos: [notes-app]\n---\n\n- AC-1 Given a share link older than a week, when it opens, then it says the link expired.\n")
+	session := connect(t, clone, project)
+	var out SearchOutput
+	call(t, session, "knowledge_search", map[string]any{"query": "share link expired week"}, &out)
+	kinds := map[string]string{}
+	for _, result := range out.Results {
+		kinds[result.Page] = result.Kind
+	}
+	if kinds["features/share.md"] != "feature" || kinds["specs/1.4.0/share-expiry/prd.md"] != "spec" {
+		t.Errorf("kinds %v", kinds)
+	}
+	text, _ := call(t, session, "knowledge_search", map[string]any{"query": "share link expired week", "kind": "spec"}, &out)
+	if len(out.Results) != 1 || out.Results[0].Page != "specs/1.4.0/share-expiry/prd.md" || !strings.Contains(text, "[spec]") {
+		t.Errorf("spec filter %+v %q", out.Results, text)
+	}
+	call(t, session, "knowledge_search", map[string]any{"query": "share", "kind": "repo"}, &out)
+	if len(out.Results) != 0 {
+		t.Errorf("repo filter %+v", out.Results)
+	}
+	if text, isError := call(t, session, "knowledge_search", map[string]any{"query": "share", "kind": "page"}, nil); !isError || !strings.Contains(text, "spec, feature, repo or other") {
+		t.Errorf("unknown kind: %v %q", isError, text)
+	}
+	for tool, err := range session.Tools(context.Background(), nil) {
+		if err != nil {
+			t.Fatal(err)
+		}
+		if tool.Name == "knowledge_search" && !strings.Contains(tool.Description, "kind") {
+			t.Errorf("description %q", tool.Description)
+		}
+	}
+}

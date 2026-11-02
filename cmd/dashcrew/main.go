@@ -131,7 +131,8 @@ func newRoot(cli cliIO) *command {
 		add(checkCommand(cli)).
 		add(commitCommand(cli)).
 		add(verifyCommand(cli)).
-		add(releaseCommand(cli))
+		add(releaseCommand(cli)).
+		add(specCommand(cli))
 	return root
 }
 
@@ -667,8 +668,8 @@ func knowledgeCommand(cli cliIO) *command {
 		return 0, nil
 	}
 
-	doctorCmd := newCommand("doctor", "Report stale code pointers, proposals waiting over 14 days and pages not verified in 180 days.\n"+
-		"Writes nothing; exits 1 when a code pointer's path is gone from its repo.")
+	doctorCmd := newCommand("doctor", "Report stale code pointers, proposals waiting over 14 days, pages not verified in 180 days and\n"+
+		"spec lint problems. Writes nothing; exits 1 when a code pointer's path is gone from its repo or a spec has a problem.")
 	doctorCmd.option("project", "p", "Project root; its repo and the sibling folders resolve code pointers.", ptr("."))
 	doctorCmd.option("clone", "", "Knowledge clone to check; defaults to the profile's ~/.dashcrew/knowledge/<name>.", nil)
 	doctorCmd.run = func(r *results) (int, error) {
@@ -700,13 +701,22 @@ func knowledgeCommand(cli cliIO) *command {
 				line("page", page.Path, fmt.Sprintf("newest verified marker %s, %d days ago", page.Newest, page.Days))
 			}
 		}
+		specs, err := specsOf(clone)
+		if err != nil {
+			return 0, &exitError{1, err.Error()}
+		}
+		specProblems := printSpecProblems(specs, func(where, message string) { line("spec", where, message) })
 		stale := "none stale"
 		if len(report.Missing) > 0 {
 			stale = strconv.Itoa(len(report.Missing)) + " stale"
 		}
-		cli.out(fmt.Sprintf("%s checked, %s; %s; %s", count(report.Checked, "pointer"), stale,
-			count(len(report.OldProposals), "old proposal"), count(len(report.Unverified), "unverified page")))
-		if len(report.Missing) > 0 {
+		summary := fmt.Sprintf("%s checked, %s; %s; %s", count(report.Checked, "pointer"), stale,
+			count(len(report.OldProposals), "old proposal"), count(len(report.Unverified), "unverified page"))
+		if len(specs) > 0 {
+			summary += fmt.Sprintf("; %s checked, %s", count(len(specs), "spec file"), count(specProblems, "spec problem"))
+		}
+		cli.out(summary)
+		if len(report.Missing) > 0 || specProblems > 0 {
 			return 1, nil
 		}
 		return 0, nil

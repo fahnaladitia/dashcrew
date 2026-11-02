@@ -401,10 +401,51 @@ func TestKnowledgeAddsTheProposalBranchToLearnOnly(t *testing.T) {
 			t.Errorf("continuous-learning lacks %q", want)
 		}
 	}
-	changes := map[string]bool{"workflow/learn": true, "skill/continuous-learning": true, "agents_md": true, "role/explorer": true, "workflow/plan": true}
+	changes := map[string]bool{"workflow/learn": true, "skill/continuous-learning": true, "agents_md": true, "role/explorer": true, "workflow/plan": true,
+		"role/reviewer": true, "skill/branching": true, "skill/prompt-polish": true}
+	added := map[string]bool{"workflow/spec": true, "trd": true}
 	for _, target := range on {
+		if !targetNames(off)[target.Target] {
+			if !added[target.Target] {
+				t.Errorf("%s added with knowledge set", target.Target)
+			}
+			continue
+		}
 		if !changes[target.Target] && target.Content != targetContent(t, off, target.Target) {
 			t.Errorf("%s changed with knowledge set", target.Target)
+		}
+	}
+}
+
+func TestKnowledgeAddsTheSpecWorkflowWithThePlatformTrdSections(t *testing.T) {
+	const knowledge = "knowledge: { repo: git@example.com:team/notes-knowledge.git }\n"
+	const other = "platform: other\nplatform_config: { detect: [go.mod], commands: { analyze: go vet, test: go test, test_scoped: go test, deps: go mod download } }\n"
+	generic := []string{"- `Contracts`: `C-<n>` per endpoint", "- `Rollout order`:", "`Decisions` (`D-<n>`"}
+	flutter := []string{"- `State`:", "- `Routing`:", "- `QA identifiers`:"}
+	for _, platform := range []string{"", other} {
+		off := renderShipped(t, "toolkit: 1\nagents: [claude-code]\n"+platform)
+		on := renderShipped(t, "toolkit: 1\nagents: [claude-code]\n"+platform+knowledge)
+		if targetNames(off)["workflow/spec"] || targetNames(off)["trd"] {
+			t.Errorf("%q: spec without knowledge", platform)
+		}
+		if strings.Contains(targetContent(t, off, "agents_md"), "`spec`") || !strings.Contains(targetContent(t, on, "agents_md"), "`build-fix`, `spec`. Say") {
+			t.Errorf("%q: the closed workflow list", platform)
+		}
+		spec := targetContent(t, on, "workflow/spec")
+		if spec != strings.Replace(spec, "{{", "", 1) || !strings.Contains(spec, "in these sections:\n\n- `Impact`") {
+			t.Errorf("%q: sections not inserted:\n%s", platform, spec)
+		}
+		for _, want := range append(generic, "dashcrew spec new <feature>", "dashcrew spec lint", "dashcrew spec revise", "`acceptance-criteria`",
+			"`feature-architecture`", "~~AC-3~~ dropped: <why>", "owner: <role>", "git -C .ai/knowledge push -u origin spec-<feature>",
+			"Approval is its merge, with `status: approved`") {
+			if !strings.Contains(spec, want) {
+				t.Errorf("%q: spec lacks %q", platform, want)
+			}
+		}
+		for _, want := range flutter {
+			if strings.Contains(spec, want) != (platform == "") {
+				t.Errorf("%q: Flutter section %q present %v", platform, want, platform != "")
+			}
 		}
 	}
 }
@@ -415,7 +456,7 @@ func TestKnowledgeAddsALineToAgentsMdExplorerAndPlanOnlyWhenSet(t *testing.T) {
 		off := renderShipped(t, profile)
 		on := renderShipped(t, profile+"knowledge: { repo: git@example.com:team/notes-knowledge.git }\n")
 		wants := map[string][]string{
-			"agents_md":     {"- Read `.ai/memory` (never rewrite it) and `.ai/knowledge` before planning; verify its code pointers before use.\n"},
+			"agents_md":     {"- Read `.ai/memory` (never rewrite) and `.ai/knowledge`; check pointers.\n"},
 			"role/explorer": {"Before sweeping code, search `.ai/knowledge`", "name the pages you used", "Knowledge: <pages used, or none>"},
 			"workflow/plan": {"Search `.ai/knowledge` for the feature before the code.", "names every knowledge page the plan relied on"},
 		}
@@ -436,14 +477,63 @@ func TestKnowledgeAddsALineToAgentsMdExplorerAndPlanOnlyWhenSet(t *testing.T) {
 	}
 }
 
+// TestKnowledgeTiesTasksToTheirSpec pins the P7 S3 text: the step 0 Spec line, its record in the branch config, the
+// ACs as criteria, the plan's Spec section with declared departures, and the reviewer's checks; none without knowledge.
+func TestKnowledgeTiesTasksToTheirSpec(t *testing.T) {
+	const knowledge = "knowledge: { repo: git@example.com:team/notes-knowledge.git }\n"
+	const releaseLines = "project: { release_lines: { main: develop, release: 'release/(?P<version>[0-9.]+)' } }\n"
+	for _, platform := range []string{"", "platform: other\nplatform_config: { detect: [x], commands: { analyze: a, test: t, test_scoped: s, deps: d } }\n"} {
+		profile := "toolkit: 1\nagents: [claude-code]\n" + platform
+		off, on := renderShipped(t, profile), renderShipped(t, profile+knowledge)
+		withLines := renderShipped(t, profile+knowledge+releaseLines)
+		checks := []struct{ target, text string }{
+			{"agents_md", "Branch:           1) <name>  2) <name>  3) <name>   base: <ask>\nSpec:             specs/<release>/<feature>@rev<n> | none\n```"},
+			{"skill/prompt-polish", "- `Spec`: the spec the task builds, `specs/<release>/<feature>@rev<n>`"},
+			{"skill/prompt-polish", "the success criteria are the ACs this task covers, by ID"},
+			{"skill/branching", "\n7. With a spec, record it: `git config branch.<name>.dashcrew-spec specs/<release>/<feature>@rev<n>`."},
+			{"workflow/plan", "### Spec\n"},
+			{"workflow/plan", "`departs from D-n: <what and why>`"},
+			{"workflow/plan", "makes the verdict NO-GO"},
+			{"workflow/plan", "needs a `spec revise` pull request on the knowledge repo, opened by a member; the summary names it as follow-up."},
+			{"role/reviewer", "the step 0 success criteria and `Spec:`, the plan path"},
+			{"role/reviewer", "- Spec: with a step 0 `Spec:`, the plan names the spec and revision"},
+			{"role/reviewer", "that the plan does not declare as a departure is HIGH."},
+			{"workflow/learn", "propose its `features/<slug>.md` page the same way, through the inbox"},
+			{"workflow/learn", "marked `superseded` only when a newer spec replaces it"},
+		}
+		for _, c := range checks {
+			if strings.Contains(targetContent(t, off, c.target), c.text) {
+				t.Errorf("%q %s without knowledge holds %q", platform, c.target, c.text)
+			}
+			if !strings.Contains(targetContent(t, on, c.target), c.text) {
+				t.Errorf("%q %s with knowledge lacks %q", platform, c.target, c.text)
+			}
+		}
+		for _, target := range []string{"agents_md", "role/reviewer", "workflow/plan", "skill/branching", "skill/prompt-polish"} {
+			if strings.Contains(targetContent(t, off, target), "dashcrew-spec") || strings.Contains(targetContent(t, off, target), "Spec:") {
+				t.Errorf("%q %s mentions a spec without knowledge", platform, target)
+			}
+		}
+		if branching := targetContent(t, withLines, "skill/branching"); !strings.Contains(branching, "\n8. With a spec, record it:") {
+			t.Errorf("%q: with release lines the spec step is 8:\n%s", platform, branching)
+		}
+		if agentsMd := targetContent(t, on, "agents_md"); strings.Contains(agentsMd, "`spec-driven-development`") {
+			t.Errorf("%q: spec-driven-development is listed next to the spec workflow", platform)
+		}
+		if !strings.Contains(targetContent(t, off, "agents_md"), "`spec-driven-development`") {
+			t.Errorf("%q: spec-driven-development is gone without knowledge", platform)
+		}
+	}
+}
+
 func TestReleaseTextRendersOnlyWithReleaseLines(t *testing.T) {
 	const releaseLines = "project: { release_lines: { main: develop, release: 'release/(?P<version>[0-9.]+)' } }\n"
 	for _, platform := range []string{"", "platform: other\nplatform_config: { detect: [x], commands: { analyze: a, test: t, test_scoped: s, deps: d } }\n"} {
 		plain := renderShipped(t, "toolkit: 1\nagents: [claude-code]\n"+platform+"knowledge: { repo: x }\n")
 		lines := renderShipped(t, "toolkit: 1\nagents: [claude-code]\n"+platform+"knowledge: { repo: x }\n"+releaseLines)
 		checks := []struct{ target, text string }{
-			{"agents_md", "Release:          <version> | none\n```"},
-			{"agents_md", "`build-fix`, `port`. Say"},
+			{"agents_md", "Release:          <version> | none\nSpec:"},
+			{"agents_md", "`build-fix`, `port`, `spec`. Say"},
 			{"agents_md", "`audit` (read-only), `port` and `worktree` sit outside the chain."},
 			{"skill/branching", "7. With a release, record it: `git config branch.<name>.dashcrew-release <version>`."},
 			{"skill/prompt-polish", "- `Release`: the version the task ships in"},

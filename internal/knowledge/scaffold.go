@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/fahnaladitia/dashcrew/internal/spec"
 )
 
 // ErrNotEmpty is returned by Init for a folder that already holds something.
@@ -23,7 +25,8 @@ dashcrew links a local clone of this repo into each project as ` + "`.ai/knowled
 - ` + "`features/<slug>.md`" + `: one feature: purpose, entry points per repo, state, endpoints, decisions and why, gotchas.
 - ` + "`repos/<repo>.md`" + `: facts about one repo: setup, conventions not written elsewhere, traps.
 - ` + "`inbox/<date>-<slug>.md`" + `: proposals from task retros, waiting for review.
-- ` + "`templates/page.md`" + `: the page template.
+- ` + "`specs/<release>/<feature>/prd.md` and `trd.md`" + `: the PRD and TRD of a large feature; ` + "`dashcrew spec new`" + ` starts one.
+- ` + "`templates/`" + `: the page, PRD and TRD templates.
 
 ## Page format
 
@@ -33,8 +36,11 @@ dashcrew links a local clone of this repo into each project as ` + "`.ai/knowled
 
 ## Rules
 
-- Agents write only under ` + "`inbox/`" + `; the dashcrew guard blocks every other write into the clone.
+- Agents write only under ` + "`inbox/`" + `, and under ` + "`specs/`" + ` to new files and files whose status is draft or review;
+  the dashcrew guard blocks every other write into the clone.
 - Pages in ` + "`features/` and `repos/`" + ` change through review and a pull request.
+- A spec is approved by the merged pull request that sets ` + "`status: approved`" + `. It changes again only after a member
+  runs ` + "`dashcrew spec revise`" + `.
 
 ## Pages
 
@@ -72,7 +78,10 @@ var scaffold = []struct{ path, content string }{
 	{"features/.gitkeep", ""},
 	{"inbox/.gitkeep", ""},
 	{"repos/.gitkeep", ""},
+	{spec.Dir + "/.gitkeep", ""},
 	{"templates/page.md", pageTemplate},
+	{spec.Templates[0].Path, spec.Templates[0].Content},
+	{spec.Templates[1].Path, spec.Templates[1].Content},
 }
 
 // Init writes a new knowledge repo layout into dir, which must be missing or empty; it returns the files written,

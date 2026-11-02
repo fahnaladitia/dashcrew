@@ -1,0 +1,62 @@
+# spec revise
+
+=== step 1: dashcrew "help" "spec" "revise"
+exit: 0
+stdout:
+| Set an approved spec back to review and raise rev in prd.md and trd.md, so agents may edit it again.
+| A member runs it; it prints the git commands for the pull request and never runs them.
+| 
+| Usage: dashcrew spec revise <path>
+| -h, --help    Print this usage information.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 2: dashcrew "spec" "revise" "../home/.dashcrew/knowledge/notes/specs/1.4.0/notes-sync"
+exit: 0
+stdout:
+| revised specs/1.4.0/notes-sync/prd.md: approved rev 1 -> review rev 2
+| revised specs/1.4.0/notes-sync/trd.md: approved rev 1 -> review rev 2
+| next: commit on a branch and open a pull request; its merge with status: approved approves rev 2:
+|   git -C <root>/home/.dashcrew/knowledge/notes checkout -b spec-revise-notes-sync-rev2
+|   git -C <root>/home/.dashcrew/knowledge/notes add specs/1.4.0/notes-sync
+|   git -C <root>/home/.dashcrew/knowledge/notes commit -m "spec: revise 1.4.0/notes-sync to rev 2"
+|   git -C <root>/home/.dashcrew/knowledge/notes push -u origin spec-revise-notes-sync-rev2
+stderr: (empty)
+files:
+~ home/.dashcrew/knowledge/notes/specs/1.4.0/notes-sync/prd.md  -rw-r--r-- sha256:e75e53e058c02ec2
+~ home/.dashcrew/knowledge/notes/specs/1.4.0/notes-sync/trd.md  -rw-r--r-- sha256:90a31596a04fb88c
+
+=== step 3: dashcrew "spec" "lint" "--against" "main"
+exit: 0
+stdout:
+| 2 spec files checked, no problems
+stderr: (empty)
+files: (unchanged)
+
+=== step 4: dashcrew "spec" "revise" "../home/.dashcrew/knowledge/notes/specs/1.4.0/notes-sync/prd.md"
+exit: 1
+stdout: (empty)
+stderr:
+| specs/1.4.0/notes-sync/prd.md is review, not approved; agents and members edit it directly
+files: (unchanged)
+
+=== step 5: dashcrew "spec" "revise" "../home/.dashcrew/knowledge/notes/features"
+exit: 1
+stdout: (empty)
+stderr:
+| ../home/.dashcrew/knowledge/notes/features is not a spec folder under specs/
+files: (unchanged)
+
+=== step 6: dashcrew "spec" "revise"
+exit: 64
+stdout: (empty)
+stderr:
+| Pass the spec folder or one of its files.
+| 
+| Usage: dashcrew spec revise <path>
+| -h, --help    Print this usage information.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)

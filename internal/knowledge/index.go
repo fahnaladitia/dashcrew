@@ -68,6 +68,41 @@ func Pages(clone string) ([]IndexedPage, error) {
 	return out, nil
 }
 
+// SearchPages are Pages and every `*.md` file under specs/ (the PRD and TRD of each spec), sorted by path: what
+// `knowledge serve` searches.
+func SearchPages(clone string) ([]IndexedPage, error) {
+	out, err := Pages(clone)
+	if err != nil {
+		return nil, err
+	}
+	err = filepath.WalkDir(filepath.Join(clone, "specs"), func(file string, entry fs.DirEntry, err error) error {
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil
+		}
+		if err != nil || entry.IsDir() || !strings.HasSuffix(entry.Name(), ".md") {
+			return err
+		}
+		data, err := os.ReadFile(file)
+		if err != nil {
+			return err
+		}
+		relative, err := filepath.Rel(clone, file)
+		if err != nil {
+			return err
+		}
+		page := Parse(string(data))
+		path := filepath.ToSlash(relative)
+		title := page.Title
+		if title == "" {
+			title = path
+		}
+		out = append(out, IndexedPage{Path: path, Page: page, Title: title})
+		return nil
+	})
+	sort.Slice(out, func(i, j int) bool { return out[i].Path < out[j].Path })
+	return out, err
+}
+
 // NewestVerified is the latest date among the page's verified markers; empty when it has none.
 func NewestVerified(page Page) string {
 	newest := ""

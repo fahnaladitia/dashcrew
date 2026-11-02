@@ -1,6 +1,10 @@
 package knowledge
 
 import (
+	"os"
+	"path/filepath"
+	"reflect"
+	"sort"
 	"strings"
 	"testing"
 )
@@ -135,4 +139,72 @@ func testPage(t *testing.T, path, text string) IndexedPage {
 	t.Helper()
 	parsed := Parse(text)
 	return IndexedPage{Path: path, Page: parsed, Title: parsed.Title}
+}
+
+func TestKindOfIsTheFirstFolder(t *testing.T) {
+	for path, want := range map[string]string{
+		"specs/1.4.0/notes-sync/prd.md": KindSpec, "features/share.md": KindFeature, "repos/notes-api.md": KindRepo,
+		"README.md": KindOther, "inbox/x.md": KindOther, "featuresx/y.md": KindOther,
+	} {
+		if got := KindOf(path); got != want {
+			t.Errorf("%s: %s", path, got)
+		}
+	}
+}
+
+func TestSearchPagesAddSpecFilesAndSearchFiltersByKind(t *testing.T) {
+	clone := t.TempDir()
+	for path, text := range map[string]string{
+		"features/sync.md":                 "---\ntitle: Notes sync\nrepos: [notes-app]\n---\n\nNotes sync across devices by cursor.\n",
+		"repos/notes-app.md":               "---\ntitle: notes-app\nrepos: [notes-app]\n---\n\nThe app syncs notes on start.\n",
+		"specs/1.4.0/notes-sync/prd.md":    "---\ntitle: Notes sync\nfeature: notes-sync\nstatus: approved\nrev: 2\nrepos: [notes-app]\n---\n\n- AC-1 Given two devices, when a note changes, then the other syncs it.\n",
+		"specs/1.4.0/notes-sync/trd.md":    "---\ntitle: Notes sync\nstatus: approved\nrev: 2\nrepos: [notes-api]\n---\n\n- D-1 Sync by cursor.\n",
+		"specs/1.4.0/notes-sync/notes.txt": "sync\n",
+		"inbox/2026-01-01-sync.md":         "sync proposal\n",
+	} {
+		file := filepath.Join(clone, filepath.FromSlash(path))
+		if err := os.MkdirAll(filepath.Dir(file), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(file, []byte(text), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	pages, err := SearchPages(clone)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var paths []string
+	for _, page := range pages {
+		paths = append(paths, page.Path)
+	}
+	if want := []string{"features/sync.md", "repos/notes-app.md", "specs/1.4.0/notes-sync/prd.md", "specs/1.4.0/notes-sync/trd.md"}; !reflect.DeepEqual(paths, want) {
+		t.Errorf("pages %v", paths)
+	}
+	index := NewSearchIndex(pages)
+	kinds := map[string]string{}
+	for _, hit := range index.Search("notes sync", "", 10) {
+		kinds[hit.Path] = hit.Kind
+	}
+	if want := map[string]string{"features/sync.md": KindFeature, "repos/notes-app.md": KindRepo,
+		"specs/1.4.0/notes-sync/prd.md": KindSpec, "specs/1.4.0/notes-sync/trd.md": KindSpec}; !reflect.DeepEqual(kinds, want) {
+		t.Errorf("kinds %v", kinds)
+	}
+	for kind, want := range map[string][]string{
+		KindSpec:    {"specs/1.4.0/notes-sync/prd.md", "specs/1.4.0/notes-sync/trd.md"},
+		KindFeature: {"features/sync.md"},
+		KindOther:   nil,
+	} {
+		var got []string
+		for _, hit := range index.SearchKind("notes sync", "", kind, 10) {
+			got = append(got, hit.Path)
+		}
+		sort.Strings(got)
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("%s: %v", kind, got)
+		}
+	}
+	if got := index.SearchKind("sync", "notes-api", KindSpec, 10); len(got) != 1 || got[0].Path != "specs/1.4.0/notes-sync/trd.md" {
+		t.Errorf("repo and kind: %+v", got)
+	}
 }

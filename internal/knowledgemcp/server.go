@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -28,8 +29,9 @@ const (
 )
 
 const (
-	searchDescription = "Search the team's reviewed product knowledge (the pages of .ai/knowledge) for a feature, flow or question. " +
-		"Ranked by BM25 over page title, headings and body; returns each page path, title, best matching snippet and score. " +
+	searchDescription = "Search the team's reviewed product knowledge (the pages and specs of .ai/knowledge) for a feature, flow or question. " +
+		"Ranked by BM25 over page title, headings and body; returns each page path, kind (spec, feature, repo or other, from its folder), " +
+		"title, best matching snippet and score. Pass kind to keep one kind, such as spec for the PRD and TRD files under specs/. " +
 		"Pages can be out of date: open a hit with knowledge_read and check its code pointers with knowledge_sources before relying on it."
 	readDescription = "Read one knowledge page by the path knowledge_search returned, such as features/checkout.md. " +
 		"Returns the page text and its verified markers (repo@sha date), which say when each fact was last checked against the code. " +
@@ -44,6 +46,7 @@ const (
 type SearchInput struct {
 	Query string `json:"query" jsonschema:"words to look for, such as a feature name or a question"`
 	Repo  string `json:"repo,omitempty" jsonschema:"only pages whose front matter repos names this repo"`
+	Kind  string `json:"kind,omitempty" jsonschema:"only pages of this kind: spec, feature, repo or other"`
 	Limit int    `json:"limit,omitempty" jsonschema:"most pages to return, 1 to 20; default 5"`
 }
 
@@ -55,6 +58,7 @@ type SearchOutput struct {
 // SearchResult is one ranked page.
 type SearchResult struct {
 	Page    string  `json:"page"`
+	Kind    string  `json:"kind"`
 	Title   string  `json:"title"`
 	Snippet string  `json:"snippet"`
 	Score   float64 `json:"score"`
@@ -143,7 +147,7 @@ func (b *base) searchIndex() (*knowledge.SearchIndex, error) {
 	if b.index != nil && head == b.head {
 		return b.index, nil
 	}
-	pages, err := knowledge.Pages(b.clone)
+	pages, err := knowledge.SearchPages(b.clone)
 	if err != nil {
 		return nil, err
 	}
@@ -156,6 +160,10 @@ func (b *base) search(_ context.Context, _ *mcp.CallToolRequest, in SearchInput)
 	if strings.TrimSpace(in.Query) == "" {
 		return nil, out, errors.New("query is empty; give words to look for")
 	}
+	kind := strings.TrimSpace(in.Kind)
+	if kind != "" && !slices.Contains(knowledge.Kinds, kind) {
+		return nil, out, errors.New("kind " + kind + " is unknown; pass spec, feature, repo or other")
+	}
 	limit := in.Limit
 	if limit <= 0 {
 		limit = defaultLimit
@@ -166,9 +174,9 @@ func (b *base) search(_ context.Context, _ *mcp.CallToolRequest, in SearchInput)
 		return nil, out, err
 	}
 	var text strings.Builder
-	for i, hit := range index.Search(in.Query, strings.TrimSpace(in.Repo), limit) {
-		out.Results = append(out.Results, SearchResult{Page: hit.Path, Title: hit.Title, Snippet: hit.Snippet, Score: hit.Score})
-		fmt.Fprintf(&text, "%d. %s - %s (score %s)\n   %s\n", i+1, hit.Path, hit.Title, strconv.FormatFloat(hit.Score, 'f', -1, 64), hit.Snippet)
+	for i, hit := range index.SearchKind(in.Query, strings.TrimSpace(in.Repo), kind, limit) {
+		out.Results = append(out.Results, SearchResult{Page: hit.Path, Kind: hit.Kind, Title: hit.Title, Snippet: hit.Snippet, Score: hit.Score})
+		fmt.Fprintf(&text, "%d. [%s] %s - %s (score %s)\n   %s\n", i+1, hit.Kind, hit.Path, hit.Title, strconv.FormatFloat(hit.Score, 'f', -1, 64), hit.Snippet)
 	}
 	if len(out.Results) == 0 {
 		text.WriteString("No page matches; try other words, or read README.md in the knowledge clone for the index.\n")

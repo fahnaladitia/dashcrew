@@ -14,6 +14,7 @@ description: "Create a task branch that never tracks its base, and keep upstream
 5. `git branch --show-current` prints the new name.
 6. `git rev-parse --abbrev-ref @{u}` must fail, and `git status -sb` must print the branch name alone: no `...origin/...`, no `[ahead N]`.
 7. With a release, record it: `git config branch.<name>.dashcrew-release <version>`. It is local branch config, never committed; `sync` then keeps the toolkit at the line's version, and the plan goes to `.ai/plans/<version>/<task-slug>/`.
+8. With a spec, record it: `git config branch.<name>.dashcrew-spec specs/<release>/<feature>@rev<n>`. It is local branch config, never committed; `dashcrew spec status` and `doctor` compare it with the knowledge clone.
 
 ## Why no tracking
 

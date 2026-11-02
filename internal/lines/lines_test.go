@@ -273,3 +273,54 @@ func TestPreviousIsTheNewestOlderLineOrVersionTag(t *testing.T) {
 		t.Errorf("2.4.0 falls back to the branch point: %s", label)
 	}
 }
+
+func TestRecordSpecIsLocalBranchConfigNextToTheRelease(t *testing.T) {
+	app := fixture(t)
+	gitT(t, app, "checkout", "-q", "-b", "feat/with-spec", "develop")
+	if got := RecordedSpec(app, "feat/with-spec"); got != "" {
+		t.Errorf("before recording: %q", got)
+	}
+	if err := RecordSpec(app, "feat/with-spec", "specs/2.5.0/notes-sync@rev2"); err != nil {
+		t.Fatal(err)
+	}
+	if err := RecordRelease(app, "feat/with-spec", "2.5.0"); err != nil {
+		t.Fatal(err)
+	}
+	if got := gitT(t, app, "config", "branch.feat/with-spec.dashcrew-spec"); got != "specs/2.5.0/notes-sync@rev2" {
+		t.Errorf("config %q", got)
+	}
+	if got := RecordedSpec(app, "feat/with-spec"); got != "specs/2.5.0/notes-sync@rev2" {
+		t.Errorf("recorded %q", got)
+	}
+	if got := RecordedRelease(app, "feat/with-spec"); got != "2.5.0" {
+		t.Errorf("release %q", got)
+	}
+	if SpecConfigKey("feat/x") != "branch.feat/x.dashcrew-spec" {
+		t.Error(SpecConfigKey("feat/x"))
+	}
+}
+
+func TestOwnCommitsCountsWhatNoOtherBranchHolds(t *testing.T) {
+	app := fixture(t)
+	gitT(t, app, "checkout", "-q", "-b", "feat/own", "develop")
+	if got := OwnCommits(app, "feat/own"); got != 0 {
+		t.Errorf("fresh branch: %d", got)
+	}
+	commitFile(t, app, "own1.txt", "1\n")
+	commitFile(t, app, "own2.txt", "2\n")
+	if got := OwnCommits(app, "feat/own"); got != 2 {
+		t.Errorf("two commits: %d", got)
+	}
+	gitT(t, app, "push", "-q", "origin", "feat/own")
+	gitT(t, app, "fetch", "-q", "origin")
+	if got := OwnCommits(app, "feat/own"); got != 2 {
+		t.Errorf("after a push of the branch itself: %d", got)
+	}
+	gitT(t, app, "branch", "feat/copy", "feat/own")
+	if got := OwnCommits(app, "feat/own"); got != 0 {
+		t.Errorf("another branch holds them: %d", got)
+	}
+	if got := OwnCommits(app, "no/such-branch"); got != 0 {
+		t.Errorf("missing branch: %d", got)
+	}
+}

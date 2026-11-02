@@ -15,7 +15,8 @@ func TestInitWritesTheLayoutIntoANewFolder(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"README.md", "features/.gitkeep", "inbox/.gitkeep", "repos/.gitkeep", "templates/page.md"}
+	want := []string{"README.md", "features/.gitkeep", "inbox/.gitkeep", "repos/.gitkeep", "specs/.gitkeep", "templates/page.md",
+		"templates/prd.md", "templates/trd.md"}
 	if !reflect.DeepEqual(written, want) {
 		t.Errorf("written %v", written)
 	}
@@ -25,7 +26,7 @@ func TestInitWritesTheLayoutIntoANewFolder(t *testing.T) {
 		}
 	}
 	readme, _ := os.ReadFile(filepath.Join(dir, "README.md"))
-	for _, part := range []string{"features/", "repos/", "inbox/", markerShape, "<repo>:<path>:<line>"} {
+	for _, part := range []string{"features/", "repos/", "inbox/", "specs/", "dashcrew spec revise", markerShape, "<repo>:<path>:<line>"} {
 		if !strings.Contains(string(readme), part) {
 			t.Errorf("README.md lacks %q", part)
 		}

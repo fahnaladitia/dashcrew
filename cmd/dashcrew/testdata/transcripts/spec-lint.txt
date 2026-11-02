@@ -1,0 +1,107 @@
+# spec lint
+
+=== step 1: dashcrew "help" "spec" "lint"
+exit: 0
+stdout:
+| Check spec files: front matter, IDs (AC-n, D-n, C-n) and the open questions of an approved spec.
+| With --against, compare with a git ref: a vanished, renumbered or reused ID, and an approved file changed
+| without a rev increase. Exits 1 on any problem. Writes nothing.
+| 
+| Usage: dashcrew spec lint [<path>] [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml; finds the clone when no <path> is given.
+|                  (defaults to ".")
+|     --clone      Knowledge clone whose specs/ to check when no <path> is given; defaults to the profile's.
+|     --against    Git ref to compare each file with, such as origin/main.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 2: dashcrew "spec" "lint"
+exit: 0
+stdout:
+| 2 spec files checked, no problems
+stderr: (empty)
+files: (unchanged)
+
+=== step 3: dashcrew "spec" "lint" "--against" "main"
+(after the case's setup for this step)
+exit: 1
+stdout:
+| specs/1.4.0/notes-sync/prd.md: AC-3 is gone (it was on line 17 at main); keep it struck through: `~~AC-3~~ dropped: <why>`
+| specs/1.4.0/notes-sync/prd.md:6: the file was approved at main and changed without a rev increase; a member runs dashcrew spec revise first
+| specs/1.4.0/notes-sync/prd.md:16: AC-2 was dropped at main; a dropped ID is never reused, number a new one
+| specs/1.4.0/notes-sync/prd.md:17: AC-4 holds the text of AC-3 at main; IDs are never renumbered
+| 2 spec files checked, 4 problems
+stderr: (empty)
+files: (unchanged)
+
+=== step 4: dashcrew "spec" "lint" "../home/.dashcrew/knowledge/notes/specs/1.5.0"
+(after the case's setup for this step)
+exit: 1
+stdout:
+| specs/1.5.0/shop-cart/prd.md:1: front matter has no release
+| specs/1.5.0/shop-cart/prd.md:1: status done is not one of draft, review, approved, superseded
+| specs/1.5.0/shop-cart/prd.md:1: owners hold an email address; owners are roles, never people
+| specs/1.5.0/shop-cart/prd.md:11: AC-1 is defined twice (first on line 10)
+| specs/1.5.0/shop-cart/prd.md:12: AC IDs skip AC-3: a new spec numbers them from AC-1 without gaps
+| specs/1.5.0/shop-cart/prd.md:13: AC-2 is struck through without a reason; write `~~AC-2~~ dropped: <why>`
+| specs/1.5.0/shop-cart/trd.md:13: open question without an owner on an approved spec; end it with owner: <role>
+| 2 spec files checked, 7 problems
+stderr: (empty)
+files: (unchanged)
+
+=== step 5: dashcrew "spec" "lint" "../home/.dashcrew/knowledge/notes/specs/1.5.0/shop-cart/trd.md"
+exit: 1
+stdout:
+| specs/1.5.0/shop-cart/trd.md:13: open question without an owner on an approved spec; end it with owner: <role>
+| 1 spec file checked, 1 problem
+stderr: (empty)
+files: (unchanged)
+
+=== step 6: dashcrew "knowledge" "doctor"
+env: SOURCE_DATE_EPOCH=1772323200
+exit: 1
+stdout:
+| spec      specs/1.4.0/notes-sync/prd.md:17  AC IDs skip AC-3: a new spec numbers them from AC-1 without gaps
+| spec      specs/1.5.0/shop-cart/prd.md:1  front matter has no release
+| spec      specs/1.5.0/shop-cart/prd.md:1  status done is not one of draft, review, approved, superseded
+| spec      specs/1.5.0/shop-cart/prd.md:1  owners hold an email address; owners are roles, never people
+| spec      specs/1.5.0/shop-cart/prd.md:11  AC-1 is defined twice (first on line 10)
+| spec      specs/1.5.0/shop-cart/prd.md:12  AC IDs skip AC-3: a new spec numbers them from AC-1 without gaps
+| spec      specs/1.5.0/shop-cart/prd.md:13  AC-2 is struck through without a reason; write `~~AC-2~~ dropped: <why>`
+| spec      specs/1.5.0/shop-cart/trd.md:13  open question without an owner on an approved spec; end it with owner: <role>
+| no pointers checked, none stale; no old proposals; no unverified pages; 4 spec files checked, 8 spec problems
+stderr: (empty)
+files: (unchanged)
+
+=== step 7: dashcrew "spec" "lint" "--against" "nope"
+exit: 1
+stdout: (empty)
+stderr:
+| unknown git ref nope
+files: (unchanged)
+
+=== step 8: dashcrew "spec" "lint" "../missing"
+exit: 1
+stdout: (empty)
+stderr:
+| No spec file or folder at ../missing.
+files: (unchanged)
+
+=== step 9: dashcrew "spec" "lint" "a" "b"
+exit: 64
+stdout: (empty)
+stderr:
+| Pass at most one path: a spec file or a folder.
+| 
+| Usage: dashcrew spec lint [<path>] [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml; finds the clone when no <path> is given.
+|                  (defaults to ".")
+|     --clone      Knowledge clone whose specs/ to check when no <path> is given; defaults to the profile's.
+|     --against    Git ref to compare each file with, such as origin/main.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)

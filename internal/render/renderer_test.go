@@ -262,3 +262,24 @@ stack: { tracker: none }
 		t.Errorf("platform.name %v", name)
 	}
 }
+
+func TestTrdTargetIsAlsoTheTrdSectionsVariable(t *testing.T) {
+	c := newCatalog([]catalog.Fragment{
+		fragment("core/workflows/spec/10-spec.md", "Sections:\n\n{{trd_sections}}\n\nEnd.", target("workflow/spec")),
+		fragment("core/trd/10-sections.md", "- Impact", target("trd"), order(10)),
+		fragment("core/trd/20-more.md", "- Risks on {{platform.name}}", target("trd"), order(20)),
+	}, nil)
+
+	targets := renderAll(t, c, minimal)
+
+	if got := targets[0]; got.Target != "trd" || got.Content != "- Impact\n\n- Risks on flutter\n" {
+		t.Errorf("trd %+v", got)
+	}
+	if got := targets[1].Content; got != "Sections:\n\n- Impact\n\n- Risks on flutter\n\nEnd.\n" {
+		t.Errorf("workflow %q", got)
+	}
+	without := newCatalog([]catalog.Fragment{fragment("a.md", "[{{trd_sections}}]")}, nil)
+	if got := renderAll(t, without, minimal)[0].Content; got != "[]\n" {
+		t.Errorf("without trd fragments %q", got)
+	}
+}

@@ -1,6 +1,6 @@
 ---
 target: skill/prompt-polish
-rules: [step0.release, workflow.step0-idea-refine, workflow.step0-detect-category, workflow.step0-prompt-template-file, workflow.polish.scope-paths, workflow.polish.branch-proposals, workflow.step0-user-confirms-once, step0.questions-once, step0.skills-from-index, step0.skill-exclusions, step0.criteria-mapped]
+rules: [step0.release, step0.spec, workflow.step0-idea-refine, workflow.step0-detect-category, workflow.step0-prompt-template-file, workflow.polish.scope-paths, workflow.polish.branch-proposals, workflow.step0-user-confirms-once, step0.questions-once, step0.skills-from-index, step0.skill-exclusions, step0.criteria-mapped]
 ---
 # Prompt polish (step 0)
 
@@ -31,6 +31,9 @@ Turn the request into the step 0 block in AGENTS.md, print it in chat, and wait 
 {{#has_release_lines}}
 - `Release`: the version the task ships in, or `none`; ask it with the base. A fix on an older line is ported later with `port`.
 {{/has_release_lines}}
+{{#has_knowledge}}
+- `Spec`: the spec the task builds, `specs/<release>/<feature>@rev<n>` with the current `rev` from `.ai/knowledge/specs/`, or `none`. With a spec, the success criteria are the ACs this task covers, by ID (`AC-2 <criterion> -> <test type>`); never renumber or add one.
+{{/has_knowledge}}
 
 ## Confirmation
 

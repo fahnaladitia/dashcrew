@@ -411,6 +411,63 @@ func knowledgeStale(t *testing.T, s side) {
 	s.write(t, profileClone+"inbox/2026-02-25-new.md", "new\n")
 }
 
+// specProject is w on branch feat/notes-sync, which records release 1.4.0, with a knowledge profile and the
+// profile's clone laid out by knowledge init.
+func specProject(t *testing.T, s side) {
+	s.write(t, "w/.ai/project.yaml", knowledgeProfile)
+	s.git(t, "w", "init", "-q", "-b", "main")
+	s.git(t, "w", "add", "-A")
+	s.git(t, "w", "commit", "-q", "-m", "chore: init")
+	s.git(t, "w", "checkout", "-q", "-b", "feat/notes-sync")
+	s.git(t, "w", "config", "branch.feat/notes-sync.dashcrew-release", "1.4.0")
+	if _, err := knowledge.Init(s.path(profileClone)); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(s.path("kb"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// specFile is a spec file of the notes app with the given status, rev and body.
+func specFile(feature, status, rev, body string) string {
+	return "---\ntitle: Notes sync\nfeature: " + feature + "\nrelease: \"1.4.0\"\nstatus: " + status + "\nrev: " + rev +
+		"\nrepos: [notes-api, notes-app]\nowners: [product]\n---\n\n" + body
+}
+
+const (
+	specPRD = "# Notes sync: PRD\n\n## Acceptance criteria\n\n- AC-1 Given two devices, when a note changes on one, then the other shows it.\n" +
+		"- ~~AC-2~~ dropped: offline merge moves to a later release\n- AC-3 Given no network, when the user edits, then the edit is kept.\n"
+	specTRD = "# Notes sync: TRD\n\n## Contracts\n\n- C-1 `GET /notes/changes?since=<cursor>`: a page of changes.\n\n" +
+		"## Decisions\n\n- D-1 Sync by cursor, not by timestamp: clocks drift.\n\n## Open questions\n\n- How long are cursors kept? owner: backend\n"
+)
+
+// specClone is the profile's clone as a git repo on main with an approved spec of notes-sync committed.
+func specClone(t *testing.T, s side) {
+	s.write(t, "w/.ai/project.yaml", knowledgeProfile)
+	if _, err := knowledge.Init(s.path(profileClone)); err != nil {
+		t.Fatal(err)
+	}
+	s.write(t, profileClone+"specs/1.4.0/notes-sync/prd.md", specFile("notes-sync", "approved", "1", specPRD))
+	s.write(t, profileClone+"specs/1.4.0/notes-sync/trd.md", specFile("notes-sync", "approved", "1", specTRD))
+	s.git(t, profileClone, "init", "-q", "-b", "main")
+	s.git(t, profileClone, "add", "-A")
+	s.git(t, profileClone, "commit", "-q", "-m", "spec: notes-sync")
+}
+
+// specStatusProject is specClone with w a git repo whose origin is notes-app, on branch feat/sync-client, and a plan
+// that claims AC-1 of the notes-sync spec.
+func specStatusProject(t *testing.T, s side) {
+	specClone(t, s)
+	s.write(t, "w/.ai/plans/1.4.0/sync-client/plan.md", "# Sync client\n\nSpec: specs/1.4.0/notes-sync@rev1\n\n"+
+		"Covers AC-1; offline edits are another task.\n\n## Verification map\n\nAC-1  test/sync_test  pulls changes by cursor\n")
+	s.write(t, "w/.ai/plans/notes-search/plan.md", "# Search\n\nSpec: none\n\nAC-1  test/search_test  finds a note\n")
+	s.git(t, "w", "init", "-q", "-b", "main")
+	s.git(t, "w", "remote", "add", "origin", "git@example.com:notes-team/notes-app.git")
+	s.git(t, "w", "add", "-A")
+	s.git(t, "w", "commit", "-q", "-m", "chore: init")
+	s.git(t, "w", "checkout", "-q", "-b", "feat/sync-client")
+}
+
 // pushPage commits a page in seed and pushes it to origin.git.
 func pushPage(file string) func(t *testing.T, s side) {
 	return func(t *testing.T, s side) {
@@ -784,6 +841,67 @@ func cliCases() []cliCase {
 				s.git(t, "w", "commit", "-q", "-m", "share")
 			}},
 			{args: []string{"knowledge", "doctor", "--clone", "../nope"}, env: recorded},
+		}},
+		{name: "spec new", setup: specProject, steps: []step{
+			cli("help", "spec", "new"),
+			cli("spec", "new", "notes-sync"),
+			cli("spec", "new", "notes-sync"),
+			cli("spec", "new", "shop-cart", "--release", "2.0.0", "--clone", "../kb"),
+			{args: []string{"spec", "new", "todo", "--clone", profileClone}, dir: "."},
+			cli("spec", "new", "Shop_Cart"),
+			cli("spec", "new", "todo", "--release", "../x"),
+			cli("spec", "new"),
+			cli("spec", "new", "todo", "--clone", "../nope"),
+		}},
+		{name: "spec lint", setup: specClone, steps: []step{
+			cli("help", "spec", "lint"),
+			cli("spec", "lint"),
+			{args: []string{"spec", "lint", "--against", "main"}, before: func(t *testing.T, s side) {
+				s.write(t, profileClone+"specs/1.4.0/notes-sync/prd.md", specFile("notes-sync", "approved", "1",
+					strings.Replace(strings.Replace(specPRD, "- AC-3 Given", "- AC-4 Given", 1), "- ~~AC-2~~ dropped: offline merge moves to a later release",
+						"- AC-2 Given a conflict, when both devices edit, then both versions stay.", 1)))
+			}},
+			{args: []string{"spec", "lint", "../" + profileClone + "specs/1.5.0"}, before: func(t *testing.T, s side) {
+				s.write(t, profileClone+"specs/1.5.0/shop-cart/prd.md", "---\ntitle: Shop cart\nfeature: shop-cart\nstatus: done\nrev: 1\n"+
+					"repos: [shop-app]\nowners: [ana@example.com]\n---\n\n- AC-1 Given a cart, then a total.\n- AC-1 Given a coupon, then a discount.\n- AC-4 Given no stock, then a notice.\n- ~~AC-2~~ gone\n")
+				s.write(t, profileClone+"specs/1.5.0/shop-cart/trd.md", specFile("shop-cart", "approved", "1",
+					"## Open questions\n\n- Which payment provider?\n- Tax rules per country? owner: backend\n"))
+			}},
+			cli("spec", "lint", "../"+profileClone+"specs/1.5.0/shop-cart/trd.md"),
+			{args: []string{"knowledge", "doctor"}, env: recorded},
+			cli("spec", "lint", "--against", "nope"),
+			cli("spec", "lint", "../missing"),
+			cli("spec", "lint", "a", "b"),
+		}},
+		{name: "spec revise", setup: specClone, steps: []step{
+			cli("help", "spec", "revise"),
+			cli("spec", "revise", "../"+profileClone+"specs/1.4.0/notes-sync"),
+			cli("spec", "lint", "--against", "main"),
+			cli("spec", "revise", "../"+profileClone+"specs/1.4.0/notes-sync/prd.md"),
+			cli("spec", "revise", "../"+profileClone+"features"),
+			cli("spec", "revise"),
+		}},
+		{name: "spec status", setup: specStatusProject, steps: []step{
+			cli("help", "spec", "status"),
+			cli("spec", "status"),
+			{args: []string{"spec", "status"}, before: func(t *testing.T, s side) {
+				s.git(t, "w", "config", "branch.feat/sync-client.dashcrew-spec", "specs/1.4.0/notes-sync@rev1")
+			}},
+			cli("spec", "revise", "../"+profileClone+"specs/1.4.0/notes-sync"),
+			cli("spec", "status"),
+			cli("sync"),
+			{args: []string{"doctor"}, env: recorded},
+			{args: []string{"spec", "status", "-p", "w"}, dir: ".", before: func(t *testing.T, s side) {
+				s.git(t, "w", "config", "branch.feat/sync-client.dashcrew-spec", "specs/1.4.0/notes-sync@rev2")
+				s.write(t, "w/.ai/plans/1.4.0/sync-offline/plan.md", "Spec: specs/1.4.0/notes-sync@rev2\n\nAC-3 and AC-7.\n")
+			}},
+			{args: []string{"spec", "status"}, before: func(t *testing.T, s side) {
+				s.git(t, "w", "config", "branch.feat/sync-client.dashcrew-spec", "notes-sync")
+			}},
+			{args: []string{"spec", "status"}, before: func(t *testing.T, s side) {
+				s.git(t, "w", "config", "branch.feat/sync-client.dashcrew-spec", "specs/1.4.0/gone@rev1")
+			}},
+			cli("spec", "status", "extra"),
 		}},
 		{name: "commit suggest", setup: commitRepo, steps: []step{
 			cli("help", "commit"),

@@ -30,6 +30,7 @@ stdout:
 | wrote   .claude/skills/code-review/SKILL.md
 | wrote   .claude/skills/learn/SKILL.md
 | wrote   .claude/skills/plan/SKILL.md
+| wrote   .claude/skills/spec/SKILL.md
 | wrote   .claude/skills/tdd/SKILL.md
 | wrote   .claude/skills/verify/SKILL.md
 | wrote   .claude/skills/worktree/SKILL.md
@@ -57,6 +58,7 @@ stdout:
 | wrote   .agents/skills/code-review/SKILL.md
 | wrote   .agents/skills/learn/SKILL.md
 | wrote   .agents/skills/plan/SKILL.md
+| wrote   .agents/skills/spec/SKILL.md
 | wrote   .agents/skills/tdd/SKILL.md
 | wrote   .agents/skills/verify/SKILL.md
 | wrote   .agents/skills/worktree/SKILL.md
@@ -75,7 +77,7 @@ files:
 + w/.agents  dir
 + w/.agents/agents  dir
 + w/.agents/agents/explorer.md  -rw-r--r-- sha256:6270442dde4a258f
-+ w/.agents/agents/reviewer.md  -rw-r--r-- sha256:19961d2490230172
++ w/.agents/agents/reviewer.md  -rw-r--r-- sha256:01d0758e8db856f4
 + w/.agents/hooks.json  -rw-r--r-- sha256:948bc96d3fae079c
 + w/.agents/mcp_config.json  -rw-r--r-- sha256:480f6097f574dc0d
 + w/.agents/skills  dir
@@ -84,7 +86,7 @@ files:
 + w/.agents/skills/audit  dir
 + w/.agents/skills/audit/SKILL.md  -rw-r--r-- sha256:7de1ab3a91f1f88b
 + w/.agents/skills/branching  dir
-+ w/.agents/skills/branching/SKILL.md  -rw-r--r-- sha256:7975aaf2b2c3367c
++ w/.agents/skills/branching/SKILL.md  -rw-r--r-- sha256:4a57a05a4a7256de
 + w/.agents/skills/build-fix  dir
 + w/.agents/skills/build-fix/SKILL.md  -rw-r--r-- sha256:875dfa07def54fe2
 + w/.agents/skills/code-review  dir
@@ -104,17 +106,19 @@ files:
 + w/.agents/skills/guardrails  dir
 + w/.agents/skills/guardrails/SKILL.md  -rw-r--r-- sha256:bf4b37de5388c74d
 + w/.agents/skills/learn  dir
-+ w/.agents/skills/learn/SKILL.md  -rw-r--r-- sha256:0c67f10b08e315a3
++ w/.agents/skills/learn/SKILL.md  -rw-r--r-- sha256:d1be54cf8810a5ab
 + w/.agents/skills/mobile-security  dir
 + w/.agents/skills/mobile-security/SKILL.md  -rw-r--r-- sha256:eac82c26b4557b97
 + w/.agents/skills/plan  dir
-+ w/.agents/skills/plan/SKILL.md  -rw-r--r-- sha256:d8b3aa562f437218
++ w/.agents/skills/plan/SKILL.md  -rw-r--r-- sha256:76ef3bfda6c58113
 + w/.agents/skills/pr-create  dir
 + w/.agents/skills/pr-create/SKILL.md  -rw-r--r-- sha256:88b181afa8381177
 + w/.agents/skills/pr-description  dir
 + w/.agents/skills/pr-description/SKILL.md  -rw-r--r-- sha256:7f02b7f17b8ea8e8
 + w/.agents/skills/prompt-polish  dir
-+ w/.agents/skills/prompt-polish/SKILL.md  -rw-r--r-- sha256:b602889385833272
++ w/.agents/skills/prompt-polish/SKILL.md  -rw-r--r-- sha256:c5bb78728151e8de
++ w/.agents/skills/spec  dir
++ w/.agents/skills/spec/SKILL.md  -rw-r--r-- sha256:59d0e0c0b3c287fc
 + w/.agents/skills/strategic-compact  dir
 + w/.agents/skills/strategic-compact/SKILL.md  -rw-r--r-- sha256:ef4f497b22288e0c
 + w/.agents/skills/tdd  dir
@@ -130,11 +134,11 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:352a198c0be12c9a
-+ w/.ai/lock.json  -rw-r--r-- sha256:a37270001b862477
++ w/.ai/lock.json  -rw-r--r-- sha256:5d55452dcaee07a0
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:ac4fca699a608a65
-+ w/.claude/agents/reviewer.md  -rw-r--r-- sha256:6083120a064a4fee
++ w/.claude/agents/reviewer.md  -rw-r--r-- sha256:5779d8243f05a36b
 + w/.claude/settings.json  -rw-r--r-- sha256:ab785cea7a7a2c39
 + w/.claude/skills  dir
 + w/.claude/skills/acceptance-criteria  dir
@@ -142,7 +146,7 @@ files:
 + w/.claude/skills/audit  dir
 + w/.claude/skills/audit/SKILL.md  -rw-r--r-- sha256:f1d546184756c826
 + w/.claude/skills/branching  dir
-+ w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:8b93b9328ded4711
++ w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:4b340a10e393505a
 + w/.claude/skills/build-fix  dir
 + w/.claude/skills/build-fix/SKILL.md  -rw-r--r-- sha256:43296f00548ded28
 + w/.claude/skills/code-review  dir
@@ -162,17 +166,19 @@ files:
 + w/.claude/skills/guardrails  dir
 + w/.claude/skills/guardrails/SKILL.md  -rw-r--r-- sha256:e4eac50f412b52a6
 + w/.claude/skills/learn  dir
-+ w/.claude/skills/learn/SKILL.md  -rw-r--r-- sha256:fa054786fbd89b03
++ w/.claude/skills/learn/SKILL.md  -rw-r--r-- sha256:351bdab5711a9a6e
 + w/.claude/skills/mobile-security  dir
 + w/.claude/skills/mobile-security/SKILL.md  -rw-r--r-- sha256:1bc29e41680bd49b
 + w/.claude/skills/plan  dir
-+ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:7e3370729ef7f6ce
++ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:0d9ff18bafc648fc
 + w/.claude/skills/pr-create  dir
 + w/.claude/skills/pr-create/SKILL.md  -rw-r--r-- sha256:e534b517a93d2650
 + w/.claude/skills/pr-description  dir
 + w/.claude/skills/pr-description/SKILL.md  -rw-r--r-- sha256:7992498f4157debe
 + w/.claude/skills/prompt-polish  dir
-+ w/.claude/skills/prompt-polish/SKILL.md  -rw-r--r-- sha256:46401e1e54b520e2
++ w/.claude/skills/prompt-polish/SKILL.md  -rw-r--r-- sha256:660592a6ccdf80a5
++ w/.claude/skills/spec  dir
++ w/.claude/skills/spec/SKILL.md  -rw-r--r-- sha256:227b482afcb4c434
 + w/.claude/skills/strategic-compact  dir
 + w/.claude/skills/strategic-compact/SKILL.md  -rw-r--r-- sha256:a866040ed09e6f37
 + w/.claude/skills/tdd  dir
@@ -188,14 +194,14 @@ files:
 + w/.codex  dir
 + w/.codex/agents  dir
 + w/.codex/agents/explorer.toml  -rw-r--r-- sha256:ff8631e1ed14ab7e
-+ w/.codex/agents/reviewer.toml  -rw-r--r-- sha256:ea588ab99f8c93a4
++ w/.codex/agents/reviewer.toml  -rw-r--r-- sha256:443d4e4fa7df663e
 + w/.codex/config.toml  -rw-r--r-- sha256:c4c25cd708159f31
 + w/.codex/hooks.json  -rw-r--r-- sha256:5d43adc427460026
 + w/.github  dir
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
 + w/.gitignore  -rw-r--r-- sha256:3a003918a77c43a0
 + w/.mcp.json  -rw-r--r-- sha256:4b1f4a87542aa9fc
-+ w/AGENTS.md  -rw-r--r-- sha256:9d1ed9a603d804fe
++ w/AGENTS.md  -rw-r--r-- sha256:7ed3debd0b6c5506
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 2: dashcrew "sync" "-p" "."
@@ -240,7 +246,7 @@ stdout:
 | ok    project-packs   no project packs in .ai/packs
 | ok    lock            .ai/lock.json schema 1
 | ok    version         lock written by this dashcrew (0.0.1)
-| ok    drift           59 generated files match the lock
+| ok    drift           61 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
 | fail  guard-binary    dashcrew is not on PATH, so .ai/bin/guard refuses every tool call: install dashcrew 0.1.0 or newer (brew install fahnaladitia/tap/dashcrew)
@@ -250,13 +256,13 @@ stdout:
 | warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
 | ok    codex-hook      PreToolUse guard hook present; Codex runs it once approved in /hooks
 | ok    codex-mcp       defined: dart-mcp-server, dashcrew-knowledge
-| ok    codex-skills-budget24 skills, list 4410 of 8000 characters
+| ok    codex-skills-budget25 skills, list 4610 of 8000 characters
 | warn  codex-trust     project not trusted in the Codex config, so .codex/ is ignored; trust it when Codex asks, then approve the guard in /hooks
 | ok    antigravity-hookPreToolUse guard hook present under dashcrew-guard
 | ok    antigravity-mcp defined: dart-mcp-server, dashcrew-knowledge
 | ok    antigravity-roles2 roles, every tool name known
 | warn  knowledge       no clone of notes-knowledge at ~/.dashcrew/knowledge/notes-knowledge; run dashcrew knowledge pull
-| ok    agents-md-size  AGENTS.md 16094 of 24000 bytes
+| ok    agents-md-size  AGENTS.md 16093 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)
@@ -269,7 +275,7 @@ stdout:
 | ok    project-packs   no project packs in .ai/packs
 | ok    lock            .ai/lock.json schema 1
 | ok    version         lock written by this dashcrew (0.0.1)
-| ok    drift           59 generated files match the lock
+| ok    drift           61 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
 | fail  guard-binary    dashcrew is not on PATH, so .ai/bin/guard refuses every tool call: install dashcrew 0.1.0 or newer (brew install fahnaladitia/tap/dashcrew)
@@ -279,13 +285,13 @@ stdout:
 | warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
 | ok    codex-hook      PreToolUse guard hook present; Codex runs it once approved in /hooks
 | ok    codex-mcp       defined: dart-mcp-server, dashcrew-knowledge
-| ok    codex-skills-budget24 skills, list 4410 of 8000 characters
+| ok    codex-skills-budget25 skills, list 4610 of 8000 characters
 | warn  codex-trust     project not trusted in the Codex config, so .codex/ is ignored; trust it when Codex asks, then approve the guard in /hooks
 | ok    antigravity-hookPreToolUse guard hook present under dashcrew-guard
 | ok    antigravity-mcp defined: dart-mcp-server, dashcrew-knowledge
 | ok    antigravity-roles2 roles, every tool name known
 | warn  knowledge       no clone of notes-knowledge at ~/.dashcrew/knowledge/notes-knowledge; run dashcrew knowledge pull
-| ok    agents-md-size  AGENTS.md 16094 of 24000 bytes
+| ok    agents-md-size  AGENTS.md 16093 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)
@@ -297,10 +303,10 @@ stdout:
 | ok    project-packs   no project packs in .ai/packs
 | ok    lock            .ai/lock.json schema 1
 | ok    version         lock written by this dashcrew (0.0.1)
-| ok    drift           59 generated files match the lock
+| ok    drift           61 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16094 of 24000 bytes
+| ok    agents-md-size  AGENTS.md 16093 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | skip  pr-sections     no PR body; pass --pr-body <file> or run on a pull_request event
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
@@ -315,10 +321,10 @@ stdout:
 | ok    project-packs   no project packs in .ai/packs
 | ok    lock            .ai/lock.json schema 1
 | ok    version         lock written by this dashcrew (0.0.1)
-| ok    drift           59 generated files match the lock
+| ok    drift           61 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16094 of 24000 bytes
+| ok    agents-md-size  AGENTS.md 16093 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | fail  pr-sections     missing: ## Changes, ## Affected files, ## Testing, ## Notes / not done (write "None" under a heading that does not apply)
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
@@ -333,10 +339,10 @@ stdout:
 | ok    project-packs   no project packs in .ai/packs
 | ok    lock            .ai/lock.json schema 1
 | ok    version         lock written by this dashcrew (0.0.1)
-| ok    drift           59 generated files match the lock
+| ok    drift           61 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16094 of 24000 bytes
+| ok    agents-md-size  AGENTS.md 16093 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | fail  pr-sections     missing: ## Changes, ## Affected files, ## Testing, ## Notes / not done (write "None" under a heading that does not apply)
 | ::error title=dashcrew pr-sections::missing: ## Changes, ## Affected files, ## Testing, ## Notes / not done (write "None" under a heading that does not apply)
@@ -352,10 +358,10 @@ stdout:
 | ok    project-packs   no project packs in .ai/packs
 | ok    lock            .ai/lock.json schema 1
 | ok    version         lock written by this dashcrew (0.0.1)
-| ok    drift           59 generated files match the lock
+| ok    drift           61 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16094 of 24000 bytes
+| ok    agents-md-size  AGENTS.md 16093 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | ok    pr-sections     5 required sections present
 | skip  commits         no base; pass --base <branch> or run on a pull_request event

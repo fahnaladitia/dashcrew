@@ -56,9 +56,23 @@ func (r *Renderer) Render(p *profile.Profile) ([]RenderedTarget, error) {
 	}
 	sort.Strings(targets)
 	context["skill_index"] = r.skillIndex(p, targets)
+	context[TrdTarget+"_sections"] = ""
+	var trd *RenderedTarget
+	if fragments, ok := byTarget[TrdTarget]; ok {
+		rendered, err := renderTarget(TrdTarget, fragments, context)
+		if err != nil {
+			return nil, err
+		}
+		trd = &rendered
+		context[TrdTarget+"_sections"] = TrimRight(rendered.Content)
+	}
 
 	out := make([]RenderedTarget, 0, len(targets))
 	for _, target := range targets {
+		if target == TrdTarget {
+			out = append(out, *trd)
+			continue
+		}
 		rendered, err := renderTarget(target, byTarget[target], context)
 		if err != nil {
 			return nil, err
@@ -67,6 +81,10 @@ func (r *Renderer) Render(p *profile.Profile) ([]RenderedTarget, error) {
 	}
 	return out, nil
 }
+
+// TrdTarget holds the TRD sections of a spec: core's generic ones plus the platform's. No file is written for it;
+// templates insert it as `{{trd_sections}}`, the `spec` workflow among them.
+const TrdTarget = "trd"
 
 func renderTarget(target string, fragments []catalog.Fragment, context map[string]any) (RenderedTarget, error) {
 	sort.SliceStable(fragments, func(i, j int) bool {

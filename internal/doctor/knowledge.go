@@ -8,7 +8,9 @@ import (
 	"time"
 
 	"github.com/fahnaladitia/dashcrew/internal/knowledge"
+	"github.com/fahnaladitia/dashcrew/internal/lines"
 	"github.com/fahnaladitia/dashcrew/internal/omap"
+	"github.com/fahnaladitia/dashcrew/internal/spec"
 )
 
 // knowledge reports the `.ai/knowledge` link and the clone's last pull, and with Fetch how far the clone is behind
@@ -144,4 +146,40 @@ func (d Doctor) knowledgeStale() (Check, bool) {
 		return Check{id, OK, "no stale pointers, old proposals or unverified pages"}, true
 	}
 	return Check{id, Warn, strings.Join(parts, ", ") + "; run dashcrew knowledge doctor"}, true
+}
+
+// specDrift compares the spec the current branch records (`branch.<name>.dashcrew-spec`) with the clone: an older
+// recorded rev, or a draft spec on a branch with commits of its own, warns. It never fails (P7 decision 4); false
+// without knowledge, a clone, a branch or a recorded spec.
+func (d Doctor) specDrift() (Check, bool) {
+	const id = "spec"
+	p, err := d.parseProfile()
+	if err != nil || p.Knowledge == nil {
+		return Check{}, false
+	}
+	home := d.Home
+	if home == "" {
+		home, _ = homeDir(environment())
+	}
+	clone := knowledge.CloneDir(home, p.Knowledge.Name)
+	branch := lines.CurrentBranch(d.ProjectDir)
+	if !isDir(clone) || branch == "" {
+		return Check{}, false
+	}
+	value := lines.RecordedSpec(d.ProjectDir, branch)
+	if value == "" || value == "none" {
+		return Check{}, false
+	}
+	ref, ok := spec.ParseRef(value)
+	if !ok {
+		return Check{id, Warn, lines.SpecConfigKey(branch) + " is " + value + ", not specs/<release>/<feature>@rev<n>"}, true
+	}
+	state, err := spec.Load(clone, ref.Folder)
+	if err != nil {
+		return Check{id, Warn, err.Error() + "; run dashcrew knowledge pull"}, true
+	}
+	if drift := spec.Drift(ref, state, lines.OwnCommits(d.ProjectDir, branch)); len(drift) > 0 {
+		return Check{id, Warn, ref.String() + ": " + strings.Join(drift, "; ")}, true
+	}
+	return Check{id, OK, ref.String() + ", " + state.Status + ", current"}, true
 }

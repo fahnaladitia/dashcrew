@@ -240,8 +240,8 @@ func evaluateWrite(event Event, p Policy) (Decision, error) {
 	if err != nil || decision.Blocked || p.knowledge == nil || event.FilePath == "" {
 		return decision, err
 	}
-	if p.knowledge.blocks(event.FilePath, p.knowledge.cwd) {
-		return Block(knowledgeReason), nil
+	if reason := p.knowledge.blocks(event.FilePath, p.knowledge.cwd); reason != "" {
+		return Block(reason), nil
 	}
 	if real, moved := p.knowledge.appPath(event.FilePath); moved {
 		event.FilePath = real

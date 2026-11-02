@@ -1,0 +1,243 @@
+# spec status
+
+=== step 1: dashcrew "help" "spec" "status"
+exit: 0
+stdout:
+| Compare the spec the current branch records (git config branch.<name>.dashcrew-spec) with the
+| knowledge clone: its current rev and status, the ACs this repo's plans claim and the ones none claims.
+| Other repos the spec names are listed as not checked. Writes nothing.
+| 
+| Usage: dashcrew spec status [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml; its branch and plans are read.
+|                  (defaults to ".")
+|     --clone      Knowledge clone holding the spec; defaults to the profile's ~/.dashcrew/knowledge/<name>.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 2: dashcrew "spec" "status"
+exit: 0
+stdout:
+| feat/sync-client records no spec. To link one: git config branch.feat/sync-client.dashcrew-spec specs/<release>/<feature>@rev<n>
+stderr: (empty)
+files: (unchanged)
+
+=== step 3: dashcrew "spec" "status"
+(after the case's setup for this step)
+exit: 0
+stdout:
+| spec        specs/1.4.0/notes-sync@rev1, recorded on feat/sync-client
+| clone       rev 1, approved (same rev as recorded)
+| claimed     AC-1  .ai/plans/1.4.0/sync-client/plan.md
+| unclaimed   AC-3
+| not checked notes-api (other repos; run spec status there)
+stderr: (empty)
+files: (unchanged)
+
+=== step 4: dashcrew "spec" "revise" "../home/.dashcrew/knowledge/notes/specs/1.4.0/notes-sync"
+exit: 0
+stdout:
+| revised specs/1.4.0/notes-sync/prd.md: approved rev 1 -> review rev 2
+| revised specs/1.4.0/notes-sync/trd.md: approved rev 1 -> review rev 2
+| next: commit on a branch and open a pull request; its merge with status: approved approves rev 2:
+|   git -C <root>/home/.dashcrew/knowledge/notes checkout -b spec-revise-notes-sync-rev2
+|   git -C <root>/home/.dashcrew/knowledge/notes add specs/1.4.0/notes-sync
+|   git -C <root>/home/.dashcrew/knowledge/notes commit -m "spec: revise 1.4.0/notes-sync to rev 2"
+|   git -C <root>/home/.dashcrew/knowledge/notes push -u origin spec-revise-notes-sync-rev2
+stderr: (empty)
+files:
+~ home/.dashcrew/knowledge/notes/specs/1.4.0/notes-sync/prd.md  -rw-r--r-- sha256:e75e53e058c02ec2
+~ home/.dashcrew/knowledge/notes/specs/1.4.0/notes-sync/trd.md  -rw-r--r-- sha256:90a31596a04fb88c
+
+=== step 5: dashcrew "spec" "status"
+exit: 0
+stdout:
+| spec        specs/1.4.0/notes-sync@rev1, recorded on feat/sync-client
+| clone       rev 2, review
+| warning     spec moved to rev 2; re-read it
+| claimed     AC-1  .ai/plans/1.4.0/sync-client/plan.md
+| unclaimed   AC-3
+| not checked notes-api (other repos; run spec status there)
+stderr: (empty)
+files: (unchanged)
+
+=== step 6: dashcrew "sync"
+exit: 0
+stdout:
+| wrote   AGENTS.md
+| wrote   .ai/guard.json
+| wrote   .ai/bin/guard
+| wrote   .github/pull_request_template.md
+| wrote   .claude/agents/explorer.md
+| wrote   .claude/agents/reviewer.md
+| wrote   .claude/skills/acceptance-criteria/SKILL.md
+| wrote   .claude/skills/branching/SKILL.md
+| wrote   .claude/skills/continuous-learning/SKILL.md
+| wrote   .claude/skills/data-layer-tdd/SKILL.md
+| wrote   .claude/skills/design-fidelity/SKILL.md
+| wrote   .claude/skills/documentation/SKILL.md
+| wrote   .claude/skills/feature-architecture/SKILL.md
+| wrote   .claude/skills/flutter-performance/SKILL.md
+| wrote   .claude/skills/guardrails/SKILL.md
+| wrote   .claude/skills/mobile-security/SKILL.md
+| wrote   .claude/skills/pr-create/SKILL.md
+| wrote   .claude/skills/pr-description/SKILL.md
+| wrote   .claude/skills/prompt-polish/SKILL.md
+| wrote   .claude/skills/strategic-compact/SKILL.md
+| wrote   .claude/skills/verification-loop/SKILL.md
+| wrote   .claude/skills/work-modes/SKILL.md
+| wrote   .claude/skills/audit/SKILL.md
+| wrote   .claude/skills/build-fix/SKILL.md
+| wrote   .claude/skills/code-review/SKILL.md
+| wrote   .claude/skills/learn/SKILL.md
+| wrote   .claude/skills/plan/SKILL.md
+| wrote   .claude/skills/spec/SKILL.md
+| wrote   .claude/skills/tdd/SKILL.md
+| wrote   .claude/skills/verify/SKILL.md
+| wrote   .claude/skills/worktree/SKILL.md
+| wrote   CLAUDE.md
+| wrote   .claude/settings.json
+| wrote   .mcp.json
+| wrote   .ai/knowledge
+| wrote   .gitignore
+stderr: (empty)
+files:
++ w/.ai/bin  dir
++ w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
++ w/.ai/guard.json  -rw-r--r-- sha256:36bfb1be82c0b298
++ w/.ai/knowledge  link -> <root>/home/.dashcrew/knowledge/notes
++ w/.ai/lock.json  -rw-r--r-- sha256:eea2511c87e2ae17
++ w/.claude  dir
++ w/.claude/agents  dir
++ w/.claude/agents/explorer.md  -rw-r--r-- sha256:ac4fca699a608a65
++ w/.claude/agents/reviewer.md  -rw-r--r-- sha256:5779d8243f05a36b
++ w/.claude/settings.json  -rw-r--r-- sha256:ab785cea7a7a2c39
++ w/.claude/skills  dir
++ w/.claude/skills/acceptance-criteria  dir
++ w/.claude/skills/acceptance-criteria/SKILL.md  -rw-r--r-- sha256:9514f49c5427aa3e
++ w/.claude/skills/audit  dir
++ w/.claude/skills/audit/SKILL.md  -rw-r--r-- sha256:f1d546184756c826
++ w/.claude/skills/branching  dir
++ w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:4b340a10e393505a
++ w/.claude/skills/build-fix  dir
++ w/.claude/skills/build-fix/SKILL.md  -rw-r--r-- sha256:43296f00548ded28
++ w/.claude/skills/code-review  dir
++ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:feda66879450b2c8
++ w/.claude/skills/continuous-learning  dir
++ w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:2c7c8bc7dca118b2
++ w/.claude/skills/data-layer-tdd  dir
++ w/.claude/skills/data-layer-tdd/SKILL.md  -rw-r--r-- sha256:eb183dbb402be1e3
++ w/.claude/skills/design-fidelity  dir
++ w/.claude/skills/design-fidelity/SKILL.md  -rw-r--r-- sha256:2659d95907aab02c
++ w/.claude/skills/documentation  dir
++ w/.claude/skills/documentation/SKILL.md  -rw-r--r-- sha256:31906773f54c291c
++ w/.claude/skills/feature-architecture  dir
++ w/.claude/skills/feature-architecture/SKILL.md  -rw-r--r-- sha256:014b086955367837
++ w/.claude/skills/flutter-performance  dir
++ w/.claude/skills/flutter-performance/SKILL.md  -rw-r--r-- sha256:dbe6f8a82a787b69
++ w/.claude/skills/guardrails  dir
++ w/.claude/skills/guardrails/SKILL.md  -rw-r--r-- sha256:e4eac50f412b52a6
++ w/.claude/skills/learn  dir
++ w/.claude/skills/learn/SKILL.md  -rw-r--r-- sha256:351bdab5711a9a6e
++ w/.claude/skills/mobile-security  dir
++ w/.claude/skills/mobile-security/SKILL.md  -rw-r--r-- sha256:1bc29e41680bd49b
++ w/.claude/skills/plan  dir
++ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:0d9ff18bafc648fc
++ w/.claude/skills/pr-create  dir
++ w/.claude/skills/pr-create/SKILL.md  -rw-r--r-- sha256:e534b517a93d2650
++ w/.claude/skills/pr-description  dir
++ w/.claude/skills/pr-description/SKILL.md  -rw-r--r-- sha256:7992498f4157debe
++ w/.claude/skills/prompt-polish  dir
++ w/.claude/skills/prompt-polish/SKILL.md  -rw-r--r-- sha256:660592a6ccdf80a5
++ w/.claude/skills/spec  dir
++ w/.claude/skills/spec/SKILL.md  -rw-r--r-- sha256:227b482afcb4c434
++ w/.claude/skills/strategic-compact  dir
++ w/.claude/skills/strategic-compact/SKILL.md  -rw-r--r-- sha256:a866040ed09e6f37
++ w/.claude/skills/tdd  dir
++ w/.claude/skills/tdd/SKILL.md  -rw-r--r-- sha256:caf317ee9e4fe00d
++ w/.claude/skills/verification-loop  dir
++ w/.claude/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:d54707cb287e4465
++ w/.claude/skills/verify  dir
++ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:c245fcc49e344b7e
++ w/.claude/skills/work-modes  dir
++ w/.claude/skills/work-modes/SKILL.md  -rw-r--r-- sha256:42e7df44abe766f6
++ w/.claude/skills/worktree  dir
++ w/.claude/skills/worktree/SKILL.md  -rw-r--r-- sha256:5ec38c7fbd7746bb
++ w/.github  dir
++ w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
++ w/.gitignore  -rw-r--r-- sha256:3a003918a77c43a0
++ w/.mcp.json  -rw-r--r-- sha256:af388c2fd3ed6bef
++ w/AGENTS.md  -rw-r--r-- sha256:7ed3debd0b6c5506
++ w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
+
+=== step 7: dashcrew "doctor"
+env: SOURCE_DATE_EPOCH=1772323200
+exit: 1
+stdout:
+| ok    profile         .ai/project.yaml valid
+| ok    project-packs   no project packs in .ai/packs
+| ok    lock            .ai/lock.json schema 1
+| ok    version         lock written by this dashcrew (0.0.1)
+| ok    drift           32 generated files match the lock
+| ok    stale           output matches the current profile and catalog
+| ok    guard-policy    .ai/guard.json valid
+| fail  guard-binary    dashcrew is not on PATH, so .ai/bin/guard refuses every tool call: install dashcrew 0.1.0 or newer (brew install fahnaladitia/tap/dashcrew)
+| ok    hook            PreToolUse guard hook present
+| ok    claude-md       CLAUDE.md imports AGENTS.md
+| ok    mcp             defined: dart-mcp-server, dashcrew-knowledge
+| warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
+| ok    knowledge       linked to ~/.dashcrew/knowledge/notes, last pull unknown
+| ok    knowledge-stale no stale pointers, old proposals or unverified pages
+| warn  spec            specs/1.4.0/notes-sync@rev1: spec moved to rev 2; re-read it
+| ok    agents-md-size  AGENTS.md 16093 of 32768 bytes
+| ok    gitignore       .ai/bin/guard is not ignored
+stderr: (empty)
+files: (unchanged)
+
+=== step 8: dashcrew "spec" "status" "-p" "w"
+dir: .
+(after the case's setup for this step)
+exit: 0
+stdout:
+| spec        specs/1.4.0/notes-sync@rev2, recorded on feat/sync-client
+| clone       rev 2, review (same rev as recorded)
+| claimed     AC-1  .ai/plans/1.4.0/sync-client/plan.md
+|             AC-3  .ai/plans/1.4.0/sync-offline/plan.md
+|             AC-7  .ai/plans/1.4.0/sync-offline/plan.md (not a live AC of the spec)
+| unclaimed   none
+| not checked notes-api (other repos; run spec status there)
+stderr: (empty)
+files: (unchanged)
+
+=== step 9: dashcrew "spec" "status"
+(after the case's setup for this step)
+exit: 1
+stdout: (empty)
+stderr:
+| branch.feat/sync-client.dashcrew-spec is notes-sync, not specs/<release>/<feature>@rev<n>.
+files: (unchanged)
+
+=== step 10: dashcrew "spec" "status"
+(after the case's setup for this step)
+exit: 1
+stdout: (empty)
+stderr:
+| no spec at specs/1.4.0/gone in the knowledge clone; run dashcrew knowledge pull, or fix the branch config.
+files: (unchanged)
+
+=== step 11: dashcrew "spec" "status" "extra"
+exit: 64
+stdout: (empty)
+stderr:
+| spec status takes no arguments; it reads the current branch.
+| 
+| Usage: dashcrew spec status [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml; its branch and plans are read.
+|                  (defaults to ".")
+|     --clone      Knowledge clone holding the spec; defaults to the profile's ~/.dashcrew/knowledge/<name>.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)

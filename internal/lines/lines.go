@@ -1,5 +1,5 @@
 // Package lines finds a project's release lines (`project.release_lines`) in git and resolves the line a branch
-// belongs to. It only reads git, except RecordRelease, which writes one key of the local branch config.
+// belongs to. It only reads git, except RecordRelease and RecordSpec, which write one key of the local branch config.
 package lines
 
 import (
@@ -131,6 +131,36 @@ func RecordedRelease(dir, branch string) string {
 func RecordRelease(dir, branch, release string) error {
 	_, err := git(dir, "config", ConfigKey(branch), release)
 	return err
+}
+
+// SpecConfigKey is the branch config key that records the spec a branch builds, `specs/<release>/<feature>@rev<n>`.
+func SpecConfigKey(branch string) string { return "branch." + branch + ".dashcrew-spec" }
+
+// RecordedSpec is the spec branch records; empty when it records none.
+func RecordedSpec(dir, branch string) string {
+	value, _ := git(dir, "config", "--get", SpecConfigKey(branch))
+	return strings.TrimSpace(value)
+}
+
+// RecordSpec writes the spec into the local branch config, which is never committed.
+func RecordSpec(dir, branch, spec string) error {
+	_, err := git(dir, "config", SpecConfigKey(branch), spec)
+	return err
+}
+
+// OwnCommits is how many commits of branch no other local or remote-tracking branch holds (its own pushed copy
+// aside): the work past its base, whatever the base was. 0 for a missing branch.
+func OwnCommits(dir, branch string) int {
+	if _, err := git(dir, "rev-parse", "--verify", "--quiet", "refs/heads/"+branch); err != nil {
+		return 0
+	}
+	out, err := git(dir, "rev-list", "--count", "refs/heads/"+branch, "--not",
+		"--exclude="+branch, "--branches", "--exclude=*/"+branch, "--remotes")
+	if err != nil {
+		return 0
+	}
+	n, _ := strconv.Atoi(out)
+	return n
 }
 
 // List is every line branch, local and remote-tracking, ordered by version (release before hotfix on a tie), with

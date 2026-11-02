@@ -1,0 +1,108 @@
+# spec new
+
+=== step 1: dashcrew "help" "spec" "new"
+exit: 0
+stdout:
+| Write specs/<release>/<feature>/prd.md and trd.md into the knowledge clone from its templates,
+| with status draft and rev 1. Refuses a folder that exists; writes a missing template first. Runs no git.
+| 
+| Usage: dashcrew spec new <feature> [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml; its branch gives the default release.
+|                  (defaults to ".")
+|     --clone      Knowledge clone to write into; defaults to the profile's ~/.dashcrew/knowledge/<name>.
+|     --release    Release folder; defaults to the release the current branch records, else unreleased.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 2: dashcrew "spec" "new" "notes-sync"
+exit: 0
+stdout:
+| wrote   specs/1.4.0/notes-sync/prd.md
+| wrote   specs/1.4.0/notes-sync/trd.md
+| note: in <root>/home/.dashcrew/knowledge/notes; fill both files with the spec workflow, then run dashcrew spec lint.
+stderr: (empty)
+files:
++ home/.dashcrew/knowledge/notes/specs/1.4.0  dir
++ home/.dashcrew/knowledge/notes/specs/1.4.0/notes-sync  dir
++ home/.dashcrew/knowledge/notes/specs/1.4.0/notes-sync/prd.md  -rw-r--r-- sha256:e30168b10f3347c2
++ home/.dashcrew/knowledge/notes/specs/1.4.0/notes-sync/trd.md  -rw-r--r-- sha256:19c8916d215cdddb
+
+=== step 3: dashcrew "spec" "new" "notes-sync"
+exit: 1
+stdout: (empty)
+stderr:
+| specs/1.4.0/notes-sync: spec folder exists; edit its files while they are draft or review, or reopen an approved spec with dashcrew spec revise specs/1.4.0/notes-sync
+files: (unchanged)
+
+=== step 4: dashcrew "spec" "new" "shop-cart" "--release" "2.0.0" "--clone" "../kb"
+exit: 0
+stdout:
+| wrote   templates/prd.md
+| wrote   specs/2.0.0/shop-cart/prd.md
+| wrote   templates/trd.md
+| wrote   specs/2.0.0/shop-cart/trd.md
+| note: in ../kb; fill both files with the spec workflow, then run dashcrew spec lint.
+stderr: (empty)
+files:
++ kb/specs  dir
++ kb/specs/2.0.0  dir
++ kb/specs/2.0.0/shop-cart  dir
++ kb/specs/2.0.0/shop-cart/prd.md  -rw-r--r-- sha256:63e1b916af0580da
++ kb/specs/2.0.0/shop-cart/trd.md  -rw-r--r-- sha256:f68f975d6f3462da
++ kb/templates  dir
++ kb/templates/prd.md  -rw-r--r-- sha256:2b0ce0641b451cfa
++ kb/templates/trd.md  -rw-r--r-- sha256:ea180e0230920d54
+
+=== step 5: dashcrew "spec" "new" "todo" "--clone" "home/.dashcrew/knowledge/notes/"
+dir: .
+exit: 0
+stdout:
+| wrote   specs/unreleased/todo/prd.md
+| wrote   specs/unreleased/todo/trd.md
+| note: in home/.dashcrew/knowledge/notes; fill both files with the spec workflow, then run dashcrew spec lint.
+stderr: (empty)
+files:
++ home/.dashcrew/knowledge/notes/specs/unreleased  dir
++ home/.dashcrew/knowledge/notes/specs/unreleased/todo  dir
++ home/.dashcrew/knowledge/notes/specs/unreleased/todo/prd.md  -rw-r--r-- sha256:4ecb1952189cd108
++ home/.dashcrew/knowledge/notes/specs/unreleased/todo/trd.md  -rw-r--r-- sha256:39f4cf36af395efb
+
+=== step 6: dashcrew "spec" "new" "Shop_Cart"
+exit: 1
+stdout: (empty)
+stderr:
+| feature "Shop_Cart": use lowercase words joined by -, such as notes-sync
+files: (unchanged)
+
+=== step 7: dashcrew "spec" "new" "todo" "--release" "../x"
+exit: 1
+stdout: (empty)
+stderr:
+| release "../x": use a version such as 1.4.0, or unreleased
+files: (unchanged)
+
+=== step 8: dashcrew "spec" "new"
+exit: 64
+stdout: (empty)
+stderr:
+| Pass one feature name, such as notes-sync.
+| 
+| Usage: dashcrew spec new <feature> [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml; its branch gives the default release.
+|                  (defaults to ".")
+|     --clone      Knowledge clone to write into; defaults to the profile's ~/.dashcrew/knowledge/<name>.
+|     --release    Release folder; defaults to the release the current branch records, else unreleased.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 9: dashcrew "spec" "new" "todo" "--clone" "../nope"
+exit: 1
+stdout: (empty)
+stderr:
+| No knowledge clone at ../nope; run dashcrew knowledge pull.
+files: (unchanged)
