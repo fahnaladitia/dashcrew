@@ -136,6 +136,26 @@ func TestPubOtherKinds(t *testing.T) {
 	}
 }
 
+// TestALockWrittenWhileLinkedIsRefused uses the lock entry pub get wrote in the P9 live run under a link.
+func TestALockWrittenWhileLinkedIsRefused(t *testing.T) {
+	linkedLock := "packages:\n  shared_core:\n    dependency: \"direct main\"\n    description:\n      path: \"../core\"\n      relative: true\n    source: path\n    version: \"1.0.0\"\n"
+	cases := []struct {
+		name, deps string
+		status     Status
+		detail     string
+	}{
+		{"git ref with a linked lock", "dependencies:\n  shared_core:\n    git:\n      url: /nowhere\n      ref: v1.0.0\n", Refused, "pubspec.lock resolves it from the path ../core"},
+		{"hosted with a linked lock", "dependencies:\n  shared_core: ^1.0.0\n", Refused, "run dashcrew link remove"},
+		{"path dependency keeps its path lock", "dependencies:\n  shared_core:\n    path: packages/core\n", OK, "inside the repository"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			dir := app(t, map[string]string{"pubspec.yaml": "name: app\n" + c.deps, "pubspec.lock": linkedLock})
+			expect(t, only(t, Check(dir, links("shared_core", ""), pubspecOverrides)), c.status, c.detail)
+		})
+	}
+}
+
 func TestACommittedLinkFileIsRefused(t *testing.T) {
 	dir := app(t, map[string]string{"pubspec.yaml": "name: app\ndependencies:\n  shared_core: ^1.0.0\n", "pubspec_overrides.yaml": "x: 1\n"})
 	git(t, dir, "add", "pubspec_overrides.yaml")

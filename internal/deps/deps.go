@@ -87,6 +87,12 @@ func pubPackage(dir string, link profile.Link, remote *remotes) Result {
 		return Result{Status: Absent, Detail: "not a dependency in pubspec.yaml"}
 	}
 	fields, isMap := spec.(*omap.Map[any])
+	if !isMap || !fields.Has("path") {
+		if path, linked := lockedPath(dir, link.Package); linked {
+			return Result{Status: Refused, Detail: "pubspec.lock resolves it from the path " + path + ", written while it was linked; " +
+				"run dashcrew link remove (it runs pub get) so the lock goes back to " + section + ", then commit the lock"}
+		}
+	}
 	switch {
 	case !isMap || fields.Has("hosted") || (!fields.Has("git") && !fields.Has("path") && !fields.Has("sdk")):
 		return Result{Status: OK, Detail: "hosted version in " + section + "; pub get checks that it is published"}
@@ -123,24 +129,42 @@ func gitSpec(value any) (url, ref string) {
 
 // lockedRef is the commit pubspec.lock resolved the package to; empty without one.
 func lockedRef(dir, pkg string) string {
-	lock, err := readYAML(filepath.Join(dir, "pubspec.lock"))
-	if err != nil {
-		return ""
-	}
-	packages, _ := lock.Value("packages").(*omap.Map[any])
-	if packages == nil {
-		return ""
-	}
-	entry, _ := packages.Value(pkg).(*omap.Map[any])
-	if entry == nil {
-		return ""
-	}
-	description, _ := entry.Value("description").(*omap.Map[any])
+	_, description := lockEntry(dir, pkg)
 	if description == nil {
 		return ""
 	}
 	ref, _ := description.Value("resolved-ref").(string)
 	return ref
+}
+
+// lockedPath is the path pubspec.lock resolves the package from, as `pub get` writes it under a
+// `pubspec_overrides.yaml`; false when the lock has no path entry for it.
+func lockedPath(dir, pkg string) (string, bool) {
+	source, description := lockEntry(dir, pkg)
+	if source != "path" || description == nil {
+		return "", false
+	}
+	path, _ := description.Value("path").(string)
+	return path, true
+}
+
+// lockEntry is the package's `source` and `description` in pubspec.lock; empty and nil without one.
+func lockEntry(dir, pkg string) (string, *omap.Map[any]) {
+	lock, err := readYAML(filepath.Join(dir, "pubspec.lock"))
+	if err != nil {
+		return "", nil
+	}
+	packages, _ := lock.Value("packages").(*omap.Map[any])
+	if packages == nil {
+		return "", nil
+	}
+	entry, _ := packages.Value(pkg).(*omap.Map[any])
+	if entry == nil {
+		return "", nil
+	}
+	source, _ := entry.Value("source").(string)
+	description, _ := entry.Value("description").(*omap.Map[any])
+	return source, description
 }
 
 func readYAML(file string) (*omap.Map[any], error) {

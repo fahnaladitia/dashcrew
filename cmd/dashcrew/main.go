@@ -442,7 +442,7 @@ func checkLinks(cli cliIO, r *results) (int, error) {
 		cli.out(check.Line(result))
 	}
 	if check.Failed(results) {
-		cli.out("merge or release the dependency first, then pin a tag or a commit on its default branch")
+		cli.out("fix each refused dependency as its line says, then run dashcrew check --links again")
 		return 1, nil
 	}
 	cli.out("every linked dependency is committed at a merged or released version")

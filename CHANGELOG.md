@@ -3,6 +3,7 @@
 - Multi-repo work (P9), for any layout and any way an app consumes a dependency. `project.links` lists the dependencies a task may point at a local checkout. `dashcrew link add/ls/remove` writes the platform's link file (`pubspec_overrides.yaml`, or `go.work` through `platform_config.link`) after checking the package name, and excludes it from git; `doctor` reports a link file git would commit, a committed one, missing checkouts, and linked checkouts on another branch (info).
 - The guard checks a file under the policy of the dashcrew project holding its real path, so a linked dependency keeps its own rules. A hook running in a folder above several projects checks shell commands under all of their policies.
 - `dashcrew check` adds `links` with `project.links`: a git ref must be a tag or a commit on the dependency's default branch, a path must stay in the repository, a local Go `replace` and a committed link file are refused, and an unreachable dependency repository fails. `check --links` runs it alone.
+- `check --links` refuses a `pubspec.lock` that resolves a linked package from a path, as `pub get` writes it while the link is active (found in the P9 live run); `link add` says so, and the branching skill runs `dashcrew link remove` before the commit command.
 - With `project.links`, the branching, pr-description and verify skills get the cross-repo steps and the PR template a `## Dependencies` section. AGENTS.md does not change.
 
 ## 0.1.1
