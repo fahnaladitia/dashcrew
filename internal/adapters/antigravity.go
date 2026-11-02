@@ -46,6 +46,8 @@ type Antigravity struct {
 	catalog  *catalog.Catalog
 	project  projectfiles.Project
 	platform string
+	// Knowledge adds the `dashcrew knowledge serve` MCP server when set.
+	Knowledge *profile.Knowledge
 }
 
 // NewAntigravity returns the adapter; platform's `mcp_servers` go to `.agents/mcp_config.json`.
@@ -56,10 +58,10 @@ func NewAntigravity(c *catalog.Catalog, projectDir, platform string) *Antigravit
 // Agent is `antigravity`.
 func (a *Antigravity) Agent() string { return "antigravity" }
 
-// McpServers are the platform's servers as `.agents/mcp_config.json` entries.
+// McpServers are the platform's servers, then the knowledge server, as `.agents/mcp_config.json` entries.
 func (a *Antigravity) McpServers() *omap.Map[any] {
 	out := omap.New[any]()
-	servers := platformServers(a.catalog, a.platform)
+	servers := mcpServers(a.catalog, a.platform, a.Knowledge)
 	for _, name := range servers.Keys() {
 		server := servers.Value(name)
 		out.Set(name, omap.Of[any]("command", server.Command, "args", stringList(server.Args)))

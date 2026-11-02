@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "dart-mcp-server": {
+      "command": "dart",
+      "args": [
+        "mcp-server"
+      ]
+    },
+    "dashcrew-knowledge": {
+      "command": "dashcrew",
+      "args": [
+        "knowledge",
+        "serve",
+        "--clone",
+        "~/.dashcrew/knowledge/notes-knowledge"
+      ]
+    }
+  }
+}

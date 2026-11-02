@@ -37,6 +37,8 @@ type ClaudeCode struct {
 	catalog  *catalog.Catalog
 	project  projectfiles.Project
 	platform string
+	// Knowledge adds the `dashcrew knowledge serve` MCP server when set.
+	Knowledge *profile.Knowledge
 }
 
 // NewClaudeCode returns the adapter; platform's `mcp_servers` go to `.mcp.json`.
@@ -47,10 +49,10 @@ func NewClaudeCode(c *catalog.Catalog, projectDir, platform string) *ClaudeCode 
 // Agent is `claude-code`.
 func (a *ClaudeCode) Agent() string { return "claude-code" }
 
-// McpServers are the platform's servers as `.mcp.json` entries.
+// McpServers are the platform's servers, then the knowledge server, as `.mcp.json` entries.
 func (a *ClaudeCode) McpServers() *omap.Map[any] {
 	out := omap.New[any]()
-	servers := platformServers(a.catalog, a.platform)
+	servers := mcpServers(a.catalog, a.platform, a.Knowledge)
 	for _, name := range servers.Keys() {
 		server := servers.Value(name)
 		out.Set(name, omap.Of[any]("type", "stdio", "command", server.Command, "args", stringList(server.Args)))

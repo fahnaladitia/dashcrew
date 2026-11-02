@@ -319,7 +319,7 @@ func (s Sync) Render(adopt bool, warnings *[]string) (*Rendered, error) {
 	}
 	var agentAdapters []adapters.Adapter
 	for _, agent := range p.Agents {
-		adapter, err := adapters.AdapterFor(agent, c, s.ProjectDir, p.Platform)
+		adapter, err := adapters.AdapterFor(agent, c, s.ProjectDir, p.Platform, p.Knowledge)
 		if err != nil {
 			return nil, &Error{Message: err.Error()}
 		}

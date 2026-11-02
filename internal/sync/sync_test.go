@@ -248,12 +248,12 @@ func TestALockWithTheOldMcpListIsReadAsClaudeCodeOwnership(t *testing.T) {
 func TestAdapterForNamesTheSupportedAgentsAndRejectsTheOthers(t *testing.T) {
 	s, project := newProject(t, "toolkit: 1\nagents: [claude-code]\n")
 	for _, agent := range []string{"claude-code", "codex", "antigravity"} {
-		adapter, err := adapters.AdapterFor(agent, s.Catalog, project, "flutter")
+		adapter, err := adapters.AdapterFor(agent, s.Catalog, project, "flutter", nil)
 		if err != nil || adapter.Agent() != agent {
 			t.Errorf("%s: %v", agent, err)
 		}
 	}
-	if _, err := adapters.AdapterFor("cursor", s.Catalog, project, "flutter"); err == nil {
+	if _, err := adapters.AdapterFor("cursor", s.Catalog, project, "flutter", nil); err == nil {
 		t.Error("cursor accepted")
 	}
 }

@@ -24,6 +24,7 @@ The main session writes the plan for tier standard and large. No implementation 
 
 - Search for the concept, the feature folder and the entities involved before proposing anything new.
 - When the answer needs a sweep across many files, ask the `explorer` for a `file:line` map instead of reading them all here.
+- Search `.ai/knowledge` for the feature before the code. The Existing code section names every knowledge page the plan relied on, each after its code pointers were checked.
 
 ## File
 

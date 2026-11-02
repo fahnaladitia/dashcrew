@@ -6,6 +6,16 @@
       "args": [
         "mcp-server"
       ]
+    },
+    "dashcrew-knowledge": {
+      "type": "stdio",
+      "command": "dashcrew",
+      "args": [
+        "knowledge",
+        "serve",
+        "--clone",
+        "~/.dashcrew/knowledge/notes-knowledge"
+      ]
     }
   }
 }

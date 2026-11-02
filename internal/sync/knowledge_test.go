@@ -239,3 +239,31 @@ func TestIgnoreBlockEdgeCases(t *testing.T) {
 		t.Errorf("%q", got)
 	}
 }
+
+func TestKnowledgeRegistersTheMcpServerForEveryAgentAndDroppingItRemovesIt(t *testing.T) {
+	const agents = "toolkit: 1\nagents: [claude-code, codex, antigravity]\n"
+	s, project, _ := knowledgeProject(t, agents+"knowledge: { repo: 'git@example.com:team/notes.git' }\n")
+	run(t, s, false, false)
+	const args = `["knowledge","serve","--clone","~/.dashcrew/knowledge/notes"]`
+	if got := encode(t, object(t, read(t, project, ".mcp.json")).Value("mcpServers")); !strings.Contains(got, `"dashcrew-knowledge":{"type":"stdio","command":"dashcrew","args":`+args+`}`) {
+		t.Errorf(".mcp.json %s", got)
+	}
+	if got := encode(t, object(t, read(t, project, ".agents/mcp_config.json")).Value("mcpServers")); !strings.Contains(got, `"dashcrew-knowledge":{"command":"dashcrew","args":`+args+`}`) {
+		t.Errorf("mcp_config.json %s", got)
+	}
+	if got := read(t, project, ".codex/config.toml"); !strings.Contains(got, "[mcp_servers.dashcrew-knowledge]\ncommand = \"dashcrew\"\nargs = "+args+"\n") {
+		t.Errorf("config.toml %q", got)
+	}
+	want := `{"antigravity":["dart-mcp-server","dashcrew-knowledge"],"claude-code":["dart-mcp-server","dashcrew-knowledge"],"codex":["dart-mcp-server","dashcrew-knowledge"]}`
+	if got := encode(t, lock(t, project).Value("mcp_servers")); got != want {
+		t.Errorf("lock mcp_servers %s", got)
+	}
+
+	write(t, project, ".ai/project.yaml", agents)
+	run(t, s, false, false)
+	for _, file := range []string{".mcp.json", ".agents/mcp_config.json", ".codex/config.toml", LockPath} {
+		if strings.Contains(read(t, project, file), "dashcrew-knowledge") {
+			t.Errorf("%s still names dashcrew-knowledge", file)
+		}
+	}
+}

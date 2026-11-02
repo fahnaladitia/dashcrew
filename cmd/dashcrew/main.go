@@ -4,6 +4,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -20,6 +21,7 @@ import (
 	"github.com/fahnaladitia/dashcrew/internal/guard"
 	"github.com/fahnaladitia/dashcrew/internal/initproject"
 	"github.com/fahnaladitia/dashcrew/internal/knowledge"
+	"github.com/fahnaladitia/dashcrew/internal/knowledgemcp"
 	"github.com/fahnaladitia/dashcrew/internal/profile"
 	"github.com/fahnaladitia/dashcrew/internal/sync"
 	"github.com/fahnaladitia/dashcrew/internal/version"
@@ -531,7 +533,21 @@ func knowledgeCommand(cli cliIO) *command {
 		}
 		return 0, nil
 	}
-	return branch.add(initRepo).add(pull).add(review).add(doctorCmd)
+	serve := newCommand("serve", "Serve the knowledge clone over stdio MCP: knowledge_search, knowledge_read, knowledge_sources.\n"+
+		"sync registers it for every agent when knowledge is set. Writes nothing.")
+	serve.option("project", "p", "Project root; its repo and the sibling folders resolve code pointers.", ptr("."))
+	serve.option("clone", "", "Knowledge clone to serve; defaults to the profile's ~/.dashcrew/knowledge/<name>.", nil)
+	serve.run = func(r *results) (int, error) {
+		clone, projectDir, err := knowledgeClone(r)
+		if err != nil {
+			return 0, err
+		}
+		if err := knowledgemcp.Run(context.Background(), clone, projectDir, stdin, cli.stdout); err != nil {
+			return 0, &exitError{1, err.Error()}
+		}
+		return 0, nil
+	}
+	return branch.add(initRepo).add(pull).add(review).add(doctorCmd).add(serve)
 }
 
 // loadKnowledgeProfile is the project folder and its profile, which must set `knowledge`.
@@ -554,11 +570,23 @@ func loadKnowledgeProfile(r *results) (string, *profile.Profile, error) {
 	return projectDir, p, nil
 }
 
-// knowledgeClone is --clone, else the profile's clone, with the project folder.
+// knowledgeClone is --clone, with a leading `~/` expanded as the server registration needs, else the profile's
+// clone, with the project folder.
 func knowledgeClone(r *results) (string, string, error) {
 	if clone := r.option("clone"); clone != nil {
 		projectDir, err := absolute(*r.option("project"))
-		return filepath.Clean(*clone), filepath.Clean(projectDir), err
+		if err != nil {
+			return "", "", err
+		}
+		path := *clone
+		if strings.HasPrefix(path, "~/") {
+			home, err := os.UserHomeDir()
+			if err != nil {
+				return "", "", err
+			}
+			path = knowledge.ExpandHome(path, home)
+		}
+		return filepath.Clean(path), filepath.Clean(projectDir), nil
 	}
 	projectDir, p, err := loadKnowledgeProfile(r)
 	if err != nil {

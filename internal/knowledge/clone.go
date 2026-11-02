@@ -25,6 +25,15 @@ func CloneDir(home, name string) string { return filepath.Join(home, ".dashcrew"
 // PolicyClonePath is CloneDir as `.ai/guard.json` records it: under `~`, so the policy is the same on every machine.
 func PolicyClonePath(name string) string { return "~/.dashcrew/knowledge/" + name }
 
+// ServerName is the MCP server `dashcrew knowledge serve` runs as, and the key sync registers it under.
+const ServerName = "dashcrew-knowledge"
+
+// ServeArgs are the arguments of the `dashcrew` command sync registers as the knowledge MCP server: the clone is
+// given under `~`, which serve expands, so the registration is the same on every machine.
+func ServeArgs(name string) []string {
+	return []string{"knowledge", "serve", "--clone", PolicyClonePath(name)}
+}
+
 // ExpandHome replaces a leading `~/` with home.
 func ExpandHome(path, home string) string {
 	if rest, ok := strings.CutPrefix(path, "~/"); ok {

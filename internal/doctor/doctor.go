@@ -213,6 +213,15 @@ func (d Doctor) platform() string {
 	return p.Platform
 }
 
+// profileKnowledge is the profile's `knowledge`; nil without it or when the profile cannot be read.
+func (d Doctor) profileKnowledge() *profile.Knowledge {
+	p, err := d.parseProfile()
+	if err != nil {
+		return nil
+	}
+	return p.Knowledge
+}
+
 // readObject decodes a JSON file whose top level must be an object.
 func (d Doctor) readObject(relative string) (*omap.Map[any], error) {
 	text, err := d.read(relative)
@@ -302,7 +311,9 @@ func (d Doctor) antigravityMcp() Check {
 	if err != nil {
 		return Check{id, Warn, ".agents/mcp_config.json invalid: " + err.Error()}
 	}
-	expected := adapters.NewAntigravity(d.Catalog, d.ProjectDir, d.platform()).McpServers().Keys()
+	adapter := adapters.NewAntigravity(d.Catalog, d.ProjectDir, d.platform())
+	adapter.Knowledge = d.profileKnowledge()
+	expected := adapter.McpServers().Keys()
 	var missing []string
 	for _, name := range expected {
 		if !servers.Has(name) {
@@ -392,7 +403,9 @@ func (d Doctor) codexMcp() Check {
 	if d.exists(".codex/config.toml") {
 		toml, _ = d.read(".codex/config.toml")
 	}
-	expected := adapters.NewCodex(d.Catalog, d.ProjectDir, d.platform()).McpServerNames()
+	adapter := adapters.NewCodex(d.Catalog, d.ProjectDir, d.platform())
+	adapter.Knowledge = d.profileKnowledge()
+	expected := adapter.McpServerNames()
 	var missing []string
 	for _, name := range expected {
 		if !adapters.DefinesMcpServer(toml, name) {
@@ -839,7 +852,9 @@ func (d Doctor) mcp() Check {
 	if err != nil {
 		return Check{id, Warn, ".mcp.json invalid: " + err.Error()}
 	}
-	expected := adapters.NewClaudeCode(d.Catalog, d.ProjectDir, d.platform()).McpServers()
+	adapter := adapters.NewClaudeCode(d.Catalog, d.ProjectDir, d.platform())
+	adapter.Knowledge = d.profileKnowledge()
+	expected := adapter.McpServers()
 	var problems []string
 	for _, name := range expected.Keys() {
 		switch current := servers.Value(name); {

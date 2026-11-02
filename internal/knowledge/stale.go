@@ -63,7 +63,7 @@ func Staleness(clone, project string, now time.Time) (StaleReport, error) {
 	if err != nil {
 		return report, err
 	}
-	repos := repoResolver{project: project, dirs: map[string]string{}, files: map[string]map[string]bool{}}
+	repos := newRepoResolver(project)
 	unresolved := map[string]bool{}
 	for _, page := range pages {
 		for _, pointer := range page.Page.Pointers {
@@ -138,6 +138,10 @@ type repoResolver struct {
 	read         bool
 	dirs         map[string]string
 	files        map[string]map[string]bool
+}
+
+func newRepoResolver(project string) *repoResolver {
+	return &repoResolver{project: project, dirs: map[string]string{}, files: map[string]map[string]bool{}}
 }
 
 func (r *repoResolver) resolve(name string) (string, bool) {

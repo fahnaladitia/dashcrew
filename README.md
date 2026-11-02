@@ -105,6 +105,7 @@ ci: { github: true, dashcrew_ref: <commit or tag> }
 | `paths.*` | `.ai/plans`, `.ai/audits`, `.ai/pr`, `.ai/memory` | where plans, audits, PR descriptions and project memory live |
 | `ci.github` | `false` | write `.github/workflows/dashcrew.yml`, which runs `dashcrew check` on every pull request; see [Merge gate on GitHub](#merge-gate-on-github) |
 | `ci.dashcrew_ref` | none | dashcrew commit or tag that workflow installs; required with `ci.github` |
+| `knowledge` | not set | `{repo: <git url or path>, name: <folder>}`: the team's shared knowledge repo; see [Shared knowledge](#shared-knowledge) |
 
 ## Platforms
 
@@ -311,6 +312,29 @@ them in the format it reads.
 | AGENTS.md cut at | no documented cut | 32 KiB | 24,000 bytes |
 
 dashcrew keeps AGENTS.md under the smallest cut of the selected agents, and `doctor` warns above it.
+
+## Shared knowledge
+
+A team can keep its product knowledge (how a flow works, a contract, a trap, a decision and its reason) in one reviewed git repo that every member's agents read. Agents propose; people review.
+
+**Layout.** `README.md` (the generated index), `features/<slug>.md`, `repos/<repo>.md`, and `inbox/` for proposals. A page has front matter (`title`, `repos`, `tags`); each fact ends with `<!-- verified <repo>@<sha> <yyyy-mm-dd> -->`, and code pointers are written `` `<repo>:<path>:<line>` ``.
+
+**Setup.**
+
+1. `dashcrew knowledge init <dir>` writes that layout into a new folder. Commit it to a new repo and push it.
+2. In each project, set `knowledge: { repo: <git url or path> }` in `.ai/project.yaml` (`name` defaults to the repo's last path segment).
+3. Each member runs `dashcrew knowledge pull`: it clones the repo into `~/.dashcrew/knowledge/<name>`, or fetches and fast-forwards it. A diverged clone is reported, never reset.
+4. `dashcrew sync` links `.ai/knowledge` to the clone (a copy on Windows), git-ignores the link, and registers the knowledge MCP server for every agent in the profile. `sync` never touches the network; with no clone it warns and carries on.
+
+**Guard rule.** Agents read the whole clone but write only `.ai/knowledge/inbox/`. The guard checks the real path, so a write through the link, the absolute clone path, `..` or another symlink is blocked the same way, for edits, patches and shell redirections.
+
+**Retro and review.** With `knowledge` set, `learn` turns each product lesson into one proposal in `inbox/` (a standing instruction for agents goes to `.ai/packs/` instead). `dashcrew knowledge review` walks the inbox oldest first: accept merges the proposal into its page with a verified marker (making the page when needed), edit opens `$EDITOR`, skip or delete. It then regenerates `README.md` and prints the `git` commands to open a pull request on the knowledge repo.
+
+**Staleness.** `dashcrew knowledge doctor` reports code pointers whose path is gone at HEAD (for the current project and sibling folders), proposals waiting over 14 days, and pages with no verified marker in 180 days. It edits nothing, and exits 1 only on a stale pointer. `dashcrew doctor` runs it as the `knowledge-stale` check.
+
+**MCP server.** `dashcrew knowledge serve [--clone <dir>]` is a stdio MCP server with three tools: `knowledge_search` (BM25 over title, headings and body; page, title, snippet, score), `knowledge_read` (the page and its verified markers) and `knowledge_sources` (each code pointer as found, missing or unchecked). Its index lives in memory and is rebuilt when the clone's HEAD moves. `sync` registers it as `dashcrew-knowledge` in `.mcp.json`, `.codex/config.toml` and `.agents/mcp_config.json`, and removes it when `knowledge` is dropped. AGENTS.md, the `explorer` and the `plan` workflow tell agents to read the knowledge before planning and to check a page's code pointers before relying on it.
+
+dashcrew never commits, pushes or resets the knowledge repo; every change to it goes through a member's own pull request.
 
 ## Troubleshooting
 

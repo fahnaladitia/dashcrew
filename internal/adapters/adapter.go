@@ -9,6 +9,7 @@ import (
 
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
 	"github.com/fahnaladitia/dashcrew/internal/dartjson"
+	"github.com/fahnaladitia/dashcrew/internal/knowledge"
 	"github.com/fahnaladitia/dashcrew/internal/omap"
 	"github.com/fahnaladitia/dashcrew/internal/profile"
 	"github.com/fahnaladitia/dashcrew/internal/projectfiles"
@@ -37,15 +38,21 @@ type Adapter interface {
 // SupportedAdapters are the agents AdapterFor accepts, in message order.
 var SupportedAdapters = []string{"claude-code", "codex", "antigravity"}
 
-// AdapterFor returns the adapter for agent on platform.
-func AdapterFor(agent string, c *catalog.Catalog, projectDir, platform string) (Adapter, error) {
+// AdapterFor returns the adapter for agent on platform; a non-nil k adds the knowledge MCP server.
+func AdapterFor(agent string, c *catalog.Catalog, projectDir, platform string, k *profile.Knowledge) (Adapter, error) {
 	switch agent {
 	case "claude-code":
-		return NewClaudeCode(c, projectDir, platform), nil
+		a := NewClaudeCode(c, projectDir, platform)
+		a.Knowledge = k
+		return a, nil
 	case "codex":
-		return NewCodex(c, projectDir, platform), nil
+		a := NewCodex(c, projectDir, platform)
+		a.Knowledge = k
+		return a, nil
 	case "antigravity":
-		return NewAntigravity(c, projectDir, platform), nil
+		a := NewAntigravity(c, projectDir, platform)
+		a.Knowledge = k
+		return a, nil
 	}
 	return nil, fmt.Errorf("Agent adapter not available yet: %s. Supported: %s.", agent, strings.Join(SupportedAdapters, ", "))
 }
@@ -179,6 +186,7 @@ func objectAt(parent *omap.Map[any], key, path string) (*omap.Map[any], error) {
 
 // MergeJSONMcpServers adds servers to the `mcpServers` map of the JSON file at path, keeping every other entry.
 // A server is replaced only when dashcrew owned it before; one the user defined differently stays, with a warning.
+// A server dashcrew owned that servers no longer lists is removed.
 func MergeJSONMcpServers(project projectfiles.Project, path string, servers *omap.Map[any], owned map[string]bool, warnings *[]string) (bool, map[string]bool, error) {
 	config, err := readJSONObject(project, path)
 	if err != nil {
@@ -190,7 +198,11 @@ func MergeJSONMcpServers(project projectfiles.Project, path string, servers *oma
 	}
 	nowOwned := map[string]bool{}
 	for name := range owned {
-		nowOwned[name] = true
+		if servers.Has(name) {
+			nowOwned[name] = true
+		} else {
+			current.Delete(name)
+		}
 	}
 	for _, name := range servers.Keys() {
 		server := servers.Value(name)
@@ -264,9 +276,14 @@ func stringList(items []string) []any {
 	return out
 }
 
-func platformServers(c *catalog.Catalog, platform string) *omap.Map[catalog.McpServer] {
+// mcpServers are the platform's servers, then the knowledge server when k is set.
+func mcpServers(c *catalog.Catalog, platform string, k *profile.Knowledge) *omap.Map[catalog.McpServer] {
+	servers := omap.New[catalog.McpServer]()
 	if spec := c.Platforms[platform]; spec != nil && spec.McpServers != nil {
-		return spec.McpServers
+		servers = spec.McpServers.Copy()
 	}
-	return omap.New[catalog.McpServer]()
+	if k != nil {
+		servers.Set(knowledge.ServerName, catalog.McpServer{Command: "dashcrew", Args: knowledge.ServeArgs(k.Name)})
+	}
+	return servers
 }

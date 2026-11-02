@@ -1,7 +1,7 @@
 # Synthetic profile: a notes app team that shares a knowledge repo. The golden run has no clone, so sync warns
 # and records the link as missing.
 toolkit: 1
-agents: [claude-code, codex]
+agents: [claude-code, codex, antigravity]
 knowledge:
   repo: git@example.com:notes-team/knowledge.git
   name: notes-knowledge

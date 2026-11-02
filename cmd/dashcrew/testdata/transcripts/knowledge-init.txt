@@ -83,6 +83,7 @@ stderr:
 |   init     Write the knowledge repo layout into <dir>, which must be new or empty. Runs no git.
 |   pull     Clone the knowledge repo into ~/.dashcrew/knowledge/<name>, or fetch and fast-forward it. Never resets.
 |   review   Walk the inbox/ proposals oldest first and accept, edit, skip or delete each.
+|   serve    Serve the knowledge clone over stdio MCP: knowledge_search, knowledge_read, knowledge_sources.
 | 
 | Run "dashcrew help" to see global options.
 files: (unchanged)

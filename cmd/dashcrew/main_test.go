@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -292,5 +294,59 @@ func TestGuardInstallIsRemovedAndMalformedPayloadsReachDoctor(t *testing.T) {
 	log := filepath.Join(common, "dashcrew", "guard-malformed.log")
 	if _, stdout, _ := dashcrew(t, nil, "doctor", "-p", project); !strings.Contains(stdout, "warn  guard-log       the guard let 1 malformed payload through since the last sync, logged in "+log) {
 		t.Errorf("doctor:\n%s", stdout)
+	}
+}
+
+func TestKnowledgeServeAnswersAnMcpClientOnStdio(t *testing.T) {
+	clone := filepath.Join(t.TempDir(), "kb")
+	writeFile(t, filepath.Join(clone, ".git", "HEAD"), "1111111111111111111111111111111111111111\n")
+	writeFile(t, filepath.Join(clone, "features", "share.md"), "---\ntitle: Share\n---\n\nA share link expires after a week.\n")
+	inReader, inWriter := io.Pipe()
+	outReader, outWriter := io.Pipe()
+	previous := stdin
+	stdin = inReader
+	t.Cleanup(func() { stdin = previous })
+
+	done := make(chan int)
+	var stderr bytes.Buffer
+	go func() {
+		code := run([]string{"knowledge", "serve", "--clone", clone, "-p", t.TempDir()}, outWriter, &stderr, nil)
+		outWriter.Close()
+		done <- code
+	}()
+	responses := bufio.NewReader(outReader)
+	send := func(line string) {
+		if _, err := io.WriteString(inWriter, line+"\n"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	receive := func() string {
+		line, err := responses.ReadString('\n')
+		if err != nil {
+			t.Fatalf("%v; stderr %q", err, stderr.String())
+		}
+		return line
+	}
+
+	send(`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"t","version":"0"}}}`)
+	if got := receive(); !strings.Contains(got, `"name":"dashcrew-knowledge"`) {
+		t.Errorf("initialize %s", got)
+	}
+	send(`{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}`)
+	send(`{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"knowledge_search","arguments":{"query":"share link"}}}`)
+	if got := receive(); !strings.Contains(got, `"page":"features/share.md"`) {
+		t.Errorf("knowledge_search %s", got)
+	}
+	inWriter.Close()
+	if code := <-done; code != 0 {
+		t.Errorf("exit %d, stderr %q", code, stderr.String())
+	}
+}
+
+func TestKnowledgeServeRefusesAMissingClone(t *testing.T) {
+	missing := filepath.Join(t.TempDir(), "none")
+	code, _, stderr := dashcrew(t, nil, "knowledge", "serve", "--clone", missing)
+	if code != 1 || stderr != "No knowledge clone at "+missing+"; run dashcrew knowledge pull.\n" {
+		t.Errorf("exit %d, stderr %q", code, stderr)
 	}
 }

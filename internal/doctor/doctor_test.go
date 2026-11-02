@@ -716,3 +716,15 @@ func TestDefaultHomes(t *testing.T) {
 		t.Error("a default without a home")
 	}
 }
+
+func TestTheMcpChecksExpectTheKnowledgeServerWhenKnowledgeIsSet(t *testing.T) {
+	f := setup(t, "toolkit: 1\nagents: [claude-code, codex, antigravity]\nknowledge: { repo: 'git@example.com:team/notes.git' }\n")
+	f.sync()
+	checks := f.doctor()
+	expect(t, checks, "mcp", OK, "defined: dart-mcp-server, dashcrew-knowledge")
+	expect(t, checks, "codex-mcp", OK, "defined: dart-mcp-server, dashcrew-knowledge")
+	expect(t, checks, "antigravity-mcp", OK, "defined: dart-mcp-server, dashcrew-knowledge")
+
+	f.write(".mcp.json", `{"mcpServers":{"dart-mcp-server":{"type":"stdio","command":"dart","args":["mcp-server"]}}}`)
+	expect(t, f.doctor(), "mcp", Warn, "dashcrew-knowledge missing")
+}

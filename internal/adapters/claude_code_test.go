@@ -166,12 +166,12 @@ func TestClaudeCodeMergeLeavesAServerTheUserDefinedDifferently(t *testing.T) {
 func TestAdapterForNamesTheSupportedAgents(t *testing.T) {
 	c := shipped(t)
 	for _, agent := range []string{"claude-code", "codex", "antigravity"} {
-		adapter, err := AdapterFor(agent, c, t.TempDir(), "flutter")
+		adapter, err := AdapterFor(agent, c, t.TempDir(), "flutter", nil)
 		if err != nil || adapter.Agent() != agent {
 			t.Errorf("%s: %v", agent, err)
 		}
 	}
-	_, err := AdapterFor("cursor", c, t.TempDir(), "flutter")
+	_, err := AdapterFor("cursor", c, t.TempDir(), "flutter", nil)
 	if err == nil || err.Error() != "Agent adapter not available yet: cursor. Supported: claude-code, codex, antigravity." {
 		t.Errorf("cursor: %v", err)
 	}

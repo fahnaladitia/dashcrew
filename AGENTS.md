@@ -25,7 +25,7 @@ Doubt between two tiers means the higher one.
 
 ## Code
 
-- Go, standard library first. No new dependency without a stated reason in the plan; today the only one is `go.yaml.in/yaml/v3`.
+- Go, standard library first. No new dependency without a stated reason in the plan; today they are `go.yaml.in/yaml/v3` and `github.com/modelcontextprotocol/go-sdk` (for `knowledge serve`).
 - `cmd/dashcrew` stays thin: flag parsing and output. Logic lives in `internal/<concern>/`, one concern per package.
 - Tests live next to the code they test (`internal/<pkg>/*_test.go`), with hand-written fakes and temp folders, no mocking library.
 - Generated output is checked with goldens: `test/golden/` (sync and init output), `cmd/dashcrew/testdata/transcripts/` (CLI output) and `internal/guard/testdata/` (guard answers).

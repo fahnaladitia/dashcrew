@@ -2,4 +2,7 @@
 [mcp_servers.dart-mcp-server]
 command = "dart"
 args = ["mcp-server"]
+[mcp_servers.dashcrew-knowledge]
+command = "dashcrew"
+args = ["knowledge","serve","--clone","~/.dashcrew/knowledge/notes-knowledge"]
 # dashcrew:end

@@ -60,15 +60,24 @@ stdout:
 | wrote   .agents/skills/tdd/SKILL.md
 | wrote   .agents/skills/verify/SKILL.md
 | wrote   .agents/skills/worktree/SKILL.md
+| wrote   .agents/agents/explorer.md
+| wrote   .agents/agents/reviewer.md
 | wrote   .claude/settings.json
 | wrote   .mcp.json
 | wrote   .codex/hooks.json
 | wrote   .codex/config.toml
+| wrote   .agents/hooks.json
+| wrote   .agents/mcp_config.json
 | wrote   .gitignore
 stderr:
 | warning: knowledge clone notes-knowledge is missing (~/.dashcrew/knowledge/notes-knowledge); run dashcrew knowledge pull
 files:
 + w/.agents  dir
++ w/.agents/agents  dir
++ w/.agents/agents/explorer.md  -rw-r--r-- sha256:6270442dde4a258f
++ w/.agents/agents/reviewer.md  -rw-r--r-- sha256:19961d2490230172
++ w/.agents/hooks.json  -rw-r--r-- sha256:948bc96d3fae079c
++ w/.agents/mcp_config.json  -rw-r--r-- sha256:480f6097f574dc0d
 + w/.agents/skills  dir
 + w/.agents/skills/acceptance-criteria  dir
 + w/.agents/skills/acceptance-criteria/SKILL.md  -rw-r--r-- sha256:efe8d2bd85968ed1
@@ -99,7 +108,7 @@ files:
 + w/.agents/skills/mobile-security  dir
 + w/.agents/skills/mobile-security/SKILL.md  -rw-r--r-- sha256:eac82c26b4557b97
 + w/.agents/skills/plan  dir
-+ w/.agents/skills/plan/SKILL.md  -rw-r--r-- sha256:1d3e4df0b40d1691
++ w/.agents/skills/plan/SKILL.md  -rw-r--r-- sha256:d8b3aa562f437218
 + w/.agents/skills/pr-create  dir
 + w/.agents/skills/pr-create/SKILL.md  -rw-r--r-- sha256:88b181afa8381177
 + w/.agents/skills/pr-description  dir
@@ -121,10 +130,10 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:352a198c0be12c9a
-+ w/.ai/lock.json  -rw-r--r-- sha256:3fe0762c82e7fa40
++ w/.ai/lock.json  -rw-r--r-- sha256:1193b76c5343abe3
 + w/.claude  dir
 + w/.claude/agents  dir
-+ w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
++ w/.claude/agents/explorer.md  -rw-r--r-- sha256:ac4fca699a608a65
 + w/.claude/agents/reviewer.md  -rw-r--r-- sha256:6083120a064a4fee
 + w/.claude/settings.json  -rw-r--r-- sha256:ab785cea7a7a2c39
 + w/.claude/skills  dir
@@ -157,7 +166,7 @@ files:
 + w/.claude/skills/mobile-security  dir
 + w/.claude/skills/mobile-security/SKILL.md  -rw-r--r-- sha256:1bc29e41680bd49b
 + w/.claude/skills/plan  dir
-+ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:d5653cd7d3348e13
++ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:7e3370729ef7f6ce
 + w/.claude/skills/pr-create  dir
 + w/.claude/skills/pr-create/SKILL.md  -rw-r--r-- sha256:e534b517a93d2650
 + w/.claude/skills/pr-description  dir
@@ -178,15 +187,15 @@ files:
 + w/.claude/skills/worktree/SKILL.md  -rw-r--r-- sha256:5ec38c7fbd7746bb
 + w/.codex  dir
 + w/.codex/agents  dir
-+ w/.codex/agents/explorer.toml  -rw-r--r-- sha256:b45965989f03244c
++ w/.codex/agents/explorer.toml  -rw-r--r-- sha256:ff8631e1ed14ab7e
 + w/.codex/agents/reviewer.toml  -rw-r--r-- sha256:ea588ab99f8c93a4
-+ w/.codex/config.toml  -rw-r--r-- sha256:75476fb2976c79a3
++ w/.codex/config.toml  -rw-r--r-- sha256:c4c25cd708159f31
 + w/.codex/hooks.json  -rw-r--r-- sha256:5d43adc427460026
 + w/.github  dir
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
 + w/.gitignore  -rw-r--r-- sha256:3a003918a77c43a0
-+ w/.mcp.json  -rw-r--r-- sha256:745dcf12d577148c
-+ w/AGENTS.md  -rw-r--r-- sha256:37b94d6c6708a229
++ w/.mcp.json  -rw-r--r-- sha256:4b1f4a87542aa9fc
++ w/AGENTS.md  -rw-r--r-- sha256:f0ccb90142851e02
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 2: dashcrew "sync" "-p" "."
@@ -231,20 +240,23 @@ stdout:
 | ok    project-packs   no project packs in .ai/packs
 | ok    lock            .ai/lock.json schema 1
 | ok    version         lock written by this dashcrew (0.0.1)
-| ok    drift           57 generated files match the lock
+| ok    drift           59 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
 | fail  guard-binary    dashcrew is not on PATH, so .ai/bin/guard refuses every tool call: install dashcrew 0.1.0 or newer (brew install fahnaladitia/tap/dashcrew)
 | ok    hook            PreToolUse guard hook present
 | ok    claude-md       CLAUDE.md imports AGENTS.md
-| ok    mcp             defined: dart-mcp-server
+| ok    mcp             defined: dart-mcp-server, dashcrew-knowledge
 | warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
 | ok    codex-hook      PreToolUse guard hook present; Codex runs it once approved in /hooks
-| ok    codex-mcp       defined: dart-mcp-server
+| ok    codex-mcp       defined: dart-mcp-server, dashcrew-knowledge
 | ok    codex-skills-budget24 skills, list 4410 of 8000 characters
 | warn  codex-trust     project not trusted in the Codex config, so .codex/ is ignored; trust it when Codex asks, then approve the guard in /hooks
+| ok    antigravity-hookPreToolUse guard hook present under dashcrew-guard
+| ok    antigravity-mcp defined: dart-mcp-server, dashcrew-knowledge
+| ok    antigravity-roles2 roles, every tool name known
 | warn  knowledge       no clone of notes-knowledge at ~/.dashcrew/knowledge/notes-knowledge; run dashcrew knowledge pull
-| ok    agents-md-size  AGENTS.md 16152 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16151 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)
@@ -257,20 +269,23 @@ stdout:
 | ok    project-packs   no project packs in .ai/packs
 | ok    lock            .ai/lock.json schema 1
 | ok    version         lock written by this dashcrew (0.0.1)
-| ok    drift           57 generated files match the lock
+| ok    drift           59 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
 | fail  guard-binary    dashcrew is not on PATH, so .ai/bin/guard refuses every tool call: install dashcrew 0.1.0 or newer (brew install fahnaladitia/tap/dashcrew)
 | ok    hook            PreToolUse guard hook present
 | ok    claude-md       CLAUDE.md imports AGENTS.md
-| ok    mcp             defined: dart-mcp-server
+| ok    mcp             defined: dart-mcp-server, dashcrew-knowledge
 | warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
 | ok    codex-hook      PreToolUse guard hook present; Codex runs it once approved in /hooks
-| ok    codex-mcp       defined: dart-mcp-server
+| ok    codex-mcp       defined: dart-mcp-server, dashcrew-knowledge
 | ok    codex-skills-budget24 skills, list 4410 of 8000 characters
 | warn  codex-trust     project not trusted in the Codex config, so .codex/ is ignored; trust it when Codex asks, then approve the guard in /hooks
+| ok    antigravity-hookPreToolUse guard hook present under dashcrew-guard
+| ok    antigravity-mcp defined: dart-mcp-server, dashcrew-knowledge
+| ok    antigravity-roles2 roles, every tool name known
 | warn  knowledge       no clone of notes-knowledge at ~/.dashcrew/knowledge/notes-knowledge; run dashcrew knowledge pull
-| ok    agents-md-size  AGENTS.md 16152 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16151 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)
@@ -282,10 +297,10 @@ stdout:
 | ok    project-packs   no project packs in .ai/packs
 | ok    lock            .ai/lock.json schema 1
 | ok    version         lock written by this dashcrew (0.0.1)
-| ok    drift           57 generated files match the lock
+| ok    drift           59 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16152 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16151 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | skip  pr-sections     no PR body; pass --pr-body <file> or run on a pull_request event
 stderr: (empty)
@@ -299,10 +314,10 @@ stdout:
 | ok    project-packs   no project packs in .ai/packs
 | ok    lock            .ai/lock.json schema 1
 | ok    version         lock written by this dashcrew (0.0.1)
-| ok    drift           57 generated files match the lock
+| ok    drift           59 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16152 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16151 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | fail  pr-sections     missing: ## Changes, ## Affected files, ## Testing, ## Notes / not done (write "None" under a heading that does not apply)
 stderr: (empty)
@@ -316,10 +331,10 @@ stdout:
 | ok    project-packs   no project packs in .ai/packs
 | ok    lock            .ai/lock.json schema 1
 | ok    version         lock written by this dashcrew (0.0.1)
-| ok    drift           57 generated files match the lock
+| ok    drift           59 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16152 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16151 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | fail  pr-sections     missing: ## Changes, ## Affected files, ## Testing, ## Notes / not done (write "None" under a heading that does not apply)
 | ::error title=dashcrew pr-sections::missing: ## Changes, ## Affected files, ## Testing, ## Notes / not done (write "None" under a heading that does not apply)
@@ -334,10 +349,10 @@ stdout:
 | ok    project-packs   no project packs in .ai/packs
 | ok    lock            .ai/lock.json schema 1
 | ok    version         lock written by this dashcrew (0.0.1)
-| ok    drift           57 generated files match the lock
+| ok    drift           59 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16152 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16151 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | ok    pr-sections     5 required sections present
 stderr: (empty)

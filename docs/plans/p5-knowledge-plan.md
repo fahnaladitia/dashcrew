@@ -181,3 +181,13 @@ AGENTS.md gets one short line in the toolkit section: when `knowledge` is config
     - The README index (from `## Pages`) is grouped by repo, then tag. Git commands are printed, never run.
   - K5: `knowledge doctor` prints `pointer`, `unchecked`, `proposal` and `page` lines, and exits 1 only on a stale pointer. Paths are checked via `git ls-tree HEAD`. `dashcrew doctor` gets a warn-level `knowledge-stale` line.
   - New transcripts `knowledge-review` and `knowledge-doctor`. 21 new tests. Full suite passes in about 21 s.
+- K6-K7 done.
+  - `dashcrew knowledge serve` (`internal/knowledgemcp`) uses `github.com/modelcontextprotocol/go-sdk` v1.8.0. Tools: `knowledge_search`, `knowledge_read` and `knowledge_sources`. Each returns text and structured JSON, and each description says to verify pointers.
+  - BM25 (title 3, headings 2, body 1; k1 1.2, b 0.75; stop words and suffix stripping) finds the right page in the top 3 for 20 of 20 fixture questions over 40 pages.
+  - The index rebuilds when the clone's HEAD file changes; no git process runs. `PageFile` rejects absolute paths, `..`, backslashes, `.git/`, non-`.md` files and symlinks that escape the clone.
+  - The server is registered as `dashcrew-knowledge` in `.mcp.json`, `.codex/config.toml` and `.agents/mcp_config.json`, and doctor expects it. `MergeJSONMcpServers` now removes owned servers that are no longer listed.
+  - AGENTS.md: with knowledge set, the memory line becomes one combined line that also covers `.ai/knowledge`, at no byte cost. A test enforces that. The heaviest combination stays at 23,791 bytes or less.
+  - `explorer` and `plan` get knowledge-gated lines. README gains a "Shared knowledge" section.
+  - Only `sample-knowledge` changed among the goldens (antigravity was added to its profile). 23 new tests. The full suite passes in about 23 s.
+
+P5 is complete in code. Left: the live check in "How we check" (`knowledge init` a private test repo, pull, retro, review, then ask the agent).

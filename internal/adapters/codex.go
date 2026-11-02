@@ -36,6 +36,8 @@ type Codex struct {
 	catalog  *catalog.Catalog
 	project  projectfiles.Project
 	platform string
+	// Knowledge adds the `dashcrew knowledge serve` MCP server when set.
+	Knowledge *profile.Knowledge
 }
 
 // NewCodex returns the adapter; platform's `mcp_servers` go to `.codex/config.toml`.
@@ -46,8 +48,11 @@ func NewCodex(c *catalog.Catalog, projectDir, platform string) *Codex {
 // Agent is `codex`.
 func (a *Codex) Agent() string { return "codex" }
 
-// McpServerNames are the platform's servers the dashcrew block of `.codex/config.toml` defines, in catalog order.
-func (a *Codex) McpServerNames() []string { return platformServers(a.catalog, a.platform).Keys() }
+// McpServerNames are the servers the dashcrew block of `.codex/config.toml` defines: the platform's in catalog
+// order, then the knowledge server.
+func (a *Codex) McpServerNames() []string {
+	return mcpServers(a.catalog, a.platform, a.Knowledge).Keys()
+}
 
 // Files are the role TOML files and the shared skill files.
 func (a *Codex) Files(p *profile.Profile, targets []render.RenderedTarget, context map[string]any, lockedFiles map[string]string, warnings *[]string) (*omap.Map[string], error) {
@@ -128,7 +133,7 @@ func (a *Codex) mergeMcp(warnings *[]string) (bool, map[string]bool, error) {
 
 	owned := map[string]bool{}
 	var tables strings.Builder
-	servers := platformServers(a.catalog, a.platform)
+	servers := mcpServers(a.catalog, a.platform, a.Knowledge)
 	for _, name := range servers.Keys() {
 		if DefinesMcpServer(before+"\n"+after, name) {
 			warn(warnings, `.codex/config.toml already defines "`+name+`"; left as is.`)

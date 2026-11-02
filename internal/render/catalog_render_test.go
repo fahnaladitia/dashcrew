@@ -270,10 +270,16 @@ func TestLargestOptionOfEveryFamilyStaysUnderTheLimit(t *testing.T) {
 		stack = append(stack, family+": "+largest)
 	}
 
-	content := targetContent(t, renderShipped(t, "toolkit: 1\nagents: [claude-code]\nstack: { "+strings.Join(stack, ", ")+" }\n"), "agents_md")
+	profile := "toolkit: 1\nagents: [claude-code]\nstack: { " + strings.Join(stack, ", ") + " }\n"
+	content := targetContent(t, renderShipped(t, profile), "agents_md")
+	withKnowledge := targetContent(t, renderShipped(t, profile+"knowledge: { repo: 'git@example.com:team/notes.git' }\n"), "agents_md")
+	t.Logf("%s: AGENTS.md %d bytes, %d with knowledge", strings.Join(stack, ", "), len(content), len(withKnowledge))
 
 	if len(content) >= antigravityAgentsMdLimit {
 		t.Errorf("%s: AGENTS.md %d bytes", strings.Join(stack, ", "), len(content))
+	}
+	if len(withKnowledge) > len(content) {
+		t.Errorf("knowledge adds %d bytes to the heaviest AGENTS.md; pay for its line in the knowledge-gated text", len(withKnowledge)-len(content))
 	}
 }
 
@@ -379,10 +385,37 @@ func TestKnowledgeAddsTheProposalBranchToLearnOnly(t *testing.T) {
 			t.Errorf("continuous-learning lacks %q", want)
 		}
 	}
+	changes := map[string]bool{"workflow/learn": true, "skill/continuous-learning": true, "agents_md": true, "role/explorer": true, "workflow/plan": true}
 	for _, target := range on {
-		if target.Target != "workflow/learn" && target.Target != "skill/continuous-learning" &&
-			target.Content != targetContent(t, off, target.Target) {
+		if !changes[target.Target] && target.Content != targetContent(t, off, target.Target) {
 			t.Errorf("%s changed with knowledge set", target.Target)
+		}
+	}
+}
+
+func TestKnowledgeAddsALineToAgentsMdExplorerAndPlanOnlyWhenSet(t *testing.T) {
+	for _, platform := range []string{"", "platform: other\nplatform_config: { detect: [go.mod], commands: { analyze: go vet, test: go test, test_scoped: go test, deps: go mod download } }\n"} {
+		profile := "toolkit: 1\nagents: [claude-code]\n" + platform
+		off := renderShipped(t, profile)
+		on := renderShipped(t, profile+"knowledge: { repo: git@example.com:team/notes-knowledge.git }\n")
+		wants := map[string][]string{
+			"agents_md":     {"- Read `.ai/memory` (never rewrite it) and `.ai/knowledge` before planning; verify its code pointers before use.\n"},
+			"role/explorer": {"Before sweeping code, search `.ai/knowledge`", "name the pages you used", "Knowledge: <pages used, or none>"},
+			"workflow/plan": {"Search `.ai/knowledge` for the feature before the code.", "names every knowledge page the plan relied on"},
+		}
+		for name, lines := range wants {
+			withKnowledge, without := targetContent(t, on, name), targetContent(t, off, name)
+			for _, line := range lines {
+				if !strings.Contains(withKnowledge, line) {
+					t.Errorf("%q %s lacks %q", platform, name, line)
+				}
+			}
+			if strings.Contains(without, ".ai/knowledge") || strings.Contains(without, "Knowledge:") {
+				t.Errorf("%q %s mentions knowledge without the profile key", platform, name)
+			}
+		}
+		if agentsMd := targetContent(t, on, "agents_md"); strings.Contains(agentsMd, "team feedback") || len(agentsMd) > len(targetContent(t, off, "agents_md")) {
+			t.Errorf("%q: the knowledge line is not paid for by the memory line it replaces", platform)
 		}
 	}
 }
