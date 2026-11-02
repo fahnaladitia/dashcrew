@@ -70,9 +70,10 @@ func (f *fixture) read(relative string) string {
 	return string(data)
 }
 
+// delete removes the file, link or folder at relative; a link is removed, never what it points to.
 func (f *fixture) delete(relative string) {
 	f.t.Helper()
-	if err := os.Remove(filepath.Join(f.project, filepath.FromSlash(relative))); err != nil {
+	if err := os.RemoveAll(filepath.Join(f.project, filepath.FromSlash(relative))); err != nil {
 		f.t.Fatal(err)
 	}
 }

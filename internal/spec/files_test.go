@@ -148,7 +148,12 @@ func TestReviseWritesNothingUnlessEveryFileIsApproved(t *testing.T) {
 
 func TestRootAndDisplay(t *testing.T) {
 	root, relative, ok := Root("/home/a/specs-old/kb/specs/1.0/x/prd.md")
-	if !ok || root != filepath.FromSlash("/home/a/specs-old/kb") || relative != "specs/1.0/x/prd.md" {
+	// Root makes the path absolute first, which on Windows puts it on the current drive.
+	want, err := filepath.Abs(filepath.FromSlash("/home/a/specs-old/kb"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !ok || root != want || relative != "specs/1.0/x/prd.md" {
 		t.Errorf("%s %s %v", root, relative, ok)
 	}
 	if got := Display("notes/prd.md"); got != "notes/prd.md" {

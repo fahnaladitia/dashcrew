@@ -91,6 +91,9 @@ func TestAMissingCloneWarnsAndSyncContinues(t *testing.T) {
 }
 
 func TestSyncLinksTheCloneRecordsItsHeadAndRepairsTheLink(t *testing.T) {
+	if goos == "windows" {
+		t.Skip("sync copies the clone on Windows instead of linking it; TestSyncCopiesTheCloneWhenSymlinksFail covers the copy")
+	}
 	s, project, home := knowledgeProject(t, knowledgeProfile)
 	clone := fakeClone(t, home, shaOne)
 	result := run(t, s, false, false)
@@ -161,6 +164,9 @@ func TestSyncCopiesTheCloneWhenSymlinksFail(t *testing.T) {
 	}
 
 	symlink = original
+	if goos == "windows" {
+		t.Skip("sync copies the clone on Windows even when symlinks work, so the copy is never replaced by a link")
+	}
 	if relinked := run(t, s, false, false); !slices.Contains(relinked.Written, ".ai/knowledge") || !isLink(project, ".ai/knowledge") {
 		t.Errorf("a copy was not replaced by the link once symlinks work: %v", relinked.Written)
 	}

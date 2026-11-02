@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
+	"github.com/fahnaladitia/dashcrew/internal/pathstyle"
 )
 
 // fixture is an origin, a clone with main and develop pushed, and the
@@ -471,4 +472,36 @@ func TestWatchNamesLimitTheWatchToThoseWorktrees(t *testing.T) {
 	}
 	_, err := w.watch().Pass([]string{"feat-x"})
 	errorContaining(t, err, "No worktree named feat-x")
+}
+
+// TestWorktreePathsMatchGitForWindows pins the comparison List, Create and existing make between the path git prints
+// (forward slashes on Windows) and the path dashcrew builds with the host separator.
+func TestWorktreePathsMatchGitForWindows(t *testing.T) {
+	original := pathStyle
+	t.Cleanup(func() { pathStyle = original })
+	pathStyle = pathstyle.Windows
+	for _, c := range []struct {
+		git, built string
+		same       bool
+	}{
+		{"C:/Users/runneradmin/AppData/Local/Temp/x/001/app.worktrees/feat-a", `C:\Users\runneradmin\AppData\Local\Temp\x\001\app.worktrees\feat-a`, true},
+		{"C:/Users/me/app", `C:\Users\me\app`, true},
+		{"c:/Users/me/app", `C:\Users\me\app`, true},
+		{"C:/Users/me/App.worktrees/Feat-A", `C:\Users\me\app.worktrees\feat-a`, true},
+		{"//server/share/app", `\\server\share\app`, true},
+		{"C:/Users/me/app.worktrees/feat-a", `C:\Users\me\app.worktrees\feat-b`, false},
+		{"C:/Users/me/app", `C:\Users\me\app.worktrees`, false},
+		{"D:/Users/me/app", `C:\Users\me\app`, false},
+	} {
+		if got := samePath(filepath.FromSlash(c.git), c.built); got != c.same {
+			t.Errorf("samePath(%q, %q) = %v, want %v", c.git, c.built, got, c.same)
+		}
+		if got := samePath(c.git, c.built); got != c.same {
+			t.Errorf("samePath(%q, %q) without FromSlash = %v, want %v", c.git, c.built, got, c.same)
+		}
+	}
+	pathStyle = pathstyle.POSIX
+	if samePath("/home/me/App", "/home/me/app") || !samePath("/home/me/app", "/home/me/app") {
+		t.Error("POSIX paths are not compared exactly")
+	}
 }

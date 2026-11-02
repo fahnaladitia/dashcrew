@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"slices"
 	"strings"
 	stdsync "sync"
@@ -712,7 +713,8 @@ func TestGuardShim(t *testing.T) {
 			t.Error("shim content")
 		}
 		info, err := os.Stat(filepath.Join(project, ".ai", "bin", "guard"))
-		if err != nil || info.Mode().Perm()&0o111 != 0o111 {
+		// Windows has no executable bit; Git Bash runs the shim through sh all the same.
+		if err != nil || (runtime.GOOS != "windows" && info.Mode().Perm()&0o111 != 0o111) {
 			t.Errorf("shim mode %v, %v", info, err)
 		}
 		if !slices.Contains(lockedPaths(t, project), guard.ShimPath) || lock(t, project).Value("guard_min_version") != version.GuardMinimum {

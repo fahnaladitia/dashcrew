@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/fahnaladitia/dashcrew/internal/pathstyle"
 )
 
 // LinkPath is where sync links the clone inside a project.
@@ -44,13 +46,19 @@ func ExpandHome(path, home string) string {
 
 // ResolveRepo is the repo git clones: a URL or scp-like address as is, a relative path joined to projectDir.
 func ResolveRepo(repo, projectDir string) string {
-	if strings.Contains(repo, "://") || filepath.IsAbs(repo) {
+	return resolveRepo(pathstyle.Host, repo, projectDir)
+}
+
+// resolveRepo is ResolveRepo for paths spelled in s. A Windows path rooted without a drive (`\srv\kb`) is not
+// relative: git reads it from the current drive's root, so it is kept as written.
+func resolveRepo(s pathstyle.Style, repo, projectDir string) string {
+	if strings.Contains(repo, "://") || s.IsRooted(repo) {
 		return repo
 	}
 	if before, _, ok := strings.Cut(repo, ":"); ok && !strings.ContainsAny(before, `/\`) && len(before) > 1 {
 		return repo
 	}
-	return filepath.Join(projectDir, filepath.FromSlash(repo))
+	return s.Join(projectDir, s.FromSlash(repo))
 }
 
 func short(sha string) string {

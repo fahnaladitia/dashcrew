@@ -19,6 +19,7 @@ import (
 
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
 	"github.com/fahnaladitia/dashcrew/internal/omap"
+	"github.com/fahnaladitia/dashcrew/internal/pathstyle"
 	"github.com/fahnaladitia/dashcrew/internal/profile"
 	"github.com/fahnaladitia/dashcrew/internal/yamlutil"
 )
@@ -97,6 +98,18 @@ func gitOrFail(dir string, args ...string) (string, error) {
 	}
 	return r.stdout, nil
 }
+
+// pathStyle compares the paths git prints with the ones dashcrew builds: exactly on POSIX, and on Windows across
+// `/` and `\`, drive letter case and name case, since git for Windows prints `C:/Users/...`.
+var pathStyle = func() pathstyle.Style {
+	if runtime.GOOS == "windows" {
+		return pathstyle.Windows
+	}
+	return pathstyle.POSIX
+}()
+
+// samePath tells whether a and b, both clean absolute paths, name the same folder in pathStyle.
+func samePath(a, b string) bool { return pathStyle.Same(a, b) }
 
 // join is Dart's `p.join` for two parts: no normalization, and an absolute second part wins.
 func join(base, part string) string {
@@ -192,7 +205,7 @@ func (w *Worktrees) Create(branch, base string, name *string, installDeps bool, 
 		return nil, err
 	}
 	for i := range infos {
-		if infos[i].Path == target {
+		if samePath(infos[i].Path, target) {
 			return &infos[i], nil
 		}
 	}
@@ -238,7 +251,8 @@ func (w *Worktrees) List() ([]Info, error) {
 				branchLine = line
 			}
 		}
-		if worktreePath == "" || worktreePath == w.MainDir() || branchLine == "" || !isDir(worktreePath) {
+		worktreePath = filepath.FromSlash(worktreePath)
+		if worktreePath == "" || samePath(worktreePath, w.MainDir()) || branchLine == "" || !isDir(worktreePath) {
 			continue
 		}
 		branch := strings.Replace(branchLine, "branch refs/heads/", "", 1)
@@ -291,7 +305,7 @@ func (w *Worktrees) existing(name string) (string, error) {
 		return "", err
 	}
 	for _, info := range infos {
-		if info.Path == target {
+		if samePath(info.Path, target) {
 			return target, nil
 		}
 	}

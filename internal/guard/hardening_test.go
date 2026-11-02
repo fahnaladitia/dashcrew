@@ -359,7 +359,7 @@ func TestMalformedPayloadsAreAllowedAndLogged(t *testing.T) {
 		{`{"tool_name":7,"tool_input":{"command":"git push ` + secret + `"}}`, "2026-11-01T10:00:00Z\tunknown\thook field tool_name has the wrong type"},
 		{`{"tool_name":"Write","tool_input":{"file_path":7,"content":"` + secret + `"}}`, "2026-11-01T10:00:00Z\tclaude-code\thook field file_path has the wrong type"},
 		{`{"tool_name":"MultiEdit","tool_input":{"file_path":"lib/a.dart","edits":["` + secret + `"]}}`, "2026-11-01T10:00:00Z\tclaude-code\thook field edits has the wrong type"},
-		{`{"toolCall":{"name":"run_command","args":{"CommandLine":7}},"workspacePaths":["` + dir + `"]}`, "2026-11-01T10:00:00Z\tantigravity\thook field CommandLine has the wrong type"},
+		{`{"toolCall":{"name":"run_command","args":{"CommandLine":7}},"workspacePaths":[` + jsonString(dir) + `]}`, "2026-11-01T10:00:00Z\tantigravity\thook field CommandLine has the wrong type"},
 		{patchHook("*** Move to: lib/" + secret + ".dart\n+x\n"), "2026-11-01T10:00:00Z\tcodex\tapply_patch moves a file before naming one"},
 	} {
 		if code := runIn(t, dir, policy, c.stdin, now); code != 0 {
@@ -412,7 +412,7 @@ func TestMalformedLogFollowsTheHookCwdAndWorktrees(t *testing.T) {
 	}
 	elsewhere := t.TempDir()
 	policy := writePolicy(t, elsewhere)
-	runIn(t, elsewhere, policy, `{"tool_name":"Write","tool_input":{"file_path":7},"cwd":"`+filepath.Join(worktree, "lib")+`"}`, time.Now())
+	runIn(t, elsewhere, policy, `{"tool_name":"Write","tool_input":{"file_path":7},"cwd":`+jsonString(filepath.Join(worktree, "lib"))+`}`, time.Now())
 	if lines := logLines(t, common); len(lines) != 1 || !strings.HasSuffix(lines[0], "\tclaude-code\thook field file_path has the wrong type") {
 		t.Errorf("log %q", lines)
 	}

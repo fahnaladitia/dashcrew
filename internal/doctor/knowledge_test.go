@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -81,8 +82,12 @@ func TestKnowledgeLinkAgeAndCommitsBehind(t *testing.T) {
 	}
 	f.sync()
 
+	placed := "linked to"
+	if runtime.GOOS == "windows" {
+		placed = "copied from"
+	}
 	expect(t, f.knowledgeDoctor(pulled.Add(20*time.Minute), false), "knowledge", OK,
-		"linked to ~/.dashcrew/knowledge/notes, pulled less than an hour ago")
+		placed+" ~/.dashcrew/knowledge/notes, pulled less than an hour ago")
 	expect(t, f.knowledgeDoctor(pulled.Add(time.Hour), false), "knowledge", OK, "pulled 1 hour ago")
 	expect(t, f.knowledgeDoctor(pulled.Add(50*time.Hour), true), "knowledge", OK, "pulled 2 days ago, up to date with its remote")
 
@@ -97,12 +102,19 @@ func TestKnowledgeLinkAgeAndCommitsBehind(t *testing.T) {
 
 	f.delete(".ai/knowledge")
 	expect(t, f.knowledgeDoctor(pulled, false), "knowledge", Warn, ".ai/knowledge is missing; run dashcrew sync")
-	if err := os.Symlink(t.TempDir(), filepath.Join(f.project, ".ai", "knowledge")); err != nil {
+	// Creating a symlink on Windows needs Developer Mode or admin rights; without them this step is left out.
+	if err := os.Symlink(t.TempDir(), filepath.Join(f.project, ".ai", "knowledge")); err == nil {
+		expect(t, f.knowledgeDoctor(pulled, false), "knowledge", Warn, "is not the clone; run dashcrew sync")
+		f.delete(".ai/knowledge")
+	} else if runtime.GOOS != "windows" {
 		t.Fatal(err)
 	}
-	expect(t, f.knowledgeDoctor(pulled, false), "knowledge", Warn, "is not the clone; run dashcrew sync")
-	f.delete(".ai/knowledge")
 	f.write(".ai/knowledge/mine.md", "mine\n")
+	if runtime.GOOS == "windows" {
+		// The lock records the copy sync made, so a folder in its place reads as that copy.
+		expect(t, f.knowledgeDoctor(pulled, false), "knowledge", OK, "copied from ~/.dashcrew/knowledge/notes")
+		return
+	}
 	expect(t, f.knowledgeDoctor(pulled, false), "knowledge", Warn, ".ai/knowledge is not the link dashcrew made")
 }
 

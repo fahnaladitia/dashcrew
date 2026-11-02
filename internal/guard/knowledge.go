@@ -5,12 +5,12 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"path/filepath"
 	"runtime"
 	"strings"
 
 	"github.com/fahnaladitia/dashcrew/internal/guard/shell"
 	"github.com/fahnaladitia/dashcrew/internal/knowledge"
+	"github.com/fahnaladitia/dashcrew/internal/pathstyle"
 	"github.com/fahnaladitia/dashcrew/internal/spec"
 )
 
@@ -33,11 +33,12 @@ const specReviseReason = "dashcrew spec revise reopens an approved spec; a membe
 // maxLinks is how many symbolic links realPath follows before it treats the rest of the path as plain names.
 const maxLinks = 40
 
-// foldCase is true where file names are usually case-insensitive, so a differently cased path still matches.
-var foldCase = runtime.GOOS == "darwin" || runtime.GOOS == "windows"
-
-// knowledgeRoots is where the hook runs and the knowledge folders, as real paths, on this machine.
+// knowledgeRoots is where the hook runs and the knowledge folders, as real paths, on this machine. Every path is
+// spelled and compared in style, and links are read through fsys, so the rules are the same for a Windows path
+// tested on any host.
 type knowledgeRoots struct {
+	style     pathstyle.Style
+	fsys      pathFS
 	cwd, home string
 	// roots are the clone and the project's `.ai/knowledge` (a link to the clone, or a copy of it).
 	roots []string
@@ -49,85 +50,154 @@ func (p Policy) at(cwd, project, home string) Policy {
 	if cwd == "" {
 		return p
 	}
-	k := &knowledgeRoots{cwd: cwd, home: home}
-	if p.KnowledgeClone != "" {
-		if clone := p.KnowledgeClone; !strings.HasPrefix(clone, "~/") || home != "" {
-			k.roots = append(k.roots, realPath(absolutePath(knowledge.ExpandHome(clone, home), cwd)))
+	p.knowledge = newKnowledgeRoots(pathstyle.Host, osFS{}, cwd, project, home, p.KnowledgeClone)
+	return p
+}
+
+// newKnowledgeRoots resolves clone (`~/...` or a path) and the project's `.ai/knowledge` on a machine whose paths
+// are spelled in s. Git Bash spellings of cwd, project and home (`/c/Users/me`) are read as Windows paths.
+func newKnowledgeRoots(s pathstyle.Style, fsys pathFS, cwd, project, home, clone string) *knowledgeRoots {
+	k := &knowledgeRoots{style: s, fsys: fsys, cwd: nativeDir(s, cwd), home: nativeDir(s, home)}
+	if clone != "" {
+		if !strings.HasPrefix(clone, "~/") || home != "" {
+			k.roots = append(k.roots, k.realPath(k.absolute(k.expandHome(clone))))
 		}
 		if project != "" {
-			if link := realPath(filepath.Join(project, filepath.FromSlash(knowledge.LinkPath))); !containsPath(k.roots, link) {
+			if link := k.realPath(s.Join(nativeDir(s, project), s.FromSlash(knowledge.LinkPath))); !k.containsPath(k.roots, link) {
 				k.roots = append(k.roots, link)
 			}
 		}
 	}
-	p.knowledge = k
-	return p
+	return k
 }
 
-func containsPath(paths []string, path string) bool {
+// nativeDir is a folder the hook or the environment named, spelled as s spells it.
+func nativeDir(s pathstyle.Style, dir string) string {
+	if s.Windows {
+		if native, ok := pathstyle.MSYSDrive(dir); ok {
+			return native
+		}
+	}
+	return s.Normalize(dir)
+}
+
+// expandHome is the policy's clone path with a leading `~/` replaced by the home folder.
+func (k *knowledgeRoots) expandHome(clone string) string {
+	if rest, ok := strings.CutPrefix(clone, "~/"); ok {
+		return k.style.Join(k.home, k.style.FromSlash(rest))
+	}
+	return k.style.FromSlash(clone)
+}
+
+func (k *knowledgeRoots) containsPath(paths []string, path string) bool {
 	for _, item := range paths {
-		if samePath(item, path) {
+		if k.style.Same(item, path) {
 			return true
 		}
 	}
 	return false
 }
 
-func samePath(a, b string) bool {
-	if foldCase {
-		return strings.EqualFold(a, b)
-	}
-	return a == b
-}
-
-func absolutePath(path, cwd string) string {
-	if filepath.IsAbs(path) {
+// absolute is path joined to the working folder and cleaned, unless it is absolute already.
+func (k *knowledgeRoots) absolute(path string) string {
+	if k.style.IsAbs(path) {
 		return path
 	}
-	return filepath.Join(cwd, path)
+	return k.style.Clean(k.style.Abs(path, k.cwd))
+}
+
+// pathFS is what the knowledge rules read from the file system: whether a name exists and is a symbolic link, a
+// link's target, and the first bytes of a file.
+type pathFS interface {
+	lstat(name string) (exists, link bool)
+	readlink(name string) (string, error)
+	// head is the first n bytes of the file name; an error wrapping fs.ErrNotExist when nothing is there.
+	head(name string, n int) ([]byte, error)
+}
+
+// osFS is the real file system.
+type osFS struct{}
+
+func (osFS) lstat(name string) (bool, bool) {
+	info, err := os.Lstat(name)
+	if err != nil {
+		return false, false
+	}
+	if info.Mode()&fs.ModeSymlink != 0 {
+		return true, true
+	}
+	// Go reports a Windows junction as irregular, not as a link; it redirects a path all the same.
+	if runtime.GOOS == "windows" && info.Mode()&fs.ModeIrregular != 0 {
+		if _, err := os.Readlink(name); err == nil {
+			return true, true
+		}
+	}
+	return true, false
+}
+
+func (osFS) readlink(name string) (string, error) { return os.Readlink(name) }
+
+func (osFS) head(name string, n int) ([]byte, error) {
+	file, err := os.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	buffer := make([]byte, n)
+	read, err := io.ReadFull(file, buffer)
+	if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) && !errors.Is(err, io.EOF) {
+		return nil, err
+	}
+	return buffer[:read], nil
 }
 
 // realPath is path with every symbolic link resolved, as the kernel walks it, as far as the path exists; the
-// missing rest is joined and cleaned. path must be absolute.
-func realPath(path string) string {
-	volume := filepath.VolumeName(path)
-	resolved := volume + string(filepath.Separator)
-	parts := splitPath(path[len(volume):])
+// missing rest is joined and cleaned. A `..` after a link climbs from the link's target. path must be absolute.
+func (k *knowledgeRoots) realPath(path string) string {
+	s := k.style
+	path = s.Normalize(path)
+	volume := s.VolumeName(path)
+	resolved := volume + s.Separator()
+	parts := k.splitPath(path[len(volume):])
 	links := 0
 	for i := 0; i < len(parts); i++ {
 		part := parts[i]
 		if part == ".." {
-			resolved = filepath.Dir(resolved)
+			resolved = s.Dir(resolved)
 			continue
 		}
-		next := filepath.Join(resolved, part)
-		info, err := os.Lstat(next)
-		if err != nil || (info.Mode()&fs.ModeSymlink != 0 && links >= maxLinks) {
-			return filepath.Clean(filepath.Join(append([]string{next}, parts[i+1:]...)...))
+		next := s.Join(resolved, part)
+		exists, link := k.fsys.lstat(next)
+		if !exists || (link && links >= maxLinks) {
+			return s.Clean(s.Join(append([]string{next}, parts[i+1:]...)...))
 		}
-		if info.Mode()&fs.ModeSymlink == 0 {
+		if !link {
 			resolved = next
 			continue
 		}
 		links++
-		target, err := os.Readlink(next)
+		target, err := k.fsys.readlink(next)
 		if err != nil {
-			return filepath.Clean(filepath.Join(append([]string{next}, parts[i+1:]...)...))
+			return s.Clean(s.Join(append([]string{next}, parts[i+1:]...)...))
 		}
-		if filepath.IsAbs(target) {
-			volume = filepath.VolumeName(target)
-			resolved = volume + string(filepath.Separator)
-			target = target[len(volume):]
+		target = s.Normalize(target)
+		if targetVolume := s.VolumeName(target); targetVolume != "" || strings.HasPrefix(target, s.Separator()) {
+			if targetVolume != "" {
+				volume = targetVolume
+			}
+			resolved = volume + s.Separator()
+			target = target[len(targetVolume):]
 		}
-		parts = append(splitPath(target), parts[i+1:]...)
+		parts = append(k.splitPath(target), parts[i+1:]...)
 		i = -1
 	}
 	return resolved
 }
 
-func splitPath(path string) []string {
+func (k *knowledgeRoots) splitPath(path string) []string {
 	var parts []string
-	for _, part := range strings.FieldsFunc(filepath.FromSlash(path), func(r rune) bool { return r == filepath.Separator }) {
+	separator := k.style.Separator()[0]
+	for _, part := range strings.FieldsFunc(k.style.FromSlash(path), func(r rune) bool { return r == rune(separator) }) {
 		if part != "." {
 			parts = append(parts, part)
 		}
@@ -135,37 +205,32 @@ func splitPath(path string) []string {
 	return parts
 }
 
-// within is the slash-separated path of child inside parent, "" for parent itself; false when child is outside.
-func within(parent, child string) (string, bool) {
-	p, c := parent, child
-	if foldCase {
-		p, c = strings.ToLower(p), strings.ToLower(c)
-	}
-	if p == c {
-		return "", true
-	}
-	prefix := strings.TrimSuffix(p, string(filepath.Separator)) + string(filepath.Separator)
-	if !strings.HasPrefix(c, prefix) {
-		return "", false
-	}
-	return filepath.ToSlash(child[len(prefix):]), true
-}
-
 // expand is a path the agent wrote: `~/`, `$HOME/` and `${HOME}/` become the home folder, a relative path is
-// joined to dir. Nothing is cleaned, so realPath still walks a `..` after a link as the kernel does.
+// joined to dir, and on Windows a path rooted without a volume takes dir's. Nothing is cleaned, so realPath still
+// walks a `..` after a link as the kernel does.
 func (k *knowledgeRoots) expand(path, dir string) string {
-	path = filepath.FromSlash(path)
+	s := k.style
+	path = s.Normalize(path)
 	if k.home != "" {
 		for _, prefix := range []string{"~/", "$HOME/", "${HOME}/"} {
-			if rest, ok := strings.CutPrefix(path, filepath.FromSlash(prefix)); ok {
-				return k.home + string(filepath.Separator) + rest
+			if rest, ok := strings.CutPrefix(path, s.FromSlash(prefix)); ok {
+				return k.home + s.Separator() + rest
 			}
 		}
 	}
-	if filepath.IsAbs(path) {
-		return path
+	return s.Abs(path, dir)
+}
+
+// spellings are the absolute paths a written path may name from dir: expand's, and on Windows also the Git Bash
+// reading of `/c/...` as `C:\...`, so a shell target is checked both ways.
+func (k *knowledgeRoots) spellings(path, dir string) []string {
+	full := []string{k.expand(path, dir)}
+	if k.style.Windows {
+		if native, ok := pathstyle.MSYSDrive(path); ok {
+			full = append(full, native)
+		}
 	}
-	return dir + string(filepath.Separator) + path
+	return full
 }
 
 // blocks is the reason a write to path is refused, empty when it is allowed. path is resolved from dir as the
@@ -175,18 +240,19 @@ func (k *knowledgeRoots) blocks(path, dir string) string {
 	if len(k.roots) == 0 || path == "" {
 		return ""
 	}
-	full := k.expand(path, dir)
-	for _, candidate := range []string{realPath(full), realPath(filepath.Clean(full))} {
-		for _, root := range k.roots {
-			relative, inside := within(root, candidate)
-			switch {
-			case !inside || relative == knowledge.InboxDir || strings.HasPrefix(relative, knowledge.InboxDir+"/"):
-			case relative == spec.Dir || strings.HasPrefix(relative, spec.Dir+"/"):
-				if !specWritable(candidate) {
-					return specReason
+	for _, full := range k.spellings(path, dir) {
+		for _, candidate := range []string{k.realPath(full), k.realPath(k.style.Clean(full))} {
+			for _, root := range k.roots {
+				relative, inside := k.style.Within(root, candidate)
+				switch {
+				case !inside || relative == knowledge.InboxDir || strings.HasPrefix(relative, knowledge.InboxDir+"/"):
+				case relative == spec.Dir || strings.HasPrefix(relative, spec.Dir+"/"):
+					if !specWritable(k.fsys, candidate) {
+						return specReason
+					}
+				default:
+					return knowledgeReason
 				}
-			default:
-				return knowledgeReason
 			}
 		}
 	}
@@ -195,29 +261,23 @@ func (k *knowledgeRoots) blocks(path, dir string) string {
 
 // specWritable is true for a path that does not exist yet, or a file whose front matter status, read from its first
 // 2 KB, is draft or review. A folder that exists is not writable: a command on it reaches every file inside.
-func specWritable(path string) bool {
-	file, err := os.Open(path)
+func specWritable(fsys pathFS, path string) bool {
+	data, err := fsys.head(path, 2048)
 	if errors.Is(err, fs.ErrNotExist) {
 		return true
 	}
 	if err != nil {
 		return false
 	}
-	defer file.Close()
-	buffer := make([]byte, 2048)
-	n, err := io.ReadFull(file, buffer)
-	if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) && !errors.Is(err, io.EOF) {
-		return false
-	}
-	return spec.Writable(spec.StatusOf(buffer[:n]))
+	return spec.Writable(spec.StatusOf(data))
 }
 
 // appPath is the write path as the text rules read it, after resolving links: relative to the real working folder
 // when it is inside it; false when it says nothing new.
 func (k *knowledgeRoots) appPath(path string) (string, bool) {
-	real := realPath(k.expand(path, k.cwd))
-	relative, inside := within(realPath(k.cwd), real)
-	if !inside || relative == "" || relative == filepath.ToSlash(path) {
+	real := k.realPath(k.expand(path, k.cwd))
+	relative, inside := k.style.Within(k.realPath(k.cwd), real)
+	if !inside || relative == "" || relative == k.style.ToSlash(path) {
 		return "", false
 	}
 	return relative, true
@@ -267,7 +327,7 @@ func collectArgv(argv []string, depth int, targets, dirs *[]string, k *knowledge
 		program := baseName(inner.argv[0])
 		if program == "cd" || program == "pushd" {
 			if dir := operands(inner.argv[1:]); len(dir) > 0 {
-				*dirs = append(*dirs, k.expand(dir[0], (*dirs)[len(*dirs)-1]))
+				*dirs = append(*dirs, k.spellings(dir[0], (*dirs)[len(*dirs)-1])...)
 			}
 		}
 		*targets = append(*targets, commandWrites(program, inner.argv[1:])...)

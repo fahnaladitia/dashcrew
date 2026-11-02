@@ -54,3 +54,13 @@ Already fine: secret scanning and push protection are on; default workflow permi
   - Wiki skeleton (9 pages) written outside the repo for the maintainer.
   - Unverified until pushed: Windows CI, CodeQL, the Dependabot `cooldown` key, and the release workflow.
 - GitHub settings: not done (the maintainer's).
+- First CI on Windows failed (continue-on-error). Fixes:
+  - `.gitattributes` with `* text=auto eol=lf`, because CRLF checkout broke every byte-for-byte golden.
+  - `internal/pathstyle`: pure path rules for POSIX, Darwin and Windows (separators, `\\?\` prefixes, drive letters and case, drive-less `\x`, Git Bash `/c/`, junctions as links). The guard knowledge and spec rules and the worktree path comparison use them.
+  - Tests compare Windows-shaped decisions with POSIX ones over a fake file system.
+  - Most guard "not blocked" failures were test harness bugs: raw `C:\` paths made the JSON payload invalid, so the guard failed open.
+  - Real fixes: `ResolveRepo` on `\srv\kb`, drive-less paths, worktree listing.
+  - Skipped on Windows by design: symlink-only sync tests and the shim executable-bit check.
+  - Known gap: 8.3 short names (`RUNNER~1`) are not matched to long names.
+  - Unverified until CI runs on Windows.
+- Dependabot PRs #1 (checkout 7.0.1) and #3 (setup-go 7.0.0) merged by the maintainer. #2 (goreleaser-action 7.3.0) reviewed as safe (v7.0.0: Node 24 and ESM; v7.1.0 adds checksum and cosign verification), held until the Windows fix lands.

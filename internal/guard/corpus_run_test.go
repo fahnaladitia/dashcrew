@@ -51,6 +51,12 @@ func (f corpusFolders) expand(text string) string {
 	return strings.NewReplacer("{project}", f.project, "{policies}", f.policies, "{elsewhere}", f.elsewhere).Replace(text)
 }
 
+// expandJSON is expand for the hook's JSON stdin: the folders are written as JSON string content, so a Windows
+// path keeps its backslashes.
+func (f corpusFolders) expandJSON(text string) string {
+	return strings.NewReplacer("{project}", jsonText(f.project), "{policies}", jsonText(f.policies), "{elsewhere}", jsonText(f.elsewhere)).Replace(text)
+}
+
 // collapse is expand reversed, so recorded outcomes do not name the temp folders.
 func (f corpusFolders) collapse(text string) string {
 	return strings.NewReplacer(f.project, "{project}", f.policies, "{policies}", f.elsewhere, "{elsewhere}").Replace(text)
@@ -79,7 +85,7 @@ func runProcess(f corpusFolders, c corpusCase, argv ...string) (outcome, error) 
 	for key, value := range c.env {
 		cmd.Env = append(cmd.Env, key+"="+f.expand(value))
 	}
-	cmd.Stdin = strings.NewReader(f.expand(c.stdin))
+	cmd.Stdin = strings.NewReader(f.expandJSON(c.stdin))
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr
 	err := cmd.Run()
@@ -108,7 +114,7 @@ func runInProcess(f corpusFolders, c corpusCase) outcome {
 		Getwd: func() (string, error) { return dir, nil },
 	}
 	var stdout, stderr bytes.Buffer
-	code := Run(args, strings.NewReader(f.expand(c.stdin)), &stdout, &stderr, env)
+	code := Run(args, strings.NewReader(f.expandJSON(c.stdin)), &stdout, &stderr, env)
 	return outcome{code, stdout.String(), stderr.String()}
 }
 

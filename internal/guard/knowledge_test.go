@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/fahnaladitia/dashcrew/internal/pathstyle"
 )
 
 // knowledgeFixture is a project whose `.ai/knowledge` links to a knowledge clone under home, a second link to that
@@ -67,10 +69,16 @@ func (f knowledgeFixture) run(t *testing.T, payload string) (bool, string) {
 		},
 		Getwd: func() (string, error) { return f.project, nil },
 	}
-	payload = strings.NewReplacer("{clone}", f.clone, "{project}", f.project).Replace(payload)
+	payload = strings.NewReplacer("{clone}", jsonText(f.clone), "{project}", jsonText(f.project)).Replace(payload)
 	var stdout, stderr bytes.Buffer
 	code := Run(nil, strings.NewReader(payload), &stdout, &stderr, env)
 	return code == 2 || strings.Contains(stdout.String(), `"deny"`), stderr.String() + stdout.String()
+}
+
+// jsonText is s as it is written inside a JSON string, so a Windows path keeps its backslashes.
+func jsonText(s string) string {
+	quoted := jsonString(s)
+	return quoted[1 : len(quoted)-1]
 }
 
 func payloadJSON(value any) string {
@@ -205,7 +213,9 @@ func TestKnowledgeShellWrites(t *testing.T) {
 		"cd docs && echo x > notes.md":                                 false,
 		"git -C .ai/knowledge status":                                  false,
 	} {
-		if got, reason := f.run(t, bashPayload(command)); got != want {
+		// A shell reads a backslash as an escape, so a script names the clone with slashes, as Git Bash does.
+		script := strings.ReplaceAll(command, "{clone}", filepath.ToSlash(f.clone))
+		if got, reason := f.run(t, bashPayload(script)); got != want {
 			t.Errorf("%q: blocked %v, want %v (%s)", command, got, want, reason)
 		}
 	}
@@ -294,6 +304,11 @@ func TestKnowledgeClonePolicyFieldIsOptionalButTyped(t *testing.T) {
 	}
 }
 
+// hostRoots reads paths as this machine spells them, through the real file system.
+func hostRoots() *knowledgeRoots {
+	return &knowledgeRoots{style: pathstyle.Host, fsys: osFS{}}
+}
+
 func TestRealPath(t *testing.T) {
 	f := newKnowledgeFixture(t)
 	for path, want := range map[string]string{
@@ -305,7 +320,7 @@ func TestRealPath(t *testing.T) {
 		"{project}/.ai/knowledge/features/share.md/x": "{clone}/features/share.md/x",
 	} {
 		expand := strings.NewReplacer("{project}", f.project, "{clone}", f.clone, "/", string(filepath.Separator)).Replace
-		if got := realPath(expand(path)); got != expand(want) {
+		if got := hostRoots().realPath(expand(path)); got != expand(want) {
 			t.Errorf("%s: %s", path, got)
 		}
 	}
@@ -313,7 +328,7 @@ func TestRealPath(t *testing.T) {
 	if err := os.Symlink("loop", loop); err != nil {
 		t.Fatal(err)
 	}
-	if got := realPath(filepath.Join(loop, "x")); got == "" {
+	if got := hostRoots().realPath(filepath.Join(loop, "x")); got == "" {
 		t.Error("a link loop gave no path")
 	}
 }

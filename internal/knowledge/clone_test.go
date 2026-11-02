@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/fahnaladitia/dashcrew/internal/pathstyle"
 )
 
 // gitEnv isolates git from the machine: no system or global config, a fixed identity.
@@ -173,6 +175,29 @@ func TestPathsAndRepoResolution(t *testing.T) {
 		if got := ResolveRepo(repo, project); got != want {
 			t.Errorf("%s: %s, want %s", repo, got, want)
 		}
+	}
+}
+
+func TestResolveRepoOnWindowsPaths(t *testing.T) {
+	project := `D:\work\app`
+	for repo, want := range map[string]string{
+		"git@example.com:team/kb.git": "git@example.com:team/kb.git",
+		"https://example.com/team/kb": "https://example.com/team/kb",
+		`C:\srv\kb`:                   `C:\srv\kb`,
+		"c:/srv/kb":                   "c:/srv/kb",
+		`\srv\kb`:                     `\srv\kb`,
+		"/srv/kb":                     "/srv/kb",
+		`\\server\share\kb`:           `\\server\share\kb`,
+		"../kb.git":                   `D:\work\kb.git`,
+		`..\kb.git`:                   `D:\work\kb.git`,
+		"./team:kb":                   `D:\work\app\team:kb`,
+	} {
+		if got := resolveRepo(pathstyle.Windows, repo, project); got != want {
+			t.Errorf("%s: %s, want %s", repo, got, want)
+		}
+	}
+	if got := resolveRepo(pathstyle.POSIX, "../kb.git", "/work/app"); got != "/work/kb.git" {
+		t.Errorf("POSIX: %s", got)
 	}
 }
 
