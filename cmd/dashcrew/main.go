@@ -126,7 +126,9 @@ func newRoot(cli cliIO) *command {
 		add(worktreeCommand(cli)).
 		add(knowledgeCommand(cli)).
 		add(guardCommand()).
-		add(checkCommand(cli))
+		add(checkCommand(cli)).
+		add(commitCommand(cli)).
+		add(verifyCommand(cli))
 	return root
 }
 
@@ -243,9 +245,10 @@ func doctorCommand(cli cliIO) *command {
 }
 
 func checkCommand(cli cliIO) *command {
-	c := newCommand("check", "Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.")
+	c := newCommand("check", "Merge gate for a pull request: toolkit current, PR sections present, commits in the pattern. Writes nothing.")
 	c.option("project", "p", "Project root holding .ai/project.yaml.", ptr("."))
 	c.option("pr-body", "", "File holding the PR description; a pull_request workflow supplies it from the event.", nil)
+	c.option("base", "", "Lint the commits of <base>..HEAD; a pull_request workflow supplies the range from the event.", nil)
 	c.run = func(r *results) (int, error) {
 		var body *string
 		if bodyFile := r.option("pr-body"); bodyFile != nil {
@@ -268,7 +271,7 @@ func checkCommand(cli cliIO) *command {
 		if err != nil {
 			return 0, err
 		}
-		checks, err := check.PrCheck{Catalog: cat, ProjectDir: projectDir, Environment: cli.env}.Run(body)
+		checks, err := check.PrCheck{Catalog: cat, ProjectDir: projectDir, Environment: cli.env, Base: r.option("base")}.Run(body)
 		if err != nil {
 			return 0, err
 		}

@@ -40,6 +40,7 @@ stdout:
 | skip  agents-md-size  no AGENTS.md
 | ok    gitignore       .ai/bin/guard is not ignored
 | fail  pr-sections     .github/pull_request_template.md missing; run dashcrew sync
+| skip  commits         no base; pass --base <branch> or run on a pull_request event
 stderr: (empty)
 files: (unchanged)
 

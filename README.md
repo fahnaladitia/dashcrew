@@ -97,6 +97,16 @@ ci: { github: true, dashcrew_ref: <commit or tag> }
 | `project.base_branches` | `[main]` | proposed bases for new branches |
 | `project.branch_prefix` | `feat/`, `fix/`, `hotfix/` | branch prefixes per change type |
 | `project.build_wrapper` | none | script that injects `--dart-define`s for real builds |
+| `project.commit.pattern` | `<type>(<scope>): <subject>` | commit message pattern; placeholders `type`, `scope`, `subject` (required), `ticket`. An empty scope or ticket is dropped with its brackets |
+| `project.commit.types` | `feat, fix, refactor, test, docs, chore, perf, build, ci` | allowed types |
+| `project.commit.type_from_branch` | `{feat: feat, fix: fix, hotfix: fix}` | `branch_prefix` key to type |
+| `project.commit.scopes` | none | path glob to scope, first match wins (`lib/features/cart/**: cart`); the scope with the most changed files is picked |
+| `project.commit.ticket` | none | `{from_branch: <regex>, trailer: <name>}`: ticket id from the branch name (first group, else the match); `trailer` defaults to `Refs` unless the pattern has `<ticket>` |
+| `project.commit.subject_max` | `72` | longest subject line, in characters |
+| `project.commit.language` | `en` | language of commit subjects and bodies |
+| `project.commit.body` | `optional` | `optional`, `required` or `none` |
+| `project.commit.trailers` | none | trailers allowed on top of `Co-authored-by`, `Signed-off-by`, `Reviewed-by` and the ticket trailer |
+| `project.commit.allow_email_trailers` | none | the only trailers whose value may hold an email address (DCO `Signed-off-by`); an email anywhere else fails lint |
 | `policy.agent_commit` | `false` | `true` lets the agent commit; push stays blocked |
 | `policy.formatter` | `false` | `true` allows `dart format` on changed files only |
 | `policy.dartdoc_max_lines` | `3` | hard cap per documented unit |
@@ -217,8 +227,22 @@ Agent checks run only for the agents in the profile. Each line starts with `ok`,
 |---|---|---|
 | `-p, --project` | `.` | project root |
 | `--pr-body <file>` | none | the PR description to check; in a pull request workflow the event supplies it |
+| `--base <branch>` | none | lint the commits of `<base>..HEAD`; in a pull request workflow the event's base and head supply the range |
 
-Read-only; exit 1 on any failure, with `::error` annotations in GitHub Actions. It runs the toolkit checks of `doctor` that need no agent or guard binary, then `pr-sections` (every heading of `.github/pull_request_template.md` in the PR body).
+Read-only; exit 1 on any failure, with `::error` annotations in GitHub Actions. It runs the toolkit checks of `doctor` that need no agent or guard binary, then `pr-sections` (every heading of `.github/pull_request_template.md` in the PR body) and `commits` (`dashcrew commit lint` on every commit of the PR but merges; skipped without a base).
+
+### `dashcrew commit`
+
+Commit messages in the pattern of `project.commit`. Neither subcommand commits; both take `-p, --project`, any folder inside the repository.
+
+| Subcommand | |
+|---|---|
+| `suggest [--subject <s>] [--body <b>] [--type <t>] [--scope <s>] [--json]` | prints `git add -- <files>` with the changed tracked files listed one by one, and `git commit -m ...` quoted for bash and zsh. Type, scope and ticket come from the branch and the files; untracked files are listed apart, never added. With a verify record it says which files changed after the last verify. With `--subject` the message is linted; a problem exits 1. Never shows an email address from the branch or the git config |
+| `lint <message> \| - \| --range <base>..<head>` | checks the pattern, type, subject length, body rule, trailers, email addresses (`name@host.tld`, also inside `<...>`; `@mention` and image suffixes such as `icon@2x.png` are not addresses) and AI attribution (generated-with footers, AI co-author trailers, robot lines). One line per problem, exit 1 |
+
+### `dashcrew verify record`
+
+`-p, --project`. Records the tree hash of the working copy, untracked files included, in `<git dir>/dashcrew/last-verify` (per worktree). The hash is built in a temporary index (`GIT_INDEX_FILE`), so the real index and staging are never touched. The `verify` workflow runs it after a PASS.
 
 ### `dashcrew worktree`
 
@@ -270,7 +294,7 @@ The plan is confirmed in the session by the task owner; the team reviews in the 
 
 1. Set `ci: { github: true, dashcrew_ref: <commit or tag> }` and run `dashcrew sync`. Commit `.github/workflows/dashcrew.yml`. The workflow sets up Go and runs `go install github.com/fahnaladitia/dashcrew/cmd/dashcrew@<dashcrew_ref>`, then `dashcrew check`.
 2. In the repository settings, add a branch protection rule (or ruleset) for your base branches that requires the status check `check` from the `dashcrew check` workflow.
-3. Every pull request then needs a current toolkit and every heading of the PR template. Failures show as annotations on the PR.
+3. Every pull request then needs a current toolkit, every heading of the PR template, and commits that pass `dashcrew commit lint`. Failures show as annotations on the PR. The workflow checks out the full history (`fetch-depth: 0`) so the PR's commits can be read.
 
 The workflow reads the PR body from the pull request event and needs no token beyond read access to the repository.
 

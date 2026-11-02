@@ -659,6 +659,10 @@ func TestGithubWorkflow(t *testing.T) {
 		if !strings.Contains(text, "uses: actions/setup-go@") {
 			t.Error("no setup-go step")
 		}
+		checkout := steps[0].(*omap.Map[any])
+		if with, _ := checkout.Value("with").(*omap.Map[any]); with == nil || with.Value("fetch-depth") != 0 {
+			t.Errorf("checkout %v: the commits check needs the full history", checkout.Keys())
+		}
 		if strings.Contains(text, "GITHUB_TOKEN") {
 			t.Error("token in workflow")
 		}

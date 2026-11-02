@@ -2,11 +2,11 @@
 
 ## Workflow chain
 
-Run this chain by default; the user never has to name a step. Never skip a step of your tier's chain, and finish each step before the next starts.
+Run this chain by default, unasked. Never skip a step of your tier's chain; finish each step before the next starts.
 
 ### Step 0
 
-Never run a raw prompt as given: polish it with `prompt-polish` and print this block before anything else runs:
+Never run a raw prompt: polish it with `prompt-polish` and print this block first:
 
 ```text
 TASK:             <feat | fix | hotfix>: <polished request>
@@ -18,7 +18,7 @@ Success criteria: <id> <criterion> -> unit | ui | integration | manual
 Branch:           1) <name>  2) <name>  3) <name>   base: <ask>
 ```
 
-The user confirms or edits it once. Then create the branch (see Branching); its name is final, since the PR description path depends on it.
+The user confirms or edits it once. Then create the branch (see Branching); its name is final.
 
 ### Chain after step 0
 
@@ -26,19 +26,19 @@ The user confirms or edits it once. Then create the branch (see Branching); its 
 |---|---|
 | trivial | edit -> `go vet` on the file -> one-line summary |
 | small | `tdd` (test first, then implement) -> scoped analyze and test -> summary |
-| standard | `plan` (one file) -> `tdd` -> `code-review` (`reviewer` on the diff) -> fix -> `verify` -> PR description |
-| large | `plan` -> user confirms -> `reviewer` on the plan -> `tdd` -> `code-review` -> at most one rework round -> `verify` -> PR description |
+| standard | `plan` (one file) -> `tdd` -> `code-review` (`reviewer` on the diff) -> fix -> `verify` -> PR description -> commit command |
+| large | `plan` -> user confirms -> `reviewer` on the plan -> `tdd` -> `code-review` -> at most one rework round -> `verify` -> PR description -> commit command |
 
-- Two read-only subagents exist: `reviewer` (reviews a plan or a diff) and `explorer` (maps many files to `file:line`). The main session does everything else.
-- Loops stop on the step 0 success criteria, not when a reviewer runs out of findings. BLOCKER and HIGH are fixed; MEDIUM and LOW go to the PR Notes, asked about once as one list.
-- A re-review covers only the rework diff. A second failing review goes to the user as a decision, never into a third round.
-- Criteria mapped to `manual` form one manual checklist, handed to the user at `verify` and recorded in the PR Testing section.
-- Work on a branch is finished only when its PR description is written or updated (`pr-description`), on every round, small tasks included. Then ask once whether to open a PR (`pr-create`); never open one without an explicit yes, and a yes never carries over to another branch or round.
-- The summary gives what changed, was skipped and needs follow-up; every unit that got a doc comment; test status, skipped tests included; the PR description path and the PR decision (the URL, or "not created"). End the session with `learn`.
+- Two read-only subagents: `reviewer` (a plan or a diff) and `explorer` (maps many files to `file:line`); the main session does the rest.
+- Loops stop when the step 0 success criteria pass, not when findings run out. BLOCKER and HIGH are fixed; MEDIUM and LOW go to the PR Notes, asked about once as one list.
+- A re-review covers only the rework diff. A second failing review goes to the user, never into a third round.
+- Criteria mapped to `manual` form one manual checklist, handed over at `verify` and recorded in the PR Testing section.
+- A branch's work is done only when its PR description is written or updated (`pr-description`), every round, small tasks included. Then ask once whether to open a PR (`pr-create`); never without an explicit yes, which never carries over to another branch or round.
+- The summary gives what changed, was skipped and needs follow-up; every unit that got a doc comment; test status, skipped tests included; the PR description path, the commit command and the PR decision (the URL, or "not created"). End the session with `learn`.
 
-- Only these workflows exist: `plan`, `tdd`, `code-review`, `verify`, `learn`, `audit`, `worktree`, `build-fix`. If a request names any other, say it does not exist; never improvise one.
-- `build-fix` is a detour, not a step: take it when a build, dependency or code generation error blocks a step, then resume where you stopped.
-- `audit` (read-only) and `worktree` sit outside the chain. Each audit finding becomes a new task; each worktree session runs the chain itself, and an inline task is run by the main session.
+- Only these workflows exist: `plan`, `tdd`, `code-review`, `verify`, `learn`, `audit`, `worktree`, `build-fix`. If a request names another, say it does not exist.
+- `build-fix` is a detour, not a step: take it when a build, dependency or code generation error blocks a step, then resume.
+- `audit` (read-only) and `worktree` sit outside the chain. Each audit finding becomes a new task; each worktree session, or the main session for an inline task, runs the chain.
 
 ### Size tier
 
@@ -88,12 +88,12 @@ Trivial and small run without a plan or another stop. Standard and large stop af
 
 - Never push. The user pushes, and sets the upstream on the first push.
 - Showing a diff is fine; stage only when asked.
-- Never run `git stash` in any form: it writes commit objects and moves the user's working tree.
+- Never run `git stash` in any form: it moves the user's working tree.
 - Never run `git reset`, `rebase`, `cherry-pick`, `revert`, `merge` or `tag`; history belongs to the user.
-- No AI attribution anywhere: no generated-with footer, no AI co-author trailer, no robot line in suggested commit messages, PR descriptions, PR bodies or comments.
-- Never merge a PR, enable auto-merge, or approve your own PR. A yes to opening a PR is not a yes to merging; merging is a separate request (see `pr-create`).
+- No AI attribution anywhere: no generated-with footer, no AI co-author trailer, no robot line in commit messages, PR descriptions, PR bodies or comments.
+- Never merge a PR, enable auto-merge, or approve your own PR. A yes to opening a PR is not a yes to merging (see `pr-create`).
 
-- Never commit. The user makes every commit; suggest a message only when asked.
+- Never commit. At the end of every task, after the PR description, print the commit command from `dashcrew commit suggest` with your subject and body. When the user says they changed files, run it again and print the new command. When files changed since the last verify, say so and offer a scoped re-verify first.
 
 ## Branching
 

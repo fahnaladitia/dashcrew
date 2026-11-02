@@ -87,7 +87,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-+ w/.ai/lock.json  -rw-r--r-- sha256:f1a6971c7010cb26
++ w/.ai/lock.json  -rw-r--r-- sha256:33b45bb43ed9e8bf
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
@@ -133,7 +133,7 @@ files:
 + w/.claude/skills/verification-loop  dir
 + w/.claude/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:055cbb8370ce869e
 + w/.claude/skills/verify  dir
-+ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:a66641de2df5486b
++ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:a521d9d7f912b53f
 + w/.claude/skills/work-modes  dir
 + w/.claude/skills/work-modes/SKILL.md  -rw-r--r-- sha256:42e7df44abe766f6
 + w/.claude/skills/worktree  dir
@@ -141,7 +141,7 @@ files:
 + w/.github  dir
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
 + w/.mcp.json  -rw-r--r-- sha256:d8e397af03b5b032
-+ w/AGENTS.md  -rw-r--r-- sha256:77325c8a57cc549c
++ w/AGENTS.md  -rw-r--r-- sha256:d68110ab133c4c9a
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 6: dashcrew "doctor"
@@ -159,7 +159,7 @@ stdout:
 | ok    claude-md       CLAUDE.md imports AGENTS.md
 | ok    mcp             defined: 
 | warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
-| ok    agents-md-size  AGENTS.md 14291 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 14287 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)

@@ -2,6 +2,7 @@ package check
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	stdsync "sync"
@@ -163,4 +164,106 @@ func TestLinesSplitLikeDart(t *testing.T) {
 			t.Errorf("lines(%q) = %q", in, got)
 		}
 	}
+}
+
+// gitProject is a synced project in a git repo: main holds the toolkit, branch feat/x adds commits with the given
+// messages, then a merge from main.
+func gitProject(t *testing.T, messages ...string) (string, func(args ...string) string) {
+	t.Helper()
+	project := setup(t, "")
+	for _, kv := range [][2]string{
+		{"GIT_CONFIG_NOSYSTEM", "1"}, {"GIT_CONFIG_GLOBAL", filepath.Join(project, ".no-global")},
+		{"GIT_AUTHOR_NAME", "t"}, {"GIT_AUTHOR_EMAIL", "t@example.com"},
+		{"GIT_COMMITTER_NAME", "t"}, {"GIT_COMMITTER_EMAIL", "t@example.com"},
+	} {
+		t.Setenv(kv[0], kv[1])
+	}
+	git := func(args ...string) string {
+		t.Helper()
+		cmd := exec.Command("git", args...)
+		cmd.Dir = project
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("git %v: %v\n%s", args, err, out)
+		}
+		return strings.TrimSpace(string(out))
+	}
+	git("init", "-q", "-b", "main")
+	git("add", "-A")
+	git("commit", "-q", "-m", "chore: toolkit")
+	git("checkout", "-q", "-b", "feat/x")
+	for i, message := range messages {
+		write(t, filepath.Join(project, "src", "f.txt"), strings.Repeat("x", i+1))
+		git("add", "-A")
+		git("commit", "-q", "-m", message)
+	}
+	git("checkout", "-q", "main")
+	write(t, filepath.Join(project, "src", "g.txt"), "g")
+	git("add", "-A")
+	git("commit", "-q", "-m", "base moved without a type")
+	git("checkout", "-q", "feat/x")
+	git("merge", "-q", "--no-edit", "main")
+	return project, git
+}
+
+func TestCommitsCheckLintsThePrCommitsAndSkipsMerges(t *testing.T) {
+	project, git := gitProject(t, "feat: add sharing", "fix(api): keep the token")
+	base := "main"
+
+	got := checkWithBase(t, project, &base, nil)["commits"]
+	if got.Status != doctor.OK || got.Detail != "2 commits in main..HEAD follow <type>(<scope>): <subject>" {
+		t.Errorf("good %v", got)
+	}
+
+	git("commit", "-q", "--allow-empty", "-m", "wip\n\nCo-authored-by: Claude <noreply@anthropic.com>")
+	short := git("rev-parse", "--short=7", "HEAD")
+	bad := checkWithBase(t, project, &base, nil)["commits"]
+	want := short + ` subject line "wip" does not match <type>(<scope>): <subject>; ` + short + " email address on line 3: commit messages never show one; " +
+		short + " AI attribution: AI co-author trailer on line 3"
+	if bad.Status != doctor.Fail || bad.Detail != want {
+		t.Errorf("bad %v\nwant %s", bad, want)
+	}
+}
+
+func TestCommitsCheckReadsBaseAndHeadFromThePullRequestEvent(t *testing.T) {
+	project, git := gitProject(t, "Feat: capitalized type")
+	baseSha, headSha := git("rev-parse", "main"), git("rev-parse", "HEAD")
+	event := filepath.Join(t.TempDir(), "event.json")
+	write(t, event, `{"pull_request":{"body":"","base":{"sha":"`+baseSha+`"},"head":{"sha":"`+headSha+`"}}}`)
+
+	got := checkWithBase(t, project, nil, map[string]string{"GITHUB_EVENT_PATH": event})["commits"]
+	if got.Status != doctor.Fail || !strings.Contains(got.Detail, `type "Feat" is not one of`) {
+		t.Errorf("event %v", got)
+	}
+
+	write(t, event, `{"pull_request":{"body":"","base":{"sha":"`+strings.Repeat("0", 40)+`"},"head":{"sha":"`+headSha+`"}}}`)
+	if got := checkWithBase(t, project, nil, map[string]string{"GITHUB_EVENT_PATH": event})["commits"]; got.Status != doctor.Fail ||
+		!strings.HasPrefix(got.Detail, "cannot read 0000000.."+headSha[:7]+": fatal: ") || !strings.HasSuffix(got.Detail, "; a CI checkout needs fetch-depth: 0") {
+		t.Errorf("missing base %v", got)
+	}
+}
+
+func TestCommitsCheckSkipsWithoutABase(t *testing.T) {
+	project := setup(t, "")
+	if got := check(t, project, text(fullBody), nil)["commits"]; got.Status != doctor.Skip ||
+		got.Detail != "no base; pass --base <branch> or run on a pull_request event" {
+		t.Errorf("no base %v", got)
+	}
+	base := "main"
+	if got := checkWithBase(t, project, &base, nil)["commits"]; got.Status != doctor.Fail || !strings.Contains(got.Detail, "is not inside a git repository") {
+		t.Errorf("not a repo %v", got)
+	}
+}
+
+func checkWithBase(t *testing.T, project string, base *string, environment map[string]string) map[string]doctor.Check {
+	t.Helper()
+	checks, err := PrCheck{Catalog: shippedCatalog, ProjectDir: project, Environment: environment, Base: base}.Run(text(fullBody))
+	if err != nil {
+		t.Fatal(err)
+	}
+	out := map[string]doctor.Check{}
+	for _, c := range checks {
+		out[c.ID] = c
+	}
+	return out
 }

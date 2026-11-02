@@ -1,0 +1,223 @@
+# commit suggest
+
+=== step 1: dashcrew "help" "commit"
+exit: 0
+stdout:
+| Commit messages in the team's pattern (project.commit): a ready command, and a lint. Never commits.
+| 
+| Usage: dashcrew commit <subcommand> [arguments]
+| -h, --help    Print this usage information.
+| 
+| Available subcommands:
+|   lint      Check commit messages against project.commit; exit 1 with one line per problem.
+|   suggest   Print the git add and git commit commands for the current changes, in the pattern.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 2: dashcrew "commit" "suggest" "--help"
+exit: 0
+stdout:
+| Print the git add and git commit commands for the current changes, in the pattern.
+| Type, scope and ticket come from the branch and the changed files; untracked files are listed, never added.
+| Reads git only; with --subject the message is linted and a problem exits 1.
+| 
+| Usage: dashcrew commit suggest [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Any folder inside the repository.
+|                  (defaults to ".")
+|     --subject    The subject; without it the command keeps a <subject> placeholder.
+|     --body       The body; without it and without --subject the command keeps a <body> placeholder.
+|     --type       Override the type derived from the branch.
+|     --scope      Override the scope derived from the files; an empty value drops it.
+|     --json       Print the derived parts and commands as JSON.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 3: dashcrew "commit" "suggest"
+exit: 0
+stdout:
+| type:    fix            (branch fix/ABC-123-cart-total)
+| scope:   cart           (3 of 3 files under lib/features/cart)
+| ticket:  ABC-123        (branch fix/ABC-123-cart-total)
+| files:   3 changed, 2 untracked (listed below, not included)
+| 
+| git add -- lib/features/cart/cart_cubit.dart lib/features/cart/cart_page.dart 'lib/features/cart/it'\''s $1.dart'
+| git commit -m 'fix(cart): <subject>' -m '<body>' -m 'Refs: ABC-123'
+| 
+| untracked, not included; add the ones that belong to this commit on purpose:
+|   notes.md
+|   test/cart_cubit_test.dart
+stderr: (empty)
+files: (unchanged)
+
+=== step 4: dashcrew "commit" "suggest" "--subject" "keep the $total `right` when it's \"0\" é" "--body" "Line one.\nLine two."
+exit: 0
+stdout:
+| type:    fix            (branch fix/ABC-123-cart-total)
+| scope:   cart           (3 of 3 files under lib/features/cart)
+| ticket:  ABC-123        (branch fix/ABC-123-cart-total)
+| files:   3 changed, 2 untracked (listed below, not included)
+| 
+| git add -- lib/features/cart/cart_cubit.dart lib/features/cart/cart_page.dart 'lib/features/cart/it'\''s $1.dart'
+| git commit -m 'fix(cart): keep the $total `right` when it'\''s "0" é' -m 'Line one.
+| Line two.' -m 'Refs: ABC-123'
+| 
+| untracked, not included; add the ones that belong to this commit on purpose:
+|   notes.md
+|   test/cart_cubit_test.dart
+stderr: (empty)
+files: (unchanged)
+
+=== step 5: dashcrew "commit" "suggest" "--json"
+exit: 0
+stdout:
+| {
+|   "branch": "fix/ABC-123-cart-total",
+|   "type": "fix",
+|   "type_reason": "branch fix/ABC-123-cart-total",
+|   "scope": "cart",
+|   "scope_reason": "3 of 3 files under lib/features/cart",
+|   "ticket": "ABC-123",
+|   "files": [
+|     "lib/features/cart/cart_cubit.dart",
+|     "lib/features/cart/cart_page.dart",
+|     "lib/features/cart/it's $1.dart"
+|   ],
+|   "untracked": [
+|     "notes.md",
+|     "test/cart_cubit_test.dart"
+|   ],
+|   "since_verify": null,
+|   "header": "fix(cart): <subject>",
+|   "message": null,
+|   "add": "git add -- lib/features/cart/cart_cubit.dart lib/features/cart/cart_page.dart 'lib/features/cart/it'\\''s $1.dart'",
+|   "commit": "git commit -m 'fix(cart): <subject>' -m '<body>' -m 'Refs: ABC-123'",
+|   "problems": []
+| }
+stderr: (empty)
+files: (unchanged)
+
+=== step 6: dashcrew "verify" "record"
+exit: 0
+stdout:
+| recorded verified tree 2d18a1cf6fa62c4330aa2a87be502dd13d2c8be7; dashcrew commit suggest lists files changed after it
+stderr: (empty)
+files:
++ w/.git/dashcrew/last-verify
+    + "2d18a1cf6fa62c4330aa2a87be502dd13d2c8be7"
+
+=== step 7: dashcrew "commit" "suggest"
+exit: 0
+stdout:
+| type:    fix            (branch fix/ABC-123-cart-total)
+| scope:   cart           (3 of 3 files under lib/features/cart)
+| ticket:  ABC-123        (branch fix/ABC-123-cart-total)
+| files:   3 changed, 2 untracked (listed below, not included)
+| since verify: no file changed after the last verify
+| 
+| git add -- lib/features/cart/cart_cubit.dart lib/features/cart/cart_page.dart 'lib/features/cart/it'\''s $1.dart'
+| git commit -m 'fix(cart): <subject>' -m '<body>' -m 'Refs: ABC-123'
+| 
+| untracked, not included; add the ones that belong to this commit on purpose:
+|   notes.md
+|   test/cart_cubit_test.dart
+stderr: (empty)
+files: (unchanged)
+
+=== step 8: dashcrew "commit" "suggest"
+(after the case's setup for this step)
+exit: 0
+stdout:
+| type:    fix            (branch fix/ABC-123-cart-total)
+| scope:   cart           (3 of 4 files under lib/features/cart)
+| ticket:  ABC-123        (branch fix/ABC-123-cart-total)
+| files:   4 changed, 2 untracked (listed below, not included)
+| since verify: 2 files changed after the last verify
+|   lib/core/net.dart
+|   lib/features/cart/cart_cubit.dart
+| 
+| git add -- lib/core/net.dart lib/features/cart/cart_cubit.dart lib/features/cart/cart_page.dart 'lib/features/cart/it'\''s $1.dart'
+| git commit -m 'fix(cart): <subject>' -m '<body>' -m 'Refs: ABC-123'
+| 
+| untracked, not included; add the ones that belong to this commit on purpose:
+|   notes.md
+|   test/cart_cubit_test.dart
+stderr: (empty)
+files: (unchanged)
+
+=== step 9: dashcrew "commit" "suggest" "--scope" "" "--type" "docs" "--subject" "explain the cart"
+dir: w/lib/features
+exit: 0
+stdout:
+| type:    docs           (--type)
+| scope:   -              (--scope)
+| ticket:  ABC-123        (branch fix/ABC-123-cart-total)
+| files:   4 changed, 2 untracked (listed below, not included)
+| since verify: 2 files changed after the last verify
+|   lib/core/net.dart
+|   lib/features/cart/cart_cubit.dart
+| 
+| git add -- ../core/net.dart cart/cart_cubit.dart cart/cart_page.dart 'cart/it'\''s $1.dart'
+| git commit -m 'docs: explain the cart' -m 'Refs: ABC-123'
+| 
+| untracked, not included; add the ones that belong to this commit on purpose:
+|   notes.md
+|   test/cart_cubit_test.dart
+stderr: (empty)
+files: (unchanged)
+
+=== step 10: dashcrew "commit" "suggest" "--type" "wip"
+exit: 1
+stdout: (empty)
+stderr:
+| --type wip is not one of feat, fix, refactor, test, docs, chore, perf, build, ci
+files: (unchanged)
+
+=== step 11: dashcrew "commit" "suggest" "--subject" "Keep the total right on the cart page even when the count reaches zero"
+exit: 1
+stdout:
+| type:    fix            (branch fix/ABC-123-cart-total)
+| scope:   cart           (3 of 4 files under lib/features/cart)
+| ticket:  ABC-123        (branch fix/ABC-123-cart-total)
+| files:   4 changed, 2 untracked (listed below, not included)
+| since verify: 2 files changed after the last verify
+|   lib/core/net.dart
+|   lib/features/cart/cart_cubit.dart
+| 
+| git add -- lib/core/net.dart lib/features/cart/cart_cubit.dart lib/features/cart/cart_page.dart 'lib/features/cart/it'\''s $1.dart'
+| git commit -m 'fix(cart): Keep the total right on the cart page even when the count reaches zero' -m 'Refs: ABC-123'
+| 
+| untracked, not included; add the ones that belong to this commit on purpose:
+|   notes.md
+|   test/cart_cubit_test.dart
+stderr:
+| lint: subject line is 81 characters, over 72
+files: (unchanged)
+
+=== step 12: dashcrew "commit" "suggest"
+(after the case's setup for this step)
+exit: 1
+stdout:
+| type:    -              (no branch is checked out; pass --type)
+| scope:   -              (no scope glob matches the changed files)
+| ticket:  -              (none in the branch name)
+| files:   0 changed
+| since verify: 2 files changed after the last verify
+|   lib/core/net.dart
+|   lib/features/cart/cart_cubit.dart
+| 
+| nothing to commit: no tracked file changed
+stderr: (empty)
+files: (unchanged)
+
+=== step 13: dashcrew "commit" "suggest"
+dir: .
+exit: 1
+stdout: (empty)
+stderr:
+| . is not inside a git repository
+files: (unchanged)

@@ -422,3 +422,129 @@ func TestKnowledgeKeysAreStrict(t *testing.T) {
 		}
 	}
 }
+
+func pairs(m *omap.Map[string]) string {
+	var out []string
+	for _, key := range m.Keys() {
+		out = append(out, key+"="+m.Value(key))
+	}
+	return strings.Join(out, " ")
+}
+
+func TestCommitDefaultsWithoutTheKey(t *testing.T) {
+	p := parse(t, "toolkit: 1\nagents: [claude-code]\n")
+	c := p.Commit
+
+	if c.Pattern != "<type>(<scope>): <subject>" || c.SubjectMax != 72 || c.Language != "en" || c.Body != "optional" {
+		t.Errorf("defaults %+v", c)
+	}
+	if !reflect.DeepEqual(c.Types, []string{"feat", "fix", "refactor", "test", "docs", "chore", "perf", "build", "ci"}) {
+		t.Errorf("types %v", c.Types)
+	}
+	if got := pairs(c.TypeFromBranch); got != "feat=feat fix=fix hotfix=fix" {
+		t.Errorf("type_from_branch %v", got)
+	}
+	if c.Scopes.Len() != 0 || c.Ticket != nil || len(c.Trailers) != 0 || len(c.AllowEmailTrailers) != 0 {
+		t.Errorf("scopes %v, ticket %v, trailers %v", c.Scopes.Keys(), c.Ticket, c.Trailers)
+	}
+	if p.Project.Has("commit") {
+		t.Error("commit reached the project context")
+	}
+}
+
+func TestCommitOverridesKeyByKey(t *testing.T) {
+	p := parse(t, "toolkit: 1\nagents: [claude-code]\nproject:\n  branch_prefix: { feat: feature/, fix: bugfix/ }\n  commit:\n"+
+		"    types: [feat, fix, chore]\n    type_from_branch: { feat: feat, fix: fix }\n"+
+		"    scopes: { 'lib/features/cart/**': cart, 'lib/core/**': core }\n"+
+		"    ticket: { from_branch: '([A-Z]+-[0-9]+)' }\n    subject_max: 50\n    body: required\n    trailers: [Ported-from]\n"+
+		"    allow_email_trailers: [Signed-off-by]\n")
+	c := p.Commit
+
+	if c.Pattern != "<type>(<scope>): <subject>" || c.SubjectMax != 50 || c.Body != "required" {
+		t.Errorf("merged %+v", c)
+	}
+	if !reflect.DeepEqual(c.Scopes.Keys(), []string{"lib/features/cart/**", "lib/core/**"}) || c.Scopes.Value("lib/core/**") != "core" {
+		t.Errorf("scopes %v", c.Scopes.Keys())
+	}
+	if c.Ticket == nil || c.Ticket.FromBranch != "([A-Z]+-[0-9]+)" || c.Ticket.Trailer != "Refs" {
+		t.Errorf("ticket %+v", c.Ticket)
+	}
+	if !reflect.DeepEqual(c.Trailers, []string{"Ported-from"}) || !reflect.DeepEqual(c.AllowEmailTrailers, []string{"Signed-off-by"}) {
+		t.Errorf("trailers %v, allow_email_trailers %v", c.Trailers, c.AllowEmailTrailers)
+	}
+}
+
+func TestCommitTicketTrailerDefaultsToRefsOnlyWhenThePatternHasNoTicket(t *testing.T) {
+	inPattern := parse(t, "toolkit: 1\nagents: [claude-code]\nproject: { commit: { pattern: '<ticket> <type>: <subject>', ticket: { from_branch: '[0-9]+' } } }\n")
+	if inPattern.Commit.Ticket.Trailer != "" {
+		t.Errorf("trailer %q", inPattern.Commit.Ticket.Trailer)
+	}
+	explicit := parse(t, "toolkit: 1\nagents: [claude-code]\nproject: { commit: { ticket: { from_branch: '[0-9]+', trailer: Issue } } }\n")
+	if explicit.Commit.Ticket.Trailer != "Issue" {
+		t.Errorf("trailer %q", explicit.Commit.Ticket.Trailer)
+	}
+}
+
+func TestCommitDefaultTypeMapFollowsTheProfile(t *testing.T) {
+	p := parse(t, "toolkit: 1\nagents: [claude-code]\nproject: { branch_prefix: { feat: f/ }, commit: { types: [feat, chore] } }\n")
+
+	if got := pairs(p.Commit.TypeFromBranch); got != "feat=feat" {
+		t.Errorf("type_from_branch %v", got)
+	}
+}
+
+func TestCommitErrors(t *testing.T) {
+	for yaml, want := range map[string]string{
+		"commit: x":                                              "project.yaml project.commit: expected a map",
+		"commit: { tickets: {} }":                                "project.yaml project.commit.tickets: unknown key",
+		"commit: { pattern: '<type>: x' }":                       "project.yaml project.commit.pattern: required, a pattern with <subject>",
+		"commit: { pattern: '<kind>: <subject>' }":               "project.yaml project.commit.pattern: unknown placeholder <kind>, expected type, scope, subject or ticket",
+		"commit: { pattern: '<type> <type>: <subject>' }":        "project.yaml project.commit.pattern: <type> appears twice",
+		"commit: { pattern: '<ticket>: <subject>' }":             "project.yaml project.commit.pattern: <ticket> needs ticket.from_branch",
+		"commit: { types: [] }":                                  "project.yaml project.commit.types: required, a non-empty list of words",
+		"commit: { types: ['a b'] }":                             "project.yaml project.commit.types: required, a non-empty list of words",
+		"commit: { type_from_branch: { feat: feature } }":        `project.yaml project.commit.type_from_branch.feat: type "feature" is not in types`,
+		"commit: { type_from_branch: { docs: docs } }":           `project.yaml project.commit.type_from_branch.docs: no branch_prefix "docs"`,
+		"commit: { scopes: { 'lib/**': 'a b' } }":                "project.yaml project.commit.scopes.lib/**: expected a scope word",
+		"commit: { scopes: [a] }":                                "project.yaml project.commit.scopes: expected a map of path glob to scope",
+		"commit: { ticket: { trailer: Refs } }":                  "project.yaml project.commit.ticket.from_branch: required, a regular expression",
+		"commit: { ticket: { from_branch: '(' } }":               "project.yaml project.commit.ticket.from_branch: required, a regular expression",
+		"commit: { ticket: { from_branch: x, at: y } }":          "project.yaml project.commit.ticket.at: unknown key",
+		"commit: { ticket: { from_branch: x, trailer: 'a b' } }": "project.yaml project.commit.ticket.trailer: expected a trailer token",
+		"commit: { subject_max: 0 }":                             "project.yaml project.commit.subject_max: expected a positive number",
+		"commit: { language: '' }":                               "project.yaml project.commit.language: expected a language code",
+		"commit: { body: always }":                               "project.yaml project.commit.body: expected one of optional, required, none",
+		"commit: { allow_email_trailers: Signed-off-by }":        "project.yaml project.commit.allow_email_trailers: expected a list of trailer tokens",
+		"commit: { trailers: ['Refs:'] }":                        "project.yaml project.commit.trailers: expected a list of trailer tokens",
+	} {
+		if got := parseError(t, "toolkit: 1\nagents: [codex]\nproject: { "+yaml+" }\n").Error(); got != want {
+			t.Errorf("%s: %s\nwant %s", yaml, got, want)
+		}
+	}
+}
+
+func TestGlobRegexp(t *testing.T) {
+	cases := []struct {
+		glob, path string
+		match      bool
+	}{
+		{"lib/core/**", "lib/core/a.dart", true},
+		{"lib/core/**", "lib/core/x/y.dart", true},
+		{"lib/core/**", "lib/core_x/a.dart", false},
+		{"lib/*.dart", "lib/a.dart", true},
+		{"lib/*.dart", "lib/x/a.dart", false},
+		{"**/test/*.go", "test/a.go", true},
+		{"**/test/*.go", "a/b/test/a.go", true},
+		{"a?c", "abc", true},
+		{"a.c", "abc", false},
+	}
+	for _, c := range cases {
+		re, err := GlobRegexp(c.glob)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := re.MatchString(c.path); got != c.match {
+			t.Errorf("%s ~ %s = %v", c.glob, c.path, got)
+		}
+	}
+}

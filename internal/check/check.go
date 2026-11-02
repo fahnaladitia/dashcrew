@@ -1,5 +1,6 @@
-// Package check is the read-only merge gate for a pull request: the toolkit is current and the PR body has every
-// heading of the generated template. It runs locally or as a required GitHub check.
+// Package check is the read-only merge gate for a pull request: the toolkit is current, the PR body has every
+// heading of the generated template and every commit follows `project.commit`. It runs locally or as a required
+// GitHub check.
 package check
 
 import (
@@ -10,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
+	"github.com/fahnaladitia/dashcrew/internal/commit"
 	"github.com/fahnaladitia/dashcrew/internal/dartjson"
 	"github.com/fahnaladitia/dashcrew/internal/doctor"
 	"github.com/fahnaladitia/dashcrew/internal/omap"
@@ -20,26 +22,31 @@ import (
 type PrCheck struct {
 	Catalog    *catalog.Catalog
 	ProjectDir string
-	// Environment supplies GITHUB_EVENT_PATH, whose pull request event carries the PR body in CI.
+	// Environment supplies GITHUB_EVENT_PATH, whose pull request event carries the PR body and base in CI.
 	Environment map[string]string
+	// Base is `--base`: the commits of `<base>..HEAD` are linted. Without it, the pull request event's base and head.
+	Base *string
 }
 
-// Run returns the toolkit checks of the doctor, without the machine checks, then `pr-sections`.
+// Run returns the toolkit checks of the doctor, without the machine checks, then `pr-sections` and `commits`.
 // prBody wins; otherwise the body of the pull request event in CI; without either the section check is skipped.
 // An event file that is not JSON is an error.
 func (c PrCheck) Run(prBody *string) ([]doctor.Check, error) {
 	checks := doctor.Doctor{Catalog: c.Catalog, ProjectDir: c.ProjectDir}.Run()
-	body := prBody
-	if body == nil {
-		var err error
-		if body, err = c.eventBody(); err != nil {
-			return nil, err
-		}
+	pullRequest, err := c.pullRequest()
+	if err != nil {
+		return nil, err
 	}
-	return append(checks, c.sections(body)), nil
+	body := prBody
+	if body == nil && pullRequest != nil {
+		text, _ := pullRequest.Value("body").(string)
+		body = &text
+	}
+	return append(checks, c.sections(body), c.commits(pullRequest)), nil
 }
 
-func (c PrCheck) eventBody() (*string, error) {
+// pullRequest is the `pull_request` object of the event in CI; nil outside a pull request event.
+func (c PrCheck) pullRequest() (*omap.Map[any], error) {
 	path, ok := c.Environment["GITHUB_EVENT_PATH"]
 	if !ok {
 		return nil, nil
@@ -56,12 +63,54 @@ func (c PrCheck) eventBody() (*string, error) {
 	if !ok {
 		return nil, nil
 	}
-	pullRequest, ok := object.Value("pull_request").(*omap.Map[any])
-	if !ok {
-		return nil, nil
+	pullRequest, _ := object.Value("pull_request").(*omap.Map[any])
+	return pullRequest, nil
+}
+
+// commits lints the PR's commits, merges skipped: `<base>..HEAD` with --base, else the event's base and head sha.
+func (c PrCheck) commits(pullRequest *omap.Map[any]) doctor.Check {
+	const id = "commits"
+	revRange, shown := "", ""
+	switch {
+	case c.Base != nil:
+		revRange = *c.Base + "..HEAD"
+		shown = revRange
+	case pullRequest != nil:
+		baseSha, headSha := sha(pullRequest, "base"), sha(pullRequest, "head")
+		if baseSha != "" && headSha != "" {
+			revRange = baseSha + ".." + headSha
+			shown = baseSha[:min(7, len(baseSha))] + ".." + headSha[:min(7, len(headSha))]
+		}
 	}
-	body, _ := pullRequest.Value("body").(string)
-	return &body, nil
+	if revRange == "" {
+		return doctor.Check{ID: id, Status: doctor.Skip, Detail: "no base; pass --base <branch> or run on a pull_request event"}
+	}
+	p, err := sync.Sync{Catalog: c.Catalog, ProjectDir: c.ProjectDir}.Profile()
+	if err != nil {
+		return doctor.Check{ID: id, Status: doctor.Skip, Detail: "needs a valid profile"}
+	}
+	repo, err := commit.Open(c.ProjectDir)
+	if err != nil {
+		return doctor.Check{ID: id, Status: doctor.Fail, Detail: err.Error()}
+	}
+	problems, count, err := commit.LintRange(repo, p.Commit, revRange)
+	if err != nil {
+		return doctor.Check{ID: id, Status: doctor.Fail, Detail: strings.ReplaceAll(err.Error(), revRange, shown) + "; a CI checkout needs fetch-depth: 0"}
+	}
+	if len(problems) > 0 {
+		return doctor.Check{ID: id, Status: doctor.Fail, Detail: strings.Join(problems, "; ")}
+	}
+	return doctor.Check{ID: id, Status: doctor.OK, Detail: commit.Follow(count, shown, p.Commit.Pattern)}
+}
+
+// sha is `pull_request.<side>.sha` of the event; empty when missing.
+func sha(pullRequest *omap.Map[any], side string) string {
+	object, _ := pullRequest.Value(side).(*omap.Map[any])
+	if object == nil {
+		return ""
+	}
+	value, _ := object.Value("sha").(string)
+	return value
 }
 
 func (c PrCheck) sections(body *string) doctor.Check {

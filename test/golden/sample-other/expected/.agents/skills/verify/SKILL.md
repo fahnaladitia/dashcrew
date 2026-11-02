@@ -117,3 +117,4 @@ PR ready: [YES/NO]
 
 - On NO, list every issue with `file:line` and a concrete fix.
 - Paste the real command output under the summary. Never conclude PASS without it.
+- On PASS, run `dashcrew verify record` as the last step: `dashcrew commit suggest` then lists the files changed after this verify.

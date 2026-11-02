@@ -1,0 +1,128 @@
+# commit lint
+
+=== step 1: dashcrew "help" "commit" "lint"
+exit: 0
+stdout:
+| Check commit messages against project.commit; exit 1 with one line per problem.
+| Checks the pattern, type, subject length, body, trailers and AI attribution of one message, or of every
+| commit of --range but merges.
+| 
+| Usage: dashcrew commit lint <message> | - | --range <base>..<head>
+| -h, --help       Print this usage information.
+| -p, --project    Any folder inside the repository.
+|                  (defaults to ".")
+|     --range      Lint the commits of <base>..<head> instead of a message.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 2: dashcrew "commit" "lint" "fix(cart): keep the total\n\nThe total reset on reload."
+exit: 0
+stdout:
+| the message follows <type>(<scope>): <subject>
+stderr: (empty)
+files: (unchanged)
+
+=== step 3: dashcrew "commit" "lint" "Fix the cart"
+exit: 1
+stdout:
+| subject line "Fix the cart" does not match <type>(<scope>): <subject>
+| body is required
+stderr: (empty)
+files: (unchanged)
+
+=== step 4: dashcrew "commit" "lint" "chore: x\n\n🤖 Generated with an AI tool\n\nChange-Id: 1"
+exit: 1
+stdout:
+| trailer "Change-Id" is not allowed; allowed: Co-authored-by, Signed-off-by, Reviewed-by, Ported-from
+| AI attribution: generated-with footer on line 3
+stderr: (empty)
+files: (unchanged)
+
+=== step 5: dashcrew "commit" "lint" "-"
+stdin: "docs: explain lint\n\nBody.\n"
+exit: 0
+stdout:
+| the message follows <type>(<scope>): <subject>
+stderr: (empty)
+files: (unchanged)
+
+=== step 6: dashcrew "commit" "lint" "fix: reply faster\n\nAsk ops@example.com, not @ana; see assets/icon@2x.png.\n\nSigned-off-by: Ana Lima <ana@example.com>"
+exit: 1
+stdout:
+| email address on line 3: commit messages never show one
+| email address on line 5: commit messages never show one
+stderr: (empty)
+files: (unchanged)
+
+=== step 7: dashcrew "commit" "lint"
+exit: 64
+stdout: (empty)
+stderr:
+| Pass one message, - for stdin, or --range <base>..<head>.
+| 
+| Usage: dashcrew commit lint <message> | - | --range <base>..<head>
+| -h, --help       Print this usage information.
+| -p, --project    Any folder inside the repository.
+|                  (defaults to ".")
+|     --range      Lint the commits of <base>..<head> instead of a message.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 8: dashcrew "commit" "lint" "a" "--range" "main..HEAD"
+exit: 64
+stdout: (empty)
+stderr:
+| Pass one message, - for stdin, or --range <base>..<head>.
+| 
+| Usage: dashcrew commit lint <message> | - | --range <base>..<head>
+| -h, --help       Print this usage information.
+| -p, --project    Any folder inside the repository.
+|                  (defaults to ".")
+|     --range      Lint the commits of <base>..<head> instead of a message.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 9: dashcrew "commit" "lint" "--range" "main..HEAD"
+exit: 1
+stdout:
+| fb7d596 subject line "wip" does not match <type>(<scope>): <subject>
+| fb7d596 body is required
+| e6aa3a2 email address on line 5: commit messages never show one
+| e6aa3a2 AI attribution: AI co-author trailer on line 5
+stderr: (empty)
+files: (unchanged)
+
+=== step 10: dashcrew "commit" "lint" "--range" "HEAD~1..HEAD"
+exit: 1
+stdout:
+| e6aa3a2 email address on line 5: commit messages never show one
+| e6aa3a2 AI attribution: AI co-author trailer on line 5
+stderr: (empty)
+files: (unchanged)
+
+=== step 11: dashcrew "commit" "lint" "--range" "nope..HEAD"
+exit: 1
+stdout: (empty)
+stderr:
+| cannot read nope..HEAD: fatal: bad revision 'nope..HEAD'
+files: (unchanged)
+
+=== step 12: dashcrew "commit" "lint" "docs: no body"
+dir: .
+exit: 0
+stdout:
+| the message follows <type>(<scope>): <subject>
+stderr: (empty)
+files: (unchanged)
+
+=== step 13: dashcrew "commit" "lint" "--range" "main..HEAD"
+dir: .
+exit: 1
+stdout: (empty)
+stderr:
+| . is not inside a git repository
+files: (unchanged)

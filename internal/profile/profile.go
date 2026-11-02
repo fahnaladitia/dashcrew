@@ -95,6 +95,8 @@ type Profile struct {
 	Paths          *omap.Map[any]
 	// CI with `github: true` makes sync write a workflow running `dashcrew check` at the pinned `dashcrew_ref`.
 	CI *omap.Map[any]
+	// Commit is `project.commit` with its defaults; it is kept out of Project, so templates never see it.
+	Commit *Commit
 	// Knowledge is the shared knowledge repo; nil when the profile has no `knowledge` key. Templates see only
 	// `has_knowledge`, which `when:` gates on, so a profile without it renders as before.
 	Knowledge *Knowledge
@@ -195,6 +197,9 @@ func Parse(text string, known KnownOptions) (*Profile, error) {
 		return nil, err
 	}
 	if profile.Project, err = parseProject(root.Value("project")); err != nil {
+		return nil, err
+	}
+	if profile.Commit, err = parseCommit(profile.Project); err != nil {
 		return nil, err
 	}
 	if profile.Policy, err = merge("policy", policyDefaults(), root.Value("policy"), true); err != nil {

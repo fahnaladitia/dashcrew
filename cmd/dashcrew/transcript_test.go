@@ -160,8 +160,8 @@ func (e cliEnvironment) run(t *testing.T, s side, st step) outcome {
 
 func normalize(text, root string) string { return strings.ReplaceAll(text, root, "<root>") }
 
-// keptGitFile names the files under a .git directory the comparison reads: config, the exclude file and the
-// watch state; objects, logs and the index differ by timestamps and are skipped.
+// keptGitFile names the files under a .git directory the comparison reads: config, the exclude file, the
+// watch state and the verify record; objects, logs and the index differ by timestamps and are skipped.
 func keptGitFile(relative string) bool {
 	_, inGit, ok := strings.Cut(relative, ".git/")
 	if !ok {
@@ -171,7 +171,7 @@ func keptGitFile(relative string) bool {
 	if strings.HasPrefix(relative, "home/") {
 		return false
 	}
-	return inGit == "config" || inGit == "info/exclude" || inGit == "dashcrew-watch/state.json"
+	return inGit == "config" || inGit == "info/exclude" || inGit == "dashcrew-watch/state.json" || inGit == "dashcrew/last-verify"
 }
 
 // snapshot maps every file, link and folder under the side root to a normalized description.
@@ -203,7 +203,7 @@ func snapshot(t *testing.T, s side) map[string]string {
 			out[relative] = "link -> " + normalize(target, s.root)
 		case info.IsDir():
 			if strings.Contains(relative+"/", ".git/") {
-				if _, inGit, _ := strings.Cut(relative+"/", ".git/"); inGit != "" && inGit != "info/" && inGit != "dashcrew-watch/" {
+				if _, inGit, _ := strings.Cut(relative+"/", ".git/"); inGit != "" && inGit != "info/" && inGit != "dashcrew-watch/" && inGit != "dashcrew/" {
 					return filepath.SkipDir
 				}
 				return nil
@@ -418,6 +418,37 @@ func pushPage(file string) func(t *testing.T, s side) {
 // guardWrite is a Claude Code Write hook payload for path.
 func guardWrite(path string) step {
 	return step{args: []string{"guard"}, stdin: `{"tool_name":"Write","tool_input":{"file_path":"` + path + `","content":"x"}}`}
+}
+
+const commitRepoProfile = "toolkit: 1\nagents: [claude-code]\nproject:\n  commit:\n" +
+	"    scopes: { 'lib/features/cart/**': cart, 'lib/core/**': core }\n    ticket: { from_branch: '([A-Z]+-[0-9]+)' }\n"
+
+// commitRepo is a repo in w on branch fix/ABC-123-cart-total, with one staged file, one unstaged edit, an edit to a
+// file whose name needs quotes, and two untracked files.
+func commitRepo(t *testing.T, s side) {
+	s.write(t, "w/.ai/project.yaml", commitRepoProfile)
+	s.write(t, "w/lib/features/cart/cart_cubit.dart", "class CartCubit {}\n")
+	s.write(t, "w/lib/features/cart/it's $1.dart", "x\n")
+	s.write(t, "w/README.md", "readme\n")
+	s.git(t, "w", "init", "-q", "-b", "main")
+	s.git(t, "w", "add", "-A")
+	s.git(t, "w", "commit", "-q", "-m", "chore: init")
+	s.git(t, "w", "checkout", "-q", "-b", "fix/ABC-123-cart-total")
+	s.write(t, "w/lib/features/cart/cart_page.dart", "class CartPage {}\n")
+	s.git(t, "w", "add", "lib/features/cart/cart_page.dart")
+	s.write(t, "w/lib/features/cart/cart_cubit.dart", "class CartCubit { int total = 0; }\n")
+	s.write(t, "w/lib/features/cart/it's $1.dart", "y\n")
+	s.write(t, "w/test/cart_cubit_test.dart", "void main() {}\n")
+	s.write(t, "w/notes.md", "draft\n")
+}
+
+// commitOnBranch writes file and commits it with message in w.
+func commitOnBranch(file, message string) func(t *testing.T, s side) {
+	return func(t *testing.T, s side) {
+		s.write(t, "w/"+file, message+"\n")
+		s.git(t, "w", "add", "-A")
+		s.git(t, "w", "commit", "-q", "-m", message)
+	}
 }
 
 func cli(args ...string) step { return step{args: args} }
@@ -649,6 +680,77 @@ func cliCases() []cliCase {
 				s.git(t, "w", "commit", "-q", "-m", "share")
 			}},
 			{args: []string{"knowledge", "doctor", "--clone", "../nope"}, env: recorded},
+		}},
+		{name: "commit suggest", setup: commitRepo, steps: []step{
+			cli("help", "commit"),
+			cli("commit", "suggest", "--help"),
+			cli("commit", "suggest"),
+			cli("commit", "suggest", "--subject", "keep the $total `right` when it's \"0\" \u00e9", "--body", "Line one.\nLine two."),
+			cli("commit", "suggest", "--json"),
+			cli("verify", "record"),
+			cli("commit", "suggest"),
+			{args: []string{"commit", "suggest"}, before: func(t *testing.T, s side) {
+				s.write(t, "w/lib/core/net.dart", "edited by hand\n")
+				s.git(t, "w", "add", "lib/core/net.dart")
+				s.write(t, "w/lib/features/cart/cart_cubit.dart", "class CartCubit { int total = 1; }\n")
+			}},
+			{args: []string{"commit", "suggest", "--scope", "", "--type", "docs", "--subject", "explain the cart"}, dir: "w/lib/features"},
+			cli("commit", "suggest", "--type", "wip"),
+			cli("commit", "suggest", "--subject", "Keep the total right on the cart page even when the count reaches zero"),
+			{args: []string{"commit", "suggest"}, before: func(t *testing.T, s side) {
+				s.git(t, "w", "add", "-A")
+				s.git(t, "w", "commit", "-q", "-m", "fix(cart): keep the total")
+				s.git(t, "w", "checkout", "-q", "--detach")
+			}},
+			{args: []string{"commit", "suggest"}, dir: "."},
+		}},
+		{name: "commit lint", setup: func(t *testing.T, s side) {
+			s.write(t, "w/.ai/project.yaml", "toolkit: 1\nagents: [claude-code]\nproject: { commit: { body: required, trailers: [Ported-from] } }\n")
+			s.git(t, "w", "init", "-q", "-b", "main")
+			commitOnBranch("a.txt", "chore: init\n\nFirst commit.")(t, s)
+			s.git(t, "w", "checkout", "-q", "-b", "feat/x")
+			commitOnBranch("b.txt", "feat(share): add links\n\nWhy.\n\nPorted-from: abc1234")(t, s)
+			commitOnBranch("c.txt", "wip")(t, s)
+			commitOnBranch("d.txt", "fix: ok\n\nWhy.\n\nCo-Authored-By: Claude <noreply@anthropic.com>")(t, s)
+		}, steps: []step{
+			cli("help", "commit", "lint"),
+			cli("commit", "lint", "fix(cart): keep the total\n\nThe total reset on reload."),
+			cli("commit", "lint", "Fix the cart"),
+			cli("commit", "lint", "chore: x\n\n\U0001F916 Generated with an AI tool\n\nChange-Id: 1"),
+			{args: []string{"commit", "lint", "-"}, stdin: "docs: explain lint\n\nBody.\n"},
+			cli("commit", "lint", "fix: reply faster\n\nAsk ops@example.com, not @ana; see assets/icon@2x.png.\n\nSigned-off-by: Ana Lima <ana@example.com>"),
+			cli("commit", "lint"),
+			cli("commit", "lint", "a", "--range", "main..HEAD"),
+			cli("commit", "lint", "--range", "main..HEAD"),
+			cli("commit", "lint", "--range", "HEAD~1..HEAD"),
+			cli("commit", "lint", "--range", "nope..HEAD"),
+			{args: []string{"commit", "lint", "docs: no body"}, dir: "."},
+			{args: []string{"commit", "lint", "--range", "main..HEAD"}, dir: "."},
+		}},
+		{name: "check commits", setup: func(t *testing.T, s side) {
+			s.write(t, "w/.ai/project.yaml", "toolkit: 1\nagents: [claude-code]\n")
+			s.git(t, "w", "init", "-q", "-b", "main")
+		}, steps: []step{
+			cli("sync"),
+			{args: []string{"check", "--base", "main"}, before: func(t *testing.T, s side) {
+				commitOnBranch("README.md", "chore: toolkit")(t, s)
+				s.git(t, "w", "checkout", "-q", "-b", "feat/share")
+				commitOnBranch("src/a.txt", "feat(share): add links")(t, s)
+			}},
+			{args: []string{"check", "--base", "main"}, before: func(t *testing.T, s side) {
+				s.git(t, "w", "checkout", "-q", "main")
+				commitOnBranch("src/base.txt", "base moved")(t, s)
+				s.git(t, "w", "checkout", "-q", "feat/share")
+				s.git(t, "w", "merge", "-q", "--no-edit", "main")
+				commitOnBranch("src/b.txt", "WIP sharing")(t, s)
+			}},
+			{args: []string{"check"}, env: map[string]string{"GITHUB_EVENT_PATH": "../event.json", "GITHUB_ACTIONS": "true"},
+				before: func(t *testing.T, s side) {
+					s.write(t, "event.json", `{"pull_request":{"body":"","base":{"sha":"`+s.git(t, "w", "rev-parse", "main")+
+						`"},"head":{"sha":"`+s.git(t, "w", "rev-parse", "HEAD")+`"}}}`)
+				}},
+			cli("check", "--base", "nope"),
+			cli("help", "check"),
 		}},
 		{name: "worktree watch", setup: repo(repoProfile), steps: []step{
 			cli("worktree", "watch", "--once"),

@@ -43,7 +43,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:36bfb1be82c0b298
-+ w/.ai/lock.json  -rw-r--r-- sha256:04d3528796ecac03
++ w/.ai/lock.json  -rw-r--r-- sha256:352b146151d5c217
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:ac4fca699a608a65
@@ -93,7 +93,7 @@ files:
 + w/.claude/skills/verification-loop  dir
 + w/.claude/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:d54707cb287e4465
 + w/.claude/skills/verify  dir
-+ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:4cc495071bb3d384
++ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:c245fcc49e344b7e
 + w/.claude/skills/work-modes  dir
 + w/.claude/skills/work-modes/SKILL.md  -rw-r--r-- sha256:42e7df44abe766f6
 + w/.claude/skills/worktree  dir
@@ -102,7 +102,7 @@ files:
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
 + w/.gitignore  -rw-r--r-- sha256:3a003918a77c43a0
 + w/.mcp.json  -rw-r--r-- sha256:af388c2fd3ed6bef
-+ w/AGENTS.md  -rw-r--r-- sha256:f0ccb90142851e02
++ w/AGENTS.md  -rw-r--r-- sha256:e127335e5e1cf051
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 2: dashcrew "doctor"
@@ -121,7 +121,7 @@ stdout:
 | ok    mcp             defined: dart-mcp-server, dashcrew-knowledge
 | warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
 | warn  knowledge       no clone of notes at ~/.dashcrew/knowledge/notes; run dashcrew knowledge pull
-| ok    agents-md-size  AGENTS.md 16151 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16147 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)
@@ -157,7 +157,7 @@ stdout:
 stderr: (empty)
 files:
 + w/.ai/knowledge  link -> <root>/home/.dashcrew/knowledge/notes
-~ w/.ai/lock.json  -rw-r--r-- sha256:26b6b71d21853b49
+~ w/.ai/lock.json  -rw-r--r-- sha256:6d5a6ef8d776138c
 
 === step 6: dashcrew "sync"
 exit: 0
@@ -220,7 +220,7 @@ stdout:
 | up to date
 stderr: (empty)
 files:
-~ w/.ai/lock.json  -rw-r--r-- sha256:ac629dfe7c9fc85b
+~ w/.ai/lock.json  -rw-r--r-- sha256:ddef3b7d9355501f
 
 === step 14: dashcrew "doctor" "--fetch"
 (after the case's setup for this step)
@@ -240,7 +240,7 @@ stdout:
 | warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
 | warn  knowledge       linked to ~/.dashcrew/knowledge/notes, pulled less than an hour ago, 1 commit behind its remote; run dashcrew knowledge pull
 | warn  knowledge-stale 2 unverified pages; run dashcrew knowledge doctor
-| ok    agents-md-size  AGENTS.md 16151 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16147 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)
@@ -270,11 +270,11 @@ stderr: (empty)
 files:
 ~ w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
 - w/.ai/knowledge
-~ w/.ai/lock.json  -rw-r--r-- sha256:a2e2775c416ce6af
+~ w/.ai/lock.json  -rw-r--r-- sha256:c2144f4c1419672d
 ~ w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
 ~ w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:698f498fdff18b66
 ~ w/.claude/skills/learn/SKILL.md  -rw-r--r-- sha256:f5d260c1d5735b9e
 ~ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:d5653cd7d3348e13
 - w/.gitignore
 ~ w/.mcp.json  -rw-r--r-- sha256:745dcf12d577148c
-~ w/AGENTS.md  -rw-r--r-- sha256:37b94d6c6708a229
+~ w/AGENTS.md  -rw-r--r-- sha256:03f9b31b80913d13
