@@ -354,3 +354,35 @@ policy:
 		}
 	}
 }
+
+func TestKnowledgeAddsTheProposalBranchToLearnOnly(t *testing.T) {
+	off := renderShipped(t, minimal)
+	on := renderShipped(t, "toolkit: 1\nagents: [claude-code]\nknowledge: { repo: git@example.com:team/notes-knowledge.git }\n")
+	for _, name := range []string{"workflow/learn", "skill/continuous-learning"} {
+		withKnowledge, without := targetContent(t, on, name), targetContent(t, off, name)
+		if !strings.HasPrefix(withKnowledge, without) || len(withKnowledge) == len(without) {
+			t.Errorf("%s: the knowledge branch must be appended to the unchanged text", name)
+		}
+		if strings.Contains(without, ".ai/knowledge") {
+			t.Errorf("%s mentions knowledge without the profile key", name)
+		}
+	}
+	learn := targetContent(t, on, "workflow/learn")
+	for _, want := range []string{".ai/knowledge/inbox/<yyyy-mm-dd>-<slug>.md", ".ai/packs/"} {
+		if !strings.Contains(learn, want) {
+			t.Errorf("learn lacks %q", want)
+		}
+	}
+	skill := targetContent(t, on, "skill/continuous-learning")
+	for _, want := range []string{"kind: feature | repo", "target:", "repo:", "branch:", "commit:", "`<repo>:<path>:<line>`"} {
+		if !strings.Contains(skill, want) {
+			t.Errorf("continuous-learning lacks %q", want)
+		}
+	}
+	for _, target := range on {
+		if target.Target != "workflow/learn" && target.Target != "skill/continuous-learning" &&
+			target.Content != targetContent(t, off, target.Target) {
+			t.Errorf("%s changed with knowledge set", target.Target)
+		}
+	}
+}

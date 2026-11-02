@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -18,6 +19,7 @@ import (
 	"github.com/fahnaladitia/dashcrew/internal/doctor"
 	"github.com/fahnaladitia/dashcrew/internal/guard"
 	"github.com/fahnaladitia/dashcrew/internal/initproject"
+	"github.com/fahnaladitia/dashcrew/internal/knowledge"
 	"github.com/fahnaladitia/dashcrew/internal/profile"
 	"github.com/fahnaladitia/dashcrew/internal/sync"
 	"github.com/fahnaladitia/dashcrew/internal/version"
@@ -120,6 +122,7 @@ func newRoot(cli cliIO) *command {
 		add(syncCommand(cli)).
 		add(doctorCommand(cli)).
 		add(worktreeCommand(cli)).
+		add(knowledgeCommand(cli)).
 		add(guardCommand()).
 		add(checkCommand(cli))
 	return root
@@ -221,6 +224,7 @@ func printChecks(stdout io.Writer, checks []doctor.Check, annotate bool) int {
 func doctorCommand(cli cliIO) *command {
 	c := newCommand("doctor", "Check that the generated toolkit is installed, untouched and current. Writes nothing.")
 	c.option("project", "p", "Project root holding .ai/project.yaml.", ptr("."))
+	c.flag("fetch", "", "Fetch the knowledge clone and report how many commits it is behind its remote.", false, false)
 	c.run = func(r *results) (int, error) {
 		projectDir, err := absolute(*r.option("project"))
 		if err != nil {
@@ -230,7 +234,7 @@ func doctorCommand(cli cliIO) *command {
 		if err != nil {
 			return 0, err
 		}
-		checks := doctor.Doctor{Catalog: cat, ProjectDir: projectDir, MachineChecks: true}.Run()
+		checks := doctor.Doctor{Catalog: cat, ProjectDir: projectDir, MachineChecks: true, Fetch: r.flag("fetch"), Now: clock(cli.env)}.Run()
 		return printChecks(cli.stdout, checks, false), nil
 	}
 	return c
@@ -390,6 +394,210 @@ func worktreeCommand(cli cliIO) *command {
 			time.Duration(interval)*time.Second, cli.out)
 	}
 	return branch
+}
+
+func knowledgeCommand(cli cliIO) *command {
+	branch := newCommand("knowledge", "Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.")
+
+	initRepo := newCommand("init", "Write the knowledge repo layout into <dir>, which must be new or empty. Runs no git.")
+	initRepo.invocation = "dashcrew knowledge init <dir>"
+	initRepo.run = func(r *results) (int, error) {
+		if len(r.rest) == 0 {
+			return 0, &usageError{initRepo, "Missing <dir>."}
+		}
+		dir := r.rest[0]
+		written, err := knowledge.Init(dir)
+		for _, file := range written {
+			cli.out("wrote   " + filepath.ToSlash(filepath.Join(dir, file)))
+		}
+		if err != nil {
+			return 0, &exitError{1, err.Error()}
+		}
+		cli.out("note: commit it in a new git repo, push it, then set knowledge.repo in each project's .ai/project.yaml.")
+		return 0, nil
+	}
+
+	pull := newCommand("pull", "Clone the knowledge repo into ~/.dashcrew/knowledge/<name>, or fetch and fast-forward it. Never resets.")
+	pull.option("project", "p", "Project root holding .ai/project.yaml.", ptr("."))
+	pull.run = func(r *results) (int, error) {
+		projectDir, p, err := loadKnowledgeProfile(r)
+		if err != nil {
+			return 0, err
+		}
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return 0, err
+		}
+		message, err := knowledge.Pull(knowledge.ResolveRepo(p.Knowledge.Repo, projectDir), knowledge.CloneDir(home, p.Knowledge.Name), time.Now())
+		if err != nil {
+			return 0, &exitError{1, err.Error()}
+		}
+		cli.out(message)
+		if _, err := os.Lstat(filepath.Join(projectDir, filepath.FromSlash(knowledge.LinkPath))); err != nil {
+			cli.out("note: run dashcrew sync to link it as " + knowledge.LinkPath + ".")
+		}
+		return 0, nil
+	}
+
+	review := newCommand("review", "Walk the inbox/ proposals oldest first and accept, edit, skip or delete each.\n"+
+		"Accept merges a proposal into its page. Then the README.md index is rewritten and the git commands for a pull\n"+
+		"request are printed; it never runs git.")
+	review.option("project", "p", "Project root holding .ai/project.yaml.", ptr("."))
+	review.option("clone", "", "Knowledge clone to review; defaults to the profile's ~/.dashcrew/knowledge/<name>.", nil)
+	review.run = func(r *results) (int, error) {
+		clone, _, err := knowledgeClone(r)
+		if err != nil {
+			return 0, err
+		}
+		terminal := isTerminal(stdin)
+		reader := bufio.NewReader(stdin)
+		_, err = knowledge.Review{
+			Clone: clone,
+			Now:   clock(cli.env),
+			Ask: func(prompt string) (string, bool) {
+				fmt.Fprint(cli.stdout, prompt)
+				line, err := reader.ReadString('\n')
+				if err != nil && line == "" {
+					fmt.Fprintln(cli.stdout)
+					return "", false
+				}
+				line = strings.TrimRight(line, "\r\n")
+				if !terminal {
+					fmt.Fprintln(cli.stdout, line)
+				}
+				return line, true
+			},
+			Edit: func(path string) error {
+				editor := strings.Fields(cli.env["EDITOR"])
+				if len(editor) == 0 {
+					return errors.New("set $EDITOR to edit a proposal")
+				}
+				cmd := exec.Command(editor[0], append(editor[1:], path)...)
+				if terminal {
+					cmd.Stdin = os.Stdin
+				}
+				cmd.Stdout, cmd.Stderr = cli.stdout, cli.stderr
+				return cmd.Run()
+			},
+			Out: cli.out,
+		}.Run()
+		if err != nil {
+			return 0, &exitError{1, err.Error()}
+		}
+		return 0, nil
+	}
+
+	doctorCmd := newCommand("doctor", "Report stale code pointers, proposals waiting over 14 days and pages not verified in 180 days.\n"+
+		"Writes nothing; exits 1 when a code pointer's path is gone from its repo.")
+	doctorCmd.option("project", "p", "Project root; its repo and the sibling folders resolve code pointers.", ptr("."))
+	doctorCmd.option("clone", "", "Knowledge clone to check; defaults to the profile's ~/.dashcrew/knowledge/<name>.", nil)
+	doctorCmd.run = func(r *results) (int, error) {
+		clone, projectDir, err := knowledgeClone(r)
+		if err != nil {
+			return 0, err
+		}
+		if info, err := os.Stat(clone); err != nil || !info.IsDir() {
+			return 0, &exitError{1, "No knowledge clone at " + clone + "; run dashcrew knowledge pull."}
+		}
+		report, err := knowledge.Staleness(clone, projectDir, clock(cli.env)())
+		if err != nil {
+			return 0, &exitError{1, err.Error()}
+		}
+		line := func(kind, where, what string) { cli.out(fmt.Sprintf("%-10s%s  %s", kind, where, what)) }
+		for _, stale := range report.Missing {
+			line("pointer", stale.Page+":"+strconv.Itoa(stale.Pointer.Line), stale.Pointer.String()+" not found in "+stale.RepoDir)
+		}
+		for _, repo := range report.Unresolved {
+			line("unchecked", repo, "no such repo: not the project and no sibling folder of that name")
+		}
+		for _, old := range report.OldProposals {
+			line("proposal", old.Path, fmt.Sprintf("waiting %d days; run dashcrew knowledge review", old.Days))
+		}
+		for _, page := range report.Unverified {
+			if page.Newest == "" {
+				line("page", page.Path, "no verified marker")
+			} else {
+				line("page", page.Path, fmt.Sprintf("newest verified marker %s, %d days ago", page.Newest, page.Days))
+			}
+		}
+		stale := "none stale"
+		if len(report.Missing) > 0 {
+			stale = strconv.Itoa(len(report.Missing)) + " stale"
+		}
+		cli.out(fmt.Sprintf("%s checked, %s; %s; %s", count(report.Checked, "pointer"), stale,
+			count(len(report.OldProposals), "old proposal"), count(len(report.Unverified), "unverified page")))
+		if len(report.Missing) > 0 {
+			return 1, nil
+		}
+		return 0, nil
+	}
+	return branch.add(initRepo).add(pull).add(review).add(doctorCmd)
+}
+
+// loadKnowledgeProfile is the project folder and its profile, which must set `knowledge`.
+func loadKnowledgeProfile(r *results) (string, *profile.Profile, error) {
+	projectDir, err := absolute(*r.option("project"))
+	if err != nil {
+		return "", nil, err
+	}
+	cat, err := catalog.LoadEmbedded()
+	if err != nil {
+		return "", nil, err
+	}
+	p, err := sync.Sync{Catalog: cat, ProjectDir: projectDir}.Profile()
+	if err != nil {
+		return "", nil, err
+	}
+	if p.Knowledge == nil {
+		return "", nil, &exitError{1, "No knowledge in .ai/project.yaml; add knowledge: { repo: <git url or path> } first."}
+	}
+	return projectDir, p, nil
+}
+
+// knowledgeClone is --clone, else the profile's clone, with the project folder.
+func knowledgeClone(r *results) (string, string, error) {
+	if clone := r.option("clone"); clone != nil {
+		projectDir, err := absolute(*r.option("project"))
+		return filepath.Clean(*clone), filepath.Clean(projectDir), err
+	}
+	projectDir, p, err := loadKnowledgeProfile(r)
+	if err != nil {
+		return "", "", err
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", "", err
+	}
+	return knowledge.CloneDir(home, p.Knowledge.Name), filepath.Clean(projectDir), nil
+}
+
+// clock is the time SOURCE_DATE_EPOCH names when it is set, so a recorded run dates its output the same every time;
+// else the current time.
+func clock(env map[string]string) func() time.Time {
+	if seconds, err := strconv.ParseInt(env["SOURCE_DATE_EPOCH"], 10, 64); err == nil {
+		return func() time.Time { return time.Unix(seconds, 0).UTC() }
+	}
+	return time.Now
+}
+
+// isTerminal is true when r is a terminal, where the user's typing already shows the answer.
+func isTerminal(r io.Reader) bool {
+	file, ok := r.(*os.File)
+	if !ok {
+		return false
+	}
+	info, err := file.Stat()
+	return err == nil && info.Mode()&os.ModeCharDevice != 0
+}
+
+func count(n int, word string) string {
+	switch n {
+	case 0:
+		return "no " + word + "s"
+	case 1:
+		return "1 " + word
+	}
+	return strconv.Itoa(n) + " " + word + "s"
 }
 
 // dartTryParseInt is Dart's `int.tryParse` without a radix: surrounding whitespace, a sign and a `0x` prefix.

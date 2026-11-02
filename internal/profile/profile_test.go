@@ -376,3 +376,49 @@ func TestPlatformConfigErrors(t *testing.T) {
 		})
 	}
 }
+
+func TestKnowledgeIsOptionalAndItsNameDefaultsToTheRepoFolder(t *testing.T) {
+	if p := parse(t, "toolkit: 1\nagents: [codex]\n"); p.Knowledge != nil {
+		t.Errorf("knowledge without the key: %+v", p.Knowledge)
+	}
+	for repo, name := range map[string]string{
+		"git@example.com:team/notes-knowledge.git": "notes-knowledge",
+		"https://example.com/team/notes.git/":      "notes",
+		"../shared/notes":                          "notes",
+		"/srv/git/kb.git":                          "kb",
+		"host:kb":                                  "kb",
+	} {
+		p := parse(t, "toolkit: 1\nagents: [codex]\nknowledge: { repo: '"+repo+"' }\n")
+		if p.Knowledge == nil || p.Knowledge.Repo != repo || p.Knowledge.Name != name {
+			t.Errorf("%s: %+v", repo, p.Knowledge)
+		}
+	}
+	p := parse(t, "toolkit: 1\nagents: [codex]\nknowledge:\n  repo: git@example.com:team/kb.git\n  name: team-notes\n")
+	if p.Knowledge.Name != "team-notes" {
+		t.Errorf("explicit name: %+v", p.Knowledge)
+	}
+	if _, ok := p.ToContext()["knowledge"]; ok {
+		t.Error("knowledge reached the template context; profiles without it must render as before")
+	}
+	if p.ToContext()["has_knowledge"] != true || parse(t, "toolkit: 1\nagents: [codex]\n").ToContext()["has_knowledge"] != false {
+		t.Error("has_knowledge")
+	}
+}
+
+func TestKnowledgeKeysAreStrict(t *testing.T) {
+	for yaml, want := range map[string]string{
+		"knowledge: notes\n":                                "project.yaml knowledge: expected a map with repo and an optional name",
+		"knowledge: {}\n":                                   "project.yaml knowledge.repo: required, a git URL or path",
+		"knowledge: { repo: '' }\n":                         "project.yaml knowledge.repo: required, a git URL or path",
+		"knowledge: { repo: 3 }\n":                          "project.yaml knowledge.repo: required, a git URL or path",
+		"knowledge: { repo: x.git, branch: main }\n":        "project.yaml knowledge.branch: unknown key",
+		"knowledge: { repo: x.git, name: 'a/b' }\n":         "project.yaml knowledge.name: expected a folder name of letters, digits, '.', '_' or '-'",
+		"knowledge: { repo: x.git, name: '..' }\n":          "project.yaml knowledge.name: expected a folder name of letters, digits, '.', '_' or '-'",
+		"knowledge: { repo: x.git, name: '' }\n":            "project.yaml knowledge.name: expected a folder name of letters, digits, '.', '_' or '-'",
+		"knowledge: { repo: 'https://example.com/.git' }\n": "project.yaml knowledge.name: required, the repo has no folder name to default to",
+	} {
+		if got := parseError(t, "toolkit: 1\nagents: [codex]\n"+yaml).Error(); got != want {
+			t.Errorf("%s: %s\nwant %s", strings.TrimSpace(yaml), got, want)
+		}
+	}
+}

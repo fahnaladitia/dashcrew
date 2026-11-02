@@ -74,9 +74,13 @@ type Doctor struct {
 	PathEnv string
 	// Home is the shim's HOME, where it caches a passed version check; empty means this process's.
 	Home string
-	// MachineChecks runs what depends on this machine or an agent (guard binary, hooks, MCP, skills, trust);
-	// off in CI.
+	// MachineChecks runs what depends on this machine or an agent (guard binary, hooks, MCP, skills, trust,
+	// the knowledge link and its staleness); off in CI.
 	MachineChecks bool
+	// Fetch fetches the knowledge clone to report how many commits it is behind its remote.
+	Fetch bool
+	// Now dates the knowledge clone's last pull and its staleness; nil means time.Now.
+	Now func() time.Time
 }
 
 var (
@@ -141,6 +145,12 @@ func (d Doctor) checks(projectPacks Check) []Check {
 		}
 		if agents["antigravity"] {
 			checks = append(checks, d.antigravityHook(), d.antigravityMcp(), d.antigravityRoles())
+		}
+		if knowledgeCheck, ok := d.knowledge(lock); ok {
+			checks = append(checks, knowledgeCheck)
+		}
+		if staleCheck, ok := d.knowledgeStale(); ok {
+			checks = append(checks, staleCheck)
 		}
 	}
 	checks = append(checks, d.agentsMdSize(AgentsMdLimitFor(agents)), d.gitignore())

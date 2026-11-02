@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -64,6 +65,7 @@ func Run(args []string, stdin io.Reader, stdout, stderr io.Writer, env Env) int 
 	if err != nil {
 		return 0
 	}
+	policy = policy.at(hookDir(object, env), projectOf(policyPath), homeOf(env))
 	events, err := AllFromHook(object)
 	if err != nil {
 		logMalformed(env, object, malformedReason(err))
@@ -111,6 +113,46 @@ func readJSON(r io.Reader) (any, error) {
 		return nil, errNotUTF8
 	}
 	return dartjson.Decode(strings.TrimPrefix(string(data), "\ufeff"))
+}
+
+// hookDir is the folder the agent ran the tool in: the hook's cwd, else its first workspace path, else the
+// guard's working folder; empty when none is known.
+func hookDir(input *omap.Map[any], env Env) string {
+	if cwd, ok := input.Value("cwd").(string); ok && cwd != "" {
+		return cwd
+	}
+	if paths, ok := input.Value("workspacePaths").([]any); ok && len(paths) > 0 {
+		if first, ok := paths[0].(string); ok && first != "" {
+			return first
+		}
+	}
+	if dir, err := env.Getwd(); err == nil {
+		return dir
+	}
+	return ""
+}
+
+// projectOf is the project whose `.ai/guard.json` is policyPath; empty for a policy stored anywhere else.
+func projectOf(policyPath string) string {
+	ai := filepath.Dir(policyPath)
+	if filepath.Base(policyPath) != "guard.json" || filepath.Base(ai) != ".ai" {
+		return ""
+	}
+	project, err := filepath.Abs(filepath.Dir(ai))
+	if err != nil {
+		return ""
+	}
+	return project
+}
+
+// homeOf is HOME, else USERPROFILE; empty when neither is set.
+func homeOf(env Env) string {
+	for _, key := range []string{"HOME", "USERPROFILE"} {
+		if home, ok := env.LookupEnv(key); ok && home != "" {
+			return home
+		}
+	}
+	return ""
 }
 
 func policyPath(args []string, input *omap.Map[any], env Env) (string, error) {

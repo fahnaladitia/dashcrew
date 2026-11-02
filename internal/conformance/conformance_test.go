@@ -23,6 +23,7 @@ var samples = []string{
 	"sample-antigravity",
 	"sample-other",
 	"sample-project-platform",
+	"sample-knowledge",
 }
 
 // update rewrites the goldens from the current output instead of comparing:
@@ -107,7 +108,8 @@ func TestGoldenSamplesAreByteIdentical(t *testing.T) {
 				copyInto(t, tree(t, filepath.Join(fixture, folder)), filepath.Join(project, ".ai", folder))
 			}
 
-			s := sync.Sync{Catalog: c, ProjectDir: project}
+			// Home has no knowledge clone, so a profile with knowledge takes the warning path on every machine.
+			s := sync.Sync{Catalog: c, ProjectDir: project, Home: t.TempDir()}
 			if _, err := s.Run(false, false); err != nil {
 				t.Fatal(err)
 			}

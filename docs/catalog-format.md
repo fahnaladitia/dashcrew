@@ -109,6 +109,7 @@ Templates are strict: an unknown variable is a render error. Use only these.
 | `stack.<family>.use` | selected option; absent when the family is not selected |
 | `stack_other` (list of `family`, `name`) | the families set to `use: other`, sorted by family; empty |
 | `has_stack_other` | `true` when `stack_other` is not empty; gate fragments that loop over it |
+| `has_knowledge` | `true` when the profile sets `knowledge`; gate knowledge fragments with `when: { has_knowledge: true }` |
 | `pack.<family>.<param>` | pack param; use only inside that pack's own fragments |
 | `platform.name` | the selected platform, or `other` |
 | `platform.commands.analyze`, `.test`, `.test_scoped`, `.deps` | the platform's commands |

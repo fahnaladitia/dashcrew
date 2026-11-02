@@ -19,6 +19,7 @@ import (
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
 	"github.com/fahnaladitia/dashcrew/internal/dartjson"
 	"github.com/fahnaladitia/dashcrew/internal/guard"
+	"github.com/fahnaladitia/dashcrew/internal/knowledge"
 	"github.com/fahnaladitia/dashcrew/internal/omap"
 	"github.com/fahnaladitia/dashcrew/internal/profile"
 	"github.com/fahnaladitia/dashcrew/internal/projectfiles"
@@ -68,6 +69,9 @@ var preP4Roles = map[string]bool{
 type Sync struct {
 	Catalog    *catalog.Catalog
 	ProjectDir string
+	// Home holds `.dashcrew/knowledge/<name>`, the knowledge clone; empty means the user's home folder. Read only
+	// when the profile sets `knowledge`.
+	Home string
 }
 
 // Rendered is what Render produces: generated files in the order the Dart engine writes them,
@@ -76,6 +80,8 @@ type Rendered struct {
 	Files    *omap.Map[string]
 	Packs    *omap.Map[any]
 	Adapters []adapters.Adapter
+	// Knowledge is the profile's `knowledge`; nil without it.
+	Knowledge *profile.Knowledge
 }
 
 // Result is what one Run changed. Notes are one-time information, such as P4MigrationNote; never a problem to fix.
@@ -183,15 +189,31 @@ func (s Sync) Run(force, adopt bool) (*Result, error) {
 	if err := makeExecutable(project.Path(guard.ShimPath)); err != nil {
 		return nil, err
 	}
+	previousKnowledge, _ := lock.Value("knowledge").(*omap.Map[any])
+	knowledgeEntry, err := s.syncKnowledge(rendered.Knowledge, previousKnowledge, result)
+	if err != nil {
+		return nil, err
+	}
 	dropped, err := s.dropGuardIgnore()
 	if err != nil {
 		return nil, err
 	}
-	if dropped {
+	var ignored []string
+	if rendered.Knowledge != nil {
+		ignored = append(ignored, "/"+knowledge.LinkPath)
+	}
+	blockWritten, ignoreRemoved, err := s.writeIgnoreBlock(ignored)
+	if err != nil {
+		return nil, err
+	}
+	if (dropped || blockWritten) && !ignoreRemoved {
 		result.Written = append(result.Written, ".gitignore")
 	}
+	if ignoreRemoved {
+		result.Removed = append(result.Removed, ".gitignore")
+	}
 
-	lockText, err := lockJSON(files, rendered.Packs, nowOwnedMcp)
+	lockText, err := lockJSON(files, rendered.Packs, nowOwnedMcp, knowledgeEntry)
 	if err != nil {
 		return nil, err
 	}
@@ -202,8 +224,9 @@ func (s Sync) Run(force, adopt bool) (*Result, error) {
 }
 
 // lockJSON is `.ai/lock.json` with the Dart key order: files sorted by path, agents of mcp_servers sorted.
-// `guard_min_version` is the oldest dashcrew the shim accepts.
-func lockJSON(files *omap.Map[string], packs *omap.Map[any], ownedMcp map[string][]string) (string, error) {
+// `guard_min_version` is the oldest dashcrew the shim accepts. `knowledge` (name, link, state, target, head) is
+// written last and only when the profile sets it.
+func lockJSON(files *omap.Map[string], packs *omap.Map[any], ownedMcp map[string][]string, knowledgeEntry *omap.Map[any]) (string, error) {
 	paths := files.Keys()
 	sort.Strings(paths)
 	fileHashes := omap.New[any]()
@@ -231,6 +254,9 @@ func lockJSON(files *omap.Map[string], packs *omap.Map[any], ownedMcp map[string
 		"mcp_servers", servers,
 		"guard_min_version", version.GuardMinimum,
 	)
+	if knowledgeEntry != nil {
+		lock.Set("knowledge", knowledgeEntry)
+	}
 	text, err := dartjson.EncodeIndent(lock, "  ")
 	if err != nil {
 		return "", err
@@ -374,7 +400,7 @@ func (s Sync) Render(adopt bool, warnings *[]string) (*Rendered, error) {
 			files.Set(path, content)
 		}
 	}
-	return &Rendered{Files: files, Packs: packs, Adapters: agentAdapters}, nil
+	return &Rendered{Files: files, Packs: packs, Adapters: agentAdapters, Knowledge: p.Knowledge}, nil
 }
 
 // ownedByDashcrew is true when path is missing, in the lock, or starts with marker.
@@ -388,6 +414,15 @@ func (s Sync) ownedByDashcrew(path string, lockedFiles map[string]string, marker
 		return false, err
 	}
 	return strings.HasPrefix(current, marker), nil
+}
+
+// Profile is the project's parsed `.ai/project.yaml`, read against the catalog with the project packs overlaid.
+func (s Sync) Profile() (*profile.Profile, error) {
+	c, err := s.Catalog.WithProjectPacks(s.ProjectDir)
+	if err != nil {
+		return nil, &Error{Message: "Project pack: " + err.Error()}
+	}
+	return s.profile(c)
 }
 
 func (s Sync) profile(c *catalog.Catalog) (*profile.Profile, error) {

@@ -14,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/fahnaladitia/dashcrew/internal/knowledge"
 )
 
 // The CLI transcript test runs the README's commands through the built binary in temp folders and compares, per
@@ -164,6 +166,10 @@ func keptGitFile(relative string) bool {
 	_, inGit, ok := strings.Cut(relative, ".git/")
 	if !ok {
 		return true
+	}
+	// A knowledge clone under home is made by a step, so its whole git folder is new: git's initial content.
+	if strings.HasPrefix(relative, "home/") {
+		return false
 	}
 	return inGit == "config" || inGit == "info/exclude" || inGit == "dashcrew-watch/state.json"
 }
@@ -324,6 +330,95 @@ func repo(profileYaml string) func(t *testing.T, s side) {
 }
 
 const repoProfile = "toolkit: 1\nagents: [claude-code]\npaths: { plans: docs/plans }\n"
+
+const knowledgeProfile = "toolkit: 1\nagents: [claude-code]\nknowledge: { repo: ../origin.git, name: notes }\n"
+
+// knowledgeRepo is a knowledge repo laid out by `dashcrew knowledge init`, pushed to origin.git, with its working
+// copy in seed; w holds a profile whose knowledge is origin.git.
+func knowledgeRepo(t *testing.T, s side) {
+	s.write(t, "seed/README.md", "# Knowledge\n")
+	s.write(t, "seed/features/share.md", "---\ntitle: Note sharing\nrepos: [notes-api]\ntags: [sharing]\n---\n\n# Note sharing\n")
+	s.write(t, "seed/inbox/.gitkeep", "")
+	s.git(t, "seed", "init", "-q", "-b", "main")
+	s.git(t, "seed", "add", "-A")
+	s.git(t, "seed", "commit", "-q", "-m", "init")
+	s.git(t, ".", "clone", "-q", "--bare", s.path("seed"), "origin.git")
+	s.git(t, "seed", "remote", "add", "origin", s.path("origin.git"))
+	s.git(t, "seed", "fetch", "-q", "origin")
+	s.write(t, "w/.ai/project.yaml", knowledgeProfile)
+}
+
+// recorded is the clock of the knowledge review and doctor steps: 2026-03-01T00:00:00Z.
+var recorded = map[string]string{"SOURCE_DATE_EPOCH": "1772323200"}
+
+// knowledgeProposal is an inbox proposal about notes-api with body below the front matter.
+func knowledgeProposal(kind, target, body string) string {
+	return "---\nkind: " + kind + "\ntarget: " + target + "\nrepo: notes-api\nbranch: feat/notes\ncommit: 1a2b3c4d5e6f\n---\n\n" + body
+}
+
+const profileClone = "home/.dashcrew/knowledge/notes/"
+
+// knowledgeInbox is the profile's clone laid out by `knowledge init` with one page and six proposals, and a fake
+// editor in the root that fixes a typo in the file it is given.
+func knowledgeInbox(t *testing.T, s side) {
+	s.write(t, "w/.ai/project.yaml", knowledgeProfile)
+	if _, err := knowledge.Init(s.path(profileClone)); err != nil {
+		t.Fatal(err)
+	}
+	s.write(t, profileClone+"features/share.md", "---\ntitle: Note sharing\nrepos: [notes-api, notes-app]\ntags: [sharing]\n---\n\n"+
+		"# Note sharing\n\n## Purpose\n\nShare a note with a link. <!-- verified notes-api@abcdef1 2026-01-10 -->\n\n## Gotchas\n")
+	s.write(t, profileClone+"inbox/2026-02-01-expiry.md", knowledgeProposal("feature", "share",
+		"## Gotchas\n\nShare links expire after 7 days; the API refuses older tokens. `notes-api:src/share/token.go:42`\n"))
+	s.write(t, profileClone+"inbox/2026-02-02-tags.md", knowledgeProposal("feature", "tags", "## Purpose\n\nTags group notes across folders.\n"))
+	s.write(t, profileClone+"inbox/2026-02-03-broken.md", "---\nkind: flow\ntarget: share\n---\n\nNo repo.\n")
+	s.write(t, profileClone+"inbox/2026-02-04-setup.md", knowledgeProposal("repo", "notes-api", "Run the API with `make devv`.\n"))
+	s.write(t, profileClone+"inbox/2026-02-05-later.md", knowledgeProposal("feature", "share", "Maybe later.\n"))
+	s.write(t, profileClone+"inbox/2026-02-06-noise.md", knowledgeProposal("feature", "share", "Noise.\n"))
+	s.write(t, "editor.sh", "#!/bin/sh\nsed 's/devv/dev/' \"$1\" > \"$1.tmp\" && mv \"$1.tmp\" \"$1\"\n")
+	if err := os.Chmod(s.path("editor.sh"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// knowledgeStale is a project w whose origin is notes-app, a sibling clone notes-api, and the profile's clone with
+// a stale pointer, an unchecked repo, an old proposal and two unverified pages.
+func knowledgeStale(t *testing.T, s side) {
+	s.write(t, "w/.ai/project.yaml", knowledgeProfile)
+	s.write(t, "w/src/app.go", "package app\n")
+	s.git(t, "w", "init", "-q", "-b", "main")
+	s.git(t, "w", "remote", "add", "origin", "git@example.com:notes-team/notes-app.git")
+	s.git(t, "w", "add", "src")
+	s.git(t, "w", "commit", "-q", "-m", "app")
+	s.write(t, "notes-api/src/share/token.go", "package share\n")
+	s.git(t, "notes-api", "init", "-q", "-b", "main")
+	s.git(t, "notes-api", "add", "-A")
+	s.git(t, "notes-api", "commit", "-q", "-m", "api")
+	if _, err := knowledge.Init(s.path(profileClone)); err != nil {
+		t.Fatal(err)
+	}
+	s.write(t, profileClone+"features/share.md", "---\ntitle: Note sharing\nrepos: [notes-api, notes-app]\n---\n\n"+
+		"The app opens `notes-app:src/app.go:1` and `notes-app:src/share.go:3`; the API checks `notes-api:src/share/token.go:4`.\n"+
+		"The web client is `notes-web:src/share.ts:9`. <!-- verified notes-app@abcdef1 2026-02-01 -->\n")
+	s.write(t, profileClone+"repos/notes-app.md", "---\ntitle: notes-app\nrepos: [notes-app]\n---\n\nBuilt with make. <!-- verified notes-app@abcdef1 2025-06-01 -->\n")
+	s.write(t, profileClone+"features/tags.md", "---\ntitle: Tags\nrepos: [notes-app]\n---\n\nTags group notes.\n")
+	s.write(t, profileClone+"inbox/2026-02-01-old.md", "old\n")
+	s.write(t, profileClone+"inbox/2026-02-25-new.md", "new\n")
+}
+
+// pushPage commits a page in seed and pushes it to origin.git.
+func pushPage(file string) func(t *testing.T, s side) {
+	return func(t *testing.T, s side) {
+		s.write(t, "seed/"+file, file+"\n")
+		s.git(t, "seed", "add", "-A")
+		s.git(t, "seed", "commit", "-q", "-m", file)
+		s.git(t, "seed", "push", "-q", "origin", "main")
+	}
+}
+
+// guardWrite is a Claude Code Write hook payload for path.
+func guardWrite(path string) step {
+	return step{args: []string{"guard"}, stdin: `{"tool_name":"Write","tool_input":{"file_path":"` + path + `","content":"x"}}`}
+}
 
 func cli(args ...string) step { return step{args: args} }
 
@@ -494,6 +589,67 @@ func cliCases() []cliCase {
 					s.git(t, "w", "commit", "-q", "-m", "pubspec")
 				}},
 			}},
+		{name: "knowledge init", setup: func(t *testing.T, s side) {
+			s.write(t, "w/.ai/project.yaml", "toolkit: 1\nagents: [claude-code]\n")
+			if err := os.MkdirAll(s.path("w/empty"), 0o755); err != nil {
+				t.Fatal(err)
+			}
+		}, steps: []step{
+			cli("knowledge", "init", "kb"),
+			cli("knowledge", "init", "kb"),
+			cli("knowledge", "init", "empty"),
+			cli("knowledge", "init", "kb/README.md"),
+			cli("knowledge", "init"),
+			cli("knowledge"),
+			cli("help", "knowledge", "pull"),
+			cli("knowledge", "pull"),
+		}},
+		{name: "knowledge pull and sync", setup: knowledgeRepo, steps: []step{
+			cli("sync"),
+			cli("doctor"),
+			guardWrite(".ai/knowledge/features/x.md"),
+			cli("knowledge", "pull"),
+			cli("sync"),
+			cli("sync"),
+			cli("knowledge", "pull"),
+			guardWrite(".ai/knowledge/features/x.md"),
+			guardWrite(".ai/knowledge/inbox/2026-01-01-share.md"),
+			{args: []string{"guard"}, stdin: `{"tool_name":"Bash","tool_input":{"command":"cd .ai/knowledge && echo x >> features/share.md"}}`},
+			{args: []string{"guard"}, stdin: `{"tool_name":"Bash","tool_input":{"command":"cp draft.md .ai/knowledge/inbox/"}}`},
+			{args: []string{"knowledge", "pull", "-p", "w"}, dir: ".", before: pushPage("repos/notes-api.md")},
+			cli("sync"),
+			{args: []string{"doctor", "--fetch"}, before: pushPage("features/tags.md")},
+			{args: []string{"knowledge", "pull"}, before: func(t *testing.T, s side) {
+				s.write(t, "home/.dashcrew/knowledge/notes/inbox/2026-01-01-tags.md", "proposal\n")
+				s.git(t, "home/.dashcrew/knowledge/notes", "add", "-A")
+				s.git(t, "home/.dashcrew/knowledge/notes", "commit", "-q", "-m", "proposal")
+				pushPage("features/export.md")(t, s)
+			}},
+			{args: []string{"sync"}, before: func(t *testing.T, s side) {
+				s.write(t, "w/.ai/project.yaml", "toolkit: 1\nagents: [claude-code]\n")
+			}},
+		}},
+		{name: "knowledge review", setup: knowledgeInbox, steps: []step{
+			cli("help", "knowledge", "review"),
+			{args: []string{"knowledge", "review"}, stdin: "a\nx\naccept\ne\na\ns\nd\n", env: map[string]string{
+				"SOURCE_DATE_EPOCH": recorded["SOURCE_DATE_EPOCH"], "EDITOR": "../editor.sh"}},
+			{args: []string{"knowledge", "review"}, env: recorded},
+			{args: []string{"knowledge", "review"}, stdin: "e\nskip\n", env: recorded},
+			{args: []string{"knowledge", "review", "--clone", "../" + profileClone}, stdin: "delete\n", env: recorded},
+			{args: []string{"knowledge", "review", "--clone", "../nope"}, env: recorded},
+		}},
+		{name: "knowledge doctor", setup: knowledgeStale, steps: []step{
+			cli("help", "knowledge", "doctor"),
+			{args: []string{"knowledge", "doctor"}, env: recorded},
+			{args: []string{"sync"}},
+			{args: []string{"doctor"}, env: recorded},
+			{args: []string{"knowledge", "doctor", "-p", "w", "--clone", profileClone}, dir: ".", env: recorded, before: func(t *testing.T, s side) {
+				s.write(t, "w/src/share.go", "package app\n")
+				s.git(t, "w", "add", "src")
+				s.git(t, "w", "commit", "-q", "-m", "share")
+			}},
+			{args: []string{"knowledge", "doctor", "--clone", "../nope"}, env: recorded},
+		}},
 		{name: "worktree watch", setup: repo(repoProfile), steps: []step{
 			cli("worktree", "watch", "--once"),
 			cli("worktree", "create", "feat/a", "origin/main", "--no-pub"),
@@ -536,7 +692,7 @@ func cliCases() []cliCase {
 		}},
 	}
 	for _, name := range []string{"sample-bloc-getx", "sample-project-pack", "sample-riverpod-gorouter", "sample-codex",
-		"sample-antigravity", "sample-other", "sample-project-platform"} {
+		"sample-antigravity", "sample-other", "sample-project-platform", "sample-knowledge"} {
 		cases = append(cases, cliCase{name: name, setup: sample(name), steps: toolkitSteps()})
 	}
 	return cases

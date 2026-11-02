@@ -8,6 +8,7 @@ import (
 
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
 	"github.com/fahnaladitia/dashcrew/internal/dartjson"
+	"github.com/fahnaladitia/dashcrew/internal/knowledge"
 	"github.com/fahnaladitia/dashcrew/internal/omap"
 	"github.com/fahnaladitia/dashcrew/internal/profile"
 	"github.com/fahnaladitia/dashcrew/internal/yamlutil"
@@ -27,6 +28,13 @@ type Policy struct {
 	RoleCapability   map[string]string
 	ForbiddenImports []string
 	LocalPackages    []string
+	// KnowledgeClone is the knowledge clone as `~/.dashcrew/knowledge/<name>`; empty without `knowledge`. Writes
+	// whose real path is inside it are allowed only under `inbox/`.
+	KnowledgeClone string
+
+	// knowledge is the hook's folder and KnowledgeClone resolved on this machine; Run sets it (see at). Without it
+	// the write rules read paths as text only, as the Dart guard did.
+	knowledge *knowledgeRoots
 
 	// Set by LoadPolicy: entries of the wrong type, which fail only when Evaluate reaches them.
 	brokenRoles     map[string]bool
@@ -71,7 +79,12 @@ func CompilePolicy(p *profile.Profile, c *catalog.Catalog) Policy {
 		}
 	}
 	plans, _ := p.Paths.Value("plans").(string)
+	clone := ""
+	if p.Knowledge != nil {
+		clone = knowledge.PolicyClonePath(p.Knowledge.Name)
+	}
 	return Policy{
+		KnowledgeClone:   clone,
 		BlockedGit:       blocked,
 		BlockFormatters:  p.Policy.Value("formatter") != true,
 		PlansDir:         plans,
@@ -97,7 +110,7 @@ func (p Policy) ToJSON() *omap.Map[any] {
 	for _, name := range names {
 		roles.Set(name, p.RoleCapability[name])
 	}
-	return omap.Of[any](
+	object := omap.Of[any](
 		"schema", Schema,
 		"blocked_git", toAny(blocked),
 		"block_formatters", p.BlockFormatters,
@@ -106,6 +119,21 @@ func (p Policy) ToJSON() *omap.Map[any] {
 		"forbidden_imports", toAny(p.ForbiddenImports),
 		"local_packages", toAny(p.LocalPackages),
 	)
+	if p.KnowledgeClone != "" {
+		object.Set("knowledge_clone", p.KnowledgeClone)
+	}
+	return object
+}
+
+// knowledgeCloneOf is the optional `knowledge_clone` of a policy object; a value that is not a string is an error.
+func knowledgeCloneOf(object *omap.Map[any]) (string, error) {
+	switch value := object.Value("knowledge_clone").(type) {
+	case nil:
+		return "", nil
+	case string:
+		return value, nil
+	}
+	return "", errors.New("knowledge_clone is not a string")
 }
 
 func toAny(items []string) []any {
@@ -166,7 +194,11 @@ func PolicyFromJSON(text string) (Policy, error) {
 	if err != nil {
 		return Policy{}, err
 	}
-	return Policy{BlockedGit: blocked, BlockFormatters: blockFormatters, PlansDir: plansDir, RoleCapability: roles, ForbiddenImports: forbidden, LocalPackages: local}, nil
+	clone, err := knowledgeCloneOf(object)
+	if err != nil {
+		return Policy{}, err
+	}
+	return Policy{BlockedGit: blocked, BlockFormatters: blockFormatters, PlansDir: plansDir, RoleCapability: roles, ForbiddenImports: forbidden, LocalPackages: local, KnowledgeClone: clone}, nil
 }
 
 func stringsOf(object *omap.Map[any], key string) ([]string, error) {

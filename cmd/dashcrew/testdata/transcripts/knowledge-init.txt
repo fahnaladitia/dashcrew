@@ -1,0 +1,109 @@
+# knowledge init
+
+=== step 1: dashcrew "knowledge" "init" "kb"
+exit: 0
+stdout:
+| wrote   kb/README.md
+| wrote   kb/features/.gitkeep
+| wrote   kb/inbox/.gitkeep
+| wrote   kb/repos/.gitkeep
+| wrote   kb/templates/page.md
+| note: commit it in a new git repo, push it, then set knowledge.repo in each project's .ai/project.yaml.
+stderr: (empty)
+files:
++ w/kb  dir
++ w/kb/README.md  -rw-r--r-- sha256:18b38e9a8c2cc2cb
++ w/kb/features  dir
++ w/kb/features/.gitkeep  -rw-r--r-- sha256:e3b0c44298fc1c14
++ w/kb/inbox  dir
++ w/kb/inbox/.gitkeep  -rw-r--r-- sha256:e3b0c44298fc1c14
++ w/kb/repos  dir
++ w/kb/repos/.gitkeep  -rw-r--r-- sha256:e3b0c44298fc1c14
++ w/kb/templates  dir
++ w/kb/templates/page.md  -rw-r--r-- sha256:228bb232ceb97b9a
+
+=== step 2: dashcrew "knowledge" "init" "kb"
+exit: 1
+stdout: (empty)
+stderr:
+| kb: folder is not empty; knowledge init only writes into a new or empty folder
+files: (unchanged)
+
+=== step 3: dashcrew "knowledge" "init" "empty"
+exit: 0
+stdout:
+| wrote   empty/README.md
+| wrote   empty/features/.gitkeep
+| wrote   empty/inbox/.gitkeep
+| wrote   empty/repos/.gitkeep
+| wrote   empty/templates/page.md
+| note: commit it in a new git repo, push it, then set knowledge.repo in each project's .ai/project.yaml.
+stderr: (empty)
+files:
++ w/empty/README.md  -rw-r--r-- sha256:18b38e9a8c2cc2cb
++ w/empty/features  dir
++ w/empty/features/.gitkeep  -rw-r--r-- sha256:e3b0c44298fc1c14
++ w/empty/inbox  dir
++ w/empty/inbox/.gitkeep  -rw-r--r-- sha256:e3b0c44298fc1c14
++ w/empty/repos  dir
++ w/empty/repos/.gitkeep  -rw-r--r-- sha256:e3b0c44298fc1c14
++ w/empty/templates  dir
++ w/empty/templates/page.md  -rw-r--r-- sha256:228bb232ceb97b9a
+
+=== step 4: dashcrew "knowledge" "init" "kb/README.md"
+exit: 1
+stdout: (empty)
+stderr:
+| kb/README.md is not a folder
+files: (unchanged)
+
+=== step 5: dashcrew "knowledge" "init"
+exit: 64
+stdout: (empty)
+stderr:
+| Missing <dir>.
+| 
+| Usage: dashcrew knowledge init <dir>
+| -h, --help    Print this usage information.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 6: dashcrew "knowledge"
+exit: 64
+stdout: (empty)
+stderr:
+| Missing subcommand for "dashcrew knowledge".
+| 
+| Usage: dashcrew knowledge <subcommand> [arguments]
+| -h, --help    Print this usage information.
+| 
+| Available subcommands:
+|   doctor   Report stale code pointers, proposals waiting over 14 days and pages not verified in 180 days.
+|   init     Write the knowledge repo layout into <dir>, which must be new or empty. Runs no git.
+|   pull     Clone the knowledge repo into ~/.dashcrew/knowledge/<name>, or fetch and fast-forward it. Never resets.
+|   review   Walk the inbox/ proposals oldest first and accept, edit, skip or delete each.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 7: dashcrew "help" "knowledge" "pull"
+exit: 0
+stdout:
+| Clone the knowledge repo into ~/.dashcrew/knowledge/<name>, or fetch and fast-forward it. Never resets.
+| 
+| Usage: dashcrew knowledge pull [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml.
+|                  (defaults to ".")
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 8: dashcrew "knowledge" "pull"
+exit: 1
+stdout: (empty)
+stderr:
+| No knowledge in .ai/project.yaml; add knowledge: { repo: <git url or path> } first.
+files: (unchanged)

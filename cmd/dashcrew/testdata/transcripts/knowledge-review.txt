@@ -1,0 +1,136 @@
+# knowledge review
+
+=== step 1: dashcrew "help" "knowledge" "review"
+exit: 0
+stdout:
+| Walk the inbox/ proposals oldest first and accept, edit, skip or delete each.
+| Accept merges a proposal into its page. Then the README.md index is rewritten and the git commands for a pull
+| request are printed; it never runs git.
+| 
+| Usage: dashcrew knowledge review [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml.
+|                  (defaults to ".")
+|     --clone      Knowledge clone to review; defaults to the profile's ~/.dashcrew/knowledge/<name>.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 2: dashcrew "knowledge" "review"
+stdin: "a\nx\naccept\ne\na\ns\nd\n"
+env: EDITOR=../editor.sh
+env: SOURCE_DATE_EPOCH=1772323200
+exit: 0
+stdout:
+| [1/6] inbox/2026-02-01-expiry.md
+|   into features/share.md under ## Gotchas, from notes-api@1a2b3c4 on feat/notes
+|   Share links expire after 7 days; the API refuses older tokens. `notes-api:src/share/token.go:42`
+| accept, edit, skip or delete? [a/e/s/d] a
+| merged into features/share.md under ## Gotchas
+| [2/6] inbox/2026-02-02-tags.md
+|   into features/tags.md under ## Purpose, from notes-api@1a2b3c4 on feat/notes
+|   Tags group notes across folders.
+| accept, edit, skip or delete? [a/e/s/d] x
+| answer a, e, s or d
+| accept, edit, skip or delete? [a/e/s/d] accept
+| created features/tags.md from templates/page.md, merged under ## Purpose
+| [3/6] inbox/2026-02-03-broken.md is malformed, left in inbox/: repo: required
+| [4/6] inbox/2026-02-04-setup.md
+|   into repos/notes-api.md under ## Notes, from notes-api@1a2b3c4 on feat/notes
+|   Run the API with `make devv`.
+| accept, edit, skip or delete? [a/e/s/d] e
+| [4/6] inbox/2026-02-04-setup.md
+|   into repos/notes-api.md under ## Notes, from notes-api@1a2b3c4 on feat/notes
+|   Run the API with `make dev`.
+| accept, edit, skip or delete? [a/e/s/d] a
+| created repos/notes-api.md from templates/page.md, merged under ## Notes
+| [5/6] inbox/2026-02-05-later.md
+|   into features/share.md under ## Notes, from notes-api@1a2b3c4 on feat/notes
+|   Maybe later.
+| accept, edit, skip or delete? [a/e/s/d] s
+| skipped
+| [6/6] inbox/2026-02-06-noise.md
+|   into features/share.md under ## Notes, from notes-api@1a2b3c4 on feat/notes
+|   Noise.
+| accept, edit, skip or delete? [a/e/s/d] d
+| deleted inbox/2026-02-06-noise.md
+| wrote README.md
+| accepted 3, skipped 1, deleted 1, malformed 1
+| next: commit on a branch and open a pull request, so the team reviews the change:
+|   git -C <root>/home/.dashcrew/knowledge/notes checkout -b knowledge-review-2026-03-01
+|   git -C <root>/home/.dashcrew/knowledge/notes add -A
+|   git -C <root>/home/.dashcrew/knowledge/notes commit -m "knowledge: review inbox 2026-03-01"
+|   git -C <root>/home/.dashcrew/knowledge/notes push -u origin knowledge-review-2026-03-01
+stderr: (empty)
+files:
+~ home/.dashcrew/knowledge/notes/README.md  -rw-r--r-- sha256:b5e0a0105fec9dc9
+~ home/.dashcrew/knowledge/notes/features/share.md  -rw-r--r-- sha256:492b0db844202082
++ home/.dashcrew/knowledge/notes/features/tags.md  -rw-r--r-- sha256:0cc13cf66c7a5352
+- home/.dashcrew/knowledge/notes/inbox/2026-02-01-expiry.md
+- home/.dashcrew/knowledge/notes/inbox/2026-02-02-tags.md
+- home/.dashcrew/knowledge/notes/inbox/2026-02-04-setup.md
+- home/.dashcrew/knowledge/notes/inbox/2026-02-06-noise.md
++ home/.dashcrew/knowledge/notes/repos/notes-api.md  -rw-r--r-- sha256:45b12d26b431ae67
+
+=== step 3: dashcrew "knowledge" "review"
+env: SOURCE_DATE_EPOCH=1772323200
+exit: 0
+stdout:
+| [1/2] inbox/2026-02-03-broken.md is malformed, left in inbox/: repo: required
+| [2/2] inbox/2026-02-05-later.md
+|   into features/share.md under ## Notes, from notes-api@1a2b3c4 on feat/notes
+|   Maybe later.
+| accept, edit, skip or delete? [a/e/s/d] 
+| no more answers; 1 proposal left in inbox/
+| accepted 0, skipped 0, deleted 0, malformed 1
+| nothing to commit
+stderr: (empty)
+files: (unchanged)
+
+=== step 4: dashcrew "knowledge" "review"
+stdin: "e\nskip\n"
+env: SOURCE_DATE_EPOCH=1772323200
+exit: 0
+stdout:
+| [1/2] inbox/2026-02-03-broken.md is malformed, left in inbox/: repo: required
+| [2/2] inbox/2026-02-05-later.md
+|   into features/share.md under ## Notes, from notes-api@1a2b3c4 on feat/notes
+|   Maybe later.
+| accept, edit, skip or delete? [a/e/s/d] e
+| edit failed: set $EDITOR to edit a proposal
+| accept, edit, skip or delete? [a/e/s/d] skip
+| skipped
+| accepted 0, skipped 1, deleted 0, malformed 1
+| nothing to commit
+stderr: (empty)
+files: (unchanged)
+
+=== step 5: dashcrew "knowledge" "review" "--clone" "../home/.dashcrew/knowledge/notes/"
+stdin: "delete\n"
+env: SOURCE_DATE_EPOCH=1772323200
+exit: 0
+stdout:
+| [1/2] inbox/2026-02-03-broken.md is malformed, left in inbox/: repo: required
+| [2/2] inbox/2026-02-05-later.md
+|   into features/share.md under ## Notes, from notes-api@1a2b3c4 on feat/notes
+|   Maybe later.
+| accept, edit, skip or delete? [a/e/s/d] delete
+| deleted inbox/2026-02-05-later.md
+| accepted 0, skipped 0, deleted 1, malformed 1
+| next: commit on a branch and open a pull request, so the team reviews the change:
+|   git -C ../home/.dashcrew/knowledge/notes checkout -b knowledge-review-2026-03-01
+|   git -C ../home/.dashcrew/knowledge/notes add -A
+|   git -C ../home/.dashcrew/knowledge/notes commit -m "knowledge: review inbox 2026-03-01"
+|   git -C ../home/.dashcrew/knowledge/notes push -u origin knowledge-review-2026-03-01
+stderr: (empty)
+files:
+- home/.dashcrew/knowledge/notes/inbox/2026-02-05-later.md
+
+=== step 6: dashcrew "knowledge" "review" "--clone" "../nope"
+env: SOURCE_DATE_EPOCH=1772323200
+exit: 1
+stdout: (empty)
+stderr:
+| ../nope has no inbox/; is it a knowledge clone? Run dashcrew knowledge pull
+files: (unchanged)

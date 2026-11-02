@@ -12,12 +12,13 @@ stdout:
 |     --version    Print the dashcrew version.
 | 
 | Available commands:
-|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
-|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
-|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
-|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
-|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+|   check       Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
 | Run "dashcrew help <command>" for more information about a command.
 stderr: (empty)
@@ -35,12 +36,13 @@ stdout:
 |     --version    Print the dashcrew version.
 | 
 | Available commands:
-|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
-|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
-|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
-|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
-|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+|   check       Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
 | Run "dashcrew help <command>" for more information about a command.
 stderr: (empty)
@@ -58,12 +60,13 @@ stdout:
 |     --version    Print the dashcrew version.
 | 
 | Available commands:
-|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
-|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
-|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
-|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
-|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+|   check       Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
 | Run "dashcrew help <command>" for more information about a command.
 stderr: (empty)
@@ -81,12 +84,13 @@ stdout:
 |     --version    Print the dashcrew version.
 | 
 | Available commands:
-|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
-|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
-|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
-|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
-|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+|   check       Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
 | Run "dashcrew help <command>" for more information about a command.
 stderr: (empty)
@@ -148,6 +152,7 @@ stdout:
 | -h, --help       Print this usage information.
 | -p, --project    Project root holding .ai/project.yaml.
 |                  (defaults to ".")
+|     --fetch      Fetch the knowledge clone and report how many commits it is behind its remote.
 | 
 | Run "dashcrew help" to see global options.
 stderr: (empty)
@@ -270,12 +275,13 @@ stderr:
 |     --version    Print the dashcrew version.
 | 
 | Available commands:
-|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
-|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
-|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
-|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
-|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+|   check       Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
@@ -293,12 +299,13 @@ stderr:
 |     --version    Print the dashcrew version.
 | 
 | Available commands:
-|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
-|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
-|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
-|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
-|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+|   check       Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
@@ -316,12 +323,13 @@ stderr:
 |     --version    Print the dashcrew version.
 | 
 | Available commands:
-|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
-|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
-|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
-|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
-|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+|   check       Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
@@ -418,6 +426,7 @@ stdout:
 | -h, --help       Print this usage information.
 | -p, --project    Project root holding .ai/project.yaml.
 |                  (defaults to ".")
+|     --fetch      Fetch the knowledge clone and report how many commits it is behind its remote.
 | 
 | Run "dashcrew help" to see global options.
 stderr: (empty)
@@ -643,12 +652,13 @@ stderr:
 |     --version    Print the dashcrew version.
 | 
 | Available commands:
-|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
-|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
-|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
-|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
-|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+|   check       Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
@@ -670,12 +680,13 @@ stderr:
 |     --version    Print the dashcrew version.
 | 
 | Available commands:
-|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
-|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
-|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
-|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
-|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+|   check       Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
@@ -697,12 +708,13 @@ stderr:
 |     --version    Print the dashcrew version.
 | 
 | Available commands:
-|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
-|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
-|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
-|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
-|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+|   check       Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
@@ -724,12 +736,13 @@ stderr:
 |     --version    Print the dashcrew version.
 | 
 | Available commands:
-|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
-|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
-|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
-|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
-|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+|   check       Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
@@ -751,12 +764,13 @@ stderr:
 |     --version    Print the dashcrew version.
 | 
 | Available commands:
-|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
-|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
-|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
-|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
-|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+|   check       Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
@@ -1043,6 +1057,7 @@ stderr:
 | -h, --help       Print this usage information.
 | -p, --project    Project root holding .ai/project.yaml.
 |                  (defaults to ".")
+|     --fetch      Fetch the knowledge clone and report how many commits it is behind its remote.
 | 
 | Run "dashcrew help" to see global options.
 files: (unchanged)
@@ -1098,12 +1113,13 @@ stderr:
 |     --version    Print the dashcrew version.
 | 
 | Available commands:
-|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
-|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
-|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
-|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
-|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+|   check       Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
@@ -1121,12 +1137,13 @@ stderr:
 |     --version    Print the dashcrew version.
 | 
 | Available commands:
-|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
-|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
-|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
-|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
-|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+|   check       Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
@@ -1156,12 +1173,13 @@ stderr:
 |     --version    Print the dashcrew version.
 | 
 | Available commands:
-|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
-|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
-|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
-|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
-|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+|   check       Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
@@ -1179,12 +1197,13 @@ stderr:
 |     --version    Print the dashcrew version.
 | 
 | Available commands:
-|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
-|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
-|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
-|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
-|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+|   check       Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
@@ -1201,12 +1220,13 @@ stdout:
 |     --version    Print the dashcrew version.
 | 
 | Available commands:
-|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
-|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
-|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
-|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
-|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+|   check       Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
 | Run "dashcrew help <command>" for more information about a command.
 stderr: (empty)
@@ -1225,12 +1245,13 @@ stderr:
 |     --version    Print the dashcrew version.
 | 
 | Available commands:
-|   check      Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
-|   doctor     Check that the generated toolkit is installed, untouched and current. Writes nothing.
-|   guard      Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init       Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
-|   sync       Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
-|   worktree   One worktree per parallel task. Never commits, pushes or deletes a branch.
+|   check       Merge gate for a pull request: toolkit current, PR sections present. Writes nothing.
+|   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
+|   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+|   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)

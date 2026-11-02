@@ -78,7 +78,7 @@ func (f *fixture) delete(relative string) {
 
 func (f *fixture) sync() {
 	f.t.Helper()
-	if _, err := (sync.Sync{Catalog: shippedCatalog, ProjectDir: f.project}).Run(false, false); err != nil {
+	if _, err := (sync.Sync{Catalog: shippedCatalog, ProjectDir: f.project, Home: f.home}).Run(false, false); err != nil {
 		f.t.Fatal(err)
 	}
 }

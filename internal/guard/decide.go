@@ -96,6 +96,9 @@ func LoadPolicy(value any) (Policy, error) {
 	if p.LocalPackages, p.localBroken, err = lazyStrings(object, "local_packages"); err != nil {
 		return Policy{}, err
 	}
+	if p.KnowledgeClone, err = knowledgeCloneOf(object); err != nil {
+		return Policy{}, err
+	}
 	return p, nil
 }
 
@@ -155,7 +158,12 @@ func evaluateShell(script string, argv []string, p Policy) Decision {
 		return decision
 	}
 	if argv != nil {
-		return evaluateUnwrapped(argv, p, 0)
+		if decision := evaluateUnwrapped(argv, p, 0); decision.Blocked {
+			return decision
+		}
+	}
+	if p.knowledge != nil && len(p.knowledge.roots) > 0 {
+		return p.knowledge.shellWrites(script, argv)
 	}
 	return Allow()
 }
@@ -224,7 +232,26 @@ func gitSubcommand(argv []string) (string, bool) {
 // jsWhitespace is `\s` of a Dart (JavaScript) regular expression, which also matches Unicode spaces.
 const jsWhitespace = `[\t\n\v\f\r \x{a0}\x{1680}\x{2000}-\x{200a}\x{2028}\x{2029}\x{202f}\x{205f}\x{3000}\x{feff}]`
 
+// evaluateWrite runs the write rules on the path as written, then, when Run gave the policy a working folder (K2),
+// the knowledge rule on its real path and the write rules again on the real path when a link moves it elsewhere
+// in the project.
 func evaluateWrite(event Event, p Policy) (Decision, error) {
+	decision, err := evaluateWritePath(event, p)
+	if err != nil || decision.Blocked || p.knowledge == nil || event.FilePath == "" {
+		return decision, err
+	}
+	if p.knowledge.blocks(event.FilePath, p.knowledge.cwd) {
+		return Block(knowledgeReason), nil
+	}
+	if real, moved := p.knowledge.appPath(event.FilePath); moved {
+		event.FilePath = real
+		return evaluateWritePath(event, p)
+	}
+	return Allow(), nil
+}
+
+// evaluateWritePath is the Dart guard's write check, on the path's text.
+func evaluateWritePath(event Event, p Policy) (Decision, error) {
 	path := strings.ReplaceAll(event.FilePath, `\`, "/")
 	var capability string
 	if event.Role != nil {

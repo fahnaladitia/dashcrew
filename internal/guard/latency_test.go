@@ -2,7 +2,9 @@ package guard
 
 import (
 	"os"
+	"path/filepath"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 )
@@ -14,13 +16,27 @@ var typicalCall = corpusCase{
 	args:  []string{"{policies}/default.json"},
 }
 
+// knowledgeCalls are typical calls under a policy with a knowledge clone (K2): the same Bash call, and a Write,
+// whose path the guard resolves to its real path.
+var knowledgeCalls = []corpusCase{
+	{name: "typical-knowledge", stdin: typicalCall.stdin, args: []string{"{policies}/knowledge.json"}},
+	{name: "write-knowledge", args: []string{"{policies}/knowledge.json"},
+		stdin: `{"session_id":"s1","cwd":"{project}","hook_event_name":"PreToolUse","tool_name":"Write","tool_input":{"file_path":"lib/feature/a.dart","content":"void a() {}"}}`},
+}
+
 // latencies runs the typical call n times through argv as a process, sorted.
 func latencies(t testing.TB, f corpusFolders, n int, argv ...string) []time.Duration {
+	t.Helper()
+	return callLatencies(t, f, typicalCall, n, argv...)
+}
+
+// callLatencies runs call n times through argv as a process, sorted; the call must be allowed silently.
+func callLatencies(t testing.TB, f corpusFolders, call corpusCase, n int, argv ...string) []time.Duration {
 	t.Helper()
 	out := make([]time.Duration, n)
 	for i := range out {
 		start := time.Now()
-		result, err := runProcess(f, typicalCall, argv...)
+		result, err := runProcess(f, call, argv...)
 		out[i] = time.Since(start)
 		if err != nil || result != (outcome{}) {
 			t.Fatalf("%v: %s, %v", argv, result, err)
@@ -42,10 +58,22 @@ func TestGuardLatency(t *testing.T) {
 	}
 	const calls = 1000
 	f := newCorpusFolders(t)
-	goTimes := latencies(t, f, calls, buildDashcrew(t), "guard")
+	binary := buildDashcrew(t)
+	goTimes := latencies(t, f, calls, binary, "guard")
 	t.Logf("dashcrew guard: %d calls, median %v, p95 %v", calls, percentile(goTimes, 0.5), percentile(goTimes, 0.95))
 	if median := percentile(goTimes, 0.5); median >= 10*time.Millisecond {
 		t.Errorf("median %v, want under 10ms", median)
+	}
+	policy := strings.TrimSuffix(corpusPolicies["default"], "}") + `,"knowledge_clone":"~/.dashcrew/knowledge/notes"}`
+	if err := os.WriteFile(filepath.Join(f.policies, "knowledge.json"), []byte(policy), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	for _, call := range knowledgeCalls {
+		times := callLatencies(t, f, call, calls, binary, "guard")
+		t.Logf("dashcrew guard, %s: %d calls, median %v, p95 %v", call.name, calls, percentile(times, 0.5), percentile(times, 0.95))
+		if median := percentile(times, 0.5); median >= 10*time.Millisecond {
+			t.Errorf("%s: median %v, want under 10ms", call.name, median)
+		}
 	}
 }
 

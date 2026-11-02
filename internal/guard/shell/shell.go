@@ -22,10 +22,20 @@ func Expanded(script string) [][]string {
 	return s.scan()
 }
 
-// nested is the commands of body, scanned the way s is.
+// Scan is Expanded plus the targets of the output redirections (`>`, `>>`, `>|`, `&>`, `<>`, `>&file`) anywhere in
+// script, nested scripts included, as written. Go only (K2): the knowledge rule checks where a script writes.
+func Scan(script string) (commands [][]string, writes []string) {
+	s := &scanner{source: script, expanded: true}
+	commands = s.scan()
+	return commands, s.writes
+}
+
+// nested is the commands of body, scanned the way s is; its redirection targets join s's.
 func (s *scanner) nested(body string) [][]string {
 	inner := &scanner{source: body, expanded: s.expanded}
-	return inner.scan()
+	commands := inner.scan()
+	s.writes = append(s.writes, inner.writes...)
+	return commands
 }
 
 var shellReceivers = map[string]bool{"sh": true, "bash": true, "zsh": true, "dash": true, "ksh": true, "ssh": true, "eval": true, "source": true, ".": true}
@@ -48,6 +58,8 @@ type scanner struct {
 	// expanded is set by Expanded; hereStrings are the here-string words of the current line.
 	expanded    bool
 	hereStrings []string
+	// writes are the output redirection targets, read by Scan.
+	writes []string
 }
 
 func lastSegment(word string) string {
@@ -281,6 +293,7 @@ func (s *scanner) redirect() {
 		return
 	}
 
+	start := s.pos
 	s.pos++
 	for s.pos < len(src) && strings.IndexByte("<>&|", src[s.pos]) >= 0 {
 		s.pos++
@@ -291,7 +304,10 @@ func (s *scanner) redirect() {
 		}
 		return
 	}
-	s.readTargetWord()
+	operator := src[start:s.pos]
+	if target := s.readTargetWord(); strings.Contains(operator, ">") && target != "" {
+		s.writes = append(s.writes, target)
+	}
 }
 
 func (s *scanner) readTargetWord() string {

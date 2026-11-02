@@ -2,6 +2,7 @@
 package profile
 
 import (
+	"regexp"
 	"sort"
 	"strings"
 
@@ -52,7 +53,7 @@ var (
 	// OptionalPlatformCommands a platform may leave out.
 	OptionalPlatformCommands = []string{"format"}
 
-	topLevelKeys = []string{"toolkit", "platform", "platform_config", "agents", "language", "stack", "project", "policy", "paths", "ci"}
+	topLevelKeys = []string{"toolkit", "platform", "platform_config", "agents", "language", "stack", "project", "policy", "paths", "ci", "knowledge"}
 )
 
 func ciDefaults() *omap.Map[any] { return omap.Of[any]("github", false, "dashcrew_ref", nil) }
@@ -94,8 +95,19 @@ type Profile struct {
 	Paths          *omap.Map[any]
 	// CI with `github: true` makes sync write a workflow running `dashcrew check` at the pinned `dashcrew_ref`.
 	CI *omap.Map[any]
+	// Knowledge is the shared knowledge repo; nil when the profile has no `knowledge` key. Templates see only
+	// `has_knowledge`, which `when:` gates on, so a profile without it renders as before.
+	Knowledge *Knowledge
 	// Warnings are keys the profile still accepts but ignores.
 	Warnings []string
+}
+
+// Knowledge is `knowledge: { repo, name }`: the repo is cloned to `~/.dashcrew/knowledge/<name>`.
+type Knowledge struct {
+	// Repo is a git URL or a path; a relative path is relative to the project root.
+	Repo string
+	// Name is the clone's folder name; it defaults to the repo's last path segment without `.git`.
+	Name string
 }
 
 // PlatformCommandsFrom validates a platform `commands` map; every required command is a non-empty string and
@@ -192,6 +204,9 @@ func Parse(text string, known KnownOptions) (*Profile, error) {
 		return nil, err
 	}
 	if profile.CI, err = parseCI(root.Value("ci")); err != nil {
+		return nil, err
+	}
+	if profile.Knowledge, err = parseKnowledge(root.Value("knowledge")); err != nil {
 		return nil, err
 	}
 	return profile, nil
@@ -312,6 +327,44 @@ func parseCI(value any) (*omap.Map[any], error) {
 	return ci, nil
 }
 
+var knowledgeName = regexp.MustCompile(`^[A-Za-z0-9._-]+$`)
+
+func parseKnowledge(value any) (*Knowledge, error) {
+	if value == nil {
+		return nil, nil
+	}
+	config, ok := value.(*omap.Map[any])
+	if !ok {
+		return nil, fail("knowledge", "expected a map with repo and an optional name")
+	}
+	for _, key := range config.Keys() {
+		if key != "repo" && key != "name" {
+			return nil, fail("knowledge."+key, "unknown key")
+		}
+	}
+	repo, ok := config.Value("repo").(string)
+	if !ok || strings.TrimSpace(repo) == "" {
+		return nil, fail("knowledge.repo", "required, a git URL or path")
+	}
+	name := defaultKnowledgeName(repo)
+	if config.Has("name") {
+		name, ok = config.Value("name").(string)
+		if !ok || !knowledgeName.MatchString(name) || name == "." || name == ".." {
+			return nil, fail("knowledge.name", "expected a folder name of letters, digits, '.', '_' or '-'")
+		}
+	} else if !knowledgeName.MatchString(name) || name == "." || name == ".." {
+		return nil, fail("knowledge.name", "required, the repo has no folder name to default to")
+	}
+	return &Knowledge{Repo: repo, Name: name}, nil
+}
+
+// defaultKnowledgeName is the last segment of a URL, scp-like address or path, without a trailing `.git`.
+func defaultKnowledgeName(repo string) string {
+	trimmed := strings.TrimRight(strings.ReplaceAll(repo, `\`, "/"), "/")
+	segment := trimmed[strings.LastIndexAny(trimmed, "/:")+1:]
+	return strings.TrimSuffix(segment, ".git")
+}
+
 func parseStack(value any, known *omap.Map[[]string]) (*omap.Map[StackChoice], error) {
 	choices := omap.New[StackChoice]()
 	if value == nil {
@@ -396,6 +449,7 @@ func (p *Profile) ToContext() map[string]any {
 		"stack":           stack,
 		"stack_other":     others,
 		"has_stack_other": len(others) > 0,
+		"has_knowledge":   p.Knowledge != nil,
 		"project":         p.Project,
 		"policy":          p.Policy,
 		"paths":           p.Paths,

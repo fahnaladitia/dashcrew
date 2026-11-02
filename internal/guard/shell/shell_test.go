@@ -112,3 +112,26 @@ func TestCommands(t *testing.T) {
 		})
 	}
 }
+
+func TestScanListsOutputRedirectionTargets(t *testing.T) {
+	for script, want := range map[string][]string{
+		"echo x > a":                         {"a"},
+		"echo x >> 'b c' 2>&1 < in":          {"b c"},
+		"cmd &> d; cmd >| e; cmd 1>f 2>&-":   {"d", "e", "f"},
+		"cmd <> g; cmd >&h":                  {"g", "h"},
+		"echo $(echo y > i) `echo z >> j`":   {"i", "j"},
+		"bash <<EOF\necho x > k\nEOF":        {"k"},
+		"cat <<EOF > l\nnot > m\nEOF":        {"l"},
+		"sh <<< 'echo x > n'":                {"n"},
+		"echo x < o; cat <<< p; echo q 2>&1": nil,
+	} {
+		_, got := Scan(script)
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("%q: %q, want %q", script, got, want)
+		}
+	}
+	commands, _ := Scan("a > x | b")
+	if !reflect.DeepEqual(commands, Expanded("a > x | b")) {
+		t.Errorf("Scan commands %q differ from Expanded", commands)
+	}
+}
