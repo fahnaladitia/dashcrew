@@ -49,23 +49,34 @@ func Run(args []string, stdin io.Reader, stdout, stderr io.Writer, env Env) int 
 		logMalformed(env, object, malformedReason(err))
 		return 0
 	}
-	if info, err := os.Stat(policyPath); err != nil || info.IsDir() {
+	resolver := newProjects(hookDir(object, env), homeOf(env))
+	resolver.project = projectOf(policyPath)
+	info, err := os.Stat(policyPath)
+	switch {
+	case err == nil && !info.IsDir():
+		file, err := os.Open(policyPath)
+		if err != nil {
+			return 0
+		}
+		value, err := readJSON(file)
+		file.Close()
+		if err != nil {
+			return 0
+		}
+		policy, err := LoadPolicy(value)
+		if err != nil {
+			return 0
+		}
+		policy = policy.at(hookDir(object, env), resolver.project, homeOf(env))
+		resolver.policy = &policy
+		resolver.perPath = resolver.project != ""
+	case errors.Is(err, os.ErrNotExist) && resolver.project != "" && workspaceFolder(resolver.project):
+		resolver.workspace = resolver.project
+		resolver.project = ""
+		resolver.perPath = true
+	default:
 		return 0
 	}
-	file, err := os.Open(policyPath)
-	if err != nil {
-		return 0
-	}
-	value, err := readJSON(file)
-	file.Close()
-	if err != nil {
-		return 0
-	}
-	policy, err := LoadPolicy(value)
-	if err != nil {
-		return 0
-	}
-	policy = policy.at(hookDir(object, env), projectOf(policyPath), homeOf(env))
 	events, err := AllFromHook(object)
 	if err != nil {
 		logMalformed(env, object, malformedReason(err))
@@ -77,7 +88,7 @@ func Run(args []string, stdin io.Reader, stdout, stderr io.Writer, env Env) int 
 			break
 		}
 	}
-	decision, err := EvaluateAll(events, policy)
+	decision, err := resolver.evaluateAll(events)
 	if err != nil {
 		return 0
 	}
@@ -130,6 +141,12 @@ func hookDir(input *omap.Map[any], env Env) string {
 		return dir
 	}
 	return ""
+}
+
+// workspaceFolder is true when dir holds a dashcrew project one level down: a folder above several checkouts.
+func workspaceFolder(dir string) bool {
+	matches, _ := filepath.Glob(filepath.Join(dir, "*", ".ai", "guard.json"))
+	return len(matches) > 0
 }
 
 // projectOf is the project whose `.ai/guard.json` is policyPath; empty for a policy stored anywhere else.

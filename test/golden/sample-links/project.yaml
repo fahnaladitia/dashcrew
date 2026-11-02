@@ -1,0 +1,6 @@
+# Synthetic profile: an app that shares a core package with other apps and links it during cross-repo tasks.
+toolkit: 1
+agents: [claude-code]
+project:
+  links:
+    - { package: shop_core, repo: 'git@example.com:shop-team/shop_core.git' }

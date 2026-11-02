@@ -1112,7 +1112,7 @@ func cliCases() []cliCase {
 		}},
 	}
 	for _, name := range []string{"sample-bloc-getx", "sample-project-pack", "sample-riverpod-gorouter", "sample-codex",
-		"sample-antigravity", "sample-other", "sample-project-platform", "sample-knowledge", "sample-release-lines"} {
+		"sample-antigravity", "sample-other", "sample-project-platform", "sample-knowledge", "sample-release-lines", "sample-links"} {
 		cases = append(cases, cliCase{name: name, setup: sample(name), steps: toolkitSteps()})
 	}
 	return cases

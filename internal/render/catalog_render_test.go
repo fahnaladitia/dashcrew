@@ -558,3 +558,30 @@ func TestReleaseTextRendersOnlyWithReleaseLines(t *testing.T) {
 		}
 	}
 }
+
+// TestLinksAddTextOnlyOutsideAgentsMd pins P9 M4: project.links adds the cross-repo text to the branching,
+// pr-description and verify skills and the Dependencies heading to the PR template, and not one byte to AGENTS.md.
+func TestLinksAddTextOnlyOutsideAgentsMd(t *testing.T) {
+	const links = "project: { links: [{ package: shop_core }] }\n"
+	for _, platform := range []string{"", "platform: other\nplatform_config: { detect: [go.mod], commands: { analyze: go vet, test: go test, test_scoped: go test, deps: go mod download }, link: go.work }\n"} {
+		profile := "toolkit: 1\nagents: [claude-code]\n" + platform
+		off, on := renderShipped(t, profile), renderShipped(t, profile+links)
+		if targetContent(t, on, "agents_md") != targetContent(t, off, "agents_md") {
+			t.Errorf("%q: project.links changes AGENTS.md", platform)
+		}
+		for _, c := range []struct{ target, text string }{
+			{"skill/branching", "## Across repos\n"},
+			{"skill/branching", "`dashcrew link add <package> <path>`"},
+			{"skill/pr-description", "- `## Dependencies` - each dependency in `project.links`"},
+			{"pr_template", "## Dependencies\n"},
+			{"workflow/verify", "run `dashcrew check --links` before the commit command"},
+		} {
+			if !strings.Contains(targetContent(t, on, c.target), c.text) {
+				t.Errorf("%q %s lacks %q", platform, c.target, c.text)
+			}
+			if strings.Contains(targetContent(t, off, c.target), c.text) {
+				t.Errorf("%q %s has %q without project.links", platform, c.target, c.text)
+			}
+		}
+	}
+}

@@ -110,6 +110,7 @@ ci: { github: true, dashcrew_ref: v0.1.0 }
 | `project.commit.trailers` | none | trailers allowed on top of `Co-authored-by`, `Signed-off-by`, `Reviewed-by` and the ticket trailer |
 | `project.commit.allow_email_trailers` | none | the only trailers whose value may hold an email address (DCO `Signed-off-by`); an email anywhere else fails lint |
 | `project.release_lines` | not set | `{main: <branch>, release: <regex>, hotfix: <regex>, check_ports: <bool>}`: the main line and the patterns of release and hotfix lines; see [Release lines](#release-lines) |
+| `project.links` | not set | `[{package: <name>, repo: <git url>}]`: dependencies a task may point at a local checkout with `dashcrew link` (the pubspec name or Go module path; `repo` optional, ssh or https). `has_links` gates the multi-repo text |
 | `policy.agent_commit` | `false` | `true` lets the agent commit; push stays blocked |
 | `policy.formatter` | `false` | `true` allows `dart format` on changed files only |
 | `policy.dartdoc_max_lines` | `3` | hard cap per documented unit |
@@ -126,7 +127,7 @@ The profile's `platform` picks one. Every stack works at the first level; the ot
 
 | Level | How | What the team gets |
 |---|---|---|
-| `platform: other` | declare it inline: `platform_config: { detect: [<file>], commands: { analyze, test, test_scoped, deps, format } }` (`format` optional) | all of core: the chain, skills, guard, `reviewer` and `explorer`, PR template and `dashcrew check`; core renders your commands, with no stack-specific rules |
+| `platform: other` | declare it inline: `platform_config: { detect: [<file>], commands: { analyze, test, test_scoped, deps, format }, link }` (`format` and `link` optional; `link` is `pubspec_overrides.yaml` or `go.work`) | all of core: the chain, skills, guard, `reviewer` and `explorer`, PR template and `dashcrew check`; core renders your commands, with no stack-specific rules |
 | Project platform | write `.ai/platforms/<name>/` in your repo, in the format of `platforms/` (`platform.yaml`, rules, skills, workflows, packs), and set `platform: <name>` | depth for that stack, your conventions, no dashcrew release needed |
 | Built-in | `platforms/<name>/` in this repo; today `flutter` | shared with every team |
 
@@ -235,7 +236,7 @@ Agent checks run only for the agents in the profile. Each line starts with `ok`,
 | `--ports` | off | only the port check of [release lines](#release-lines); runs alone, without `--pr-body` or `--base` |
 | `--from <line>`, `--to <line>` | every adjacent pair | with `--ports`: the older and the newer line, each a version, a line branch or `main` |
 
-Read-only; exit 1 on any failure, with `::error` annotations in GitHub Actions. It runs the toolkit checks of `doctor` that need no agent or guard binary, then `pr-sections` (every heading of `.github/pull_request_template.md` in the PR body) and `commits` (`dashcrew commit lint` on every commit of the PR but merges; skipped without a base). With `release_lines.check_ports: true` it adds `ports`, the check of `--ports` over every adjacent pair of lines.
+Read-only; exit 1 on any failure, with `::error` annotations in GitHub Actions. It runs the toolkit checks of `doctor` that need no agent or guard binary, then `pr-sections` (every heading of `.github/pull_request_template.md` in the PR body) and `commits` (`dashcrew commit lint` on every commit of the PR but merges; skipped without a base). With `release_lines.check_ports: true` it adds `ports`, the check of `--ports` over every adjacent pair of lines. With `project.links` it adds `links`: each listed dependency as committed in `pubspec.yaml` and `pubspec.lock`, or `go.mod`. A git ref must be a tag, or a commit on the dependency's default branch (a branch name is refused, even the default one); a `path` must stay inside the repository; a Go `replace` to a local folder and a pseudo-version off the default branch are refused; hosted versions pass, since `pub get` and `go mod download` fail on an unpublished one; a committed link file fails. Refs are read with `git ls-remote` and a commits-only fetch, using the credentials CI already has for the dependency; an unreachable repository fails the check. `dashcrew check --links` runs only this, one line per dependency, before a push.
 
 ### `dashcrew commit`
 
@@ -273,6 +274,18 @@ One worktree per parallel task, at `<repo>.worktrees/<name>`. It never commits, 
 
 Every subcommand takes `-p, --project`, any folder inside the repository.
 
+### `dashcrew link`
+
+Points a dependency listed in `project.links` at a local checkout while a task spans repos, through the platform's link file: `pubspec_overrides.yaml` for Flutter, `go.work` for a Go project (`platform_config.link`). The file is added to the checkout's git exclude file and is never committed; `doctor` warns when git would commit it, and fails when it is committed.
+
+| Subcommand | |
+|---|---|
+| `add <package> <path> [--force] [--no-deps]` | checks that `<path>` holds that package (pubspec `name` or `go.mod` module), writes the entry, excludes the file and runs the platform's `deps` command. A link file dashcrew did not write is refused without `--force`, and a committed one always |
+| `ls` | each link with its path and the branch of the linked checkout |
+| `remove <package> [--no-deps]` | drops the entry; the file goes when nothing is left |
+
+Every subcommand takes `-p, --project`, any folder inside the repository. Linked repos on different branch names are fine; `doctor` reports them as info.
+
 ## What `sync` writes
 
 | | Claude Code | Codex | Antigravity |
@@ -296,6 +309,8 @@ Each agent's pre-tool hook sends the tool call to `.ai/bin/guard`, which blocks:
 - a `gh` command whose arguments contain `/approve`: approvals are the user's, on whatever approval flow a team keeps on GitHub.
 
 Claude Code and Codex get exit code 2 with the reason on stderr; Antigravity gets `{"decision": "deny", "reason": ...}` on stdout.
+
+**Several repos.** A file the agent writes is checked under the `.ai/guard.json` of the nearest dashcrew project holding its real path, so a dependency reached through `dashcrew link`, a symbolic link or an absolute path keeps its own rules, and the app's rules do not leak into it. When the hook runs in a folder that is no project but holds projects one level down, a shell command is blocked when any of their policies blocks it, and a file under the project holding it; with no project below, nothing changes. A policy passed as a file outside any project keeps the single-policy check.
 
 **Hidden commands.** The guard also looks inside nested shells (`sh -c`, `bash -c` and other shells with option clusters, `eval`, here-strings, heredocs, Codex argv lists; up to 8 levels deep), shell keywords and grouping (`{ ...; }`, `if ... then`, `do`, `!`), wrappers with options (`sudo -u`, `env -i`, `/usr/bin/env`, `nice`, `timeout`, `exec`, `xargs`, `find -exec`, `command`, `builtin`, `rtk proxy`), line continuations, and `apply_patch` headers with CRLF line ends or a leading `*** Move to:`. It does not block a command whose first word is a `$` expansion (`$x push`), `source` or `.`, `fish -c`, `stdbuf`, `doas`, or nesting deeper than 8 levels: blocking those would also block legitimate scripts.
 
