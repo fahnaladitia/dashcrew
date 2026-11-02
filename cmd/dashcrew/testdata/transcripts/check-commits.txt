@@ -41,7 +41,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-+ w/.ai/lock.json  -rw-r--r-- sha256:95eb784f3d2d083d
++ w/.ai/lock.json  -rw-r--r-- sha256:e2cb0b01d5919590
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
@@ -57,7 +57,7 @@ files:
 + w/.claude/skills/build-fix  dir
 + w/.claude/skills/build-fix/SKILL.md  -rw-r--r-- sha256:43296f00548ded28
 + w/.claude/skills/code-review  dir
-+ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:feda66879450b2c8
++ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:2d12aba3232cc779
 + w/.claude/skills/continuous-learning  dir
 + w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:698f498fdff18b66
 + w/.claude/skills/data-layer-tdd  dir
@@ -77,7 +77,7 @@ files:
 + w/.claude/skills/mobile-security  dir
 + w/.claude/skills/mobile-security/SKILL.md  -rw-r--r-- sha256:1bc29e41680bd49b
 + w/.claude/skills/plan  dir
-+ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:d5653cd7d3348e13
++ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:aa500e589116c210
 + w/.claude/skills/pr-create  dir
 + w/.claude/skills/pr-create/SKILL.md  -rw-r--r-- sha256:e534b517a93d2650
 + w/.claude/skills/pr-description  dir
@@ -87,7 +87,7 @@ files:
 + w/.claude/skills/strategic-compact  dir
 + w/.claude/skills/strategic-compact/SKILL.md  -rw-r--r-- sha256:a866040ed09e6f37
 + w/.claude/skills/tdd  dir
-+ w/.claude/skills/tdd/SKILL.md  -rw-r--r-- sha256:caf317ee9e4fe00d
++ w/.claude/skills/tdd/SKILL.md  -rw-r--r-- sha256:609c68287a05c3e6
 + w/.claude/skills/verification-loop  dir
 + w/.claude/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:d54707cb287e4465
 + w/.claude/skills/verify  dir
@@ -99,7 +99,7 @@ files:
 + w/.github  dir
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
 + w/.mcp.json  -rw-r--r-- sha256:745dcf12d577148c
-+ w/AGENTS.md  -rw-r--r-- sha256:e4528288fd10c5be
++ w/AGENTS.md  -rw-r--r-- sha256:7bea615a4b79b70c
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 2: dashcrew "check" "--base" "main"
@@ -134,7 +134,7 @@ stdout:
 | ok    agents-md-size  AGENTS.md 16095 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | skip  pr-sections     no PR body; pass --pr-body <file> or run on a pull_request event
-| fail  commits         38a0285 subject line "WIP sharing" does not match <type>(<scope>): <subject>
+| fail  commits         12f703d subject line "WIP sharing" does not match <type>(<scope>): <subject>
 stderr: (empty)
 files: (unchanged)
 
@@ -155,8 +155,8 @@ stdout:
 | ok    gitignore       .ai/bin/guard is not ignored
 | fail  pr-sections     missing: ## Summary, ## Changes, ## Affected files, ## Testing, ## Notes / not done (write "None" under a heading that does not apply)
 | ::error title=dashcrew pr-sections::missing: ## Summary, ## Changes, ## Affected files, ## Testing, ## Notes / not done (write "None" under a heading that does not apply)
-| fail  commits         38a0285 subject line "WIP sharing" does not match <type>(<scope>): <subject>
-| ::error title=dashcrew commits::38a0285 subject line "WIP sharing" does not match <type>(<scope>): <subject>
+| fail  commits         12f703d subject line "WIP sharing" does not match <type>(<scope>): <subject>
+| ::error title=dashcrew commits::12f703d subject line "WIP sharing" does not match <type>(<scope>): <subject>
 stderr: (empty)
 files: (unchanged)
 

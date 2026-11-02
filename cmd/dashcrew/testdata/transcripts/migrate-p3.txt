@@ -153,7 +153,7 @@ files:
 ~ w/.agents/skills/branching/SKILL.md  -rw-r--r-- sha256:7975aaf2b2c3367c
 ~ w/.agents/skills/build-fix/SKILL.md  -rw-r--r-- sha256:875dfa07def54fe2
 - w/.agents/skills/checkpoint/SKILL.md
-~ w/.agents/skills/code-review/SKILL.md  -rw-r--r-- sha256:59fbaf9c51a0e6bc
+~ w/.agents/skills/code-review/SKILL.md  -rw-r--r-- sha256:083355e2ed389c49
 ~ w/.agents/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:8e75f35233aaf6c4
 ~ w/.agents/skills/data-layer-tdd/SKILL.md  -rw-r--r-- sha256:b05e453a7d2a9d54
 ~ w/.agents/skills/design-fidelity/SKILL.md  -rw-r--r-- sha256:9abbb4c8c13a9e88
@@ -165,19 +165,19 @@ files:
 + w/.agents/skills/hive-storage/SKILL.md  -rw-r--r-- sha256:5a48937e18c2f0c8
 ~ w/.agents/skills/mobile-security/SKILL.md  -rw-r--r-- sha256:eac82c26b4557b97
 - w/.agents/skills/orchestrate/SKILL.md
-~ w/.agents/skills/plan/SKILL.md  -rw-r--r-- sha256:b3570d07fc10a5cb
+~ w/.agents/skills/plan/SKILL.md  -rw-r--r-- sha256:8ca5ecfddfc32a57
 ~ w/.agents/skills/pr-create/SKILL.md  -rw-r--r-- sha256:88b181afa8381177
 ~ w/.agents/skills/pr-description/SKILL.md  -rw-r--r-- sha256:7f02b7f17b8ea8e8
 ~ w/.agents/skills/prompt-polish/SKILL.md  -rw-r--r-- sha256:b602889385833272
 ~ w/.agents/skills/strategic-compact/SKILL.md  -rw-r--r-- sha256:ef4f497b22288e0c
-~ w/.agents/skills/tdd/SKILL.md  -rw-r--r-- sha256:a63bee10a2e579b7
+~ w/.agents/skills/tdd/SKILL.md  -rw-r--r-- sha256:55aad03d0b7f363f
 ~ w/.agents/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:487563193e58e790
 ~ w/.agents/skills/verify/SKILL.md  -rw-r--r-- sha256:bc476f675a6fe091
 ~ w/.agents/skills/work-modes/SKILL.md  -rw-r--r-- sha256:cca07dc711f2e958
 ~ w/.agents/skills/worktree/SKILL.md  -rw-r--r-- sha256:05e374e3165f3e56
 ~ w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 ~ w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-~ w/.ai/lock.json  -rw-r--r-- sha256:8c5d27c5e0f7f4fd
+~ w/.ai/lock.json  -rw-r--r-- sha256:16e2e87f833db5d1
 - w/.claude/agents/dart-tdd-guide.md
 - w/.claude/agents/design-refiner.md
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
@@ -199,7 +199,7 @@ files:
 ~ w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:8b93b9328ded4711
 ~ w/.claude/skills/build-fix/SKILL.md  -rw-r--r-- sha256:43296f00548ded28
 - w/.claude/skills/checkpoint/SKILL.md
-~ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:feda66879450b2c8
+~ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:2d12aba3232cc779
 ~ w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:698f498fdff18b66
 ~ w/.claude/skills/data-layer-tdd/SKILL.md  -rw-r--r-- sha256:eb183dbb402be1e3
 ~ w/.claude/skills/design-fidelity/SKILL.md  -rw-r--r-- sha256:2659d95907aab02c
@@ -211,12 +211,12 @@ files:
 + w/.claude/skills/hive-storage/SKILL.md  -rw-r--r-- sha256:8ee250e8d1b8d201
 ~ w/.claude/skills/mobile-security/SKILL.md  -rw-r--r-- sha256:1bc29e41680bd49b
 - w/.claude/skills/orchestrate/SKILL.md
-~ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:5a7e03bc5575260a
+~ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:3eeccfcca67af57a
 ~ w/.claude/skills/pr-create/SKILL.md  -rw-r--r-- sha256:e534b517a93d2650
 ~ w/.claude/skills/pr-description/SKILL.md  -rw-r--r-- sha256:7992498f4157debe
 ~ w/.claude/skills/prompt-polish/SKILL.md  -rw-r--r-- sha256:46401e1e54b520e2
 ~ w/.claude/skills/strategic-compact/SKILL.md  -rw-r--r-- sha256:a866040ed09e6f37
-~ w/.claude/skills/tdd/SKILL.md  -rw-r--r-- sha256:caf317ee9e4fe00d
+~ w/.claude/skills/tdd/SKILL.md  -rw-r--r-- sha256:609c68287a05c3e6
 ~ w/.claude/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:d54707cb287e4465
 ~ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:c245fcc49e344b7e
 ~ w/.claude/skills/work-modes/SKILL.md  -rw-r--r-- sha256:42e7df44abe766f6
@@ -237,7 +237,7 @@ files:
 - w/.codex/agents/tech-lead.toml
 - w/.codex/agents/worktree-monitor.toml
 ~ w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
-~ w/AGENTS.md  -rw-r--r-- sha256:8872d131289faaf2
+~ w/AGENTS.md  -rw-r--r-- sha256:cddbcdf1243bd155
 
 === step 3: dashcrew "sync"
 exit: 0

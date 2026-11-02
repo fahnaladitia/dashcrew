@@ -623,3 +623,26 @@ func TestGithubTrackerLabelsMode(t *testing.T) {
 		}
 	}
 }
+
+// TestQuestionsAreAskedWhenTheyComeUp pins the question triggers added after the P7 live run: a spec asks its open
+// questions before hand-over, a plan carries a Questions line that blocks GO, implementation stops on a
+// contradiction, and the reviewer's open questions reach the user.
+func TestQuestionsAreAskedWhenTheyComeUp(t *testing.T) {
+	const knowledge = "knowledge: { repo: git@example.com:team/notes-knowledge.git }\n"
+	for _, platform := range []string{"", "platform: other\nplatform_config: { detect: [x], commands: { analyze: a, test: t, test_scoped: s, deps: d } }\n"} {
+		rendered := renderShipped(t, "toolkit: 1\nagents: [claude-code]\n"+platform+knowledge)
+		for _, c := range []struct{ target, text string }{
+			{"workflow/spec", "## 4. Questions"},
+			{"workflow/spec", "Never hand over a spec with a question the user could have answered."},
+			{"workflow/plan", "Questions: <each question only the user can settle, found while planning, or none>"},
+			{"workflow/plan", "The `Questions:` line is not `none`"},
+			{"workflow/tdd", "### When the code disagrees"},
+			{"workflow/code-review", "and the open questions the reviewer raised, go to the user once, as one list"},
+			{"agents_md", "Ask every question at step 0, together; one found later, when found."},
+		} {
+			if !strings.Contains(targetContent(t, rendered, c.target), c.text) {
+				t.Errorf("%q %s lacks %q", platform, c.target, c.text)
+			}
+		}
+	}
+}

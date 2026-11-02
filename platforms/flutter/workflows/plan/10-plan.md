@@ -25,7 +25,7 @@ The main session writes the plan for tier standard and large{{^policy.tier_gates
 
 - Restate the requirement in your own words.
 - Add no feature the step 0 block did not confirm.
-- List every ambiguity as an explicit assumption.
+- List every ambiguity: one the code settles is an assumption; one only the user can settle goes on the plan's `Questions:` line.
 
 ## Search first
 

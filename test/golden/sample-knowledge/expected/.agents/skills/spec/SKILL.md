@@ -16,7 +16,7 @@ The main session runs this workflow, outside the chain, for a feature large enou
 
 ## 1. Brainstorm
 
-Before writing, ask every question in one round: the problem, the users, two or three options with their trade-offs, the assumptions, and what is not done. Wait for the answers; what is still open becomes an assumption or an open question, never a second round.
+Before writing, ask every question in one round: the problem, the users, two or three options with their trade-offs, the assumptions, and what is not done. Wait for the answers; what is still open becomes an assumption or an open question. There is no second brainstorm; questions that come up while writing are asked in step 4.
 
 ## 2. PRD
 
@@ -40,11 +40,15 @@ Under `Impact`, each Flutter app adds:
 
 Contracts and decisions take IDs under the same rules as criteria. Every open question ends with `owner: <role>`. Owners, in the front matter and on questions, are roles such as `backend` or `mobile`, never names or emails.
 
-## 4. Lint
+## 4. Questions
+
+Before lint, show every open question and every assumption the PRD and TRD gained since the brainstorm, as one list, and ask the user once. An answer becomes a decision (`D-n`) or a criterion and leaves the open questions; only what the user cannot settle, another role's call, stays with `owner: <role>`. Never hand over a spec with a question the user could have answered.
+
+## 5. Lint
 
 Run `dashcrew spec lint .ai/knowledge/specs/<release>/<feature>` and fix every problem until it exits 0.
 
-## 5. Hand over
+## 6. Hand over
 
 Set `status: review` in both files, then print these commands for the member and never run them:
 

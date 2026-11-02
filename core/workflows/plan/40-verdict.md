@@ -9,6 +9,7 @@ rules:
   - plan.verdict.user-decision
   - plan.verdict.scope-creep
   - plan.verdict.step0-decision-missing
+  - plan.verdict.open-question
 ---
 ## Verdict
 
@@ -20,3 +21,4 @@ Self-gate before closing. The verdict is NO-GO when any criterion below holds. D
 - A design or approach choice needs a user decision.
 - The scope grew beyond the step 0 block.
 - A step 0 decision the plan depends on is missing.
+- The `Questions:` line is not `none`: a question found while planning is asked before any code, on every tier.
