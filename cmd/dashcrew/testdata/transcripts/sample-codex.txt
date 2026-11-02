@@ -124,7 +124,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:12ab966252052574
-+ w/.ai/lock.json  -rw-r--r-- sha256:5397d5f0d718c5d7
++ w/.ai/lock.json  -rw-r--r-- sha256:99a20abb15cbf356
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
@@ -190,7 +190,7 @@ files:
 + w/.github  dir
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:d04513360a2435b2
 + w/.github/workflows  dir
-+ w/.github/workflows/dashcrew.yml  -rw-r--r-- sha256:8414f6f1f3a37a29
++ w/.github/workflows/dashcrew.yml  -rw-r--r-- sha256:3a9321469d994a5d
 + w/.mcp.json  -rw-r--r-- sha256:745dcf12d577148c
 + w/AGENTS.md  -rw-r--r-- sha256:c8a99a346d93db01
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad

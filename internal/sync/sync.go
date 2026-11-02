@@ -729,6 +729,13 @@ func (s Sync) dropGuardIgnore() (bool, error) {
 	return project.WriteIfChanged(".gitignore", next)
 }
 
+// Actions in the generated workflow are pinned to the same commits as this repository's own CI;
+// TestGithubWorkflowPinsMatchTheRepoCI fails when Dependabot moves one and not the other.
+const (
+	checkoutAction = "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1"
+	setupGoAction  = "actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0"
+)
+
 // GithubWorkflow runs `dashcrew check` on every pull request with dashcrew pinned at dashcrewRef, so CI judges
 // a PR with the same dashcrew the team uses. The full history is fetched so the PR's commits can be linted.
 func GithubWorkflow(dashcrewRef string) string {
@@ -747,10 +754,11 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: ` + checkoutAction + `
         with:
           fetch-depth: 0
-      - uses: actions/setup-go@v5
+          persist-credentials: false
+      - uses: ` + setupGoAction + `
         with:
           go-version: stable
           cache: false

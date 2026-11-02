@@ -631,6 +631,23 @@ func TestLinksInTheProject(t *testing.T) {
 	})
 }
 
+// TestGithubWorkflowPinsMatchTheRepoCI keeps the generated workflow on the same action commits as this repository's
+// own CI, which Dependabot updates; the template is a Go string Dependabot cannot see.
+func TestGithubWorkflowPinsMatchTheRepoCI(t *testing.T) {
+	ci, err := os.ReadFile(filepath.Join("..", "..", ".github", "workflows", "ci.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, pin := range []string{checkoutAction, setupGoAction} {
+		if !strings.Contains(string(ci), "uses: "+pin) {
+			t.Errorf("ci.yaml does not use %q; update the pin in sync.go to match it", pin)
+		}
+	}
+	if text := GithubWorkflow("0123abc"); !strings.Contains(text, "persist-credentials: false") {
+		t.Error("the generated checkout keeps credentials")
+	}
+}
+
 func TestGithubWorkflow(t *testing.T) {
 	const ciProfile = "toolkit: 1\nagents: [claude-code]\nci: { github: true, dashcrew_ref: 0123abc }\n"
 
