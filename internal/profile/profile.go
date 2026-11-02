@@ -31,6 +31,8 @@ type StackChoice struct {
 // PlatformConfig is the `platform_config` of a `platform: other` profile.
 type PlatformConfig struct {
 	Detect []string
+	// Link is the override file `dashcrew link` writes, one of LinkFiles; empty when not set.
+	Link string
 	// Commands holds PlatformCommands then OptionalPlatformCommands, in that order; a missing format is nil.
 	Commands *omap.Map[any]
 }
@@ -102,6 +104,8 @@ type Profile struct {
 	// ReleaseLines is `project.release_lines`; nil without it. Kept out of Project like Commit; templates see only
 	// `has_release_lines`, which gates the release text.
 	ReleaseLines *ReleaseLines
+	// Links is `project.links`; nil without it. Kept out of Project; templates see only `has_links`.
+	Links []Link
 	// Knowledge is the shared knowledge repo; nil when the profile has no `knowledge` key. Templates see only
 	// `has_knowledge`, which `when:` gates on, so a profile without it renders as before.
 	Knowledge *Knowledge
@@ -211,6 +215,9 @@ func Parse(text string, known KnownOptions) (*Profile, error) {
 		return nil, err
 	}
 	profile.Commit.PortTrailers = profile.ReleaseLines != nil
+	if profile.Links, err = parseLinks(profile.Project); err != nil {
+		return nil, err
+	}
 	if profile.Policy, err = merge("policy", policyDefaults(), root.Value("policy"), true); err != nil {
 		return nil, err
 	}
@@ -241,7 +248,7 @@ func parsePlatformConfig(platform string, value any) (*PlatformConfig, error) {
 		return nil, fail("platform_config", "expected a map of detect and commands")
 	}
 	for _, key := range config.Keys() {
-		if key != "detect" && key != "commands" {
+		if key != "detect" && key != "commands" && key != "link" {
 			return nil, fail("platform_config."+key, "unknown key")
 		}
 	}
@@ -255,7 +262,15 @@ func parsePlatformConfig(platform string, value any) (*PlatformConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &PlatformConfig{Detect: detect, Commands: commands}, nil
+	link := ""
+	if config.Has("link") {
+		text, isString := config.Value("link").(string)
+		if !isString || !contains(LinkFiles, text) {
+			return nil, fail("platform_config.link", "expected one of "+strings.Join(LinkFiles, ", "))
+		}
+		link = text
+	}
+	return &PlatformConfig{Detect: detect, Commands: commands, Link: link}, nil
 }
 
 // StringList returns value as a list of non-empty strings; false when it is not a list or holds anything else.
@@ -480,6 +495,7 @@ func (p *Profile) ToContext() map[string]any {
 		"has_stack_other":   len(others) > 0,
 		"has_knowledge":     p.Knowledge != nil,
 		"has_release_lines": p.ReleaseLines != nil,
+		"has_links":         len(p.Links) > 0,
 		"project":           p.Project,
 		"policy":            p.Policy,
 		"paths":             p.Paths,

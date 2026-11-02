@@ -343,8 +343,13 @@ func (c *Catalog) WorkflowsFor(platform string) map[string]DocMeta {
 // PlatformFor is the profile's platform: `other` comes from platform_config, an unknown name is an empty platform.
 func (c *Catalog) PlatformFor(p *profile.Profile) *PlatformSpec {
 	if p.Platform == profile.OtherOption && p.PlatformConfig != nil {
-		return &PlatformSpec{Name: profile.OtherOption, Detect: p.PlatformConfig.Detect, Commands: p.PlatformConfig.Commands,
+		spec := &PlatformSpec{Name: profile.OtherOption, Detect: p.PlatformConfig.Detect, Commands: p.PlatformConfig.Commands,
 			McpServers: omap.New[McpServer](), Packs: omap.New[*omap.Map[*Pack]]()}
+		if p.PlatformConfig.Link != "" {
+			link := p.PlatformConfig.Link
+			spec.Link = &link
+		}
+		return spec
 	}
 	if spec := c.Platforms[p.Platform]; spec != nil {
 		return spec

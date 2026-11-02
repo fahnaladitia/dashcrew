@@ -46,8 +46,13 @@ func (c PrCheck) Run(prBody *string) ([]doctor.Check, error) {
 		body = &text
 	}
 	checks = append(checks, c.sections(body), c.commits(pullRequest))
-	if p, err := (sync.Sync{Catalog: c.Catalog, ProjectDir: c.ProjectDir}).Profile(); err == nil && p.ReleaseLines != nil && p.ReleaseLines.CheckPorts {
-		checks = append(checks, c.ports(p))
+	if p, err := (sync.Sync{Catalog: c.Catalog, ProjectDir: c.ProjectDir}).Profile(); err == nil {
+		if p.ReleaseLines != nil && p.ReleaseLines.CheckPorts {
+			checks = append(checks, c.ports(p))
+		}
+		if len(p.Links) > 0 {
+			checks = append(checks, c.links(p))
+		}
 	}
 	return checks, nil
 }

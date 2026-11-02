@@ -191,6 +191,7 @@ stdout:
 |     --ports      Only check that each fix of an older release line reached the newer one (exit 1 if not).
 |     --from       With --ports: the older line (a version, a line branch or main); default every adjacent pair.
 |     --to         With --ports: the newer line; default the line after --from.
+|     --links      Only check how each dependency in project.links is committed (exit 1 if one is not merged).
 | 
 | Run "dashcrew help" to see global options.
 stderr: (empty)

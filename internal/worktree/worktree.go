@@ -430,6 +430,9 @@ func (w *Worktrees) profilePaths() []string {
 	return out
 }
 
+// Exclude adds each entry, a path relative to the checkout root, to the checkout's git exclude file as `/<entry>`.
+func Exclude(dir string, entries []string) error { return exclude(dir, entries) }
+
 func exclude(worktree string, linked []string) error {
 	excludePath := strings.TrimSpace(git(worktree, "rev-parse", "--path-format=absolute", "--git-path", "info/exclude").stdout)
 	data, _ := os.ReadFile(excludePath)
@@ -464,6 +467,12 @@ func (w *Worktrees) installDeps(dir string) string {
 	if err != nil {
 		return "skipped (" + filepath.Join(".ai", "project.yaml") + ": " + err.Error() + ")"
 	}
+	return RunDeps(dir, platform)
+}
+
+// RunDeps runs the platform's deps command in dir when one of its detect files is there, and says what happened:
+// ok, skipped or failed with the command to rerun. A Flutter command runs through `fvm` when dir has `.fvmrc`.
+func RunDeps(dir string, platform *catalog.PlatformSpec) string {
 	command, ok := platform.Commands.Value("deps").(string)
 	if !ok {
 		return "skipped (platform " + platform.Name + " has no deps command)"

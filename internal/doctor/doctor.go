@@ -164,6 +164,9 @@ func (d Doctor) checks(projectPacks Check) []Check {
 		if lineCheck, ok := d.releaseLineCheck(lock, line); ok {
 			checks = append(checks, lineCheck)
 		}
+		if linksCheck, ok := d.links(); ok {
+			checks = append(checks, linksCheck)
+		}
 	}
 	checks = append(checks, d.agentsMdSize(AgentsMdLimitFor(agents)), d.gitignore())
 	if rosters, ok := d.handoffRosters(); ok {

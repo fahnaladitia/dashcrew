@@ -132,7 +132,8 @@ func newRoot(cli cliIO) *command {
 		add(commitCommand(cli)).
 		add(verifyCommand(cli)).
 		add(releaseCommand(cli)).
-		add(specCommand(cli))
+		add(specCommand(cli)).
+		add(linkCommand(cli))
 	return root
 }
 
@@ -368,7 +369,14 @@ func checkCommand(cli cliIO) *command {
 	c.flag("ports", "", "Only check that each fix of an older release line reached the newer one (exit 1 if not).", false, false)
 	c.option("from", "", "With --ports: the older line (a version, a line branch or main); default every adjacent pair.", nil)
 	c.option("to", "", "With --ports: the newer line; default the line after --from.", nil)
+	c.flag("links", "", "Only check how each dependency in project.links is committed (exit 1 if one is not merged).", false, false)
 	c.run = func(r *results) (int, error) {
+		if r.flag("links") {
+			if r.flag("ports") || r.option("pr-body") != nil || r.option("base") != nil {
+				return 0, &usageError{c, "--links runs alone, without --ports, --pr-body or --base."}
+			}
+			return checkLinks(cli, r)
+		}
 		if r.flag("ports") {
 			if r.option("pr-body") != nil || r.option("base") != nil {
 				return 0, &usageError{c, "--ports runs alone, without --pr-body or --base."}
@@ -406,6 +414,39 @@ func checkCommand(cli cliIO) *command {
 		return printChecks(cli.stdout, checks, cli.env["GITHUB_ACTIONS"] == "true"), nil
 	}
 	return c
+}
+
+// checkLinks is `dashcrew check --links`: one line per dependency, then a summary.
+func checkLinks(cli cliIO, r *results) (int, error) {
+	projectDir, err := absolute(*r.option("project"))
+	if err != nil {
+		return 0, err
+	}
+	cat, err := catalog.LoadEmbedded()
+	if err != nil {
+		return 0, err
+	}
+	p, err := sync.Sync{Catalog: cat, ProjectDir: projectDir}.Profile()
+	if err != nil {
+		return 0, &exitError{1, err.Error()}
+	}
+	if len(p.Links) == 0 {
+		cli.out("no project.links in .ai/project.yaml: nothing to check")
+		return 0, nil
+	}
+	results, err := check.Links(projectDir, p, cat)
+	if err != nil {
+		return 0, &exitError{1, err.Error()}
+	}
+	for _, result := range results {
+		cli.out(check.Line(result))
+	}
+	if check.Failed(results) {
+		cli.out("merge or release the dependency first, then pin a tag or a commit on its default branch")
+		return 1, nil
+	}
+	cli.out("every linked dependency is committed at a merged or released version")
+	return 0, nil
 }
 
 // checkPorts is `dashcrew check --ports`: one block per line pair, one line per fix, then a summary.

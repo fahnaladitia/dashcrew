@@ -18,6 +18,7 @@ stdout:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -46,6 +47,7 @@ stdout:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -74,6 +76,7 @@ stdout:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -102,6 +105,7 @@ stdout:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -190,6 +194,7 @@ stdout:
 |     --ports      Only check that each fix of an older release line reached the newer one (exit 1 if not).
 |     --from       With --ports: the older line (a version, a line branch or main); default every adjacent pair.
 |     --to         With --ports: the newer line; default the line after --from.
+|     --links      Only check how each dependency in project.links is committed (exit 1 if one is not merged).
 | 
 | Run "dashcrew help" to see global options.
 stderr: (empty)
@@ -303,6 +308,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -331,6 +337,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -359,6 +366,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -484,6 +492,7 @@ stdout:
 |     --ports      Only check that each fix of an older release line reached the newer one (exit 1 if not).
 |     --from       With --ports: the older line (a version, a line branch or main); default every adjacent pair.
 |     --to         With --ports: the newer line; default the line after --from.
+|     --links      Only check how each dependency in project.links is committed (exit 1 if one is not merged).
 | 
 | Run "dashcrew help" to see global options.
 stderr: (empty)
@@ -704,6 +713,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -737,6 +747,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -769,6 +780,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -785,6 +797,7 @@ stderr:
 | Could not find a command named "sink".
 | 
 | Did you mean one of these?
+|   link
 |   sync
 | 
 | 
@@ -801,6 +814,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -833,6 +847,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -1201,6 +1216,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -1229,6 +1245,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -1269,6 +1286,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -1297,6 +1315,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -1324,6 +1343,7 @@ stdout:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -1353,6 +1373,7 @@ stderr:
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
+|   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -1415,6 +1436,7 @@ stderr:
 |     --ports      Only check that each fix of an older release line reached the newer one (exit 1 if not).
 |     --from       With --ports: the older line (a version, a line branch or main); default every adjacent pair.
 |     --to         With --ports: the newer line; default the line after --from.
+|     --links      Only check how each dependency in project.links is committed (exit 1 if one is not merged).
 | 
 | Run "dashcrew help" to see global options.
 files: (unchanged)
@@ -1434,6 +1456,7 @@ stderr:
 |     --ports      Only check that each fix of an older release line reached the newer one (exit 1 if not).
 |     --from       With --ports: the older line (a version, a line branch or main); default every adjacent pair.
 |     --to         With --ports: the newer line; default the line after --from.
+|     --links      Only check how each dependency in project.links is committed (exit 1 if one is not merged).
 | 
 | Run "dashcrew help" to see global options.
 files: (unchanged)
@@ -1453,6 +1476,7 @@ stderr:
 |     --ports      Only check that each fix of an older release line reached the newer one (exit 1 if not).
 |     --from       With --ports: the older line (a version, a line branch or main); default every adjacent pair.
 |     --to         With --ports: the newer line; default the line after --from.
+|     --links      Only check how each dependency in project.links is committed (exit 1 if one is not merged).
 | 
 | Run "dashcrew help" to see global options.
 files: (unchanged)
@@ -1472,6 +1496,7 @@ stderr:
 |     --ports      Only check that each fix of an older release line reached the newer one (exit 1 if not).
 |     --from       With --ports: the older line (a version, a line branch or main); default every adjacent pair.
 |     --to         With --ports: the newer line; default the line after --from.
+|     --links      Only check how each dependency in project.links is committed (exit 1 if one is not merged).
 | 
 | Run "dashcrew help" to see global options.
 files: (unchanged)
