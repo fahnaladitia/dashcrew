@@ -1,0 +1,2 @@
+- snake_case on the wire
+- a mapper per DTO

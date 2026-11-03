@@ -7,11 +7,13 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 
 	"github.com/fahnaladitia/dashcrew/internal/adapters"
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
+	"github.com/fahnaladitia/dashcrew/internal/filemode"
 	"github.com/fahnaladitia/dashcrew/internal/worktree"
 )
 
@@ -199,7 +201,7 @@ func repoSkillTargets(home *Profile, dir string, on []catalog.ProjectSkill) []ta
 			}
 			full := filepath.Join(dir, filepath.FromSlash(relative))
 			wanted[full] = true
-			out = append(out, target{path: full, text: text, want: true, skill: true})
+			out = append(out, target{path: full, text: text, want: true, skill: true, files: skill.Files})
 		}
 	}
 	for _, root := range skillRoots() {
@@ -308,4 +310,179 @@ func repoSkillLines(skills []catalog.ProjectSkill) []any {
 		out = append(out, map[string]any{"name": skill.Name, "when": when})
 	}
 	return out
+}
+
+// ---- supporting files of an optional skill: owned through the folder's manifest ----
+
+// skillManifest lists, one per line, the supporting files me sync wrote into a skill folder. A file it does not
+// list was not written by me sync and is never overwritten or removed.
+const skillManifest = ".dashcrew-me"
+
+// readManifest is the manifest's paths that stay inside the skill folder, sorted; any other line is ignored, so a
+// manifest written by hand cannot reach a file outside the folder.
+func readManifest(folder string) []string {
+	data, err := os.ReadFile(filepath.Join(folder, skillManifest))
+	if err != nil {
+		return nil
+	}
+	var out []string
+	for _, name := range strings.Fields(string(data)) {
+		if filepath.IsLocal(filepath.FromSlash(name)) && name != skillManifest && name != "SKILL.md" {
+			out = append(out, name)
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
+func writeManifest(folder string, files []catalog.SkillFile) error {
+	if len(files) == 0 {
+		if err := os.Remove(filepath.Join(folder, skillManifest)); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			return err
+		}
+		return nil
+	}
+	lines := make([]string, len(files))
+	for i, file := range files {
+		lines[i] = file.Path
+	}
+	return os.WriteFile(filepath.Join(folder, skillManifest), []byte(strings.Join(lines, "\n")+"\n"), 0o644)
+}
+
+// pruneEmpty removes the empty folders between file and folder, deepest first, never folder or anything above it.
+func pruneEmpty(folder, file string) {
+	for dir := filepath.Dir(file); ; dir = filepath.Dir(dir) {
+		relative, err := filepath.Rel(folder, dir)
+		if err != nil || relative == "." || !filepath.IsLocal(relative) || os.Remove(dir) != nil {
+			return
+		}
+	}
+}
+
+// writeSkill writes a skill target and, unless its SKILL.md was kept as foreign, its supporting files: each one
+// the manifest lists or that is absent, executable when the source is, and the files it no longer carries go.
+func writeSkill(t target) ([]Change, error) {
+	change, err := write(t)
+	if err != nil || change.Kept {
+		return []Change{change}, err
+	}
+	changes := []Change{change}
+	folder := filepath.Dir(t.path)
+	owned := map[string]bool{}
+	for _, name := range readManifest(folder) {
+		owned[name] = true
+	}
+	carried := map[string]bool{}
+	var ownedNow []catalog.SkillFile
+	for _, file := range t.files {
+		carried[file.Path] = true
+		full := filepath.Join(folder, filepath.FromSlash(file.Path))
+		current, readErr := os.ReadFile(full)
+		if readErr == nil && !owned[file.Path] {
+			changes = append(changes, Change{full, "kept, not written by dashcrew", true})
+			continue
+		}
+		ownedNow = append(ownedNow, file)
+		if readErr != nil || string(current) != file.Content {
+			if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {
+				return changes, err
+			}
+			if err := os.WriteFile(full, []byte(file.Content), 0o644); err != nil {
+				return changes, err
+			}
+			what := "written"
+			if readErr == nil {
+				what = "updated"
+			}
+			changes = append(changes, Change{full, what, false})
+		}
+		if err := filemode.SetExecutable(full, file.Executable); err != nil {
+			return changes, err
+		}
+	}
+	for _, name := range readManifest(folder) {
+		if carried[name] {
+			continue
+		}
+		full := filepath.Join(folder, filepath.FromSlash(name))
+		err := os.Remove(full)
+		if errors.Is(err, fs.ErrNotExist) {
+			continue
+		}
+		if err != nil {
+			return changes, err
+		}
+		pruneEmpty(folder, full)
+		changes = append(changes, Change{full, "removed", false})
+	}
+	return changes, writeManifest(folder, ownedNow)
+}
+
+// removeSkill takes out a skill target's SKILL.md, the supporting files its manifest lists, the manifest, and the
+// folders left empty; a file me sync did not write stays.
+func removeSkill(t target) ([]Change, error) {
+	folder := filepath.Dir(t.path)
+	current, err := readOwned(t)
+	if err != nil || !current.owned {
+		return nil, err
+	}
+	var changes []Change
+	for _, name := range readManifest(folder) {
+		full := filepath.Join(folder, filepath.FromSlash(name))
+		if err := os.Remove(full); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			return changes, err
+		}
+		pruneEmpty(folder, full)
+	}
+	if err := os.Remove(filepath.Join(folder, skillManifest)); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return changes, err
+	}
+	change, err := remove(t)
+	if err != nil {
+		return changes, err
+	}
+	changes = appendChange(changes, change)
+	return changes, dropEmptySkillDir(t.path)
+}
+
+// skillFileStatus compares a written skill's supporting files with what me sync would write: content, execute
+// bits, and the files its manifest lists that the skill no longer carries.
+func skillFileStatus(t target) []Change {
+	folder := filepath.Dir(t.path)
+	owned, carried := map[string]bool{}, map[string]bool{}
+	for _, name := range readManifest(folder) {
+		owned[name] = true
+	}
+	var changes []Change
+	for _, file := range t.files {
+		carried[file.Path] = true
+		full := filepath.Join(folder, filepath.FromSlash(file.Path))
+		data, err := os.ReadFile(full)
+		info, statErr := os.Stat(full)
+		switch {
+		case err != nil || statErr != nil:
+			changes = append(changes, Change{full, "missing", false})
+		case !owned[file.Path]:
+			changes = append(changes, Change{full, "not dashcrew's", true})
+		case string(data) != file.Content || executableBits(info) != file.Executable:
+			changes = append(changes, Change{full, "stale", false})
+		}
+	}
+	for _, name := range readManifest(folder) {
+		full := filepath.Join(folder, filepath.FromSlash(name))
+		if !carried[name] && fileExists(full) {
+			changes = append(changes, Change{full, "left over", false})
+		}
+	}
+	return changes
+}
+
+// executableBits is whether a file has execute bits; always false where the file system has none.
+func executableBits(info os.FileInfo) bool {
+	return runtime.GOOS != "windows" && info.Mode().Perm()&0o111 != 0
+}
+
+func fileExists(file string) bool {
+	_, err := os.Lstat(file)
+	return err == nil
 }

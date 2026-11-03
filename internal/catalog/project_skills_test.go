@@ -1,7 +1,13 @@
 package catalog
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"reflect"
+	"runtime"
 	"strings"
+	"syscall"
 	"testing"
 )
 
@@ -89,5 +95,87 @@ func TestSkillFrontMatterReadsTopLevelYaml(t *testing.T) {
 		if got := SkillFrontMatter(text)["description"]; got != want {
 			t.Errorf("%q: got %q, want %q", text, got, want)
 		}
+	}
+}
+
+func TestProjectSkillsCarryTheirSupportingFiles(t *testing.T) {
+	root, project := projectPacksRoot(t)
+	write(t, project, ".ai/skills/api-style/meta.yaml", "description: d\n")
+	write(t, project, ".ai/skills/api-style/SKILL.md", "# API style\n")
+	write(t, project, ".ai/skills/api-style/references/checklist.md", "- one\n")
+	write(t, project, ".ai/skills/api-style/scripts/check.sh", "#!/bin/sh\necho ok\n")
+	write(t, project, ".ai/skills/api-style/.DS_Store", "junk")
+	write(t, project, ".ai/skills/api-style/.git/config", "junk")
+	if err := os.Chmod(filepath.Join(project, ".ai/skills/api-style/scripts/check.sh"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	catalog, err := load(t, root).WithProjectPacks(project)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	skill, _ := catalog.ProjectSkill("api-style")
+	want := []SkillFile{
+		{Path: "references/checklist.md", Content: "- one\n"},
+		{Path: "scripts/check.sh", Content: "#!/bin/sh\necho ok\n", Executable: runtime.GOOS != "windows"},
+	}
+	if !reflect.DeepEqual(skill.Files, want) {
+		t.Errorf("files %+v", skill.Files)
+	}
+}
+
+func TestProjectSkillFileLimits(t *testing.T) {
+	for _, c := range []struct {
+		name    string
+		prepare func(t *testing.T, folder string)
+		source  string
+		message string
+	}{
+		{"a symlink", func(t *testing.T, folder string) {
+			if err := os.Symlink("/etc/hosts", filepath.Join(folder, "hosts")); err != nil {
+				t.Skip("no symlinks here")
+			}
+		}, ".ai/skills/api-style/hosts", "a symlink"},
+		{"a file over 1 MiB", func(t *testing.T, folder string) {
+			write(t, folder, "big.bin", strings.Repeat("x", 1<<20+1))
+		}, ".ai/skills/api-style/big.bin", "over 1 MiB"},
+		{"more than 50 files", func(t *testing.T, folder string) {
+			for i := 0; i < 51; i++ {
+				write(t, folder, fmt.Sprintf("refs/%02d.md", i), "x\n")
+			}
+		}, ".ai/skills/api-style", "more than 50 supporting files"},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			root, project := projectPacksRoot(t)
+			write(t, project, ".ai/skills/api-style/meta.yaml", "description: d\n")
+			write(t, project, ".ai/skills/api-style/SKILL.md", "# API style\n")
+			c.prepare(t, filepath.Join(project, ".ai", "skills", "api-style"))
+
+			_, err := load(t, root).WithProjectPacks(project)
+
+			got := catalogError(t, err)
+			if got.Source != c.source || !strings.Contains(got.Message, c.message) {
+				t.Errorf("error %s: %s", got.Source, got.Message)
+			}
+		})
+	}
+}
+
+func TestAFifoInASkillFolderIsRefusedNotRead(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("no named pipes here")
+	}
+	root, project := projectPacksRoot(t)
+	write(t, project, ".ai/skills/api-style/meta.yaml", "description: d\n")
+	write(t, project, ".ai/skills/api-style/SKILL.md", "# API style\n")
+	if err := syscall.Mkfifo(filepath.Join(project, ".ai/skills/api-style/pipe"), 0o644); err != nil {
+		t.Skip("mkfifo: " + err.Error())
+	}
+
+	_, err := load(t, root).WithProjectPacks(project)
+
+	if got := catalogError(t, err); got.Source != ".ai/skills/api-style/pipe" || !strings.Contains(got.Message, "not a regular file") {
+		t.Errorf("error %s: %s", got.Source, got.Message)
 	}
 }

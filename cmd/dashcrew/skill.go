@@ -34,7 +34,7 @@ func skillCommand(cli cliIO) *command {
 		}
 		cli.out("wrote .ai/skills/" + name + "/meta.yaml and .ai/skills/" + name + "/SKILL.md")
 		if len(skipped) > 0 {
-			cli.out("not adopted, only SKILL.md reaches the agents: " + strings.Join(skipped, ", ") + "; put what the skill needs in SKILL.md")
+			cli.out("left out, hidden: " + strings.Join(skipped, ", "))
 		}
 		if required {
 			cli.out("next: dashcrew sync, then commit .ai/skills/" + name + " and the files sync writes")

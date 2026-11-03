@@ -18,6 +18,7 @@ import (
 	"github.com/fahnaladitia/dashcrew/internal/adapters"
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
 	"github.com/fahnaladitia/dashcrew/internal/dartjson"
+	"github.com/fahnaladitia/dashcrew/internal/filemode"
 	"github.com/fahnaladitia/dashcrew/internal/guard"
 	"github.com/fahnaladitia/dashcrew/internal/knowledge"
 	"github.com/fahnaladitia/dashcrew/internal/omap"
@@ -102,6 +103,9 @@ type Rendered struct {
 	Profile *profile.Profile
 	// GuardMinimum is the oldest dashcrew the shim accepts for this policy (see guard.Policy.Minimum).
 	GuardMinimum string
+	// SkillModes are the supporting files of required project skills among Files, each with whether it is
+	// executable in `.ai/skills`; Run sets or clears the execute bits to match after writing.
+	SkillModes *omap.Map[bool]
 }
 
 // Result is what one Run changed. Notes are one-time information, such as P4MigrationNote; never a problem to fix.
@@ -258,8 +262,16 @@ func (s Sync) RunWith(opts Options) (*Result, error) {
 		sort.Strings(owned)
 		nowOwnedMcp[adapter.Agent()] = owned
 	}
-	if err := makeExecutable(project.Path(guard.ShimPath)); err != nil {
+	if err := filemode.SetExecutable(project.Path(guard.ShimPath), true); err != nil {
 		return nil, err
+	}
+	for _, file := range rendered.SkillModes.Keys() {
+		if held[file] {
+			continue
+		}
+		if err := filemode.SetExecutable(project.Path(file), rendered.SkillModes.Value(file)); err != nil {
+			return nil, err
+		}
 	}
 	previousKnowledge, _ := lock.Value("knowledge").(*omap.Map[any])
 	knowledgeEntry, err := s.syncKnowledge(rendered.Knowledge, previousKnowledge, result)
@@ -421,15 +433,6 @@ func isPreP4Role(file string) bool {
 	return preP4Roles[strings.TrimSuffix(base, path.Ext(base))]
 }
 
-// makeExecutable adds the execute bits, as `chmod +x` does under the usual umask.
-func makeExecutable(file string) error {
-	info, err := os.Stat(file)
-	if err != nil {
-		return err
-	}
-	return os.Chmod(file, info.Mode().Perm()|0o111)
-}
-
 // Render returns the generated files without touching the disk. Project packs and platforms in `.ai/` are
 // overlaid on the catalog. adopt keeps a foreign AGENTS.md as the project block; warnings may be nil.
 func (s Sync) Render(adopt bool, warnings *[]string) (*Rendered, error) {
@@ -532,7 +535,24 @@ func (s Sync) Render(adopt bool, warnings *[]string) (*Rendered, error) {
 			files.Set(path, content)
 		}
 	}
-	return &Rendered{Files: files, Packs: packs, Adapters: agentAdapters, Knowledge: p.Knowledge, Profile: p, GuardMinimum: compiled.Minimum()}, nil
+	return &Rendered{Files: files, Packs: packs, Adapters: agentAdapters, Knowledge: p.Knowledge, Profile: p,
+		GuardMinimum: compiled.Minimum(), SkillModes: skillModes(c, p.Agents, files)}, nil
+}
+
+// skillModes are the supporting files of required project skills that files holds, with their executable flag.
+// It reads only paths the adapters produced, so a skill or agent that wrote nothing has no entry.
+func skillModes(c *catalog.Catalog, agents []string, files *omap.Map[string]) *omap.Map[bool] {
+	out := omap.New[bool]()
+	for _, skill := range c.ProjectSkills {
+		for _, file := range skill.Files {
+			for _, agent := range agents {
+				if target := adapters.SupportingFile(agent, skill.Name, file.Path); files.Has(target) {
+					out.Set(target, file.Executable)
+				}
+			}
+		}
+	}
+	return out
 }
 
 // ownedByDashcrew is true when path is missing, in the lock, or starts with marker.

@@ -207,14 +207,17 @@ files:
 exit: 0
 stdout:
 | wrote .ai/skills/ui-slop/meta.yaml and .ai/skills/ui-slop/SKILL.md
+| left out, hidden: .DS_Store
 | next: dashcrew sync, commit .ai/skills/ui-slop; members turn it on with skills: [ui-slop] in .ai/me.yaml, then dashcrew me sync
 | then remove your own copy from ~/.dashcrew/skills and me.yaml skills, if it came from there
 stderr: (empty)
 files:
 + w/.ai/skills  dir
 + w/.ai/skills/ui-slop  dir
-+ w/.ai/skills/ui-slop/SKILL.md  -rw-r--r-- sha256:933ce44be5964a4a
++ w/.ai/skills/ui-slop/SKILL.md  -rw-r--r-- sha256:9c012bc1aa2cd9cc
 + w/.ai/skills/ui-slop/meta.yaml  -rw-r--r-- sha256:a91fcada3064047d
++ w/.ai/skills/ui-slop/references  dir
++ w/.ai/skills/ui-slop/references/examples.md  -rw-r--r-- sha256:63a4eff1418cdce0
 
 === step 4: dashcrew "skill" "adopt" "ui-slop"
 exit: 1
@@ -260,7 +263,9 @@ stdout:
 | updated  <root>/home/.claude/rules/dashcrew-me.md
 | updated  <root>/home/.codex/AGENTS.md
 | written  <root>/w/.claude/rules/dashcrew-me.md
+| written  <root>/w/.agents/skills/ui-slop/references/examples.md
 | written  <root>/w/.agents/skills/ui-slop/SKILL.md
+| written  <root>/w/.claude/skills/ui-slop/references/examples.md
 | written  <root>/w/.claude/skills/ui-slop/SKILL.md
 | skill api-style: required in this repo, on for everyone  <root>/w
 stderr: (empty)
@@ -269,12 +274,18 @@ files:
 ~ home/.codex/AGENTS.md  -rw-r--r-- sha256:fa4b0895449e39db
 + home/.dashcrew/me-repos  -rw-r--r-- sha256:9ddf81090f8f5a47
 + w/.agents/skills/ui-slop  dir
-+ w/.agents/skills/ui-slop/SKILL.md  -rw-r--r-- sha256:54a2f4c617b4992a
++ w/.agents/skills/ui-slop/.dashcrew-me  -rw-r--r-- sha256:afcf39e1f62cfd99
++ w/.agents/skills/ui-slop/SKILL.md  -rw-r--r-- sha256:75315c2854db2059
++ w/.agents/skills/ui-slop/references  dir
++ w/.agents/skills/ui-slop/references/examples.md  -rw-r--r-- sha256:63a4eff1418cdce0
 ~ w/.ai/me.yaml  -rw-r--r-- sha256:6e18ae470caa00c2
 + w/.claude/rules  dir
 + w/.claude/rules/dashcrew-me.md  -rw-r--r-- sha256:76c6129ea4edb0be
 + w/.claude/skills/ui-slop  dir
-+ w/.claude/skills/ui-slop/SKILL.md  -rw-r--r-- sha256:e2bb0f8d05d452ec
++ w/.claude/skills/ui-slop/.dashcrew-me  -rw-r--r-- sha256:afcf39e1f62cfd99
++ w/.claude/skills/ui-slop/SKILL.md  -rw-r--r-- sha256:901c1277a040dea8
++ w/.claude/skills/ui-slop/references  dir
++ w/.claude/skills/ui-slop/references/examples.md  -rw-r--r-- sha256:63a4eff1418cdce0
 ~ w/.git/info/exclude
     + "/.ai/me.yaml"
     + "/.claude/rules/dashcrew-me.md"
@@ -320,10 +331,16 @@ stderr: (empty)
 files:
 ~ home/.codex/AGENTS.md  -rw-r--r-- sha256:09be98dc5cb54724
 - w/.agents/skills/ui-slop
+- w/.agents/skills/ui-slop/.dashcrew-me
 - w/.agents/skills/ui-slop/SKILL.md
+- w/.agents/skills/ui-slop/references
+- w/.agents/skills/ui-slop/references/examples.md
 ~ w/.claude/rules/dashcrew-me.md  -rw-r--r-- sha256:3bae27d92a3d81f1
 - w/.claude/skills/ui-slop
+- w/.claude/skills/ui-slop/.dashcrew-me
 - w/.claude/skills/ui-slop/SKILL.md
+- w/.claude/skills/ui-slop/references
+- w/.claude/skills/ui-slop/references/examples.md
 ~ w/.git/info/exclude
     - "/.agents/skills/ui-slop/"
     - "/.claude/skills/ui-slop/"

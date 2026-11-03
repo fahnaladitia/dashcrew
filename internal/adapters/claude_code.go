@@ -72,7 +72,7 @@ func (a *ClaudeCode) Files(p *profile.Profile, targets []render.RenderedTarget, 
 		return nil, err
 	}
 	for _, doc := range docs {
-		files.Set(SkillFile(a.Agent(), doc.Name), ClaudeSkillFile(doc.Name, doc.Meta, doc.Body))
+		setSkill(files, a.Agent(), doc, ClaudeSkillFile(doc.Name, doc.Meta, doc.Body))
 	}
 
 	_, locked := lockedFiles["CLAUDE.md"]

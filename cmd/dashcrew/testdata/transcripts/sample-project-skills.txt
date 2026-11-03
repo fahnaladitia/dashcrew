@@ -11,6 +11,8 @@ stdout:
 | wrote   .claude/agents/reviewer.md
 | wrote   .claude/skills/acceptance-criteria/SKILL.md
 | wrote   .claude/skills/api-style/SKILL.md
+| wrote   .claude/skills/api-style/references/checklist.md
+| wrote   .claude/skills/api-style/scripts/check.sh
 | wrote   .claude/skills/branching/SKILL.md
 | wrote   .claude/skills/continuous-learning/SKILL.md
 | wrote   .claude/skills/data-layer-tdd/SKILL.md
@@ -39,6 +41,8 @@ stdout:
 | wrote   .codex/agents/reviewer.toml
 | wrote   .agents/skills/acceptance-criteria/SKILL.md
 | wrote   .agents/skills/api-style/SKILL.md
+| wrote   .agents/skills/api-style/references/checklist.md
+| wrote   .agents/skills/api-style/scripts/check.sh
 | wrote   .agents/skills/branching/SKILL.md
 | wrote   .agents/skills/continuous-learning/SKILL.md
 | wrote   .agents/skills/data-layer-tdd/SKILL.md
@@ -73,7 +77,11 @@ files:
 + w/.agents/skills/acceptance-criteria  dir
 + w/.agents/skills/acceptance-criteria/SKILL.md  -rw-r--r-- sha256:26fe55e725e8121b
 + w/.agents/skills/api-style  dir
-+ w/.agents/skills/api-style/SKILL.md  -rw-r--r-- sha256:ebf6cc3ad56c4499
++ w/.agents/skills/api-style/SKILL.md  -rw-r--r-- sha256:b00ea6566f8bb477
++ w/.agents/skills/api-style/references  dir
++ w/.agents/skills/api-style/references/checklist.md  -rw-r--r-- sha256:ea6cca4d4a31794b
++ w/.agents/skills/api-style/scripts  dir
++ w/.agents/skills/api-style/scripts/check.sh  -rwxr-xr-x sha256:c91e5fae7486f2e7
 + w/.agents/skills/audit  dir
 + w/.agents/skills/audit/SKILL.md  -rw-r--r-- sha256:7de1ab3a91f1f88b
 + w/.agents/skills/branching  dir
@@ -123,7 +131,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-+ w/.ai/lock.json  -rw-r--r-- sha256:bbf933572a7119f6
++ w/.ai/lock.json  -rw-r--r-- sha256:67f60e00c7765cda
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
@@ -133,7 +141,11 @@ files:
 + w/.claude/skills/acceptance-criteria  dir
 + w/.claude/skills/acceptance-criteria/SKILL.md  -rw-r--r-- sha256:ae96af8d4fdad818
 + w/.claude/skills/api-style  dir
-+ w/.claude/skills/api-style/SKILL.md  -rw-r--r-- sha256:bfd6fe5bbd0aea45
++ w/.claude/skills/api-style/SKILL.md  -rw-r--r-- sha256:772798e6440d8749
++ w/.claude/skills/api-style/references  dir
++ w/.claude/skills/api-style/references/checklist.md  -rw-r--r-- sha256:ea6cca4d4a31794b
++ w/.claude/skills/api-style/scripts  dir
++ w/.claude/skills/api-style/scripts/check.sh  -rwxr-xr-x sha256:c91e5fae7486f2e7
 + w/.claude/skills/audit  dir
 + w/.claude/skills/audit/SKILL.md  -rw-r--r-- sha256:f1d546184756c826
 + w/.claude/skills/branching  dir
@@ -230,7 +242,7 @@ stdout:
 | ok    project-packs   no project packs in .ai/packs
 | ok    lock            .ai/lock.json schema 1
 | ok    version         lock written by this dashcrew (0.0.1)
-| ok    drift           59 generated files match the lock
+| ok    drift           63 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
 | fail  guard-binary    dashcrew is not on PATH, so .ai/bin/guard refuses every tool call: install dashcrew 0.1.0 or newer (brew install fahnaladitia/tap/dashcrew)
@@ -256,7 +268,7 @@ stdout:
 | ok    project-packs   no project packs in .ai/packs
 | ok    lock            .ai/lock.json schema 1
 | ok    version         lock written by this dashcrew (0.0.1)
-| ok    drift           59 generated files match the lock
+| ok    drift           63 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
 | fail  guard-binary    dashcrew is not on PATH, so .ai/bin/guard refuses every tool call: install dashcrew 0.1.0 or newer (brew install fahnaladitia/tap/dashcrew)
@@ -281,7 +293,7 @@ stdout:
 | ok    project-packs   no project packs in .ai/packs
 | ok    lock            .ai/lock.json schema 1
 | ok    version         lock written by this dashcrew (0.0.1)
-| ok    drift           59 generated files match the lock
+| ok    drift           63 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
 | ok    agents-md-size  AGENTS.md 16182 of 32768 bytes
@@ -299,7 +311,7 @@ stdout:
 | ok    project-packs   no project packs in .ai/packs
 | ok    lock            .ai/lock.json schema 1
 | ok    version         lock written by this dashcrew (0.0.1)
-| ok    drift           59 generated files match the lock
+| ok    drift           63 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
 | ok    agents-md-size  AGENTS.md 16182 of 32768 bytes
@@ -317,7 +329,7 @@ stdout:
 | ok    project-packs   no project packs in .ai/packs
 | ok    lock            .ai/lock.json schema 1
 | ok    version         lock written by this dashcrew (0.0.1)
-| ok    drift           59 generated files match the lock
+| ok    drift           63 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
 | ok    agents-md-size  AGENTS.md 16182 of 32768 bytes
@@ -336,7 +348,7 @@ stdout:
 | ok    project-packs   no project packs in .ai/packs
 | ok    lock            .ai/lock.json schema 1
 | ok    version         lock written by this dashcrew (0.0.1)
-| ok    drift           59 generated files match the lock
+| ok    drift           63 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
 | ok    agents-md-size  AGENTS.md 16182 of 32768 bytes

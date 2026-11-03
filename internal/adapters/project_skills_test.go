@@ -10,10 +10,11 @@ import (
 func TestEveryAdapterWritesARequiredProjectSkillAndNoOptionalOne(t *testing.T) {
 	project := t.TempDir()
 	for path, text := range map[string]string{
-		".ai/skills/api-style/meta.yaml": "description: Team API style.\nwhen_to_use: When an endpoint changes.\n",
-		".ai/skills/api-style/SKILL.md":  "# API style\n",
-		".ai/skills/ui-slop/meta.yaml":   "description: Catch generic UI.\noptional: true\n",
-		".ai/skills/ui-slop/SKILL.md":    "# UI slop\n",
+		".ai/skills/api-style/meta.yaml":               "description: Team API style.\nwhen_to_use: When an endpoint changes.\n",
+		".ai/skills/api-style/SKILL.md":                "# API style\n",
+		".ai/skills/api-style/references/checklist.md": "- one\n",
+		".ai/skills/ui-slop/meta.yaml":                 "description: Catch generic UI.\noptional: true\n",
+		".ai/skills/ui-slop/SKILL.md":                  "# UI slop\n",
 	} {
 		full := filepath.Join(project, filepath.FromSlash(path))
 		if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {
@@ -40,6 +41,9 @@ func TestEveryAdapterWritesARequiredProjectSkillAndNoOptionalOne(t *testing.T) {
 		skill, ok := written[dir+"api-style/SKILL.md"]
 		if !ok || !strings.Contains(skill, "Team API style.") || !strings.HasSuffix(skill, "# API style\n") {
 			t.Errorf("%s api-style %q", agent, skill)
+		}
+		if got := written[dir+"api-style/references/checklist.md"]; got != "- one\n" {
+			t.Errorf("%s api-style/references/checklist.md %q", agent, got)
 		}
 		if _, ok := written[dir+"ui-slop/SKILL.md"]; ok {
 			t.Errorf("%s writes the optional ui-slop for everyone", agent)
