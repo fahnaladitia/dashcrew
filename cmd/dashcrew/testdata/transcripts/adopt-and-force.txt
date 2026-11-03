@@ -221,6 +221,7 @@ stdout:
 | ok    codex-mcp       defined: dart-mcp-server
 | ok    codex-skills-budget24 skills, list 4410 of 8000 characters
 | warn  codex-trust     project not trusted in the Codex config, so .codex/ is ignored; trust it when Codex asks, then approve the guard in /hooks
+| skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 16120 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
@@ -318,6 +319,7 @@ stdout:
 | ok    claude-md       CLAUDE.md imports AGENTS.md
 | ok    mcp             defined: dart-mcp-server
 | warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
+| skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 16120 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)

@@ -22,6 +22,7 @@ stdout:
 | ok    antigravity-hookPreToolUse guard hook present under dashcrew-guard
 | ok    antigravity-mcp defined: dart-mcp-server
 | ok    antigravity-roles13 roles, every tool name known
+| skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 17029 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | info  handoff-rosters .ai/plans/todo-filter/handoff/00-roster.md left from the pre-P4 team flow; nothing reads them now, delete them when done
@@ -269,6 +270,7 @@ stdout:
 | ok    antigravity-hookPreToolUse guard hook present under dashcrew-guard
 | ok    antigravity-mcp defined: dart-mcp-server
 | ok    antigravity-roles2 roles, every tool name known
+| skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 17587 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | info  handoff-rosters .ai/plans/todo-filter/handoff/00-roster.md left from the pre-P4 team flow; nothing reads them now, delete them when done

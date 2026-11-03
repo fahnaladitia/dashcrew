@@ -262,6 +262,7 @@ stdout:
 | ok    antigravity-mcp defined: dart-mcp-server, dashcrew-knowledge
 | ok    antigravity-roles2 roles, every tool name known
 | warn  knowledge       no clone of notes-knowledge at ~/.dashcrew/knowledge/notes-knowledge; run dashcrew knowledge pull
+| skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 16089 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
@@ -291,6 +292,7 @@ stdout:
 | ok    antigravity-mcp defined: dart-mcp-server, dashcrew-knowledge
 | ok    antigravity-roles2 roles, every tool name known
 | warn  knowledge       no clone of notes-knowledge at ~/.dashcrew/knowledge/notes-knowledge; run dashcrew knowledge pull
+| skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 16089 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)

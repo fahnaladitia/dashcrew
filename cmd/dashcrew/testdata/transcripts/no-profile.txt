@@ -22,6 +22,7 @@ stdout:
 | fail  claude-md       CLAUDE.md missing; run dashcrew sync
 | warn  mcp             .mcp.json missing; run dashcrew sync
 | skip  skills          needs the lock
+| skip  me              no personal profile; dashcrew me init adds one
 | skip  agents-md-size  no AGENTS.md
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)

@@ -191,6 +191,7 @@ stdout:
 | ok    knowledge       linked to ~/.dashcrew/knowledge/notes, last pull unknown
 | ok    knowledge-stale no stale pointers, old proposals or unverified pages
 | warn  spec            specs/1.4.0/notes-sync@rev1: spec moved to rev 2; re-read it
+| skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 16089 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)

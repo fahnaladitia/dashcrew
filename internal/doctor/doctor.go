@@ -21,6 +21,7 @@ import (
 	"github.com/fahnaladitia/dashcrew/internal/dartjson"
 	"github.com/fahnaladitia/dashcrew/internal/guard"
 	"github.com/fahnaladitia/dashcrew/internal/lines"
+	"github.com/fahnaladitia/dashcrew/internal/me"
 	"github.com/fahnaladitia/dashcrew/internal/omap"
 	"github.com/fahnaladitia/dashcrew/internal/profile"
 	"github.com/fahnaladitia/dashcrew/internal/sync"
@@ -82,6 +83,8 @@ type Doctor struct {
 	Fetch bool
 	// Now dates the knowledge clone's last pull and its staleness; nil means time.Now.
 	Now func() time.Time
+	// Me is where the personal profile and its files live; nil skips the me check, so only the CLI reads them.
+	Me *me.Places
 }
 
 var (
@@ -169,6 +172,9 @@ func (d Doctor) checks(projectPacks Check) []Check {
 		}
 		if trackerCheck, ok := d.githubTracker(); ok {
 			checks = append(checks, trackerCheck)
+		}
+		if d.Me != nil {
+			checks = append(checks, d.me())
 		}
 	}
 	checks = append(checks, d.agentsMdSize(AgentsMdLimitFor(agents)), d.gitignore())

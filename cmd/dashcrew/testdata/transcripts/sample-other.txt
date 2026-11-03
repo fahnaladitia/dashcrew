@@ -234,6 +234,7 @@ stdout:
 | ok    antigravity-hookPreToolUse guard hook present under dashcrew-guard
 | ok    antigravity-mcp defined: 
 | ok    antigravity-roles2 roles, every tool name known
+| skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 14576 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
@@ -262,6 +263,7 @@ stdout:
 | ok    antigravity-hookPreToolUse guard hook present under dashcrew-guard
 | ok    antigravity-mcp defined: 
 | ok    antigravity-roles2 roles, every tool name known
+| skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 14576 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)

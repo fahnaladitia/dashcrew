@@ -14,3 +14,9 @@ var CatalogFS embed.FS
 //
 //go:embed all:starters
 var StartersFS embed.FS
+
+// PersonalFS holds personal/: the personal instruction template and the personal skills `dashcrew me sync` writes
+// outside every repo. They are never part of a project's generated toolkit.
+//
+//go:embed all:personal
+var PersonalFS embed.FS
