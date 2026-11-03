@@ -19,7 +19,7 @@ stdout:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
-|   me          Your personal profile, ~/.dashcrew/me.yaml: how agents work with you in every project.
+|   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -50,7 +50,7 @@ stdout:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
-|   me          Your personal profile, ~/.dashcrew/me.yaml: how agents work with you in every project.
+|   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -81,7 +81,7 @@ stdout:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
-|   me          Your personal profile, ~/.dashcrew/me.yaml: how agents work with you in every project.
+|   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -112,7 +112,7 @@ stdout:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
-|   me          Your personal profile, ~/.dashcrew/me.yaml: how agents work with you in every project.
+|   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -317,7 +317,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
-|   me          Your personal profile, ~/.dashcrew/me.yaml: how agents work with you in every project.
+|   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -348,7 +348,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
-|   me          Your personal profile, ~/.dashcrew/me.yaml: how agents work with you in every project.
+|   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -379,7 +379,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
-|   me          Your personal profile, ~/.dashcrew/me.yaml: how agents work with you in every project.
+|   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -728,7 +728,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
-|   me          Your personal profile, ~/.dashcrew/me.yaml: how agents work with you in every project.
+|   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -764,7 +764,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
-|   me          Your personal profile, ~/.dashcrew/me.yaml: how agents work with you in every project.
+|   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -799,7 +799,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
-|   me          Your personal profile, ~/.dashcrew/me.yaml: how agents work with you in every project.
+|   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -835,7 +835,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
-|   me          Your personal profile, ~/.dashcrew/me.yaml: how agents work with you in every project.
+|   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -870,7 +870,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
-|   me          Your personal profile, ~/.dashcrew/me.yaml: how agents work with you in every project.
+|   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -1241,7 +1241,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
-|   me          Your personal profile, ~/.dashcrew/me.yaml: how agents work with you in every project.
+|   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -1272,7 +1272,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
-|   me          Your personal profile, ~/.dashcrew/me.yaml: how agents work with you in every project.
+|   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -1315,7 +1315,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
-|   me          Your personal profile, ~/.dashcrew/me.yaml: how agents work with you in every project.
+|   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -1346,7 +1346,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
-|   me          Your personal profile, ~/.dashcrew/me.yaml: how agents work with you in every project.
+|   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -1376,7 +1376,7 @@ stdout:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
-|   me          Your personal profile, ~/.dashcrew/me.yaml: how agents work with you in every project.
+|   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -1412,7 +1412,7 @@ stderr:
 |   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
-|   me          Your personal profile, ~/.dashcrew/me.yaml: how agents work with you in every project.
+|   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.

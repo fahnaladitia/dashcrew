@@ -227,7 +227,7 @@ The guard hook: reads one tool call as hook JSON on stdin and answers per agent 
 | Antigravity | `antigravity-hook`, `antigravity-mcp`, `antigravity-roles` |
 | Knowledge | `knowledge` (the link and the clone's last pull), `knowledge-stale`, `spec` (only when the branch records a spec; warns, never fails) |
 | Project | `agents-md-size`, `gitignore` (warns while `.ai/bin/` is ignored), `handoff-rosters` (only when found) |
-| Personal | `me` (your `~/.dashcrew/me.yaml` and the personal files `dashcrew me sync` writes; warns, never fails) |
+| Personal | `me` (your role and level here with their source, and the personal files `dashcrew me sync` writes; warns, and fails only when git tracks a personal file) |
 
 Agent checks run only for the agents in the profile. Each line starts with `ok`, `warn`, `fail`, `skip` or `info`; only `fail` sets exit 1. `info` reports something that needs no fix, such as `handoff-rosters`: `<plans>/*/handoff/00-roster.md` files left by the pre-P4 team flow.
 
@@ -293,31 +293,37 @@ Every subcommand takes `-p, --project`, any folder inside the repository. Linked
 
 ### `dashcrew me`
 
-Your personal profile, `~/.dashcrew/me.yaml`, one per machine and never committed. The repo decides the rules; the profile changes only how agents work with you. The guard never reads it, and a role grants nothing: in a repo outside your role you follow that repo's rules like its owners.
+Your personal profile, never committed. The repo decides the rules; the profile changes only how agents work with you. The guard never reads it, and a role grants nothing: in a repo outside your role you follow that repo's rules like its owners.
+
+It has two layers. `~/.dashcrew/me.yaml`, one per machine, describes you; a repo's `.ai/me.yaml` holds your `role` and `level` in that repo when they differ from home (lead in one repo, new in another). `.ai/me.yaml` is listed in the clone's `.git/info/exclude`, so it never reaches the team.
 
 ```yaml
-role: mobile          # be | fe | mobile | devops | fullstack | lead
+# ~/.dashcrew/me.yaml
+role: mobile          # default role: be | fe | mobile | devops | fullstack | lead
 stacks: [flutter]     # the platforms you work on
-level: regular        # new | regular
+level: regular        # default level: new | regular
 chat_language: id     # ISO 639-1; empty keeps each project's language.chat
 agents: [claude-code] # claude-code, codex, antigravity
+
+# <repo>/.ai/me.yaml
+role: lead            # only role and level, only what differs from home
 ```
 
 | Subcommand | |
 |---|---|
-| `init [-p <repo>] [--yes]` | proposes values from the repo's platform (and adds it to your stacks when a profile exists), asks to confirm each, writes the file |
-| `show` | prints the profile and whether the personal files are in step |
-| `sync [--remove]` | writes the personal instructions where each agent reads them, outside every repo; `--remove` takes out all of it, `me.yaml` stays |
+| `init [-p <repo>] [--home] [--yes]` | the first time (or with `--home`): proposes the home profile from the repo's platform and asks to confirm each value. Inside a dashcrew repo afterwards: asks your role and level there, keeps what differs from home in `.ai/me.yaml` (nothing differs: the repo is forgotten), then syncs |
+| `show [-p <repo>]` | prints the profile, your role and level in this repo with where each comes from, the repos set up, and whether the personal files are in step |
+| `sync [-p <repo>] [--remove-repo] [--prune] [--remove]` | writes the personal instructions for home and every repo set up; `--remove-repo` takes this repo's files out and forgets it, `--prune` forgets repos whose `.ai/me.yaml` is gone, `--remove` takes out everything; the `me.yaml` files stay |
 
 What `sync` writes, and only into files it owns (a file without its marker is kept and reported, exit 1):
 
-| Agent | Personal instructions | Personal skills |
-|---|---|---|
-| Claude Code | `$CLAUDE_CONFIG_DIR/rules/dashcrew-me.md` (default `~/.claude`) | `dashcrew-onboarding` with `level: new`, `dashcrew-lead` with `role: lead`, written to `~/.dashcrew/skills/` and linked into `<config dir>/skills/` |
-| Codex | a block between `<!-- dashcrew:me:begin -->` and `<!-- dashcrew:me:end -->` in `$CODEX_HOME/AGENTS.md` (default `~/.codex`); the rest of the file is untouched | none |
-| Antigravity | `~/.gemini/config/rules/dashcrew-me.md`, an `always_on` rule | none |
+| Agent | Home | Per repo with `.ai/me.yaml` | Personal skills |
+|---|---|---|---|
+| Claude Code | `$CLAUDE_CONFIG_DIR/rules/dashcrew-me.md` (default `~/.claude`) | `<repo>/.claude/rules/dashcrew-me.md` | `dashcrew-onboarding` and `dashcrew-lead` when home or any repo selects them, written to `~/.dashcrew/skills/` and linked into `<config dir>/skills/` |
+| Codex | a block between `<!-- dashcrew:me:begin -->` and `<!-- dashcrew:me:end -->` in `$CODEX_HOME/AGENTS.md` (default `~/.codex`); the rest of the file is untouched | an "In the repository at `<path>`" section in that block, since Codex has no personal file per repo | none |
+| Antigravity | `~/.gemini/config/rules/dashcrew-me.md`, an `always_on` rule | `<repo>/.agents/rules/dashcrew-me.md` | none |
 
-The instructions say what changes: outside your stacks (a project whose `platform` is not one of them) the agent asks every assumption at step 0, runs every review skill and explains one level deeper; `level: new` reads the knowledge index and the cross-repo flow before step 0; `chat_language` answers you in that language while code and PRs keep the project's; `role: lead` reports knowledge proposals, release lines and ports, reviews and specs when asked what needs attention. Run `dashcrew me sync` after editing `me.yaml`; `doctor` reports when the files are out of step.
+The instructions say what changes: outside your stacks (a project whose `platform` is not one of them) the agent asks every assumption at step 0, runs every review skill and explains one level deeper; `level: new` reads the knowledge index and the cross-repo flow before step 0; `chat_language` answers you in that language while code and PRs keep the project's; `role: lead` reports knowledge proposals, release lines and ports, reviews and specs when asked what needs attention. A repo's file says which role and level apply there and switches the lead and new-member parts on or off. A task worktree from `dashcrew worktree create` links these git-excluded files from the main checkout like the rest of the toolkit (`worktree link` adds them to an older worktree). Run `dashcrew me sync` after editing either file; `doctor` reports files out of step and fails when git tracks a personal file.
 
 ## What `sync` writes
 

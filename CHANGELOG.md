@@ -1,5 +1,6 @@
 ## Unreleased
 
+- Role and level per repo (P10c): `~/.dashcrew/me.yaml` keeps what describes you (stacks, chat language, agents, default role and level); a repo's `.ai/me.yaml` holds your `role` and `level` there when they differ, listed in `.git/info/exclude`. `dashcrew me init` inside a repo asks only those two once the home profile exists. `me sync` writes each repo's file for Claude Code (`.claude/rules/dashcrew-me.md`) and Antigravity (`.agents/rules/dashcrew-me.md`), and an "In the repository at" section for Codex; personal skills are linked when home or any repo selects them. New `me sync --remove-repo` and `--prune`; task worktrees link the personal files from the main checkout like the rest of the git-excluded toolkit; `doctor` shows the effective role and level with their source and fails when git tracks a personal file.
 - `check --ports` and the release ledger no longer lose a line's branch point when the line is merged into the main line by fast-forward (the main line had not moved since the cut): the older merge-base with a newer line wins, so the line's fixes are still checked instead of passing silently.
 
 ## 0.3.0

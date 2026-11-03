@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/fahnaladitia/dashcrew/internal/mustache"
@@ -25,7 +26,7 @@ var Skills = []string{"dashcrew-onboarding", "dashcrew-lead"}
 
 // Places are the folders me sync reads and writes.
 type Places struct {
-	// Home holds `.dashcrew/me.yaml` and `.dashcrew/skills/`.
+	// Home holds `.dashcrew/me.yaml`, `.dashcrew/me-repos` and `.dashcrew/skills/`.
 	Home string
 	// ClaudeDir is `$CLAUDE_CONFIG_DIR`, else `~/.claude`.
 	ClaudeDir string
@@ -80,12 +81,96 @@ func (p *Profile) SelectedSkills() []string {
 	return out
 }
 
-// Instructions renders the personal instructions for one agent; linked names the personal skills it can follow.
-func Instructions(p *Profile, personal fs.FS, agent string, linked map[string]bool) (string, error) {
-	source, err := fs.ReadFile(personal, "rules.md")
-	if err != nil {
-		return "", err
+// ---- registry of repos with a `.ai/me.yaml` ----
+
+func registryPath(places Places) string { return filepath.Join(places.Home, ".dashcrew", "me-repos") }
+
+// Repos are the repo folders me sync writes personal files into, in the order they were registered.
+func Repos(places Places) ([]string, error) {
+	data, err := os.ReadFile(registryPath(places))
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil, nil
 	}
+	if err != nil {
+		return nil, err
+	}
+	var out []string
+	for _, line := range strings.Split(string(data), "\n") {
+		if line = strings.TrimSpace(line); line != "" && !contains(out, line) {
+			out = append(out, line)
+		}
+	}
+	return out, nil
+}
+
+func saveRepos(places Places, repos []string) error {
+	if len(repos) == 0 {
+		err := os.Remove(registryPath(places))
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil
+		}
+		return err
+	}
+	if err := os.MkdirAll(filepath.Dir(registryPath(places)), 0o755); err != nil {
+		return err
+	}
+	return os.WriteFile(registryPath(places), []byte(strings.Join(repos, "\n")+"\n"), 0o644)
+}
+
+// Register adds a repo folder (absolute) to the repos me sync writes into.
+func Register(places Places, dir string) error {
+	repos, err := Repos(places)
+	if err != nil || contains(repos, dir) {
+		return err
+	}
+	return saveRepos(places, append(repos, dir))
+}
+
+// Unregister drops a repo folder from the repos me sync writes into.
+func Unregister(places Places, dir string) error {
+	repos, err := Repos(places)
+	if err != nil {
+		return err
+	}
+	var kept []string
+	for _, repo := range repos {
+		if repo != dir {
+			kept = append(kept, repo)
+		}
+	}
+	return saveRepos(places, kept)
+}
+
+// repo is one registered repo; profile is nil when its `.ai/me.yaml` (or the folder) is gone.
+type repo struct {
+	dir     string
+	profile *RepoProfile
+}
+
+func loadRepos(places Places) ([]repo, error) {
+	dirs, err := Repos(places)
+	if err != nil {
+		return nil, err
+	}
+	var out []repo
+	for _, dir := range dirs {
+		profile, err := LoadRepo(dir)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, repo{dir, profile})
+	}
+	return out, nil
+}
+
+// ---- rendering ----
+
+// Instructions renders the home personal instructions for one agent; linked names the personal skills it can follow.
+func Instructions(p *Profile, personal fs.FS, agent string, linked map[string]bool) (string, error) {
+	return renderHome(p, personal, agent, linked, false)
+}
+
+func baseContext(p *Profile, linked map[string]bool) map[string]any {
 	stacks := make([]string, len(p.Stacks))
 	for i, stack := range p.Stacks {
 		stacks[i] = "`" + stack + "`"
@@ -94,28 +179,158 @@ func Instructions(p *Profile, personal fs.FS, agent string, linked map[string]bo
 	if p.ChatLanguage != "" {
 		chat = p.ChatLanguage
 	}
-	return mustache.Render(string(source), map[string]any{
-		"antigravity":      agent == "antigravity",
-		"role":             p.Role,
-		"stacks":           strings.Join(stacks, ", "),
-		"new":              p.Level == "new",
-		"lead":             p.Role == "lead",
-		"chat_language":    chat,
-		"onboarding_skill": linked["dashcrew-onboarding"],
-		"lead_skill":       linked["dashcrew-lead"],
-	})
+	return map[string]any{
+		"antigravity": false, "marker": true, "home": false, "repo": false, "repos": false,
+		"h": "##", "h1": "#", "title": "", "where": "", "there": "",
+		"role": p.Role, "level": p.Level, "stacks": strings.Join(stacks, ", "), "chat_language": chat,
+		"new": p.Level == "new", "lead": p.Role == "lead",
+		"lead_off": false, "new_off": false,
+		"onboarding_skill": linked["dashcrew-onboarding"], "lead_skill": linked["dashcrew-lead"],
+	}
 }
 
-// Sync writes the personal instructions for each agent in the profile and links its selected skills for Claude
-// Code; it takes out what it wrote earlier for agents and skills the profile no longer has.
-func Sync(p *Profile, places Places, personal fs.FS) ([]Change, error) {
+func render(personal fs.FS, context map[string]any) (string, error) {
+	source, err := fs.ReadFile(personal, "rules.md")
+	if err != nil {
+		return "", err
+	}
+	return mustache.Render(string(source), context)
+}
+
+func renderHome(p *Profile, personal fs.FS, agent string, linked map[string]bool, repos bool) (string, error) {
+	context := baseContext(p, linked)
+	context["home"], context["repos"], context["antigravity"] = true, repos, agent == "antigravity"
+	return render(personal, context)
+}
+
+// renderRepo renders a repo's lines: as its own file, or for codex as a section of the user block.
+func renderRepo(home *Profile, r *RepoProfile, dir string, personal fs.FS, agent string, linked map[string]bool) (string, error) {
+	effective := EffectiveIn(home, r)
+	context := baseContext(&effective.Profile, linked)
+	homeNew, homeLead := home.Level == "new", home.Role == "lead"
+	context["repo"] = true
+	context["new"], context["new_off"] = effective.Level == "new" && !homeNew, homeNew && effective.Level != "new"
+	context["lead"], context["lead_off"] = effective.Role == "lead" && !homeLead, homeLead && effective.Role != "lead"
+	if agent == "codex" {
+		where := "the repository at `" + filepath.ToSlash(dir) + "`"
+		context["marker"] = false
+		context["h1"], context["h"] = "##", "###"
+		context["title"] = "In the repository at `" + filepath.ToSlash(dir) + "`"
+		context["where"], context["there"] = where, "there"
+	} else {
+		context["antigravity"] = agent == "antigravity"
+		context["title"] = "Personal profile in this repository (dashcrew)"
+		context["where"], context["there"] = "this repository", "here"
+	}
+	return render(personal, context)
+}
+
+// ---- targets: every file or block me sync manages, and what it should hold ----
+
+type target struct {
+	path  string
+	block bool
+	// text is what the target should hold when want; otherwise it should be absent.
+	text string
+	want bool
+}
+
+func homeInstructionPath(places Places, agent string) string {
+	switch agent {
+	case "codex":
+		return filepath.Join(places.CodexDir, "AGENTS.md")
+	case "antigravity":
+		return filepath.Join(places.GeminiDir, "config", "rules", ruleFile)
+	default:
+		return filepath.Join(places.ClaudeDir, "rules", ruleFile)
+	}
+}
+
+func repoInstructionPath(dir, agent string) string {
+	if agent == "antigravity" {
+		return filepath.Join(dir, ".agents", "rules", ruleFile)
+	}
+	return filepath.Join(dir, ".claude", "rules", ruleFile)
+}
+
+func selectedSkills(home *Profile, repos []repo) []string {
+	out := append([]string(nil), home.SelectedSkills()...)
+	for _, r := range repos {
+		if r.profile == nil {
+			continue
+		}
+		effective := EffectiveIn(home, r.profile)
+		for _, name := range effective.SelectedSkills() {
+			if !contains(out, name) {
+				out = append(out, name)
+			}
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
+func targets(home *Profile, repos []repo, places Places, personal fs.FS, linked map[string]bool) ([]target, error) {
+	live := false
+	for _, r := range repos {
+		live = live || r.profile != nil
+	}
+	var out []target
+	for _, agent := range Agents {
+		t := target{path: homeInstructionPath(places, agent), block: agent == "codex", want: contains(home.Agents, agent)}
+		if t.want {
+			text, err := renderHome(home, personal, agent, linked, live)
+			if err != nil {
+				return nil, err
+			}
+			if agent == "codex" {
+				for _, r := range repos {
+					if r.profile == nil {
+						continue
+					}
+					section, err := renderRepo(home, r.profile, r.dir, personal, agent, linked)
+					if err != nil {
+						return nil, err
+					}
+					text += "\n" + section
+				}
+			}
+			t.text = text
+		}
+		out = append(out, t)
+	}
+	for _, r := range repos {
+		for _, agent := range []string{"claude-code", "antigravity"} {
+			t := target{path: repoInstructionPath(r.dir, agent), want: r.profile != nil && contains(home.Agents, agent)}
+			if t.want {
+				text, err := renderRepo(home, r.profile, r.dir, personal, agent, linked)
+				if err != nil {
+					return nil, err
+				}
+				t.text = text
+			}
+			out = append(out, t)
+		}
+	}
+	return out, nil
+}
+
+// ---- sync, status, remove ----
+
+// Sync writes the personal instructions for each agent in the home profile and for each registered repo, and links
+// the personal skills any of them selects for Claude Code; it takes out what it wrote earlier and no longer needs.
+func Sync(home *Profile, places Places, personal fs.FS) ([]Change, error) {
+	repos, err := loadRepos(places)
+	if err != nil {
+		return nil, err
+	}
 	var changes []Change
-	claude := contains(p.Agents, "claude-code")
+	claude := contains(home.Agents, "claude-code")
+	selected := selectedSkills(home, repos)
 	linked := map[string]bool{}
 	for _, name := range Skills {
 		var change Change
-		var err error
-		if claude && contains(p.SelectedSkills(), name) {
+		if claude && contains(selected, name) {
 			change, err = linkSkill(places, personal, name)
 			linked[name] = err == nil && !change.Kept
 		} else {
@@ -126,57 +341,43 @@ func Sync(p *Profile, places Places, personal fs.FS) ([]Change, error) {
 		}
 		changes = appendChange(changes, change)
 	}
-	for _, agent := range Agents {
+	all, err := targets(home, repos, places, personal, linked)
+	if err != nil {
+		return changes, err
+	}
+	for _, t := range all {
 		var change Change
-		var err error
-		if contains(p.Agents, agent) {
-			var text string
-			if text, err = Instructions(p, personal, agent, linked); err != nil {
-				return changes, err
-			}
-			change, err = write(places, agent, text)
+		if t.want {
+			change, err = write(t)
 		} else {
-			change, err = remove(places, agent)
+			change, err = remove(t)
 		}
 		if err != nil {
 			return changes, err
 		}
 		changes = appendChange(changes, change)
 	}
-	return changes, nil
-}
-
-// Remove takes out every file, block and link me sync wrote; me.yaml stays.
-func Remove(places Places) ([]Change, error) {
-	var changes []Change
-	for _, name := range Skills {
-		change, err := unlinkSkill(places, name)
-		if err != nil {
-			return changes, err
+	for _, r := range repos {
+		if r.profile == nil {
+			changes = append(changes, Change{r.dir, "no .ai/me.yaml there; dashcrew me sync --prune forgets it", false})
 		}
-		changes = appendChange(changes, change)
-		if err := os.RemoveAll(skillSource(places, name)); err != nil {
-			return changes, err
-		}
-	}
-	for _, agent := range Agents {
-		change, err := remove(places, agent)
-		if err != nil {
-			return changes, err
-		}
-		changes = appendChange(changes, change)
 	}
 	return changes, nil
 }
 
 // Status compares what me sync would write with what is there, without writing; a stale or kept path is a change.
-func Status(p *Profile, places Places, personal fs.FS) ([]Change, error) {
+func Status(home *Profile, places Places, personal fs.FS) ([]Change, error) {
+	repos, err := loadRepos(places)
+	if err != nil {
+		return nil, err
+	}
 	var changes []Change
-	claude := contains(p.Agents, "claude-code")
+	claude := contains(home.Agents, "claude-code")
+	selected := selectedSkills(home, repos)
 	linked := map[string]bool{}
 	for _, name := range Skills {
 		ours, present := linkState(places, name)
-		want := claude && contains(p.SelectedSkills(), name)
+		want := claude && contains(selected, name)
 		link := filepath.Join(places.ClaudeDir, "skills", name)
 		switch {
 		case want && present && !ours:
@@ -188,32 +389,106 @@ func Status(p *Profile, places Places, personal fs.FS) ([]Change, error) {
 		}
 		linked[name] = want && ours
 	}
-	for _, agent := range Agents {
-		path := instructionPath(places, agent)
-		current, err := readOwned(places, agent)
-		if err != nil {
-			return nil, err
-		}
-		if !contains(p.Agents, agent) {
-			if current.owned {
-				changes = append(changes, Change{path, "left over", false})
-			}
-			continue
-		}
-		text, err := Instructions(p, personal, agent, linked)
+	all, err := targets(home, repos, places, personal, linked)
+	if err != nil {
+		return nil, err
+	}
+	for _, t := range all {
+		current, err := readOwned(t)
 		if err != nil {
 			return nil, err
 		}
 		switch {
+		case !t.want:
+			if current.owned {
+				changes = append(changes, Change{t.path, "left over", false})
+			}
 		case current.foreign:
-			changes = append(changes, Change{path, "not dashcrew's", true})
+			changes = append(changes, Change{t.path, "not dashcrew's", true})
 		case !current.owned:
-			changes = append(changes, Change{path, "missing", false})
-		case current.text != text:
-			changes = append(changes, Change{path, "stale", false})
+			changes = append(changes, Change{t.path, "missing", false})
+		case current.text != t.text:
+			changes = append(changes, Change{t.path, "stale", false})
+		}
+	}
+	for _, r := range repos {
+		if r.profile == nil {
+			changes = append(changes, Change{r.dir, "no .ai/me.yaml there", false})
 		}
 	}
 	return changes, nil
+}
+
+// Remove takes out every file, block and link me sync wrote, in home and in every registered repo, and forgets the
+// repos; me.yaml and each repo's .ai/me.yaml stay.
+func Remove(places Places) ([]Change, error) {
+	repos, err := Repos(places)
+	if err != nil {
+		return nil, err
+	}
+	var changes []Change
+	for _, name := range Skills {
+		change, err := unlinkSkill(places, name)
+		if err != nil {
+			return changes, err
+		}
+		changes = appendChange(changes, change)
+		if err := os.RemoveAll(skillSource(places, name)); err != nil {
+			return changes, err
+		}
+	}
+	var all []target
+	for _, agent := range Agents {
+		all = append(all, target{path: homeInstructionPath(places, agent), block: agent == "codex"})
+	}
+	for _, dir := range repos {
+		for _, agent := range []string{"claude-code", "antigravity"} {
+			all = append(all, target{path: repoInstructionPath(dir, agent)})
+		}
+	}
+	for _, t := range all {
+		change, err := remove(t)
+		if err != nil {
+			return changes, err
+		}
+		changes = appendChange(changes, change)
+	}
+	return changes, saveRepos(places, nil)
+}
+
+// RemoveRepo takes one repo's personal files out and forgets it, then syncs the rest, so its Codex section and the
+// skills only it selected go too; its .ai/me.yaml stays.
+func RemoveRepo(home *Profile, places Places, personal fs.FS, dir string) ([]Change, error) {
+	var changes []Change
+	for _, agent := range []string{"claude-code", "antigravity"} {
+		change, err := remove(target{path: repoInstructionPath(dir, agent)})
+		if err != nil {
+			return changes, err
+		}
+		changes = appendChange(changes, change)
+	}
+	if err := Unregister(places, dir); err != nil {
+		return changes, err
+	}
+	rest, err := Sync(home, places, personal)
+	return append(changes, rest...), err
+}
+
+// Prune forgets every registered repo whose .ai/me.yaml is gone and returns their folders.
+func Prune(places Places) ([]string, error) {
+	repos, err := loadRepos(places)
+	if err != nil {
+		return nil, err
+	}
+	var kept, gone []string
+	for _, r := range repos {
+		if r.profile == nil {
+			gone = append(gone, r.dir)
+		} else {
+			kept = append(kept, r.dir)
+		}
+	}
+	return gone, saveRepos(places, kept)
 }
 
 func appendChange(changes []Change, change Change) []Change {
@@ -223,29 +498,18 @@ func appendChange(changes []Change, change Change) []Change {
 	return append(changes, change)
 }
 
-func instructionPath(places Places, agent string) string {
-	switch agent {
-	case "codex":
-		return filepath.Join(places.CodexDir, "AGENTS.md")
-	case "antigravity":
-		return filepath.Join(places.GeminiDir, "config", "rules", ruleFile)
-	default:
-		return filepath.Join(places.ClaudeDir, "rules", ruleFile)
-	}
-}
-
-// owned is what an instruction path holds: dashcrew's text, someone else's file, or nothing.
+// owned is what a target path holds: dashcrew's text, someone else's file, or nothing.
 type owned struct {
 	text    string
 	owned   bool
 	foreign bool
-	// file is the whole Codex AGENTS.md; begin and end bound the block in it, end -1 when the block is not closed.
+	// file is the whole Codex AGENTS.md; begin and end bound the block in it.
 	file       string
 	begin, end int
 }
 
-func readOwned(places Places, agent string) (owned, error) {
-	data, err := os.ReadFile(instructionPath(places, agent))
+func readOwned(t target) (owned, error) {
+	data, err := os.ReadFile(t.path)
 	if errors.Is(err, fs.ErrNotExist) {
 		return owned{}, nil
 	}
@@ -253,7 +517,7 @@ func readOwned(places Places, agent string) (owned, error) {
 		return owned{}, err
 	}
 	file := string(data)
-	if agent != "codex" {
+	if !t.block {
 		if !strings.Contains(file, marker) {
 			return owned{foreign: true}, nil
 		}
@@ -272,25 +536,24 @@ func readOwned(places Places, agent string) (owned, error) {
 	return owned{text: text, owned: true, file: file, begin: begin, end: end}, nil
 }
 
-func write(places Places, agent, text string) (Change, error) {
-	path := instructionPath(places, agent)
-	current, err := readOwned(places, agent)
+func write(t target) (Change, error) {
+	current, err := readOwned(t)
 	if err != nil {
 		return Change{}, err
 	}
 	if current.foreign {
 		what := "kept, not written by dashcrew"
-		if agent == "codex" {
+		if t.block {
 			what = "kept, " + codexBegin + " has no " + codexEnd
 		}
-		return Change{path, what, true}, nil
+		return Change{t.path, what, true}, nil
 	}
-	if current.owned && current.text == text {
-		return Change{path, "unchanged", false}, nil
+	if current.owned && current.text == t.text {
+		return Change{t.path, "unchanged", false}, nil
 	}
-	out := text
-	if agent == "codex" {
-		block := codexBegin + "\n" + text + codexEnd
+	out := t.text
+	if t.block {
+		block := codexBegin + "\n" + t.text + codexEnd
 		switch {
 		case current.owned:
 			out = current.file[:current.begin] + block + current.file[current.end:]
@@ -300,33 +563,34 @@ func write(places Places, agent, text string) (Change, error) {
 			out = strings.TrimRight(current.file, "\n") + "\n\n" + block + "\n"
 		}
 	}
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(t.path), 0o755); err != nil {
 		return Change{}, err
 	}
-	if err := os.WriteFile(path, []byte(out), 0o644); err != nil {
+	if err := os.WriteFile(t.path, []byte(out), 0o644); err != nil {
 		return Change{}, err
 	}
 	if current.owned {
-		return Change{path, "updated", false}, nil
+		return Change{t.path, "updated", false}, nil
 	}
-	return Change{path, "written", false}, nil
+	return Change{t.path, "written", false}, nil
 }
 
-func remove(places Places, agent string) (Change, error) {
-	path := instructionPath(places, agent)
-	current, err := readOwned(places, agent)
+func remove(t target) (Change, error) {
+	current, err := readOwned(t)
 	if err != nil || !current.owned {
 		return Change{}, err
 	}
-	if agent != "codex" {
-		return Change{path, "removed", false}, os.Remove(path)
+	if !t.block {
+		return Change{t.path, "removed", false}, os.Remove(t.path)
 	}
 	rest := strings.TrimRight(current.file[:current.begin], "\n") + strings.TrimRight(current.file[current.end:], "\n")
 	if strings.TrimSpace(rest) == "" {
-		return Change{path, "removed", false}, os.Remove(path)
+		return Change{t.path, "removed", false}, os.Remove(t.path)
 	}
-	return Change{path, "block removed", false}, os.WriteFile(path, []byte(rest+"\n"), 0o644)
+	return Change{t.path, "block removed", false}, os.WriteFile(t.path, []byte(rest+"\n"), 0o644)
 }
+
+// ---- personal skills ----
 
 func skillSource(places Places, name string) string {
 	return filepath.Join(places.Home, ".dashcrew", "skills", name)

@@ -954,16 +954,22 @@ func cliCases() []cliCase {
 		}},
 		{name: "me", setup: func(t *testing.T, s side) {
 			s.write(t, "w/.ai/project.yaml", "toolkit: 1\nplatform: go\n")
+			s.git(t, "w", "init", "-q", "-b", "main")
+			s.write(t, "w2/.ai/project.yaml", "toolkit: 1\n")
 			s.write(t, "home/.codex/AGENTS.md", "# Mine\n")
 		}, steps: []step{
 			cli("me", "show"),
 			cli("me", "sync"),
-			{args: []string{"me", "init"}, stdin: "boss\n"},
-			{args: []string{"me", "init"}, stdin: "lead\n\nnew\nid\nclaude-code codex\n"},
+			{args: []string{"me", "init", "--home"}, stdin: "boss\n"},
+			{args: []string{"me", "init"}, stdin: "mobile\n\nregular\nid\nclaude-code codex\n"},
+			{args: []string{"me", "init"}, stdin: "lead\n\n"},
 			cli("me", "show"),
 			cli("me", "sync"),
-			cli("me", "sync"),
-			cli("me", "init", "--yes", "-p", "."),
+			{args: []string{"me", "init"}, dir: "w2", stdin: "\nnew\n"},
+			{args: []string{"me", "show"}, dir: "w2"},
+			{args: []string{"me", "init", "--home", "--yes"}, dir: "."},
+			{args: []string{"me", "sync", "--remove-repo"}, dir: "w2"},
+			{args: []string{"me", "init"}, stdin: "mobile\n\n"},
 			cli("me", "sync", "--remove"),
 			cli("me", "show"),
 		}},
