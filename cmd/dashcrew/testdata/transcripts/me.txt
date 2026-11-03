@@ -14,7 +14,7 @@ stderr:
 | no profile: run dashcrew me init
 files: (unchanged)
 
-=== step 3: dashcrew "me" "init"
+=== step 3: dashcrew "me" "init" "--home"
 stdin: "boss\n"
 exit: 1
 stdout:
@@ -25,73 +25,131 @@ stderr:
 files: (unchanged)
 
 === step 4: dashcrew "me" "init"
-stdin: "lead\n\nnew\nid\nclaude-code codex\n"
+stdin: "mobile\n\nregular\nid\nclaude-code codex\n"
 exit: 0
 stdout:
 | role (be | fe | mobile | devops | fullstack | lead) [be]: stacks (platforms you work on, comma separated) [go]: level (new | regular) [regular]: chat_language (ISO 639-1 such as id, empty keeps each project's) []: agents (claude-code, codex, antigravity) [codex]: wrote <root>/home/.dashcrew/me.yaml
-| next: dashcrew me sync
-stderr: (empty)
-files:
-+ home/.dashcrew  dir
-+ home/.dashcrew/me.yaml  -rw-r--r-- sha256:b776b2ad23b067ec
-
-=== step 5: dashcrew "me" "show"
-exit: 0
-stdout:
-| # Personal profile for dashcrew: how agents work with you. Never committed; the guard never reads it.
-| # Run dashcrew me sync after editing.
-| 
-| # be | fe | mobile | devops | fullstack | lead
-| role: lead
-| # the platforms you work on
-| stacks: [go]
-| # new | regular
-| level: new
-| # ISO 639-1 such as id; empty keeps each project's language.chat
-| chat_language: id
-| # claude-code, codex, antigravity
-| agents: [claude-code, codex]
-| personal files: missing  <root>/home/.claude/skills/dashcrew-onboarding
-| personal files: missing  <root>/home/.claude/skills/dashcrew-lead
-| personal files: missing  <root>/home/.claude/rules/dashcrew-me.md
-| personal files: missing  <root>/home/.codex/AGENTS.md
-| next: dashcrew me sync
-stderr: (empty)
-files: (unchanged)
-
-=== step 6: dashcrew "me" "sync"
-exit: 0
-stdout:
-| linked  <root>/home/.claude/skills/dashcrew-onboarding
-| linked  <root>/home/.claude/skills/dashcrew-lead
 | written  <root>/home/.claude/rules/dashcrew-me.md
 | written  <root>/home/.codex/AGENTS.md
 stderr: (empty)
 files:
 + home/.claude  dir
 + home/.claude/rules  dir
-+ home/.claude/rules/dashcrew-me.md  -rw-r--r-- sha256:cdc3a90b9795d47d
++ home/.claude/rules/dashcrew-me.md  -rw-r--r-- sha256:5dcc30ff0bca0ce6
+~ home/.codex/AGENTS.md  -rw-r--r-- sha256:4e65f74f273da65b
++ home/.dashcrew  dir
++ home/.dashcrew/me.yaml  -rw-r--r-- sha256:0f506f0ab798e6b7
+
+=== step 5: dashcrew "me" "init"
+stdin: "lead\n\n"
+exit: 0
+stdout:
+| role in this repo (be | fe | mobile | devops | fullstack | lead) [mobile]: level in this repo (new | regular) [regular]: wrote <root>/w/.ai/me.yaml
+| linked  <root>/home/.claude/skills/dashcrew-lead
+| updated  <root>/home/.claude/rules/dashcrew-me.md
+| updated  <root>/home/.codex/AGENTS.md
+| written  <root>/w/.claude/rules/dashcrew-me.md
+stderr: (empty)
+files:
+~ home/.claude/rules/dashcrew-me.md  -rw-r--r-- sha256:4e568779831f8b7d
 + home/.claude/skills  dir
 + home/.claude/skills/dashcrew-lead  link -> <root>/home/.dashcrew/skills/dashcrew-lead
-+ home/.claude/skills/dashcrew-onboarding  link -> <root>/home/.dashcrew/skills/dashcrew-onboarding
-~ home/.codex/AGENTS.md  -rw-r--r-- sha256:a2b7049830a1c979
+~ home/.codex/AGENTS.md  -rw-r--r-- sha256:aa796f6984be7653
++ home/.dashcrew/me-repos  -rw-r--r-- sha256:9ddf81090f8f5a47
 + home/.dashcrew/skills  dir
 + home/.dashcrew/skills/dashcrew-lead  dir
 + home/.dashcrew/skills/dashcrew-lead/SKILL.md  -rw-r--r-- sha256:79a58c740ccdc565
-+ home/.dashcrew/skills/dashcrew-onboarding  dir
-+ home/.dashcrew/skills/dashcrew-onboarding/SKILL.md  -rw-r--r-- sha256:e31c5dbcde3306c5
++ w/.ai/me.yaml  -rw-r--r-- sha256:c2b0343fcb88ab6f
++ w/.claude  dir
++ w/.claude/rules  dir
++ w/.claude/rules/dashcrew-me.md  -rw-r--r-- sha256:6c238f1169681192
+~ w/.git/info/exclude
+    + "/.ai/me.yaml"
+    + "/.claude/rules/dashcrew-me.md"
+    + "/.agents/rules/dashcrew-me.md"
+
+=== step 6: dashcrew "me" "show"
+exit: 0
+stdout:
+| # Personal profile for dashcrew: how agents work with you. Never committed; the guard never reads it.
+| # Run dashcrew me sync after editing.
+| 
+| # be | fe | mobile | devops | fullstack | lead
+| role: mobile
+| # the platforms you work on
+| stacks: [go]
+| # new | regular
+| level: regular
+| # ISO 639-1 such as id; empty keeps each project's language.chat
+| chat_language: id
+| # claude-code, codex, antigravity
+| agents: [claude-code, codex]
+| this repo: role lead (repo), level regular (home)
+| repo: <root>/w
+| personal files: in step
+stderr: (empty)
+files: (unchanged)
 
 === step 7: dashcrew "me" "sync"
 exit: 0
 stdout:
-| unchanged  <root>/home/.claude/skills/dashcrew-onboarding
 | unchanged  <root>/home/.claude/skills/dashcrew-lead
 | unchanged  <root>/home/.claude/rules/dashcrew-me.md
 | unchanged  <root>/home/.codex/AGENTS.md
+| unchanged  <root>/w/.claude/rules/dashcrew-me.md
 stderr: (empty)
 files: (unchanged)
 
-=== step 8: dashcrew "me" "init" "--yes" "-p" "."
+=== step 8: dashcrew "me" "init"
+dir: w2
+stdin: "\nnew\n"
+exit: 0
+stdout:
+| role in this repo (be | fe | mobile | devops | fullstack | lead) [mobile]: level in this repo (new | regular) [regular]: wrote <root>/w2/.ai/me.yaml
+| linked  <root>/home/.claude/skills/dashcrew-onboarding
+| unchanged  <root>/home/.claude/skills/dashcrew-lead
+| unchanged  <root>/home/.claude/rules/dashcrew-me.md
+| updated  <root>/home/.codex/AGENTS.md
+| unchanged  <root>/w/.claude/rules/dashcrew-me.md
+| written  <root>/w2/.claude/rules/dashcrew-me.md
+stderr: (empty)
+files:
++ home/.claude/skills/dashcrew-onboarding  link -> <root>/home/.dashcrew/skills/dashcrew-onboarding
+~ home/.codex/AGENTS.md  -rw-r--r-- sha256:c9845b89e6bd4006
+~ home/.dashcrew/me-repos  -rw-r--r-- sha256:b482281090db8ff4
++ home/.dashcrew/skills/dashcrew-onboarding  dir
++ home/.dashcrew/skills/dashcrew-onboarding/SKILL.md  -rw-r--r-- sha256:e31c5dbcde3306c5
++ w2/.ai/me.yaml  -rw-r--r-- sha256:1472900bc87fe5b4
++ w2/.claude  dir
++ w2/.claude/rules  dir
++ w2/.claude/rules/dashcrew-me.md  -rw-r--r-- sha256:ef23e00c2000531e
+
+=== step 9: dashcrew "me" "show"
+dir: w2
+exit: 0
+stdout:
+| # Personal profile for dashcrew: how agents work with you. Never committed; the guard never reads it.
+| # Run dashcrew me sync after editing.
+| 
+| # be | fe | mobile | devops | fullstack | lead
+| role: mobile
+| # the platforms you work on
+| stacks: [go]
+| # new | regular
+| level: regular
+| # ISO 639-1 such as id; empty keeps each project's language.chat
+| chat_language: id
+| # claude-code, codex, antigravity
+| agents: [claude-code, codex]
+| this repo: role mobile (home), level new (repo)
+| repo: <root>/w
+| repo: <root>/w2
+| personal files: in step
+stderr: (empty)
+files: (unchanged)
+
+=== step 10: dashcrew "me" "init" "--home" "--yes"
+dir: .
 exit: 0
 stdout:
 | wrote <root>/home/.dashcrew/me.yaml
@@ -99,42 +157,72 @@ stdout:
 stderr: (empty)
 files: (unchanged)
 
-=== step 9: dashcrew "me" "sync" "--remove"
+=== step 11: dashcrew "me" "sync" "--remove-repo"
+dir: w2
 exit: 0
 stdout:
+| removed  <root>/w2/.claude/rules/dashcrew-me.md
 | unlinked  <root>/home/.claude/skills/dashcrew-onboarding
+| unchanged  <root>/home/.claude/skills/dashcrew-lead
+| unchanged  <root>/home/.claude/rules/dashcrew-me.md
+| updated  <root>/home/.codex/AGENTS.md
+| unchanged  <root>/w/.claude/rules/dashcrew-me.md
+stderr: (empty)
+files:
+- home/.claude/skills/dashcrew-onboarding
+~ home/.codex/AGENTS.md  -rw-r--r-- sha256:aa796f6984be7653
+~ home/.dashcrew/me-repos  -rw-r--r-- sha256:9ddf81090f8f5a47
+- w2/.claude/rules/dashcrew-me.md
+
+=== step 12: dashcrew "me" "init"
+stdin: "mobile\n\n"
+exit: 0
+stdout:
+| role in this repo (be | fe | mobile | devops | fullstack | lead) [lead]: level in this repo (new | regular) [regular]: role and level match your home profile; nothing to keep in this repo
+| removed  <root>/w/.claude/rules/dashcrew-me.md
 | unlinked  <root>/home/.claude/skills/dashcrew-lead
+| updated  <root>/home/.claude/rules/dashcrew-me.md
+| updated  <root>/home/.codex/AGENTS.md
+stderr: (empty)
+files:
+~ home/.claude/rules/dashcrew-me.md  -rw-r--r-- sha256:5dcc30ff0bca0ce6
+- home/.claude/skills/dashcrew-lead
+~ home/.codex/AGENTS.md  -rw-r--r-- sha256:4e65f74f273da65b
+- home/.dashcrew/me-repos
+- w/.ai/me.yaml
+- w/.claude/rules/dashcrew-me.md
+
+=== step 13: dashcrew "me" "sync" "--remove"
+exit: 0
+stdout:
 | removed  <root>/home/.claude/rules/dashcrew-me.md
 | block removed  <root>/home/.codex/AGENTS.md
 stderr: (empty)
 files:
 - home/.claude/rules/dashcrew-me.md
-- home/.claude/skills/dashcrew-lead
-- home/.claude/skills/dashcrew-onboarding
 ~ home/.codex/AGENTS.md  -rw-r--r-- sha256:deb772266c5d7ef5
 - home/.dashcrew/skills/dashcrew-lead
 - home/.dashcrew/skills/dashcrew-lead/SKILL.md
 - home/.dashcrew/skills/dashcrew-onboarding
 - home/.dashcrew/skills/dashcrew-onboarding/SKILL.md
 
-=== step 10: dashcrew "me" "show"
+=== step 14: dashcrew "me" "show"
 exit: 0
 stdout:
 | # Personal profile for dashcrew: how agents work with you. Never committed; the guard never reads it.
 | # Run dashcrew me sync after editing.
 | 
 | # be | fe | mobile | devops | fullstack | lead
-| role: lead
+| role: mobile
 | # the platforms you work on
 | stacks: [go]
 | # new | regular
-| level: new
+| level: regular
 | # ISO 639-1 such as id; empty keeps each project's language.chat
 | chat_language: id
 | # claude-code, codex, antigravity
 | agents: [claude-code, codex]
-| personal files: missing  <root>/home/.claude/skills/dashcrew-onboarding
-| personal files: missing  <root>/home/.claude/skills/dashcrew-lead
+| this repo: role mobile (home), level regular (home)
 | personal files: missing  <root>/home/.claude/rules/dashcrew-me.md
 | personal files: missing  <root>/home/.codex/AGENTS.md
 | next: dashcrew me sync

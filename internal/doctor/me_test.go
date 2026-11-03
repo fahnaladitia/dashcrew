@@ -3,6 +3,7 @@ package doctor
 import (
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -53,5 +54,23 @@ func TestMeCheck(t *testing.T) {
 	if _, err := me.Sync(p, places, personal); err != nil {
 		t.Fatal(err)
 	}
-	expect(OK, "role mobile, stacks flutter; this project's platform go is outside your stacks")
+	expect(OK, "role mobile (home), level regular (home), stacks flutter; this project's platform go is outside your stacks")
+
+	if err := (&me.RepoProfile{Role: "lead"}).Save(project); err != nil {
+		t.Fatal(err)
+	}
+	if err := me.Register(places, project); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := me.Sync(p, places, personal); err != nil {
+		t.Fatal(err)
+	}
+	expect(OK, "role lead (repo), level regular (home)")
+
+	for _, args := range [][]string{{"init", "-q"}, {"add", "-f", ".ai/me.yaml"}} {
+		if out, err := exec.Command("git", append([]string{"-C", project}, args...)...).CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v %s", args, err, out)
+		}
+	}
+	expect(Fail, "personal files tracked by git: .ai/me.yaml")
 }
