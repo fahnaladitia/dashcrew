@@ -163,4 +163,8 @@ The workflow is added to the closed workflow list.
   - AGENTS.md: 23,784 bytes at most with both features. With knowledge, the memory line is "Read `.ai/memory` (never rewrite) and `.ai/knowledge`; check pointers." and `spec-driven-development` leaves the outside-skills list. The plan workflow, the explorer and the MCP tools still spell out verifying pointers.
   - Transcript `spec-status`. 13 new tests. Full suite passing.
 
-P7 is complete in code. Left: the live check in "How we check".
+P7 is complete in code. Live check (2-3 Nov, private knowledge repo `shop-knowledge`, sample `shop-api`, dashcrew 0.2.0 from brew):
+- The `spec` workflow wrote `specs/unreleased/order-summary` (8 ACs, C-1, D-1..D-6) and lint passed; approval came as two merged knowledge pull requests (review, then `status: approved`).
+- A task named `Spec: specs/unreleased/order-summary@rev1`, took AC-1..AC-8 as its criteria, recorded `dashcrew-spec` on its branch, and declared one departure (a separate `Summarizer`, wiring in `cmd/api/main.go` that the TRD said stays) with a `spec revise` follow-up. The reviewer checked C-1 and D-1..D-6 line by line and found no undeclared change.
+- Asked to add `average_cents` (a change to C-1), the agent stopped and asked before writing code. The guard blocked the agent from `dashcrew spec revise`, even `--help`. The member revised to rev 2 (AC-9, AC-10, C-1 updated); `spec status` and `doctor` warn on a branch that still records rev 1.
+- Found and fixed: the spec workflow handed a spec over with a question the user could answer (fixed in the questions round, with plan, tdd and review triggers); `spec revise specs/...` from the project said "no such spec" (a `specs/` path now resolves in the knowledge clone, for `revise` and `lint`).
