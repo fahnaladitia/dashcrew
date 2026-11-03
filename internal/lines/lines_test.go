@@ -255,6 +255,25 @@ func TestBranchPointIsWhereTheLineLeftTheMainLinesFirstParentChain(t *testing.T)
 	}
 }
 
+func TestAFastForwardMergeIntoTheMainLineDoesNotMoveTheBranchPoint(t *testing.T) {
+	app := t.TempDir()
+	gitT(t, app, "init", "-q", "-b", "develop")
+	commitFile(t, app, "a.txt", "a\n")
+	cut := gitT(t, app, "rev-parse", "HEAD")
+	gitT(t, app, "branch", "release/2.5.0")
+	gitT(t, app, "checkout", "-q", "-b", "release/2.4.0")
+	commitFile(t, app, "f.txt", "f\n")
+	gitT(t, app, "checkout", "-q", "develop")
+	gitT(t, app, "merge", "-q", "--ff-only", "release/2.4.0")
+	all, err := List(app, releaseLines(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if base, label := BranchPoint(app, all, *Find(all, "2.4.0")); base != cut || label != "develop" {
+		t.Errorf("got %s %s, want %s develop", base, label, cut)
+	}
+}
+
 func TestPreviousIsTheNewestOlderLineOrVersionTag(t *testing.T) {
 	app := fixture(t)
 	all, err := List(app, releaseLines(t))
