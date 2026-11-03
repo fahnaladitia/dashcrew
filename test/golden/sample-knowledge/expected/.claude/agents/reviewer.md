@@ -38,21 +38,6 @@ The main session gives you the base branch, the step 0 success criteria and `Spe
 
 ## Output
 
-Every finding has a severity, `file:line`, the current code and the fix, in the `code-review` format. Return one block, the verdict first:
-
-```text
-REVIEW  <BLOCK | PASS WITH NOTES | PASS>  (<plan | n files>)
-========================================================================
-BLOCKER <n>  HIGH <n>  MEDIUM <n>  LOW <n>
-
--- Findings ------------------------------------------------------------
-<each finding in the finding format, most severe first | none>
-
--- Criteria ------------------------------------------------------------
-ID    STATUS   WHERE                PROOF
-AC-1  met      <file:line>          <test file:line | manual item>
-AC-2  partial  <what is missing>
-========================================================================
-```
+Every finding has a severity, `file:line`, the current code and the fix, in the `code-review` format. Return one `REVIEW` block, in the format of the `code-review` workflow's Verdict section, the verdict first.
 
 BLOCK on any BLOCKER or HIGH.

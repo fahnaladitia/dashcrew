@@ -147,7 +147,7 @@ files:
 - w/.agents/agents/local-storage-engineer.md
 - w/.agents/agents/product-manager.md
 - w/.agents/agents/qa-engineer.md
-+ w/.agents/agents/reviewer.md  -rw-r--r-- sha256:42d585ea7565435a
++ w/.agents/agents/reviewer.md  -rw-r--r-- sha256:1e2bdb4fe9970c11
 - w/.agents/agents/tech-lead.md
 - w/.agents/agents/worktree-monitor.md
 + w/.agents/skills/acceptance-criteria  dir
@@ -176,12 +176,12 @@ files:
 ~ w/.agents/skills/strategic-compact/SKILL.md  -rw-r--r-- sha256:ef4f497b22288e0c
 ~ w/.agents/skills/tdd/SKILL.md  -rw-r--r-- sha256:55aad03d0b7f363f
 ~ w/.agents/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:487563193e58e790
-~ w/.agents/skills/verify/SKILL.md  -rw-r--r-- sha256:2384f143274ff9ff
+~ w/.agents/skills/verify/SKILL.md  -rw-r--r-- sha256:1b2292236d130096
 ~ w/.agents/skills/work-modes/SKILL.md  -rw-r--r-- sha256:cca07dc711f2e958
 ~ w/.agents/skills/worktree/SKILL.md  -rw-r--r-- sha256:05e374e3165f3e56
 ~ w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 ~ w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-~ w/.ai/lock.json  -rw-r--r-- sha256:d7c59fb8b695c3e0
+~ w/.ai/lock.json  -rw-r--r-- sha256:fe93bce01a8ee702
 - w/.claude/agents/dart-tdd-guide.md
 - w/.claude/agents/design-refiner.md
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
@@ -194,7 +194,7 @@ files:
 - w/.claude/agents/local-storage-engineer.md
 - w/.claude/agents/product-manager.md
 - w/.claude/agents/qa-engineer.md
-+ w/.claude/agents/reviewer.md  -rw-r--r-- sha256:21e1d1da7249afdd
++ w/.claude/agents/reviewer.md  -rw-r--r-- sha256:283487271d3e701f
 - w/.claude/agents/tech-lead.md
 - w/.claude/agents/worktree-monitor.md
 + w/.claude/skills/acceptance-criteria  dir
@@ -223,7 +223,7 @@ files:
 ~ w/.claude/skills/strategic-compact/SKILL.md  -rw-r--r-- sha256:a866040ed09e6f37
 ~ w/.claude/skills/tdd/SKILL.md  -rw-r--r-- sha256:609c68287a05c3e6
 ~ w/.claude/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:d54707cb287e4465
-~ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:f0009ed3711d15e7
+~ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:5728520b66449d20
 ~ w/.claude/skills/work-modes/SKILL.md  -rw-r--r-- sha256:42e7df44abe766f6
 ~ w/.claude/skills/worktree/SKILL.md  -rw-r--r-- sha256:5ec38c7fbd7746bb
 - w/.codex/agents/dart-tdd-guide.toml
@@ -238,7 +238,7 @@ files:
 - w/.codex/agents/local-storage-engineer.toml
 - w/.codex/agents/product-manager.toml
 - w/.codex/agents/qa-engineer.toml
-+ w/.codex/agents/reviewer.toml  -rw-r--r-- sha256:e0bcbd5bda7280e4
++ w/.codex/agents/reviewer.toml  -rw-r--r-- sha256:2b5ab13445ec4b09
 - w/.codex/agents/tech-lead.toml
 - w/.codex/agents/worktree-monitor.toml
 ~ w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c

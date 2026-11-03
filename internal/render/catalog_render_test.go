@@ -1,7 +1,9 @@
 package render
 
 import (
+	"maps"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -664,7 +666,7 @@ func TestChatBlocksShareOneLayout(t *testing.T) {
 			{"skill/prompt-polish", "-- Questions -----------------------------------------------------------\nQ1    <question>\n"},
 			{"skill/prompt-polish", "Reply \"ok\", or answer by id (Q1 ...), pick a branch and a base, edit any line."},
 			{"workflow/code-review", "REVIEW  <BLOCK | PASS WITH NOTES | PASS>  (<plan | n files>)" + rule},
-			{"role/reviewer", "REVIEW  <BLOCK | PASS WITH NOTES | PASS>  (<plan | n files>)" + rule},
+			{"role/reviewer", "Return one `REVIEW` block, in the format of the `code-review` workflow's Verdict section"},
 			{"workflow/verify", "VERIFY  <PASS | FAIL>  PR ready: <yes | no>" + rule},
 			{"workflow/learn", "LEARN" + rule},
 			{"workflow/build-fix", "BUILD FIX" + rule},
@@ -694,6 +696,27 @@ func TestChatBlocksShareOneLayout(t *testing.T) {
 			if strings.Contains(agentsMd, gone) {
 				t.Errorf("%q agents_md still holds the step 0 template line %q", platform, gone)
 			}
+		}
+	}
+}
+
+// TestEachChatBlockHasOneSource pins the single source of every chat block: a platform overrides the prose around
+// a block, never the block, so a layout change is made in one file.
+func TestEachChatBlockHasOneSource(t *testing.T) {
+	c := shipped(t)
+	fragments := append([]catalog.Fragment{}, c.Core...)
+	for _, name := range slices.Sorted(maps.Keys(c.Platforms)) {
+		fragments = append(fragments, c.Platforms[name].Fragments...)
+	}
+	for _, title := range []string{"STEP 0  <", "REVIEW  <", "VERIFY  <", "BUILD FIX\n=", "LEARN\n=", "SUMMARY\n="} {
+		var sources []string
+		for _, fragment := range fragments {
+			if strings.Contains(fragment.Body, title) {
+				sources = append(sources, fragment.Source)
+			}
+		}
+		if len(sources) != 1 {
+			t.Errorf("%q is written in %d sources, want 1: %v", title, len(sources), sources)
 		}
 	}
 }
