@@ -31,10 +31,12 @@ type Profile struct {
 	Level        string
 	ChatLanguage string
 	Agents       []string
+	// Skills are the member's own skills, in ~/.dashcrew/skills/<name>/, linked for Claude Code in every repo.
+	Skills []string
 }
 
 var (
-	keys         = []string{"role", "stacks", "level", "chat_language", "agents"}
+	keys         = []string{"role", "stacks", "level", "chat_language", "agents", "skills"}
 	stackName    = regexp.MustCompile(`^[a-z][a-z0-9_-]*$`)
 	languageCode = regexp.MustCompile(`^[a-z]{2}$`)
 )
@@ -97,22 +99,29 @@ func Parse(text string) (*Profile, error) {
 	if len(p.Agents) == 0 {
 		p.Agents = []string{"claude-code"}
 	}
+	if p.Skills, err = names(root.Value("skills"), "skills", validOwnSkill); err != nil {
+		return nil, err
+	}
 	return p, nil
 }
 
 func names(value any, key string, valid func(string) bool) ([]string, error) {
+	return namesIn("me.yaml", value, key, valid)
+}
+
+func namesIn(file string, value any, key string, valid func(string) bool) ([]string, error) {
 	if value == nil {
 		return nil, nil
 	}
 	list, ok := value.([]any)
 	if !ok {
-		return nil, fmt.Errorf("me.yaml %s: expected a list", key)
+		return nil, fmt.Errorf("%s %s: expected a list", file, key)
 	}
 	var out []string
 	for _, item := range list {
 		name, ok := item.(string)
 		if !ok || !valid(name) {
-			return nil, fmt.Errorf("me.yaml %s: %v is not valid", key, item)
+			return nil, fmt.Errorf("%s %s: %v is not valid", file, key, item)
 		}
 		if !contains(out, name) {
 			out = append(out, name)
@@ -134,7 +143,9 @@ func (p *Profile) Text() string {
 		"# ISO 639-1 such as id; empty keeps each project's language.chat\n" +
 		"chat_language: " + p.ChatLanguage + "\n" +
 		"# " + strings.Join(Agents, ", ") + "\n" +
-		"agents: [" + strings.Join(p.Agents, ", ") + "]\n"
+		"agents: [" + strings.Join(p.Agents, ", ") + "]\n" +
+		"# your own skills, each in ~/.dashcrew/skills/<name>/SKILL.md, linked for Claude Code\n" +
+		"skills: [" + strings.Join(p.Skills, ", ") + "]\n"
 }
 
 // Save writes me.yaml under home.

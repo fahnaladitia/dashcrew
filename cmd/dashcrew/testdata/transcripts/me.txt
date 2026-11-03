@@ -38,7 +38,7 @@ files:
 + home/.claude/rules/dashcrew-me.md  -rw-r--r-- sha256:5dcc30ff0bca0ce6
 ~ home/.codex/AGENTS.md  -rw-r--r-- sha256:4e65f74f273da65b
 + home/.dashcrew  dir
-+ home/.dashcrew/me.yaml  -rw-r--r-- sha256:0f506f0ab798e6b7
++ home/.dashcrew/me.yaml  -rw-r--r-- sha256:95db46effa7537c3
 
 === step 5: dashcrew "me" "init"
 stdin: "lead\n\n"
@@ -59,7 +59,7 @@ files:
 + home/.dashcrew/skills  dir
 + home/.dashcrew/skills/dashcrew-lead  dir
 + home/.dashcrew/skills/dashcrew-lead/SKILL.md  -rw-r--r-- sha256:79a58c740ccdc565
-+ w/.ai/me.yaml  -rw-r--r-- sha256:c2b0343fcb88ab6f
++ w/.ai/me.yaml  -rw-r--r-- sha256:22f88b7e396abc6d
 + w/.claude  dir
 + w/.claude/rules  dir
 + w/.claude/rules/dashcrew-me.md  -rw-r--r-- sha256:6c238f1169681192
@@ -84,6 +84,8 @@ stdout:
 | chat_language: id
 | # claude-code, codex, antigravity
 | agents: [claude-code, codex]
+| # your own skills, each in ~/.dashcrew/skills/<name>/SKILL.md, linked for Claude Code
+| skills: []
 | this repo: role lead (repo), level regular (home)
 | repo: <root>/w
 | personal files: in step
@@ -119,7 +121,7 @@ files:
 ~ home/.dashcrew/me-repos  -rw-r--r-- sha256:b482281090db8ff4
 + home/.dashcrew/skills/dashcrew-onboarding  dir
 + home/.dashcrew/skills/dashcrew-onboarding/SKILL.md  -rw-r--r-- sha256:e31c5dbcde3306c5
-+ w2/.ai/me.yaml  -rw-r--r-- sha256:1472900bc87fe5b4
++ w2/.ai/me.yaml  -rw-r--r-- sha256:12e49c32182aa3d8
 + w2/.claude  dir
 + w2/.claude/rules  dir
 + w2/.claude/rules/dashcrew-me.md  -rw-r--r-- sha256:ef23e00c2000531e
@@ -141,6 +143,8 @@ stdout:
 | chat_language: id
 | # claude-code, codex, antigravity
 | agents: [claude-code, codex]
+| # your own skills, each in ~/.dashcrew/skills/<name>/SKILL.md, linked for Claude Code
+| skills: []
 | this repo: role mobile (home), level new (repo)
 | repo: <root>/w
 | repo: <root>/w2
@@ -222,6 +226,8 @@ stdout:
 | chat_language: id
 | # claude-code, codex, antigravity
 | agents: [claude-code, codex]
+| # your own skills, each in ~/.dashcrew/skills/<name>/SKILL.md, linked for Claude Code
+| skills: []
 | this repo: role mobile (home), level regular (home)
 | personal files: missing  <root>/home/.claude/rules/dashcrew-me.md
 | personal files: missing  <root>/home/.codex/AGENTS.md

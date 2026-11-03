@@ -152,6 +152,8 @@ type Catalog struct {
 	Skills    map[string]DocMeta
 	Workflows map[string]DocMeta
 	Platforms map[string]*PlatformSpec
+	// ProjectSkills are `.ai/skills/`, sorted by name; only WithProjectPacks loads them.
+	ProjectSkills []ProjectSkill
 	// Digest is the sha256 of every file under the catalog's core/, platforms/ and packs/, path and content; a
 	// project's packs and platforms leave it as it is. The lock of a release line records it.
 	Digest string
@@ -235,8 +237,9 @@ func copyPacks(packs Packs) Packs {
 	return out
 }
 
-// WithProjectPacks adds `<projectDir>/.ai/packs/`, which replace built-in packs of the same name, and
-// `<projectDir>/.ai/platforms/`, which replace a built-in platform of the same name.
+// WithProjectPacks adds `<projectDir>/.ai/packs/`, which replace built-in packs of the same name,
+// `<projectDir>/.ai/platforms/`, which replace a built-in platform of the same name, and the project skills in
+// `<projectDir>/.ai/skills/`, whose names must be free.
 func (c *Catalog) WithProjectPacks(projectDir string) (*Catalog, error) {
 	project := os.DirFS(projectDir)
 	packs := copyPacks(c.Packs)
@@ -266,7 +269,11 @@ func (c *Catalog) WithProjectPacks(projectDir string) (*Catalog, error) {
 	for name, platform := range projectPlatforms {
 		platforms[name] = platform
 	}
-	return &Catalog{Core: c.Core, Packs: packs, Roles: c.Roles, Skills: c.Skills, Workflows: c.Workflows, Platforms: platforms, Digest: c.Digest}, nil
+	out := &Catalog{Core: c.Core, Packs: packs, Roles: c.Roles, Skills: c.Skills, Workflows: c.Workflows, Platforms: platforms, Digest: c.Digest}
+	if out.ProjectSkills, err = projectSkillsIn(project, ProjectSkillsDir, out.TakenSkillNames()); err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 // PacksFor is the packs a profile on platform may select: the platform's families over the shared ones;
@@ -295,7 +302,7 @@ func (c *Catalog) PacksFor(platform string) Packs {
 
 // ResolvedFor is this catalog with Packs resolved by PacksFor, for code that reads Packs directly.
 func (c *Catalog) ResolvedFor(platform string) *Catalog {
-	return &Catalog{Core: c.Core, Packs: c.PacksFor(platform), Roles: c.Roles, Skills: c.Skills, Workflows: c.Workflows, Platforms: c.Platforms, Digest: c.Digest}
+	return &Catalog{Core: c.Core, Packs: c.PacksFor(platform), Roles: c.Roles, Skills: c.Skills, Workflows: c.Workflows, Platforms: c.Platforms, ProjectSkills: c.ProjectSkills, Digest: c.Digest}
 }
 
 // FragmentsFor is core minus the fragments the platform replaces, then the platform's own.

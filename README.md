@@ -208,6 +208,7 @@ That is a flutter task; other platforms say `ui` where it says `widget`. Review,
 - **The index.** AGENTS.md has a generated `### Skill index`: one line per installed skill with its `when_to_use`, sorted by name. The agent writes the step 0 `Skills` list from it. Nobody keeps that table by hand: a skill in a pack or project platform appears once it renders, and `doctor` checks that every indexed skill is installed.
 - **Review checklists.** A skill whose `meta.yaml` sets `review: true` is marked `(review)` in the index. When it is in the `Skills` list, the `reviewer` applies its checklist to the diff. Shipped ones: `design-fidelity`, plus `mobile-security` and `qa-identifiers` (with `qa: semantics-identifier`) on flutter.
 - **Your own.** Add a skill to a project pack (`skills/<name>.yaml` plus a `target: skill/<name>` fragment) or a project platform (`skills/<name>/meta.yaml`), with a `when_to_use` that says when to pick it.
+- **Project skills.** A skill the team adopts lives in `.ai/skills/<name>/`: a `SKILL.md` copied as written (never rendered, so `{{` survives) and a `meta.yaml` (`description`, `when_to_use`, `review`, `optional`). A required one (`optional: false`, the default) is written for every agent and joins the skill index. An optional one is never written by `sync`: a member turns it on with `skills: [<name>]` in their `.ai/me.yaml`, and `dashcrew me sync` writes it into that member's clone only, listed in `.git/info/exclude`, so a member who did not turn it on has no file any agent could pick. A `review: true` skill is the team's checklist and cannot be optional. The usual path: try a skill alone in `~/.dashcrew/skills/<name>/` with `skills: [<name>]` in `~/.dashcrew/me.yaml`, then `dashcrew skill adopt <name>` (or `<folder>`, `--required`).
 
 ## Commands
 
@@ -327,26 +328,32 @@ stacks: [flutter]     # the platforms you work on
 level: regular        # default level: new | regular
 chat_language: id     # ISO 639-1; empty keeps each project's language.chat
 agents: [claude-code] # claude-code, codex, antigravity
+skills: [ui-slop]     # your own skills in ~/.dashcrew/skills/<name>/, linked for Claude Code
 
 # <repo>/.ai/me.yaml
-role: lead            # only role and level, only what differs from home
+role: lead            # only role, level and skills, only what differs from home
+skills: [ui-slop]     # optional skills of this repo (.ai/skills) you turn on
 ```
 
 | Subcommand | |
 |---|---|
 | `init [-p <repo>] [--home] [--yes]` | the first time (or with `--home`): proposes the home profile from the repo's platform and asks to confirm each value. Inside a dashcrew repo afterwards: asks your role and level there, keeps what differs from home in `.ai/me.yaml` (nothing differs: the repo is forgotten), then syncs |
 | `show [-p <repo>]` | prints the profile, your role and level in this repo with where each comes from, the repos set up, and whether the personal files are in step |
-| `sync [-p <repo>] [--remove-repo] [--prune] [--remove]` | writes the personal instructions for home and every repo set up; `--remove-repo` takes this repo's files out and forgets it, `--prune` forgets repos whose `.ai/me.yaml` is gone, `--remove` takes out everything; the `me.yaml` files stay |
+| `sync [-p <repo>] [--remove-repo] [--prune] [--remove]` | writes the personal instructions for home and every repo set up, links your own skills for Claude Code, and writes each repo's optional skills you turned on (git-excluded); `--remove-repo` takes this repo's files out and forgets it, `--prune` forgets repos whose `.ai/me.yaml` is gone, `--remove` takes out everything; the `me.yaml` files stay |
 
 What `sync` writes, and only into files it owns (a file without its marker is kept and reported, exit 1):
 
 | Agent | Home | Per repo with `.ai/me.yaml` | Personal skills |
 |---|---|---|---|
-| Claude Code | `$CLAUDE_CONFIG_DIR/rules/dashcrew-me.md` (default `~/.claude`) | `<repo>/.claude/rules/dashcrew-me.md` | `dashcrew-onboarding` and `dashcrew-lead` when home or any repo selects them, written to `~/.dashcrew/skills/` and linked into `<config dir>/skills/` |
+| Claude Code | `$CLAUDE_CONFIG_DIR/rules/dashcrew-me.md` (default `~/.claude`) | `<repo>/.claude/rules/dashcrew-me.md` | `dashcrew-onboarding` and `dashcrew-lead` when home or any repo selects them, written to `~/.dashcrew/skills/` and linked into `<config dir>/skills/`; your own skills listed in `skills`, linked the same way |
 | Codex | a block between `<!-- dashcrew:me:begin -->` and `<!-- dashcrew:me:end -->` in `$CODEX_HOME/AGENTS.md` (default `~/.codex`); the rest of the file is untouched | an "In the repository at `<path>`" section in that block, since Codex has no personal file per repo | none |
 | Antigravity | `~/.gemini/config/rules/dashcrew-me.md`, an `always_on` rule | `<repo>/.agents/rules/dashcrew-me.md` | none |
 
 The instructions say what changes: outside your stacks (a project whose `platform` is not one of them) the agent asks every assumption at step 0, runs every review skill and explains one level deeper; `level: new` reads the knowledge index and the cross-repo flow before step 0; `chat_language` answers you in that language while code and PRs keep the project's; `role: lead` reports knowledge proposals, release lines and ports, reviews and specs when asked what needs attention. A repo's file says which role and level apply there and switches the lead and new-member parts on or off. A task worktree from `dashcrew worktree create` links these git-excluded files from the main checkout like the rest of the toolkit (`worktree link` adds them to an older worktree). Run `dashcrew me sync` after editing either file; `doctor` reports files out of step and fails when git tracks a personal file.
+
+### `dashcrew skill adopt <name | folder>`
+
+Copies a skill into `.ai/skills/<name>/` and writes its `meta.yaml` from the `SKILL.md` front matter (`description` required, `when_to_use` kept). `<name>` is a skill in `~/.dashcrew/skills/`; a path is a local folder holding a `SKILL.md`, and the skill takes the folder's name. It is optional unless `--required`. It refuses a name a dashcrew skill, workflow or existing project skill has, and a URL. It never commits; run `dashcrew sync` and commit `.ai/skills/<name>` and what sync writes.
 
 ## What `sync` writes
 

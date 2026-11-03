@@ -136,7 +136,8 @@ func newRoot(cli cliIO) *command {
 		add(specCommand(cli)).
 		add(linkCommand(cli)).
 		add(platformCommand(cli)).
-		add(meCommand(cli))
+		add(meCommand(cli)).
+		add(skillCommand(cli))
 	return root
 }
 

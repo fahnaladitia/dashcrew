@@ -276,7 +276,7 @@ func sample(name string) func(t *testing.T, s side) {
 			t.Fatal(err)
 		}
 		s.write(t, "w/.ai/project.yaml", string(data))
-		for _, folder := range []string{"packs", "platforms"} {
+		for _, folder := range []string{"packs", "platforms", "skills"} {
 			if _, err := os.Stat(golden(t, name, folder)); err == nil {
 				copyDir(t, golden(t, name, folder), s.path("w/.ai/"+folder))
 			}
@@ -973,6 +973,27 @@ func cliCases() []cliCase {
 			cli("me", "sync", "--remove"),
 			cli("me", "show"),
 		}},
+		{name: "skill adopt", setup: func(t *testing.T, s side) {
+			s.write(t, "w/.ai/project.yaml", "toolkit: 1\nagents: [claude-code, codex]\n")
+			s.git(t, "w", "init", "-q", "-b", "main")
+			s.write(t, "home/.dashcrew/me.yaml", "role: mobile\nstacks: [flutter]\nagents: [claude-code, codex]\nskills: [ui-slop]\n")
+			s.write(t, "home/.dashcrew/skills/ui-slop/SKILL.md", "---\nname: ui-slop\ndescription: Catch generic UI.\nwhen_to_use: When a screen is built.\n---\n# UI slop\n")
+			s.write(t, "api-style/SKILL.md", "---\ndescription: Team API style.\n---\n# API style\n")
+		}, steps: []step{
+			cli("sync"),
+			cli("me", "sync"),
+			cli("skill", "adopt", "ui-slop"),
+			cli("skill", "adopt", "ui-slop"),
+			cli("skill", "adopt", "../api-style", "--required"),
+			cli("sync"),
+			{args: []string{"me", "init"}, stdin: "\n\n", before: func(t *testing.T, s side) {
+				s.write(t, "w/.ai/me.yaml", "skills: [ui-slop, api-style]\n")
+			}},
+			cli("me", "show"),
+			{args: []string{"me", "sync"}, before: func(t *testing.T, s side) {
+				s.write(t, "w/.ai/me.yaml", "# none turned on\n")
+			}},
+		}},
 		{name: "check commits", setup: func(t *testing.T, s side) {
 			s.write(t, "w/.ai/project.yaml", "toolkit: 1\nagents: [claude-code]\n")
 			s.git(t, "w", "init", "-q", "-b", "main")
@@ -1133,7 +1154,7 @@ func cliCases() []cliCase {
 		}},
 	}
 	for _, name := range []string{"sample-bloc-getx", "sample-project-pack", "sample-riverpod-gorouter", "sample-codex",
-		"sample-antigravity", "sample-other", "sample-project-platform", "sample-knowledge", "sample-release-lines", "sample-links"} {
+		"sample-antigravity", "sample-other", "sample-project-platform", "sample-knowledge", "sample-release-lines", "sample-links", "sample-project-skills"} {
 		cases = append(cases, cliCase{name: name, setup: sample(name), steps: toolkitSteps()})
 	}
 	return cases

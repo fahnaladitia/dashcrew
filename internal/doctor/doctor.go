@@ -1030,6 +1030,11 @@ func (d Doctor) skills(lockedFiles *omap.Map[string]) Check {
 	for name := range d.Catalog.WorkflowsFor(platform) {
 		dashcrewSkills[name] = true
 	}
+	for _, skill := range d.Catalog.ProjectSkills {
+		if !skill.Optional {
+			dashcrewSkills[skill.Name] = true
+		}
+	}
 	packs := d.Catalog.PacksFor(platform)
 	for _, family := range packs.Keys() {
 		options := packs.Value(family)

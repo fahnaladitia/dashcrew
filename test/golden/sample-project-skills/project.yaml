@@ -1,0 +1,6 @@
+# Synthetic profile: one required project skill (on for everyone, in the skill index) and one optional one, which
+# sync never writes: dashcrew me sync writes it into the clone of a member who turns it on.
+toolkit: 1
+agents: [claude-code, codex]
+project:
+  base_branches: [main]

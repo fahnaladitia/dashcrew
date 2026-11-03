@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/fahnaladitia/dashcrew/internal/catalog"
 	"github.com/fahnaladitia/dashcrew/internal/mustache"
 )
 
@@ -167,7 +168,7 @@ func loadRepos(places Places) ([]repo, error) {
 
 // Instructions renders the home personal instructions for one agent; linked names the personal skills it can follow.
 func Instructions(p *Profile, personal fs.FS, agent string, linked map[string]bool) (string, error) {
-	return renderHome(p, personal, agent, linked, false)
+	return renderHome(p, personal, agent, linked, false, nil)
 }
 
 func baseContext(p *Profile, linked map[string]bool) map[string]any {
@@ -186,6 +187,7 @@ func baseContext(p *Profile, linked map[string]bool) map[string]any {
 		"new": p.Level == "new", "lead": p.Role == "lead",
 		"lead_off": false, "new_off": false,
 		"onboarding_skill": linked["dashcrew-onboarding"], "lead_skill": linked["dashcrew-lead"],
+		"own_skills": []any{}, "has_own_skills": false, "repo_skills": []any{}, "has_repo_skills": false,
 	}
 }
 
@@ -197,16 +199,20 @@ func render(personal fs.FS, context map[string]any) (string, error) {
 	return mustache.Render(string(source), context)
 }
 
-func renderHome(p *Profile, personal fs.FS, agent string, linked map[string]bool, repos bool) (string, error) {
+func renderHome(p *Profile, personal fs.FS, agent string, linked map[string]bool, repos bool, own []ownSkill) (string, error) {
 	context := baseContext(p, linked)
 	context["home"], context["repos"], context["antigravity"] = true, repos, agent == "antigravity"
+	if agent == "claude-code" {
+		context["own_skills"], context["has_own_skills"] = ownSkillLines(own), len(own) > 0
+	}
 	return render(personal, context)
 }
 
 // renderRepo renders a repo's lines: as its own file, or for codex as a section of the user block.
-func renderRepo(home *Profile, r *RepoProfile, dir string, personal fs.FS, agent string, linked map[string]bool) (string, error) {
+func renderRepo(home *Profile, r *RepoProfile, dir string, personal fs.FS, agent string, linked map[string]bool, on []catalog.ProjectSkill) (string, error) {
 	effective := EffectiveIn(home, r)
 	context := baseContext(&effective.Profile, linked)
+	context["repo_skills"], context["has_repo_skills"] = repoSkillLines(on), len(on) > 0
 	homeNew, homeLead := home.Level == "new", home.Role == "lead"
 	context["repo"] = true
 	context["new"], context["new_off"] = effective.Level == "new" && !homeNew, homeNew && effective.Level != "new"
@@ -233,6 +239,8 @@ type target struct {
 	// text is what the target should hold when want; otherwise it should be absent.
 	text string
 	want bool
+	// skill marks an optional project skill file in a repo; its folder goes when the file goes.
+	skill bool
 }
 
 func homeInstructionPath(places Places, agent string) string {
@@ -270,7 +278,35 @@ func selectedSkills(home *Profile, repos []repo) []string {
 	return out
 }
 
-func targets(home *Profile, repos []repo, places Places, personal fs.FS, linked map[string]bool) ([]target, error) {
+// skillPlan is what me sync does with skills: the own skills to link and the optional project skills per repo.
+type skillPlan struct {
+	own []ownSkill
+	// listed are every own skill the profile lists for Claude Code, readable or not; none of them is unlinked.
+	listed map[string]bool
+	on     map[string][]catalog.ProjectSkill
+	// failed are the repos whose .ai/ did not load; their skill files stay as they are.
+	failed map[string]bool
+	notes  []Change
+}
+
+func planSkills(home *Profile, repos []repo, places Places) skillPlan {
+	plan := skillPlan{listed: map[string]bool{}, on: map[string][]catalog.ProjectSkill{}, failed: map[string]bool{}}
+	if contains(home.Agents, "claude-code") {
+		plan.own, plan.notes = ownSkills(home, places)
+		for _, name := range home.Skills {
+			plan.listed[name] = true
+		}
+	}
+	loader := &projectSkillsLoader{}
+	for _, r := range repos {
+		on, notes, failed := repoSkills(r, loader)
+		plan.on[r.dir], plan.failed[r.dir] = on, failed
+		plan.notes = append(plan.notes, notes...)
+	}
+	return plan
+}
+
+func targets(home *Profile, repos []repo, places Places, personal fs.FS, linked map[string]bool, plan skillPlan) ([]target, error) {
 	live := false
 	for _, r := range repos {
 		live = live || r.profile != nil
@@ -279,7 +315,7 @@ func targets(home *Profile, repos []repo, places Places, personal fs.FS, linked 
 	for _, agent := range Agents {
 		t := target{path: homeInstructionPath(places, agent), block: agent == "codex", want: contains(home.Agents, agent)}
 		if t.want {
-			text, err := renderHome(home, personal, agent, linked, live)
+			text, err := renderHome(home, personal, agent, linked, live, plan.own)
 			if err != nil {
 				return nil, err
 			}
@@ -288,7 +324,7 @@ func targets(home *Profile, repos []repo, places Places, personal fs.FS, linked 
 					if r.profile == nil {
 						continue
 					}
-					section, err := renderRepo(home, r.profile, r.dir, personal, agent, linked)
+					section, err := renderRepo(home, r.profile, r.dir, personal, agent, linked, plan.on[r.dir])
 					if err != nil {
 						return nil, err
 					}
@@ -303,13 +339,16 @@ func targets(home *Profile, repos []repo, places Places, personal fs.FS, linked 
 		for _, agent := range []string{"claude-code", "antigravity"} {
 			t := target{path: repoInstructionPath(r.dir, agent), want: r.profile != nil && contains(home.Agents, agent)}
 			if t.want {
-				text, err := renderRepo(home, r.profile, r.dir, personal, agent, linked)
+				text, err := renderRepo(home, r.profile, r.dir, personal, agent, linked, plan.on[r.dir])
 				if err != nil {
 					return nil, err
 				}
 				t.text = text
 			}
 			out = append(out, t)
+		}
+		if !plan.failed[r.dir] {
+			out = append(out, repoSkillTargets(home, r.dir, plan.on[r.dir])...)
 		}
 	}
 	return out, nil
@@ -341,22 +380,75 @@ func Sync(home *Profile, places Places, personal fs.FS) ([]Change, error) {
 		}
 		changes = appendChange(changes, change)
 	}
-	all, err := targets(home, repos, places, personal, linked)
+	plan := planSkills(home, repos, places)
+	var own []ownSkill
+	linkedNow := []string{}
+	for _, name := range readOwnLinked(places) {
+		if plan.listed[name] {
+			linkedNow = append(linkedNow, name)
+		}
+	}
+	for _, skill := range plan.own {
+		change, err := linkOwn(places, skill.name)
+		if err != nil {
+			return changes, err
+		}
+		changes = appendChange(changes, change)
+		if !change.Kept {
+			own = append(own, skill)
+			if !contains(linkedNow, skill.name) {
+				linkedNow = append(linkedNow, skill.name)
+			}
+		}
+	}
+	for _, name := range ownLinksLeftOver(places, plan.listed) {
+		change, err := unlinkSkill(places, name)
+		if err != nil {
+			return changes, err
+		}
+		changes = appendChange(changes, change)
+	}
+	if err := saveOwnLinked(places, linkedNow); err != nil {
+		return changes, err
+	}
+	plan.own = own
+	all, err := targets(home, repos, places, personal, linked, plan)
 	if err != nil {
 		return changes, err
 	}
+	written, removed := map[string][]target{}, map[string][]target{}
 	for _, t := range all {
 		var change Change
 		if t.want {
 			change, err = write(t)
 		} else {
 			change, err = remove(t)
+			if err == nil && t.skill && change.What != "" {
+				err = dropEmptySkillDir(t.path)
+			}
 		}
 		if err != nil {
 			return changes, err
 		}
 		changes = appendChange(changes, change)
+		if t.skill && !change.Kept && change.What != "" {
+			dir := repoOf(t.path)
+			if t.want {
+				written[dir] = append(written[dir], t)
+			} else {
+				removed[dir] = append(removed[dir], t)
+			}
+		}
 	}
+	for _, r := range repos {
+		if err := excludeSkills(r.dir, written[r.dir]); err != nil {
+			return changes, err
+		}
+		if err := unexcludeSkills(r.dir, removed[r.dir]); err != nil {
+			return changes, err
+		}
+	}
+	changes = append(changes, plan.notes...)
 	for _, r := range repos {
 		if r.profile == nil {
 			changes = append(changes, Change{r.dir, "no .ai/me.yaml there; dashcrew me sync --prune forgets it", false})
@@ -389,7 +481,25 @@ func Status(home *Profile, places Places, personal fs.FS) ([]Change, error) {
 		}
 		linked[name] = want && ours
 	}
-	all, err := targets(home, repos, places, personal, linked)
+	plan := planSkills(home, repos, places)
+	var own []ownSkill
+	for _, skill := range plan.own {
+		ours, present := linkState(places, skill.name)
+		link := filepath.Join(places.ClaudeDir, "skills", skill.name)
+		switch {
+		case present && !ours:
+			changes = append(changes, Change{link, "not dashcrew's", true})
+			continue
+		case !present:
+			changes = append(changes, Change{link, "missing", false})
+		}
+		own = append(own, skill)
+	}
+	plan.own = own
+	for _, name := range ownLinksLeftOver(places, plan.listed) {
+		changes = append(changes, Change{filepath.Join(places.ClaudeDir, "skills", name), "left over", false})
+	}
+	all, err := targets(home, repos, places, personal, linked, plan)
 	if err != nil {
 		return nil, err
 	}
@@ -416,6 +526,11 @@ func Status(home *Profile, places Places, personal fs.FS) ([]Change, error) {
 			changes = append(changes, Change{r.dir, "no .ai/me.yaml there", false})
 		}
 	}
+	for _, note := range plan.notes {
+		if note.Kept {
+			changes = append(changes, note)
+		}
+	}
 	return changes, nil
 }
 
@@ -437,6 +552,16 @@ func Remove(places Places) ([]Change, error) {
 			return changes, err
 		}
 	}
+	for _, name := range ownLinksLeftOver(places, nil) {
+		change, err := unlinkSkill(places, name)
+		if err != nil {
+			return changes, err
+		}
+		changes = appendChange(changes, change)
+	}
+	if err := saveOwnLinked(places, nil); err != nil {
+		return changes, err
+	}
 	var all []target
 	for _, agent := range Agents {
 		all = append(all, target{path: homeInstructionPath(places, agent), block: agent == "codex"})
@@ -445,9 +570,16 @@ func Remove(places Places) ([]Change, error) {
 		for _, agent := range []string{"claude-code", "antigravity"} {
 			all = append(all, target{path: repoInstructionPath(dir, agent)})
 		}
+		all = append(all, repoSkillTargets(&Profile{}, dir, nil)...)
 	}
 	for _, t := range all {
 		change, err := remove(t)
+		if err == nil && t.skill && change.What != "" {
+			err = dropEmptySkillDir(t.path)
+		}
+		if err == nil && t.skill && change.What != "" {
+			err = unexcludeSkills(repoOf(t.path), []target{t})
+		}
 		if err != nil {
 			return changes, err
 		}
@@ -460,8 +592,15 @@ func Remove(places Places) ([]Change, error) {
 // skills only it selected go too; its .ai/me.yaml stays.
 func RemoveRepo(home *Profile, places Places, personal fs.FS, dir string) ([]Change, error) {
 	var changes []Change
-	for _, agent := range []string{"claude-code", "antigravity"} {
-		change, err := remove(target{path: repoInstructionPath(dir, agent)})
+	all := []target{{path: repoInstructionPath(dir, "claude-code")}, {path: repoInstructionPath(dir, "antigravity")}}
+	for _, t := range append(all, repoSkillTargets(&Profile{}, dir, nil)...) {
+		change, err := remove(t)
+		if err == nil && t.skill && change.What != "" {
+			err = dropEmptySkillDir(t.path)
+		}
+		if err == nil && t.skill && change.What != "" {
+			err = unexcludeSkills(dir, []target{t})
+		}
 		if err != nil {
 			return changes, err
 		}
@@ -623,6 +762,13 @@ func linkSkill(places Places, personal fs.FS, name string) (Change, error) {
 	if err := os.WriteFile(filepath.Join(source, "SKILL.md"), data, 0o644); err != nil {
 		return Change{}, err
 	}
+	return linkOrCopy(places, name, data)
+}
+
+// linkOrCopy links ~/.dashcrew/skills/<name> into the Claude skills folder, or copies data there where a symlink
+// cannot be made; a folder dashcrew did not put there is kept.
+func linkOrCopy(places Places, name string, data []byte) (Change, error) {
+	source := skillSource(places, name)
 	link := filepath.Join(places.ClaudeDir, "skills", name)
 	ours, present := linkState(places, name)
 	switch {
@@ -663,4 +809,9 @@ func unlinkSkill(places Places, name string) (Change, error) {
 	}
 	link := filepath.Join(places.ClaudeDir, "skills", name)
 	return Change{link, "unlinked", false}, os.RemoveAll(link)
+}
+
+// repoOf is the skill file's repo: the folder above its agent skills folder (`<repo>/.claude/skills/<name>/SKILL.md`).
+func repoOf(file string) string {
+	return filepath.Dir(filepath.Dir(filepath.Dir(filepath.Dir(file))))
 }
