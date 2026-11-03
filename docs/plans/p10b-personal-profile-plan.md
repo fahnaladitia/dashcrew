@@ -68,4 +68,4 @@ User and project instructions are concatenated, not ranked; when they disagree t
 - [x] M1 personal instructions and sync (`personal/rules.md`, `internal/me/sync.go`)
 - [x] M2 personal skills (`personal/skills/`, symlink with a marked copy as fallback)
 - [x] M3 doctor `me` check (opt-in field the CLI sets), README, CHANGELOG
-- [ ] Live check on this machine: waits for the user, since it writes to the real Claude Code config
+- [x] Live check (3 Nov) with a temporary HOME and `CLAUDE_CONFIG_DIR` on a Go sample service: init, sync, doctor, a user Codex file kept, a foreign skill folder kept, level and stack changes, remove. The real config was left alone at the user's choice. Released in 0.3.0.
