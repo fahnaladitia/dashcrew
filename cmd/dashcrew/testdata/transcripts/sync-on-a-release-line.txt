@@ -134,6 +134,7 @@ stdout:
 | ok    mcp             defined: dart-mcp-server
 | warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
 | info  release-line    release/2.4.0 is the release line 2.4.0: toolkit 0.0.0, the main line develop has 0.0.1; dashcrew sync --upgrade moves this line
+| skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 16162 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)

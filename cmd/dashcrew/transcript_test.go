@@ -952,6 +952,21 @@ func cliCases() []cliCase {
 			{args: []string{"commit", "lint", "docs: no body"}, dir: "."},
 			{args: []string{"commit", "lint", "--range", "main..HEAD"}, dir: "."},
 		}},
+		{name: "me", setup: func(t *testing.T, s side) {
+			s.write(t, "w/.ai/project.yaml", "toolkit: 1\nplatform: go\n")
+			s.write(t, "home/.codex/AGENTS.md", "# Mine\n")
+		}, steps: []step{
+			cli("me", "show"),
+			cli("me", "sync"),
+			{args: []string{"me", "init"}, stdin: "boss\n"},
+			{args: []string{"me", "init"}, stdin: "lead\n\nnew\nid\nclaude-code codex\n"},
+			cli("me", "show"),
+			cli("me", "sync"),
+			cli("me", "sync"),
+			cli("me", "init", "--yes", "-p", "."),
+			cli("me", "sync", "--remove"),
+			cli("me", "show"),
+		}},
 		{name: "check commits", setup: func(t *testing.T, s side) {
 			s.write(t, "w/.ai/project.yaml", "toolkit: 1\nagents: [claude-code]\n")
 			s.git(t, "w", "init", "-q", "-b", "main")

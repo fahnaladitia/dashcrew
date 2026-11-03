@@ -1,3 +1,7 @@
+## Unreleased
+
+- Personal profile (P10b): `~/.dashcrew/me.yaml` (`role`, `stacks`, `level`, `chat_language`, `agents`), never committed and never read by the guard. `dashcrew me init` proposes it from the repo's platform, `me show` prints it, and `me sync` writes personal instructions outside every repo: a Claude Code user rule, a marked block in the Codex user AGENTS.md, an Antigravity `always_on` rule. They cover work outside your stacks, `level: new`, a personal chat language and `role: lead`. Claude Code also gets the personal skills `dashcrew-onboarding` and `dashcrew-lead`, linked from `~/.dashcrew/skills/`. A file dashcrew did not write is never overwritten; `me sync --remove` takes everything out. `doctor` adds a `me` check that warns, never fails.
+
 ## 0.2.1
 
 Fixes from the live checks of P5, P6 and P7 on a sample service and a private knowledge repo.

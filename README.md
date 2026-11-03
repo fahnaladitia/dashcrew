@@ -227,6 +227,7 @@ The guard hook: reads one tool call as hook JSON on stdin and answers per agent 
 | Antigravity | `antigravity-hook`, `antigravity-mcp`, `antigravity-roles` |
 | Knowledge | `knowledge` (the link and the clone's last pull), `knowledge-stale`, `spec` (only when the branch records a spec; warns, never fails) |
 | Project | `agents-md-size`, `gitignore` (warns while `.ai/bin/` is ignored), `handoff-rosters` (only when found) |
+| Personal | `me` (your `~/.dashcrew/me.yaml` and the personal files `dashcrew me sync` writes; warns, never fails) |
 
 Agent checks run only for the agents in the profile. Each line starts with `ok`, `warn`, `fail`, `skip` or `info`; only `fail` sets exit 1. `info` reports something that needs no fix, such as `handoff-rosters`: `<plans>/*/handoff/00-roster.md` files left by the pre-P4 team flow.
 
@@ -289,6 +290,34 @@ Points a dependency listed in `project.links` at a local checkout while a task s
 | `remove <package> [--no-deps]` | drops the entry; the file goes when nothing is left |
 
 Every subcommand takes `-p, --project`, any folder inside the repository. Linked repos on different branch names are fine; `doctor` reports them as info.
+
+### `dashcrew me`
+
+Your personal profile, `~/.dashcrew/me.yaml`, one per machine and never committed. The repo decides the rules; the profile changes only how agents work with you. The guard never reads it, and a role grants nothing: in a repo outside your role you follow that repo's rules like its owners.
+
+```yaml
+role: mobile          # be | fe | mobile | devops | fullstack | lead
+stacks: [flutter]     # the platforms you work on
+level: regular        # new | regular
+chat_language: id     # ISO 639-1; empty keeps each project's language.chat
+agents: [claude-code] # claude-code, codex, antigravity
+```
+
+| Subcommand | |
+|---|---|
+| `init [-p <repo>] [--yes]` | proposes values from the repo's platform (and adds it to your stacks when a profile exists), asks to confirm each, writes the file |
+| `show` | prints the profile and whether the personal files are in step |
+| `sync [--remove]` | writes the personal instructions where each agent reads them, outside every repo; `--remove` takes out all of it, `me.yaml` stays |
+
+What `sync` writes, and only into files it owns (a file without its marker is kept and reported, exit 1):
+
+| Agent | Personal instructions | Personal skills |
+|---|---|---|
+| Claude Code | `$CLAUDE_CONFIG_DIR/rules/dashcrew-me.md` (default `~/.claude`) | `dashcrew-onboarding` with `level: new`, `dashcrew-lead` with `role: lead`, written to `~/.dashcrew/skills/` and linked into `<config dir>/skills/` |
+| Codex | a block between `<!-- dashcrew:me:begin -->` and `<!-- dashcrew:me:end -->` in `$CODEX_HOME/AGENTS.md` (default `~/.codex`); the rest of the file is untouched | none |
+| Antigravity | `~/.gemini/config/rules/dashcrew-me.md`, an `always_on` rule | none |
+
+The instructions say what changes: outside your stacks (a project whose `platform` is not one of them) the agent asks every assumption at step 0, runs every review skill and explains one level deeper; `level: new` reads the knowledge index and the cross-repo flow before step 0; `chat_language` answers you in that language while code and PRs keep the project's; `role: lead` reports knowledge proposals, release lines and ports, reviews and specs when asked what needs attention. Run `dashcrew me sync` after editing `me.yaml`; `doctor` reports when the files are out of step.
 
 ## What `sync` writes
 
@@ -353,6 +382,7 @@ them in the format it reads.
 - Nothing else to run after cloning: every agent tool call goes through the committed shim to `dashcrew guard`.
   Without dashcrew 0.1.0 or newer on `PATH` the shim refuses every tool call and names the install command.
 - Run `dashcrew doctor` to confirm.
+- Optional: `dashcrew me init` and `dashcrew me sync` for your personal profile (see [`dashcrew me`](#dashcrew-me)).
 - Codex users: trust the project when Codex asks, then approve the dashcrew hook in `/hooks`. Codex ignores a project's `.codex/` until both are done.
 
 ### Day to day

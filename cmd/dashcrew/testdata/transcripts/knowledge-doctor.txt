@@ -156,6 +156,7 @@ stdout:
 | warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
 | ok    knowledge       linked to ~/.dashcrew/knowledge/notes, last pull unknown
 | warn  knowledge-stale 1 stale pointer, 1 old proposal, 2 unverified pages; run dashcrew knowledge doctor
+| skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 16089 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)

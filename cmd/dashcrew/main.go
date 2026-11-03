@@ -24,6 +24,7 @@ import (
 	"github.com/fahnaladitia/dashcrew/internal/knowledgemcp"
 	"github.com/fahnaladitia/dashcrew/internal/ledger"
 	"github.com/fahnaladitia/dashcrew/internal/lines"
+	"github.com/fahnaladitia/dashcrew/internal/me"
 	"github.com/fahnaladitia/dashcrew/internal/profile"
 	"github.com/fahnaladitia/dashcrew/internal/sync"
 	"github.com/fahnaladitia/dashcrew/internal/version"
@@ -134,7 +135,8 @@ func newRoot(cli cliIO) *command {
 		add(releaseCommand(cli)).
 		add(specCommand(cli)).
 		add(linkCommand(cli)).
-		add(platformCommand(cli))
+		add(platformCommand(cli)).
+		add(meCommand(cli))
 	return root
 }
 
@@ -356,7 +358,11 @@ func doctorCommand(cli cliIO) *command {
 		if err != nil {
 			return 0, err
 		}
-		checks := doctor.Doctor{Catalog: cat, ProjectDir: projectDir, MachineChecks: true, Fetch: r.flag("fetch"), Now: clock(cli.env)}.Run()
+		d := doctor.Doctor{Catalog: cat, ProjectDir: projectDir, MachineChecks: true, Fetch: r.flag("fetch"), Now: clock(cli.env)}
+		if places, err := me.PlacesFrom(cli.env); err == nil {
+			d.Me = &places
+		}
+		checks := d.Run()
 		return printChecks(cli.stdout, checks, false), nil
 	}
 	return c
