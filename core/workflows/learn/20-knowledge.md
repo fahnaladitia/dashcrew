@@ -20,4 +20,4 @@ The team's reviewed product knowledge is in `.ai/knowledge/`. Route each candida
 - Pages describe the main line. Tag a version-specific part in place, such as `(since 2.5.0)` or `(2.4 only)`; never a folder or page per version.
 {{/has_release_lines}}
 
-List each proposal as `Proposed: <path>` in the output.
+In the `LEARN` block, list the proposals in a `-- Proposed ---` section after `Candidates`, before the closing `=` rule, one path per row.

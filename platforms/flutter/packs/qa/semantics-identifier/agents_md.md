@@ -10,4 +10,4 @@ rules: [qa.tag-on-slice, qa.semantics-key-and-identifier, qa.relevant-widgets, q
 - Names are snake_case, screen-prefixed, semantic and stable across builds: `{{pack.qa.example_static_id}}`.
 - No hash codes, indexes or timestamps. Repeated items key off a stable domain id: `{{pack.qa.example_id}}`.
 - Never remove or rename an identifier without checking the automation suites. A missing one is high severity until proven unreferenced.
-- The plan (or, without one, the step 0 `TASK` line) lists the identifiers to add; the `qa-identifiers` skill has the audit. The PR description's `## QA Identifiers` section lists those added, changed or removed, or "None".
+- The plan (or, without one, step 0 `Scope`) lists the identifiers to add; the `qa-identifiers` skill has the audit. The PR description's `## QA Identifiers` section lists those added, changed or removed, or "None".

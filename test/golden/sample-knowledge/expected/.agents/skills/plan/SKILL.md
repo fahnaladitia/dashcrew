@@ -11,7 +11,7 @@ The main session writes the plan for tier standard and large. No implementation 
 
 ## Skills
 
-- Apply the skills on the step 0 `Skills:` line; `flutter-expert`, `flutter-development`, `spec-driven-development` and `source-driven-development` when installed.
+- Apply the skills on the step 0 `Skills` list; `flutter-expert`, `flutter-development`, `spec-driven-development` and `source-driven-development` when installed.
 - Ground every framework and package decision in the official Flutter, Dart or package documentation, and read the package source where a default matters.
 - Never guess an API, and never plan around a deprecated one.
 
@@ -52,7 +52,7 @@ AC-2  manual                       order list after a cold start offline
 
 ### Skill sections
 
-- `feature-architecture` on the `Skills:` line adds an Architecture section; `design-fidelity` adds a Design section with the design spec.
+- `feature-architecture` in the step 0 `Skills` list adds an Architecture section; `design-fidelity` adds a Design section with the design spec.
 - Selected packs add their own sections below.
 
 ### File map
@@ -125,7 +125,7 @@ Write "none" when there are none.
 
 ### Spec
 
-When step 0 names a spec (`Spec:`, recorded in `git config branch.<branch>.dashcrew-spec`), read its `prd.md` and `trd.md` under `.ai/knowledge/specs/` before the File map, and add a Spec section:
+When step 0 names a spec (`Spec`, recorded in `git config branch.<branch>.dashcrew-spec`), read its `prd.md` and `trd.md` under `.ai/knowledge/specs/` before the File map, and add a Spec section:
 
 - The spec and revision: `Spec: specs/<release>/<feature>@rev<n>`. When the clone's `rev` is higher, say so and plan against the newer one.
 - The ACs this task covers, by ID, each in the verification map. `dashcrew spec status` lists the ACs other plans in this repo already claim.

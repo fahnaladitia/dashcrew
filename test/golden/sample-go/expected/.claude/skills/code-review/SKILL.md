@@ -14,7 +14,7 @@ Pass paths and facts, never copied file content:
 
 - the base branch chosen when the branch was created; never guess it
 - the step 0 success criteria, and the plan path when there is one
-- the skills on the step 0 `Skills:` line that the skill index marks `review`
+- the skills on the step 0 `Skills` list that the skill index marks `review`
 - for a re-review: the rework diff only
 
 ## What the reviewer does
@@ -111,19 +111,21 @@ Fix:
 
 ## Verdict
 
-```
-REVIEW: <plan | n files>
+The review prints as one block, the verdict first:
 
-BLOCKER  n
-HIGH     n
-MEDIUM   n
-LOW      n
+```text
+REVIEW  <BLOCK | PASS WITH NOTES | PASS>  (<plan | n files>)
+========================================================================
+BLOCKER <n>  HIGH <n>  MEDIUM <n>  LOW <n>
 
-Criteria
-  AC-1  met      <file:line>   <test file:line | manual item>
-  AC-2  partial  <what is missing>
+-- Findings ------------------------------------------------------------
+<each finding in the finding format, most severe first | none>
 
-Verdict: [BLOCK / PASS WITH NOTES / PASS]
+-- Criteria ------------------------------------------------------------
+ID    STATUS   WHERE                PROOF
+AC-1  met      <file:line>          <test file:line | manual item>
+AC-2  partial  <what is missing>
+========================================================================
 ```
 
 - LOW is a finding that changes neither behavior nor risk (naming, a small duplication).

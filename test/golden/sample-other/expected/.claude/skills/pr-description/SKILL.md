@@ -33,3 +33,28 @@ Keep every heading exactly as in `.github/pull_request_template.md`, in English,
 - `## Testing` - the scoped commands that ran (`./scripts/lint.sh <paths>`, `./scripts/test.sh <files>`) and their results. Without tests: why, and how the change was verified. The manual checklist from step 0 goes here too, each item with the user's result.
 
 - `## Notes / not done` - always last: deliberate omissions, follow-ups, remaining risks, design gaps (`Not in design`), open backend questions, and the MEDIUM and LOW review findings left open.
+
+## Summary in chat
+
+After the file is written and the PR question is answered, close the round in chat with this block. A trivial task keeps its one-line summary instead.
+
+```text
+SUMMARY
+========================================================================
+Skipped    <what and why | none>
+Follow-up  <what | none>
+Docs       <units that got a doc comment | none>
+Tests      <x>/<y> passed (scoped), skipped: <n and why | none>
+PR text    <description path>
+PR         <URL | not created>
+
+-- Changed -------------------------------------------------------------
+FILE                    WHAT
+<file>                  <what changed>
+
+-- Commit --------------------------------------------------------------
+<the commit command>
+========================================================================
+```
+
+Rows the active packs add are listed below; each goes after `PR`, in the same layout.

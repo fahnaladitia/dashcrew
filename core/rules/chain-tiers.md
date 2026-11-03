@@ -5,7 +5,7 @@ rules: [tier.state-in-step0, tier.user-override, tier.highest-signal-wins, tier.
 ---
 ### Size tier
 
-The step 0 `Tier:` line gives evidence, and the user may override it. Take the highest tier any signal reaches.
+The step 0 `Tier` row gives evidence, and the user may override it. Take the highest tier any signal reaches.
 
 | Tier | Files touched | Contract or dependency | Ambiguity |
 |---|---|---|---|

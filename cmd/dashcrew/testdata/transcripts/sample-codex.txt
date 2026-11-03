@@ -72,15 +72,15 @@ files:
 + w/.agents  dir
 + w/.agents/skills  dir
 + w/.agents/skills/acceptance-criteria  dir
-+ w/.agents/skills/acceptance-criteria/SKILL.md  -rw-r--r-- sha256:efe8d2bd85968ed1
++ w/.agents/skills/acceptance-criteria/SKILL.md  -rw-r--r-- sha256:26fe55e725e8121b
 + w/.agents/skills/audit  dir
 + w/.agents/skills/audit/SKILL.md  -rw-r--r-- sha256:7de1ab3a91f1f88b
 + w/.agents/skills/branching  dir
 + w/.agents/skills/branching/SKILL.md  -rw-r--r-- sha256:7975aaf2b2c3367c
 + w/.agents/skills/build-fix  dir
-+ w/.agents/skills/build-fix/SKILL.md  -rw-r--r-- sha256:875dfa07def54fe2
++ w/.agents/skills/build-fix/SKILL.md  -rw-r--r-- sha256:d2ca338a6b26f35f
 + w/.agents/skills/code-review  dir
-+ w/.agents/skills/code-review/SKILL.md  -rw-r--r-- sha256:083355e2ed389c49
++ w/.agents/skills/code-review/SKILL.md  -rw-r--r-- sha256:960a5a53fcad369e
 + w/.agents/skills/continuous-learning  dir
 + w/.agents/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:8e75f35233aaf6c4
 + w/.agents/skills/data-layer-tdd  dir
@@ -96,17 +96,17 @@ files:
 + w/.agents/skills/guardrails  dir
 + w/.agents/skills/guardrails/SKILL.md  -rw-r--r-- sha256:bf4b37de5388c74d
 + w/.agents/skills/learn  dir
-+ w/.agents/skills/learn/SKILL.md  -rw-r--r-- sha256:8c96c8b944175d44
++ w/.agents/skills/learn/SKILL.md  -rw-r--r-- sha256:4c30511abeb5d8d0
 + w/.agents/skills/mobile-security  dir
 + w/.agents/skills/mobile-security/SKILL.md  -rw-r--r-- sha256:eac82c26b4557b97
 + w/.agents/skills/plan  dir
-+ w/.agents/skills/plan/SKILL.md  -rw-r--r-- sha256:ed61a66b9c845ff7
++ w/.agents/skills/plan/SKILL.md  -rw-r--r-- sha256:63fc9357f99bf53b
 + w/.agents/skills/pr-create  dir
 + w/.agents/skills/pr-create/SKILL.md  -rw-r--r-- sha256:88b181afa8381177
 + w/.agents/skills/pr-description  dir
-+ w/.agents/skills/pr-description/SKILL.md  -rw-r--r-- sha256:7f02b7f17b8ea8e8
++ w/.agents/skills/pr-description/SKILL.md  -rw-r--r-- sha256:ace02b859f87e993
 + w/.agents/skills/prompt-polish  dir
-+ w/.agents/skills/prompt-polish/SKILL.md  -rw-r--r-- sha256:b602889385833272
++ w/.agents/skills/prompt-polish/SKILL.md  -rw-r--r-- sha256:4bc68b0e50cd5dcf
 + w/.agents/skills/provider-patterns  dir
 + w/.agents/skills/provider-patterns/SKILL.md  -rw-r--r-- sha256:5ccf9734b49fc3c6
 + w/.agents/skills/strategic-compact  dir
@@ -116,7 +116,7 @@ files:
 + w/.agents/skills/verification-loop  dir
 + w/.agents/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:487563193e58e790
 + w/.agents/skills/verify  dir
-+ w/.agents/skills/verify/SKILL.md  -rw-r--r-- sha256:bc476f675a6fe091
++ w/.agents/skills/verify/SKILL.md  -rw-r--r-- sha256:2384f143274ff9ff
 + w/.agents/skills/work-modes  dir
 + w/.agents/skills/work-modes/SKILL.md  -rw-r--r-- sha256:cca07dc711f2e958
 + w/.agents/skills/worktree  dir
@@ -124,23 +124,23 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:12ab966252052574
-+ w/.ai/lock.json  -rw-r--r-- sha256:7587ffffc97f2441
++ w/.ai/lock.json  -rw-r--r-- sha256:a73734913da1fe04
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
-+ w/.claude/agents/reviewer.md  -rw-r--r-- sha256:6083120a064a4fee
++ w/.claude/agents/reviewer.md  -rw-r--r-- sha256:21e1d1da7249afdd
 + w/.claude/settings.json  -rw-r--r-- sha256:ab785cea7a7a2c39
 + w/.claude/skills  dir
 + w/.claude/skills/acceptance-criteria  dir
-+ w/.claude/skills/acceptance-criteria/SKILL.md  -rw-r--r-- sha256:9514f49c5427aa3e
++ w/.claude/skills/acceptance-criteria/SKILL.md  -rw-r--r-- sha256:ae96af8d4fdad818
 + w/.claude/skills/audit  dir
 + w/.claude/skills/audit/SKILL.md  -rw-r--r-- sha256:f1d546184756c826
 + w/.claude/skills/branching  dir
 + w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:8b93b9328ded4711
 + w/.claude/skills/build-fix  dir
-+ w/.claude/skills/build-fix/SKILL.md  -rw-r--r-- sha256:43296f00548ded28
++ w/.claude/skills/build-fix/SKILL.md  -rw-r--r-- sha256:58e0130412db7da5
 + w/.claude/skills/code-review  dir
-+ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:2d12aba3232cc779
++ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:f7225b8b8e7dea2e
 + w/.claude/skills/continuous-learning  dir
 + w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:698f498fdff18b66
 + w/.claude/skills/data-layer-tdd  dir
@@ -156,17 +156,17 @@ files:
 + w/.claude/skills/guardrails  dir
 + w/.claude/skills/guardrails/SKILL.md  -rw-r--r-- sha256:e4eac50f412b52a6
 + w/.claude/skills/learn  dir
-+ w/.claude/skills/learn/SKILL.md  -rw-r--r-- sha256:f5d260c1d5735b9e
++ w/.claude/skills/learn/SKILL.md  -rw-r--r-- sha256:826b3db155435ec7
 + w/.claude/skills/mobile-security  dir
 + w/.claude/skills/mobile-security/SKILL.md  -rw-r--r-- sha256:1bc29e41680bd49b
 + w/.claude/skills/plan  dir
-+ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:5a6aa95c00ff00f0
++ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:e3a53adba6deac08
 + w/.claude/skills/pr-create  dir
 + w/.claude/skills/pr-create/SKILL.md  -rw-r--r-- sha256:e534b517a93d2650
 + w/.claude/skills/pr-description  dir
-+ w/.claude/skills/pr-description/SKILL.md  -rw-r--r-- sha256:7992498f4157debe
++ w/.claude/skills/pr-description/SKILL.md  -rw-r--r-- sha256:3a2db840273a6df0
 + w/.claude/skills/prompt-polish  dir
-+ w/.claude/skills/prompt-polish/SKILL.md  -rw-r--r-- sha256:46401e1e54b520e2
++ w/.claude/skills/prompt-polish/SKILL.md  -rw-r--r-- sha256:e0901e286b6ef251
 + w/.claude/skills/provider-patterns  dir
 + w/.claude/skills/provider-patterns/SKILL.md  -rw-r--r-- sha256:967396ca1a3052d7
 + w/.claude/skills/strategic-compact  dir
@@ -176,7 +176,7 @@ files:
 + w/.claude/skills/verification-loop  dir
 + w/.claude/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:d54707cb287e4465
 + w/.claude/skills/verify  dir
-+ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:c245fcc49e344b7e
++ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:f0009ed3711d15e7
 + w/.claude/skills/work-modes  dir
 + w/.claude/skills/work-modes/SKILL.md  -rw-r--r-- sha256:42e7df44abe766f6
 + w/.claude/skills/worktree  dir
@@ -184,7 +184,7 @@ files:
 + w/.codex  dir
 + w/.codex/agents  dir
 + w/.codex/agents/explorer.toml  -rw-r--r-- sha256:b45965989f03244c
-+ w/.codex/agents/reviewer.toml  -rw-r--r-- sha256:ea588ab99f8c93a4
++ w/.codex/agents/reviewer.toml  -rw-r--r-- sha256:e0bcbd5bda7280e4
 + w/.codex/config.toml  -rw-r--r-- sha256:75476fb2976c79a3
 + w/.codex/hooks.json  -rw-r--r-- sha256:5d43adc427460026
 + w/.github  dir
@@ -192,7 +192,7 @@ files:
 + w/.github/workflows  dir
 + w/.github/workflows/dashcrew.yml  -rw-r--r-- sha256:57315ee3322f6cda
 + w/.mcp.json  -rw-r--r-- sha256:745dcf12d577148c
-+ w/AGENTS.md  -rw-r--r-- sha256:ef8339466d01ba56
++ w/AGENTS.md  -rw-r--r-- sha256:c02282b1cc94d753
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 2: dashcrew "sync" "-p" "."
@@ -246,7 +246,7 @@ stdout:
 | ok    codex-skills-budget25 skills, list 4670 of 8000 characters
 | warn  codex-trust     project not trusted in the Codex config, so .codex/ is ignored; trust it when Codex asks, then approve the guard in /hooks
 | skip  me              no personal profile; dashcrew me init adds one
-| ok    agents-md-size  AGENTS.md 21100 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 21130 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)
@@ -272,7 +272,7 @@ stdout:
 | ok    codex-skills-budget25 skills, list 4670 of 8000 characters
 | warn  codex-trust     project not trusted in the Codex config, so .codex/ is ignored; trust it when Codex asks, then approve the guard in /hooks
 | skip  me              no personal profile; dashcrew me init adds one
-| ok    agents-md-size  AGENTS.md 21100 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 21130 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)
@@ -287,7 +287,7 @@ stdout:
 | ok    drift           60 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 21100 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 21130 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | skip  pr-sections     no PR body; pass --pr-body <file> or run on a pull_request event
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
@@ -305,7 +305,7 @@ stdout:
 | ok    drift           60 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 21100 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 21130 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | fail  pr-sections     missing: ## Changes, ## Affected files, ## Testing, ## Analytics, ## Notes / not done (write "None" under a heading that does not apply)
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
@@ -323,7 +323,7 @@ stdout:
 | ok    drift           60 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 21100 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 21130 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | fail  pr-sections     missing: ## Changes, ## Affected files, ## Testing, ## Analytics, ## Notes / not done (write "None" under a heading that does not apply)
 | ::error title=dashcrew pr-sections::missing: ## Changes, ## Affected files, ## Testing, ## Analytics, ## Notes / not done (write "None" under a heading that does not apply)
@@ -342,7 +342,7 @@ stdout:
 | ok    drift           60 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 21100 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 21130 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | ok    pr-sections     6 required sections present
 | skip  commits         no base; pass --base <branch> or run on a pull_request event

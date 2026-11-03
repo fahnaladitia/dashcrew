@@ -9,7 +9,7 @@ when_to_use: "When creating the branch, or when it tracks the wrong upstream."
 ## Create
 
 1. Propose 3 names, for example `feat/order-history-filter`, `fix/order-total-rounding`, `hotfix/profile-page-null-avatar`.
-2. Ask for the base. Features and fixes usually fork from the active development branch, hotfixes from the release or main branch, but the user decides. Ask in the same question which release the task ships in (step 0 `Release:`), or none; `dashcrew release lines` lists the lines.
+2. Ask for the base. Features and fixes usually fork from the active development branch, hotfixes from the release or main branch, but the user decides. Ask in the same question which release the task ships in (step 0 `Release`), or none; `dashcrew release lines` lists the lines.
 3. `git status`: if the tree is dirty, show the changes and ask before switching.
 4. `git checkout --no-track -b <name> <base>` (or `git branch --no-track <name> <base>`). `git checkout -b --no-track ...` is rejected as an invalid branch name.
 5. `git branch --show-current` prints the new name.

@@ -10,7 +10,7 @@ rules:
 ---
 ### Spec
 
-When step 0 names a spec (`Spec:`, recorded in `git config branch.<branch>.dashcrew-spec`), read its `prd.md` and `trd.md` under `.ai/knowledge/specs/` before the File map, and add a Spec section:
+When step 0 names a spec (`Spec`, recorded in `git config branch.<branch>.dashcrew-spec`), read its `prd.md` and `trd.md` under `.ai/knowledge/specs/` before the File map, and add a Spec section:
 
 - The spec and revision: `Spec: specs/<release>/<feature>@rev<n>`. When the clone's `rev` is higher, say so and plan against the newer one.
 - The ACs this task covers, by ID, each in the verification map. `dashcrew spec status` lists the ACs other plans in this repo already claim.

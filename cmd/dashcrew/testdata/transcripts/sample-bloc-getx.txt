@@ -44,15 +44,15 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:f3b1abea2abd7456
-+ w/.ai/lock.json  -rw-r--r-- sha256:0e2112e7078cb28b
++ w/.ai/lock.json  -rw-r--r-- sha256:3f0172a07291b743
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
-+ w/.claude/agents/reviewer.md  -rw-r--r-- sha256:6083120a064a4fee
++ w/.claude/agents/reviewer.md  -rw-r--r-- sha256:21e1d1da7249afdd
 + w/.claude/settings.json  -rw-r--r-- sha256:ab785cea7a7a2c39
 + w/.claude/skills  dir
 + w/.claude/skills/acceptance-criteria  dir
-+ w/.claude/skills/acceptance-criteria/SKILL.md  -rw-r--r-- sha256:9514f49c5427aa3e
++ w/.claude/skills/acceptance-criteria/SKILL.md  -rw-r--r-- sha256:ae96af8d4fdad818
 + w/.claude/skills/audit  dir
 + w/.claude/skills/audit/SKILL.md  -rw-r--r-- sha256:37f511283e044a40
 + w/.claude/skills/bloc-patterns  dir
@@ -60,9 +60,9 @@ files:
 + w/.claude/skills/branching  dir
 + w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:3daf5323d2df9a0e
 + w/.claude/skills/build-fix  dir
-+ w/.claude/skills/build-fix/SKILL.md  -rw-r--r-- sha256:0243156e414d0b2b
++ w/.claude/skills/build-fix/SKILL.md  -rw-r--r-- sha256:5f37d6c248240004
 + w/.claude/skills/code-review  dir
-+ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:b67a31e95ac184d9
++ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:51fb819ab2753789
 + w/.claude/skills/continuous-learning  dir
 + w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:adf8930780c15e58
 + w/.claude/skills/data-layer-tdd  dir
@@ -78,19 +78,19 @@ files:
 + w/.claude/skills/guardrails  dir
 + w/.claude/skills/guardrails/SKILL.md  -rw-r--r-- sha256:6b3d7d15a51fe2d7
 + w/.claude/skills/hive-storage  dir
-+ w/.claude/skills/hive-storage/SKILL.md  -rw-r--r-- sha256:8ee250e8d1b8d201
++ w/.claude/skills/hive-storage/SKILL.md  -rw-r--r-- sha256:7def9e60435aab66
 + w/.claude/skills/learn  dir
-+ w/.claude/skills/learn/SKILL.md  -rw-r--r-- sha256:f5d260c1d5735b9e
++ w/.claude/skills/learn/SKILL.md  -rw-r--r-- sha256:826b3db155435ec7
 + w/.claude/skills/mobile-security  dir
 + w/.claude/skills/mobile-security/SKILL.md  -rw-r--r-- sha256:1bc29e41680bd49b
 + w/.claude/skills/plan  dir
-+ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:cd6ea1b802f59d18
++ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:f03de48ec7cfd51e
 + w/.claude/skills/pr-create  dir
 + w/.claude/skills/pr-create/SKILL.md  -rw-r--r-- sha256:5640ac46ac478fbb
 + w/.claude/skills/pr-description  dir
-+ w/.claude/skills/pr-description/SKILL.md  -rw-r--r-- sha256:2f013ecf9f8cae18
++ w/.claude/skills/pr-description/SKILL.md  -rw-r--r-- sha256:ee4aa29748b66b37
 + w/.claude/skills/prompt-polish  dir
-+ w/.claude/skills/prompt-polish/SKILL.md  -rw-r--r-- sha256:46401e1e54b520e2
++ w/.claude/skills/prompt-polish/SKILL.md  -rw-r--r-- sha256:e0901e286b6ef251
 + w/.claude/skills/qa-identifiers  dir
 + w/.claude/skills/qa-identifiers/SKILL.md  -rw-r--r-- sha256:0655671cc9d43935
 + w/.claude/skills/strategic-compact  dir
@@ -100,7 +100,7 @@ files:
 + w/.claude/skills/verification-loop  dir
 + w/.claude/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:d54707cb287e4465
 + w/.claude/skills/verify  dir
-+ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:235114f24f34abfc
++ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:5baf52d9d96236d4
 + w/.claude/skills/work-modes  dir
 + w/.claude/skills/work-modes/SKILL.md  -rw-r--r-- sha256:42e7df44abe766f6
 + w/.claude/skills/worktree  dir
@@ -108,7 +108,7 @@ files:
 + w/.github  dir
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:30e7b379fcfe1cab
 + w/.mcp.json  -rw-r--r-- sha256:745dcf12d577148c
-+ w/AGENTS.md  -rw-r--r-- sha256:1b3683709c6e6ad6
++ w/AGENTS.md  -rw-r--r-- sha256:876fa40f9f16812b
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 2: dashcrew "sync" "-p" "."
@@ -158,7 +158,7 @@ stdout:
 | ok    mcp             defined: dart-mcp-server
 | warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine, managing-hive-storage
 | skip  me              no personal profile; dashcrew me init adds one
-| ok    agents-md-size  AGENTS.md 21365 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 21387 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)
@@ -180,7 +180,7 @@ stdout:
 | ok    mcp             defined: dart-mcp-server
 | warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine, managing-hive-storage
 | skip  me              no personal profile; dashcrew me init adds one
-| ok    agents-md-size  AGENTS.md 21365 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 21387 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)
@@ -195,7 +195,7 @@ stdout:
 | ok    drift           34 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 21365 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 21387 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | skip  pr-sections     no PR body; pass --pr-body <file> or run on a pull_request event
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
@@ -213,7 +213,7 @@ stdout:
 | ok    drift           34 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 21365 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 21387 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | fail  pr-sections     missing: ## Changes, ## Affected files, ## Testing, ## QA Identifiers, ## Analytics, ## Notes / not done (write "None" under a heading that does not apply)
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
@@ -231,7 +231,7 @@ stdout:
 | ok    drift           34 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 21365 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 21387 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | fail  pr-sections     missing: ## Changes, ## Affected files, ## Testing, ## QA Identifiers, ## Analytics, ## Notes / not done (write "None" under a heading that does not apply)
 | ::error title=dashcrew pr-sections::missing: ## Changes, ## Affected files, ## Testing, ## QA Identifiers, ## Analytics, ## Notes / not done (write "None" under a heading that does not apply)
@@ -250,7 +250,7 @@ stdout:
 | ok    drift           34 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 21365 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 21387 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | ok    pr-sections     7 required sections present
 | skip  commits         no base; pass --base <branch> or run on a pull_request event

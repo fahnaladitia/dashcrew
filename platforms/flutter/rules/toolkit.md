@@ -9,7 +9,7 @@ rules: [workflow.discover-toolkit, workflow.names-without-prefix, workflow.agent
 - Names carry no invocation prefix: `plan` is `/plan` or `$plan`, depending on the agent.
 - This file wins over every workflow, subagent and skill on conflict; they only add detail. For UI, the design frame beats the backend contract. The user's decision beats the plan.
 - Never decide for the user at these points: the step 0 block, branch name and base, the plan, analytics, commit and push, opening a PR, merging.
-- At step 0, pick skills from the index below, plus installed outside ones (`idea-refine`, {{^has_knowledge}}`spec-driven-development`, {{/has_knowledge}}`source-driven-development`, `flutter-add-integration-test`), for the `Skills:` line. The `reviewer` applies the checklist of each one marked `review`.
+- At step 0, pick skills from the index below, plus installed outside ones (`idea-refine`, {{^has_knowledge}}`spec-driven-development`, {{/has_knowledge}}`source-driven-development`, `flutter-add-integration-test`), for the `Skills` list. The `reviewer` applies the checklist of each one marked `review`.
 - Apply Flutter and Dart expertise in every phase, with `flutter-expert` and `flutter-development` when installed.
 - `dart-mcp-server` backs the layout-fix, integration-test and runtime-error skills; a runtime exception may be diagnosed with `dart-fix-runtime-errors`, but its fix still runs the chain.
 - If a code graph tool is connected, never trust its flow index for user journeys; trace them by hand through callers and callees.

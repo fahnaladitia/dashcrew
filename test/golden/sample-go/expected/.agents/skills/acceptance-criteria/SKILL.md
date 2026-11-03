@@ -10,7 +10,7 @@ The criteria are the goal of the task: the step 0 block confirms them, the plan 
 ## Before writing
 
 - Search the codebase and existing plans for the concept; features are often half built.
-- Put every question that changes scope on the step 0 `Questions:` line. Record every other uncertainty as an assumption.
+- Put every question that changes scope on the step 0 `Questions` list. Record every other uncertainty as an assumption.
 
 ## Shape
 
@@ -42,7 +42,8 @@ When the request is a brief rather than a task, state before the criteria:
 ## Output
 
 ```text
-AC-1  Given <state>, when <action>, then <result>     -> unit
-AC-2  Given <request fails>, when <action>, then <message and retry>   -> ui
-AC-3  Given <device offline>, when <action>, then <result>   -> manual
+ID    CRITERION                                                      TEST
+AC-1  Given <state>, when <action>, then <result>                    unit
+AC-2  Given <request fails>, when <action>, then <message and retry>  ui
+AC-3  Given <device offline>, when <action>, then <result>           manual
 ```

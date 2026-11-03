@@ -11,7 +11,7 @@ The main session writes the plan for tier standard and large. No implementation 
 
 ## Skills
 
-- Apply the skills on the step 0 `Skills:` line; `spec-driven-development` and `source-driven-development` when installed.
+- Apply the skills on the step 0 `Skills` list; `spec-driven-development` and `source-driven-development` when installed.
 - Ground every framework and package decision in the official documentation of the language, framework or package, and read the package source where a default matters.
 - Never guess an API, and never plan around a deprecated one.
 
@@ -51,7 +51,7 @@ AC-2  manual                     order list after a cold start offline
 
 ### Skill sections
 
-- `feature-architecture` on the `Skills:` line adds an Architecture section; `design-fidelity` adds a Design section with the design spec.
+- `feature-architecture` in the step 0 `Skills` list adds an Architecture section; `design-fidelity` adds a Design section with the design spec.
 - Selected packs add their own sections below.
 
 ### File map
