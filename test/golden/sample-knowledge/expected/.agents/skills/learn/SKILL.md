@@ -30,15 +30,17 @@ The file format and index rules live in the `continuous-learning` skill; apply i
 
 ## Output
 
-```
+```text
 LEARN
+========================================================================
+Written    <path | none>
+Index      <line added | none>
 
-Candidates:
-1. [<kind>] <pattern>  -> save / skip (<reason>)
-2. ...
-
-Written: <path>
-Index:   <line added>
+-- Candidates ----------------------------------------------------------
+#     KIND              DECISION  PATTERN
+1     <kind>            save      <pattern>
+2     <kind>            skip      <pattern> (<reason>)
+========================================================================
 ```
 
 If nothing is worth saving, say so. An empty memory beats a noisy one.
@@ -51,4 +53,4 @@ The team's reviewed product knowledge is in `.ai/knowledge/`. Route each candida
 - A standing instruction for agents is a rule, not knowledge: propose it for the project pack in `.ai/packs/`.
 - After a feature with a spec ships, propose its `features/<slug>.md` page the same way, through the inbox: the PRD's goals and the TRD's final decisions (`D-n`, with accepted departures), each with code pointers. The spec stays as written; it is marked `superseded` only when a newer spec replaces it.
 
-List each proposal as `Proposed: <path>` in the output.
+In the `LEARN` block, list the proposals in a `-- Proposed ---` section after `Candidates`, before the closing `=` rule, one path per row.

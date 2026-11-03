@@ -35,7 +35,7 @@ AC-2  manual                     order list after a cold start offline
 
 ### Skill sections
 
-- `feature-architecture` on the `Skills:` line adds an Architecture section; `design-fidelity` adds a Design section with the design spec.
+- `feature-architecture` in the step 0 `Skills` list adds an Architecture section; `design-fidelity` adds a Design section with the design spec.
 - Selected packs add their own sections below.
 
 ### File map

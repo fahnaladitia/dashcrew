@@ -30,15 +30,17 @@ The file format and index rules live in the `continuous-learning` skill; apply i
 
 ## Output
 
-```
+```text
 LEARN
+========================================================================
+Written    <path | none>
+Index      <line added | none>
 
-Candidates:
-1. [<kind>] <pattern>  -> save / skip (<reason>)
-2. ...
-
-Written: <path>
-Index:   <line added>
+-- Candidates ----------------------------------------------------------
+#     KIND              DECISION  PATTERN
+1     <kind>            save      <pattern>
+2     <kind>            skip      <pattern> (<reason>)
+========================================================================
 ```
 
 If nothing is worth saving, say so. An empty memory beats a noisy one.

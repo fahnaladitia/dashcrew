@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-// Ref is the spec a task builds, as step 0 `Spec:` and `branch.<name>.dashcrew-spec` write it:
+// Ref is the spec a task builds, as the step 0 `Spec` row and `branch.<name>.dashcrew-spec` write it:
 // `specs/<release>/<feature>@rev<n>`.
 type Ref struct {
 	// Folder is slash-separated from `specs/` on: `specs/<release>/<feature>`.

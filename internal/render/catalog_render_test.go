@@ -487,7 +487,7 @@ func TestKnowledgeTiesTasksToTheirSpec(t *testing.T) {
 		off, on := renderShipped(t, profile), renderShipped(t, profile+knowledge)
 		withLines := renderShipped(t, profile+knowledge+releaseLines)
 		checks := []struct{ target, text string }{
-			{"agents_md", "Branch:           1) <name>  2) <name>  3) <name>   base: <ask>\nSpec:             specs/<release>/<feature>@rev<n> | none\n```"},
+			{"skill/prompt-polish", "(<evidence>)\nSpec       specs/<release>/<feature>@rev<n> | none\n"},
 			{"skill/prompt-polish", "- `Spec`: the spec the task builds, `specs/<release>/<feature>@rev<n>`"},
 			{"skill/prompt-polish", "the success criteria are the ACs this task covers, by ID"},
 			{"skill/branching", "\n7. With a spec, record it: `git config branch.<name>.dashcrew-spec specs/<release>/<feature>@rev<n>`."},
@@ -495,8 +495,8 @@ func TestKnowledgeTiesTasksToTheirSpec(t *testing.T) {
 			{"workflow/plan", "`departs from D-n: <what and why>`"},
 			{"workflow/plan", "makes the verdict NO-GO"},
 			{"workflow/plan", "needs a `spec revise` pull request on the knowledge repo, opened by a member; the summary names it as follow-up."},
-			{"role/reviewer", "the step 0 success criteria and `Spec:`, the plan path"},
-			{"role/reviewer", "- Spec: with a step 0 `Spec:`, the plan names the spec and revision"},
+			{"role/reviewer", "the step 0 success criteria and `Spec`, the plan path"},
+			{"role/reviewer", "- Spec: with a step 0 `Spec`, the plan names the spec and revision"},
 			{"role/reviewer", "that the plan does not declare as a departure is HIGH."},
 			{"workflow/learn", "propose its `features/<slug>.md` page the same way, through the inbox"},
 			{"workflow/learn", "marked `superseded` only when a newer spec replaces it"},
@@ -532,7 +532,7 @@ func TestReleaseTextRendersOnlyWithReleaseLines(t *testing.T) {
 		plain := renderShipped(t, "toolkit: 1\nagents: [claude-code]\n"+platform+"knowledge: { repo: x }\n")
 		lines := renderShipped(t, "toolkit: 1\nagents: [claude-code]\n"+platform+"knowledge: { repo: x }\n"+releaseLines)
 		checks := []struct{ target, text string }{
-			{"agents_md", "Release:          <version> | none\nSpec:"},
+			{"skill/prompt-polish", "Release    <version> | none\nSpec       "},
 			{"agents_md", "`build-fix`, `port`, `spec`. Say"},
 			{"agents_md", "`audit` (read-only), `port` and `worktree` sit outside the chain."},
 			{"skill/branching", "7. With a release, record it: `git config branch.<name>.dashcrew-release <version>`."},
@@ -642,6 +642,57 @@ func TestQuestionsAreAskedWhenTheyComeUp(t *testing.T) {
 		} {
 			if !strings.Contains(targetContent(t, rendered, c.target), c.text) {
 				t.Errorf("%q %s lacks %q", platform, c.target, c.text)
+			}
+		}
+	}
+}
+
+// TestChatBlocksShareOneLayout pins the chat block layout: AGENTS.md states it once with the comparison table rule
+// and the SUMMARY fields, and the step 0, review and verify templates follow it outside AGENTS.md.
+func TestChatBlocksShareOneLayout(t *testing.T) {
+	const rule = "\n========================================================================\n"
+	for _, platform := range []string{"", "platform: other\nplatform_config: { detect: [x], commands: { analyze: a, test: t, test_scoped: s, deps: d } }\n"} {
+		rendered := renderShipped(t, "toolkit: 1\nagents: [claude-code]\n"+platform)
+		for _, c := range []struct{ target, text string }{
+			{"agents_md", "72-column `=` rule"},
+			{"agents_md", "A comparison (options, before and after, trade-offs) is a table in that layout"},
+			{"agents_md", "Above trivial, the summary is the `SUMMARY` block in `pr-description`:"},
+			{"agents_md", "polish it with `prompt-polish` and print its block."},
+			{"agents_md", "The main session always asks open questions, with the agent's question tool when it has one, and waits."},
+			{"skill/prompt-polish", "With the agent's question tool, ask through it: each `Q` by its id, the branch and base"},
+			{"skill/prompt-polish", "STEP 0  <feat | fix | hotfix>: <polished request, one sentence>" + rule},
+			{"skill/prompt-polish", "-- Questions -----------------------------------------------------------\nQ1    <question>\n"},
+			{"skill/prompt-polish", "Reply \"ok\", or answer by id (Q1 ...), pick a branch and a base, edit any line."},
+			{"workflow/code-review", "REVIEW  <BLOCK | PASS WITH NOTES | PASS>  (<plan | n files>)" + rule},
+			{"role/reviewer", "REVIEW  <BLOCK | PASS WITH NOTES | PASS>  (<plan | n files>)" + rule},
+			{"workflow/verify", "VERIFY  <PASS | FAIL>  PR ready: <yes | no>" + rule},
+			{"workflow/learn", "LEARN" + rule},
+			{"workflow/build-fix", "BUILD FIX" + rule},
+		} {
+			if !strings.Contains(targetContent(t, rendered, c.target), c.text) {
+				t.Errorf("%q %s lacks %q", platform, c.target, c.text)
+			}
+		}
+		ui := "`unit`, `ui`, `integration` or `manual`"
+		if platform == "" {
+			ui = "`unit`, `widget`, `integration` or `manual`"
+		}
+		if !strings.Contains(targetContent(t, rendered, "skill/prompt-polish"), ui) {
+			t.Errorf("%q: prompt-polish lacks the platform test types %q", platform, ui)
+		}
+		summary := targetContent(t, rendered, "skill/pr-description")
+		if !strings.Contains(summary, "SUMMARY"+rule) || strings.Contains(summary, "- `Tracker ") {
+			t.Errorf("%q: pr-description lacks the SUMMARY block or holds a tracker row without a tracker", platform)
+		}
+		tracked := targetContent(t, renderShipped(t, "toolkit: 1\nagents: [claude-code]\n"+platform+"stack: { tracker: clickup }\n"), "skill/pr-description")
+		if !strings.Contains(tracked, "- `Tracker    <task>  <old status> -> <new status>, comment <posted | none>`") {
+			t.Errorf("%q: pr-description lacks the tracker row with tracker: clickup", platform)
+		}
+		const extras = "knowledge: { repo: x }\nproject: { release_lines: { main: develop, release: 'release/(?P<version>[0-9.]+)' } }\n"
+		agentsMd := targetContent(t, renderShipped(t, "toolkit: 1\nagents: [claude-code]\n"+platform+extras), "agents_md")
+		for _, gone := range []string{"TASK:", "Success criteria: <id>", "Release:          ", "Spec:             "} {
+			if strings.Contains(agentsMd, gone) {
+				t.Errorf("%q agents_md still holds the step 0 template line %q", platform, gone)
 			}
 		}
 	}

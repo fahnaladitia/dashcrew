@@ -107,21 +107,24 @@ Never run `dart format` or `dart fix` to clear analyzer or diff output.
 
 ## Output
 
+```text
+VERIFY  <PASS | FAIL>  PR ready: <yes | no>
+========================================================================
+Scope      <n> files analyzed, <m> test files
+Analyze    <OK | n errors, m warnings>
+Tests      <x>/<y> passed (scoped)
+Manual     <n items handed to the user | none>
+Secrets    <OK | n findings>
+Arch       <OK | n violations>
+QA ids     <OK | n widgets without identifier | N/A>
+Diff       <n> files, <m> lines out of scope
+
+-- Issues --------------------------------------------------------------
+1     <file:line>
+      <issue>. Fix: <concrete fix>
+========================================================================
 ```
-VERIFY: [PASS/FAIL]
 
-Scope:    [N files analyzed, M test files]
-Analyze:  [OK / N errors, M warnings]
-Tests:    [X/Y passed (scoped)]
-Manual:   [N items handed to the user / none]
-Secrets:  [OK / N findings]
-Arch:     [OK / N violations]
-QA ids:   [OK / N widgets without identifier / N/A]
-Diff:     [N files, M lines out of scope]
-
-PR ready: [YES/NO]
-```
-
-- On NO, list every issue with `file:line` and a concrete fix.
-- Paste the real command output under the summary. Never conclude PASS without it.
+- With `PR ready: no`, `Issues` lists every issue with `file:line` and a concrete fix; otherwise it says `none`.
+- Paste the real command output under the block. Never conclude PASS without it.
 - On PASS, run `dashcrew verify record` as the last step: `dashcrew commit suggest` then lists the files changed after this verify.

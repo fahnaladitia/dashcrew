@@ -17,7 +17,7 @@ The main session writes the plan for tier standard and large{{^policy.tier_gates
 
 ## Skills
 
-- Apply the skills on the step 0 `Skills:` line; `spec-driven-development` and `source-driven-development` when installed.
+- Apply the skills on the step 0 `Skills` list; `spec-driven-development` and `source-driven-development` when installed.
 - Ground every framework and package decision in the official documentation of the language, framework or package, and read the package source where a default matters.
 - Never guess an API, and never plan around a deprecated one.
 
@@ -37,7 +37,7 @@ The main session writes the plan for tier standard and large{{^policy.tier_gates
 
 ## File
 
-Save the plan to `{{paths.plans}}/<task-slug>/plan.md`, one file.{{#has_release_lines}} A task with a release (step 0 `Release:`, or `git config branch.<branch>.dashcrew-release`) uses `{{paths.plans}}/<release>/<task-slug>/plan.md`; `dashcrew release status <release>` lists it in that release's ledger.{{/has_release_lines}}
+Save the plan to `{{paths.plans}}/<task-slug>/plan.md`, one file.{{#has_release_lines}} A task with a release (step 0 `Release`, or `git config branch.<branch>.dashcrew-release`) uses `{{paths.plans}}/<release>/<task-slug>/plan.md`; `dashcrew release status <release>` lists it in that release's ledger.{{/has_release_lines}}
 
 - Tier large adds `code.md` next to it: signatures and the hunks that carry a decision, nothing else.
 - `code.md` never holds full test bodies; they are written test first during implementation.

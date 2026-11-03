@@ -41,23 +41,23 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-+ w/.ai/lock.json  -rw-r--r-- sha256:80ebdb72c1b5bdbb
++ w/.ai/lock.json  -rw-r--r-- sha256:84283d8546e06fef
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
-+ w/.claude/agents/reviewer.md  -rw-r--r-- sha256:6083120a064a4fee
++ w/.claude/agents/reviewer.md  -rw-r--r-- sha256:21e1d1da7249afdd
 + w/.claude/settings.json  -rw-r--r-- sha256:ab785cea7a7a2c39
 + w/.claude/skills  dir
 + w/.claude/skills/acceptance-criteria  dir
-+ w/.claude/skills/acceptance-criteria/SKILL.md  -rw-r--r-- sha256:9514f49c5427aa3e
++ w/.claude/skills/acceptance-criteria/SKILL.md  -rw-r--r-- sha256:ae96af8d4fdad818
 + w/.claude/skills/audit  dir
 + w/.claude/skills/audit/SKILL.md  -rw-r--r-- sha256:f1d546184756c826
 + w/.claude/skills/branching  dir
 + w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:8b93b9328ded4711
 + w/.claude/skills/build-fix  dir
-+ w/.claude/skills/build-fix/SKILL.md  -rw-r--r-- sha256:43296f00548ded28
++ w/.claude/skills/build-fix/SKILL.md  -rw-r--r-- sha256:58e0130412db7da5
 + w/.claude/skills/code-review  dir
-+ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:2d12aba3232cc779
++ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:f7225b8b8e7dea2e
 + w/.claude/skills/continuous-learning  dir
 + w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:698f498fdff18b66
 + w/.claude/skills/data-layer-tdd  dir
@@ -73,17 +73,17 @@ files:
 + w/.claude/skills/guardrails  dir
 + w/.claude/skills/guardrails/SKILL.md  -rw-r--r-- sha256:e4eac50f412b52a6
 + w/.claude/skills/learn  dir
-+ w/.claude/skills/learn/SKILL.md  -rw-r--r-- sha256:f5d260c1d5735b9e
++ w/.claude/skills/learn/SKILL.md  -rw-r--r-- sha256:826b3db155435ec7
 + w/.claude/skills/mobile-security  dir
 + w/.claude/skills/mobile-security/SKILL.md  -rw-r--r-- sha256:1bc29e41680bd49b
 + w/.claude/skills/plan  dir
-+ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:aa500e589116c210
++ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:2d01c5c80ac4c9f3
 + w/.claude/skills/pr-create  dir
 + w/.claude/skills/pr-create/SKILL.md  -rw-r--r-- sha256:e534b517a93d2650
 + w/.claude/skills/pr-description  dir
-+ w/.claude/skills/pr-description/SKILL.md  -rw-r--r-- sha256:7992498f4157debe
++ w/.claude/skills/pr-description/SKILL.md  -rw-r--r-- sha256:498dde800aac4ff1
 + w/.claude/skills/prompt-polish  dir
-+ w/.claude/skills/prompt-polish/SKILL.md  -rw-r--r-- sha256:46401e1e54b520e2
++ w/.claude/skills/prompt-polish/SKILL.md  -rw-r--r-- sha256:e0901e286b6ef251
 + w/.claude/skills/strategic-compact  dir
 + w/.claude/skills/strategic-compact/SKILL.md  -rw-r--r-- sha256:a866040ed09e6f37
 + w/.claude/skills/tdd  dir
@@ -91,7 +91,7 @@ files:
 + w/.claude/skills/verification-loop  dir
 + w/.claude/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:d54707cb287e4465
 + w/.claude/skills/verify  dir
-+ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:c245fcc49e344b7e
++ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:f0009ed3711d15e7
 + w/.claude/skills/work-modes  dir
 + w/.claude/skills/work-modes/SKILL.md  -rw-r--r-- sha256:42e7df44abe766f6
 + w/.claude/skills/worktree  dir
@@ -99,7 +99,7 @@ files:
 + w/.github  dir
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
 + w/.mcp.json  -rw-r--r-- sha256:745dcf12d577148c
-+ w/AGENTS.md  -rw-r--r-- sha256:a58e6fa32b031066
++ w/AGENTS.md  -rw-r--r-- sha256:5a072cf84b6c257d
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 2: dashcrew "check" "--base" "main"
@@ -113,7 +113,7 @@ stdout:
 | ok    drift           31 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16091 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16122 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | skip  pr-sections     no PR body; pass --pr-body <file> or run on a pull_request event
 | ok    commits         1 commit in main..HEAD follows <type>(<scope>): <subject>
@@ -131,10 +131,10 @@ stdout:
 | ok    drift           31 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16091 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16122 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | skip  pr-sections     no PR body; pass --pr-body <file> or run on a pull_request event
-| fail  commits         9976a09 subject line "WIP sharing" does not match <type>(<scope>): <subject>
+| fail  commits         06479cc subject line "WIP sharing" does not match <type>(<scope>): <subject>
 stderr: (empty)
 files: (unchanged)
 
@@ -151,12 +151,12 @@ stdout:
 | ok    drift           31 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16091 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16122 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | fail  pr-sections     missing: ## Summary, ## Changes, ## Affected files, ## Testing, ## Notes / not done (write "None" under a heading that does not apply)
 | ::error title=dashcrew pr-sections::missing: ## Summary, ## Changes, ## Affected files, ## Testing, ## Notes / not done (write "None" under a heading that does not apply)
-| fail  commits         9976a09 subject line "WIP sharing" does not match <type>(<scope>): <subject>
-| ::error title=dashcrew commits::9976a09 subject line "WIP sharing" does not match <type>(<scope>): <subject>
+| fail  commits         06479cc subject line "WIP sharing" does not match <type>(<scope>): <subject>
+| ::error title=dashcrew commits::06479cc subject line "WIP sharing" does not match <type>(<scope>): <subject>
 stderr: (empty)
 files: (unchanged)
 
@@ -170,7 +170,7 @@ stdout:
 | ok    drift           31 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16091 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16122 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | skip  pr-sections     no PR body; pass --pr-body <file> or run on a pull_request event
 | fail  commits         cannot read nope..HEAD: fatal: bad revision 'nope..HEAD'; a CI checkout needs fetch-depth: 0

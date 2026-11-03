@@ -168,22 +168,45 @@ Pack params and their defaults are in `pack.yaml` of each pack (`platforms/flutt
 
 ## Choosing skills
 
-Skills are picked once per task, at step 0, in one visible line. The agent prints this block before any work and you confirm or edit it once:
+Skills are picked once per task, at step 0, in one visible list. The agent prints this block before any work (the `prompt-polish` skill holds the template), asks its questions with the agent's question tool when it has one, and you confirm or edit it once:
 
 ```text
-TASK:             <feat | fix | hotfix>: <polished request>
-Tier:             trivial | small | standard | large   (<evidence>)
-Assumptions:      <each one, or none>
-Questions:        <all of them, once, or none>
-Skills:           <name> (<why>), <name> (<why>)
-Success criteria: <id> <criterion> -> unit | widget | integration | manual
-Branch:           1) <name>  2) <name>  3) <name>   base: <ask>
+STEP 0  feat: Add a status filter (all, paid, unpaid) to the order list.
+========================================================================
+Scope      lib/features/orders/ (order_list_page, order_list_cubit,
+           order_repository), test/features/orders/
+Not doing  keeping the filter across app restarts
+Tier       standard  (4 files across ui, state and data)
+
+-- Assumptions ---------------------------------------------------------
+A1    the orders API accepts ?status=paid|unpaid
+
+-- Questions -----------------------------------------------------------
+Q1    default filter: "all", or the last one used?
+
+-- Skills --------------------------------------------------------------
+NAME                 WHY
+bloc                 state lives in OrderListCubit
+data-layer-tdd       new query param in OrderRepository
+
+-- Success criteria ----------------------------------------------------
+ID    CRITERION                                 TEST
+AC-1  picking "paid" shows only paid orders     widget
+AC-2  repository sends status=paid              unit
+
+-- Branch --------------------------------------------------------------
+1     feat/order-status-filter
+2     feat/orders-filter-by-status
+3     feat/order-list-filter
+base  develop or main?
+========================================================================
+Reply "ok", or answer by id (Q1 ...), pick a branch and a base, edit any line.
 ```
 
-That is the flutter rendering; other platforms say `ui` where it says `widget`.
+That is a flutter task; other platforms say `ui` where it says `widget`. Review, verify, learn, build-fix and the end-of-task summary print in the same layout, and so does any comparison: a table aligned with spaces, so every value copies clean.
 
-- **The index.** AGENTS.md has a generated `### Skill index`: one line per installed skill with its `when_to_use`, sorted by name. The agent writes the `Skills:` line from it. Nobody keeps that table by hand: a skill in a pack or project platform appears once it renders, and `doctor` checks that every indexed skill is installed.
-- **Review checklists.** A skill whose `meta.yaml` sets `review: true` is marked `(review)` in the index. When it is in the `Skills:` line, the `reviewer` applies its checklist to the diff. Shipped ones: `design-fidelity`, plus `mobile-security` and `qa-identifiers` (with `qa: semantics-identifier`) on flutter.
+- **The index.** AGENTS.md has a generated `### Skill index`: one line per installed skill with its `when_to_use`, sorted by name. The agent writes the step 0 `Skills` list from it. Nobody keeps that table by hand: a skill in a pack or project platform appears once it renders, and `doctor` checks that every indexed skill is installed.
+- **Review checklists.** A skill whose `meta.yaml` sets `review: true` is marked `(review)` in the index. When it is in the `Skills` list, the `reviewer` applies its checklist to the diff. Shipped ones: `design-fidelity`, plus `mobile-security` and `qa-identifiers` (with `qa: semantics-identifier`) on flutter.
 - **Your own.** Add a skill to a project pack (`skills/<name>.yaml` plus a `target: skill/<name>` fragment) or a project platform (`skills/<name>/meta.yaml`), with a `when_to_use` that says when to pick it.
 
 ## Commands
@@ -460,7 +483,7 @@ With `knowledge` set, a large feature gets a PRD and a TRD in the knowledge repo
 
 **Workflow.** The `spec` workflow (main session, outside the chain): one round of brainstorm questions, the PRD with `acceptance-criteria`, the TRD with `feature-architecture` and the platform's TRD sections, `spec lint`, then `status: review` and the `git` commands for the member.
 
-**Tasks follow the spec.** Step 0 gains `Spec: specs/<release>/<feature>@rev<n> | none`; with a spec, the success criteria are its ACs by ID. The `branching` skill records it with `git config branch.<name>.dashcrew-spec <value>`. The `plan` names the spec and revision, lists the ACs it covers, and states each departure from the TRD as `departs from D-n: <what and why>`; an undeclared one makes it NO-GO, and the `reviewer` reports a change against a decision or contract the plan did not declare as HIGH. An accepted departure is followed by a `spec revise` pull request, named in the summary.
+**Tasks follow the spec.** Step 0 gains a `Spec` row (`specs/<release>/<feature>@rev<n> | none`); with a spec, the success criteria are its ACs by ID. The `branching` skill records it with `git config branch.<name>.dashcrew-spec <value>`. The `plan` names the spec and revision, lists the ACs it covers, and states each departure from the TRD as `departs from D-n: <what and why>`; an undeclared one makes it NO-GO, and the `reviewer` reports a change against a decision or contract the plan did not declare as HIGH. An accepted departure is followed by a `spec revise` pull request, named in the summary.
 
 **Drift.** `doctor` warns, and never fails, when the recorded `rev` is older than the clone's ("spec moved to rev 4; re-read it") or when the spec is still `draft` while the branch has commits of its own (commits no other branch holds). After the feature ships, the knowledge-gated `learn` proposes its `features/<slug>.md` page through the inbox from the PRD's goals and the TRD's final decisions, with code pointers; a spec becomes `superseded` only when a newer spec replaces it.
 
@@ -481,7 +504,7 @@ project:
 
 **Lines.** `dashcrew release lines` lists local and remote-tracking line branches ordered by version (release before hotfix on a tie), then the main line. A branch resolves as the main line, then a line by its name, then the release it records in `git config branch.<name>.dashcrew-release`, then the nearest line by merge-base, shown as a guess. Only a line by name or a recorded release protects a branch.
 
-**A task knows its release.** Step 0 gains `Release: <version> | none`, and the `branching` skill asks for it with the base and records it with `git config branch.<name>.dashcrew-release <version>`, local config the guard allows and nothing commits. The step 0 line, the `port` workflow and the release text in `branching`, `prompt-polish`, `plan`, `pr-description` and `learn` render only when `release_lines` is set.
+**A task knows its release.** Step 0 gains a `Release` row (`<version> | none`), and the `branching` skill asks for it with the base and records it with `git config branch.<name>.dashcrew-release <version>`, local config the guard allows and nothing commits. The step 0 row, the `port` workflow and the release text in `branching`, `prompt-polish`, `plan`, `pr-description` and `learn` render only when `release_lines` is set.
 
 **Toolkit version per line.** On a protected branch without `--upgrade`, when the lock's version or catalog digest is older or different, `sync` checks each differing file on its own: a file is written as profile-driven when rendering the lock's profile with the current catalog reproduces its locked hash; otherwise it is held as catalog-driven. Held files mean exit 1, with the two ways forward: `dashcrew sync --upgrade` on the line, or upgrade on the main line and merge it down. With `release_lines` set the lock records `inputs` (catalog digest, profile hash). `doctor`'s `release-line` check compares the line's toolkit with the main line's. Limits: the catalog digest covers only the built-in catalog, and adapter config merges (`.mcp.json`, `settings.json`) are not held.
 

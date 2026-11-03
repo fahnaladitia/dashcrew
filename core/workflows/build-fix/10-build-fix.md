@@ -55,13 +55,16 @@ Only after steps 1 to 4, and only when the error still makes no sense, clean the
 
 ## Output
 
-```
+```text
 BUILD FIX
+========================================================================
+Error      <original message, trimmed>
+Cause      <root cause, at file:line>
+Fix        <what changed>
 
-Error:   <original message, trimmed>
-Cause:   <root cause, at file:line>
-Fix:     <what changed>
-Verify:  <command run, with its real output>
+-- Verify --------------------------------------------------------------
+<command run>
+========================================================================
 ```
 
-Paste the command output. A claim without output is not verification.
+Paste the command's real output under the block. A claim without output is not verification.

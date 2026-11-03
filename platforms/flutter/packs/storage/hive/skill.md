@@ -16,7 +16,7 @@ rules: [storage.skill-api-reference-only, storage.recheck-facts, storage.box-reg
 - Boxes are untyped. Store primitives, maps or JSON strings, and map them in the repository. Never start a `@HiveType` for one feature.
 - Keys are named constants. Every read passes an explicit `defaultValue` and casts defensively (`box.get(key) as int? ?? 0`).
 - A box per app version names who deletes the previous version's box; if nobody does, list it in the PR notes.
-- Any change to the `{{pack.storage.auth_box}}` box puts `mobile-security` on the step 0 `Skills:` line. Never widen what it stores silently.
+- Any change to the `{{pack.storage.auth_box}}` box puts `mobile-security` on the step 0 `Skills` list. Never widen what it stores silently.
 - Never `deleteFromDisk()` or `clear()` a box the task does not own.
 - Changing a `typeId` or the field order of a Hive type already in use breaks data on installed devices. Raise it to the user before writing code.
 - Adding a `@HiveType` or changing adapter fields or a `typeId` requires running build_runner.

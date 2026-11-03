@@ -87,23 +87,23 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-+ w/.ai/lock.json  -rw-r--r-- sha256:1aedd66eb55d618f
++ w/.ai/lock.json  -rw-r--r-- sha256:3910667c772e856e
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
-+ w/.claude/agents/reviewer.md  -rw-r--r-- sha256:6083120a064a4fee
++ w/.claude/agents/reviewer.md  -rw-r--r-- sha256:21e1d1da7249afdd
 + w/.claude/settings.json  -rw-r--r-- sha256:ab785cea7a7a2c39
 + w/.claude/skills  dir
 + w/.claude/skills/acceptance-criteria  dir
-+ w/.claude/skills/acceptance-criteria/SKILL.md  -rw-r--r-- sha256:fb28738f06357c3f
++ w/.claude/skills/acceptance-criteria/SKILL.md  -rw-r--r-- sha256:afa66048ce47b04c
 + w/.claude/skills/audit  dir
 + w/.claude/skills/audit/SKILL.md  -rw-r--r-- sha256:d023e455d1f28efd
 + w/.claude/skills/branching  dir
 + w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:8b93b9328ded4711
 + w/.claude/skills/build-fix  dir
-+ w/.claude/skills/build-fix/SKILL.md  -rw-r--r-- sha256:8eee01f577e41fe6
++ w/.claude/skills/build-fix/SKILL.md  -rw-r--r-- sha256:174fa2191d10f0aa
 + w/.claude/skills/code-review  dir
-+ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:9fb5bf1475a25bd3
++ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:066212ee409fbc67
 + w/.claude/skills/continuous-learning  dir
 + w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:698f498fdff18b66
 + w/.claude/skills/data-layer-tdd  dir
@@ -117,15 +117,15 @@ files:
 + w/.claude/skills/guardrails  dir
 + w/.claude/skills/guardrails/SKILL.md  -rw-r--r-- sha256:2a354bc4b4e91bd7
 + w/.claude/skills/learn  dir
-+ w/.claude/skills/learn/SKILL.md  -rw-r--r-- sha256:f5d260c1d5735b9e
++ w/.claude/skills/learn/SKILL.md  -rw-r--r-- sha256:826b3db155435ec7
 + w/.claude/skills/plan  dir
-+ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:0f7ede2e26bc55ef
++ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:9a8626f1aba8048e
 + w/.claude/skills/pr-create  dir
 + w/.claude/skills/pr-create/SKILL.md  -rw-r--r-- sha256:e534b517a93d2650
 + w/.claude/skills/pr-description  dir
-+ w/.claude/skills/pr-description/SKILL.md  -rw-r--r-- sha256:133f63d02ae6af02
++ w/.claude/skills/pr-description/SKILL.md  -rw-r--r-- sha256:d6d8e161bc275a90
 + w/.claude/skills/prompt-polish  dir
-+ w/.claude/skills/prompt-polish/SKILL.md  -rw-r--r-- sha256:a15ce9881adfc5f6
++ w/.claude/skills/prompt-polish/SKILL.md  -rw-r--r-- sha256:7d03acdba3900bea
 + w/.claude/skills/strategic-compact  dir
 + w/.claude/skills/strategic-compact/SKILL.md  -rw-r--r-- sha256:a866040ed09e6f37
 + w/.claude/skills/tdd  dir
@@ -133,7 +133,7 @@ files:
 + w/.claude/skills/verification-loop  dir
 + w/.claude/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:055cbb8370ce869e
 + w/.claude/skills/verify  dir
-+ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:a521d9d7f912b53f
++ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:b59077607e7d9671
 + w/.claude/skills/work-modes  dir
 + w/.claude/skills/work-modes/SKILL.md  -rw-r--r-- sha256:42e7df44abe766f6
 + w/.claude/skills/worktree  dir
@@ -141,7 +141,7 @@ files:
 + w/.github  dir
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
 + w/.mcp.json  -rw-r--r-- sha256:d8e397af03b5b032
-+ w/AGENTS.md  -rw-r--r-- sha256:ce42df2bd22db804
++ w/AGENTS.md  -rw-r--r-- sha256:96b8bcf6ec411188
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 6: dashcrew "doctor"
@@ -160,7 +160,7 @@ stdout:
 | ok    mcp             defined: 
 | warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
 | skip  me              no personal profile; dashcrew me init adds one
-| ok    agents-md-size  AGENTS.md 14230 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 14259 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)

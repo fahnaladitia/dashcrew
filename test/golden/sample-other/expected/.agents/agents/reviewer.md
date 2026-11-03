@@ -35,21 +35,21 @@ The main session gives you the base branch, the step 0 success criteria, the pla
 
 ## Output
 
-Every finding has a severity, `file:line`, the current code and the fix, in the `code-review` format. Close with:
+Every finding has a severity, `file:line`, the current code and the fix, in the `code-review` format. Return one block, the verdict first:
 
-```
-REVIEW: <plan | n files>
+```text
+REVIEW  <BLOCK | PASS WITH NOTES | PASS>  (<plan | n files>)
+========================================================================
+BLOCKER <n>  HIGH <n>  MEDIUM <n>  LOW <n>
 
-BLOCKER  n
-HIGH     n
-MEDIUM   n
-LOW      n
+-- Findings ------------------------------------------------------------
+<each finding in the finding format, most severe first | none>
 
-Criteria
-  AC-1  met      <file:line>   <test file:line | manual item>
-  AC-2  partial  <what is missing>
-
-Verdict: BLOCK | PASS WITH NOTES | PASS
+-- Criteria ------------------------------------------------------------
+ID    STATUS   WHERE                PROOF
+AC-1  met      <file:line>          <test file:line | manual item>
+AC-2  partial  <what is missing>
+========================================================================
 ```
 
 BLOCK on any BLOCKER or HIGH.

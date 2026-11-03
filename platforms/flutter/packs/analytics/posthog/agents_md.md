@@ -7,7 +7,7 @@ rules: [analytics.flag-and-ask, analytics.no-unprompted-wiring, analytics.read-c
 
 - On every feature change, flag whether it adds, renames or removes a user action, screen or funnel step, then ask the user whether to track it.
 - Never wire an event without that decision. The plan only lists candidates; `code-review` flags wiring without a decision.
-- The step 0 `Questions:` line names the candidate actions and screens and asks. The summary and the PR description's `## Analytics` section record the decision: added, declined or not relevant.
+- The step 0 `Questions` list names the candidate actions and screens and asks. The summary and the PR description's `## Analytics` section record the decision: added, declined or not relevant.
 - Read `{{pack.analytics.catalog_doc}}` (events, funnels, properties) before touching analytics.
 - Call `{{pack.analytics.facade}}` from the `{{pack.analytics.package}}` package. Never import `{{pack.analytics.vendor_import}}` in `lib/`.
 - Event, property, screen and element names are constants in `{{pack.analytics.constants_file}}`. No string literals.

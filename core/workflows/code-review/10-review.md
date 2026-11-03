@@ -26,7 +26,7 @@ Pass paths and facts, never copied file content:
 
 - the base branch chosen when the branch was created; never guess it
 - the step 0 success criteria, and the plan path when there is one
-- the skills on the step 0 `Skills:` line that the skill index marks `review`
+- the skills on the step 0 `Skills` list that the skill index marks `review`
 - for a re-review: the rework diff only
 
 ## What the reviewer does
