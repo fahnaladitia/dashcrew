@@ -22,6 +22,7 @@ stdout:
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
+|   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
@@ -53,6 +54,7 @@ stdout:
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
+|   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
@@ -84,6 +86,7 @@ stdout:
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
+|   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
@@ -115,6 +118,7 @@ stdout:
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
+|   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
@@ -320,6 +324,7 @@ stderr:
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
+|   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
@@ -351,6 +356,7 @@ stderr:
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
+|   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
@@ -382,6 +388,7 @@ stderr:
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
+|   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
@@ -731,6 +738,7 @@ stderr:
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
+|   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
@@ -767,6 +775,7 @@ stderr:
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
+|   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
@@ -802,6 +811,7 @@ stderr:
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
+|   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
@@ -838,6 +848,7 @@ stderr:
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
+|   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
@@ -873,6 +884,7 @@ stderr:
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
+|   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
@@ -1244,6 +1256,7 @@ stderr:
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
+|   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
@@ -1275,6 +1288,7 @@ stderr:
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
+|   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
@@ -1318,6 +1332,7 @@ stderr:
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
+|   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
@@ -1349,6 +1364,7 @@ stderr:
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
+|   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
@@ -1379,6 +1395,7 @@ stdout:
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
+|   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.
@@ -1415,6 +1432,7 @@ stderr:
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
 |   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
+|   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
 |   verify      Helpers for the verify workflow.

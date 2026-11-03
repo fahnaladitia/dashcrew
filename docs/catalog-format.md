@@ -134,6 +134,16 @@ A project keeps its own packs in `.ai/packs/<family>/<option>/`, in the same for
 - Errors point at the project file (`.ai/packs/state/bloc/pack.yaml`).
 - `.ai/lock.json` records `packs` as `family/option -> builtin | project`; the `project-packs` doctor check fails on a pack that does not parse and warns on one the profile does not select.
 
+## Project skills
+
+A project keeps the skills it adopted in `.ai/skills/<name>/` (`dashcrew skill adopt` writes one):
+
+- `meta.yaml`: `description` (required), `when_to_use`, `review`, `optional` (default `false`).
+- `SKILL.md`: the body, copied verbatim to every agent with that agent's front matter; its own front matter is dropped. It is not rendered as Mustache and cannot use catalog variables.
+- A name is lowercase letters, digits and hyphens, and may not be a catalog skill, workflow or pack skill of any platform.
+- `optional: true` with `review: true` is an error: a review checklist applies to the whole team.
+- Required: a `skill/<name>` target for every agent and a line in the skill index. Optional: no target and no index line; `dashcrew me sync` writes it, git-excluded, into the clone of each member whose `.ai/me.yaml` lists it.
+
 ## Writing rules
 
 - English, imperative, short. One obligation per sentence.

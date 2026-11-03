@@ -27,6 +27,16 @@ In a project whose `.ai/project.yaml` names a `platform` (none means `flutter`) 
 
 Answer in chat in language `{{chat_language}}` (ISO 639-1), even when the project names another chat language. Code, doc comments, PR descriptions and commit messages keep the project's languages.
 {{/chat_language}}
+{{#has_own_skills}}
+
+## The member's own skills
+
+Beyond the project's skill index, step 0 may pick these skills of the member's own, in every repository:
+
+{{#own_skills}}
+- `{{name}}`: {{when}}
+{{/own_skills}}
+{{/has_own_skills}}
 {{/home}}
 {{#repo}}
 {{h1}} {{title}}
@@ -40,6 +50,16 @@ The Lead section of the home profile does not apply {{there}}.
 
 The New to the team section of the home profile does not apply {{there}}.
 {{/new_off}}
+{{#has_repo_skills}}
+
+{{h}} Optional skills turned on
+
+The member turned on these optional skills of the project {{there}}; step 0 picks them like the skills in the index:
+
+{{#repo_skills}}
+- `{{name}}`: {{when}}
+{{/repo_skills}}
+{{/has_repo_skills}}
 {{/repo}}
 {{#new}}
 

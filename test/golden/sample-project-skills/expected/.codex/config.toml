@@ -1,0 +1,5 @@
+# dashcrew:begin - written by dashcrew sync; edit outside this block
+[mcp_servers.dart-mcp-server]
+command = "dart"
+args = ["mcp-server"]
+# dashcrew:end

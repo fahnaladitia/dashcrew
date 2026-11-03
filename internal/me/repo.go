@@ -22,9 +22,11 @@ var RepoFiles = []string{RepoFile, ".claude/rules/" + ruleFile, ".agents/rules/"
 type RepoProfile struct {
 	Role  string
 	Level string
+	// Skills are the optional project skills of this repo the member turns on.
+	Skills []string
 }
 
-// ParseRepo reads `.ai/me.yaml` text: role and level only.
+// ParseRepo reads `.ai/me.yaml` text: role, level and skills.
 func ParseRepo(text string) (*RepoProfile, error) {
 	value, err := yamlutil.Parse(text)
 	if err != nil {
@@ -40,11 +42,11 @@ func ParseRepo(text string) (*RepoProfile, error) {
 	}
 	for _, key := range root.Keys() {
 		switch key {
-		case "role", "level":
+		case "role", "level", "skills":
 		case "stacks", "chat_language", "agents":
 			return nil, fmt.Errorf("%s %s: belongs in ~/.dashcrew/me.yaml, the same for every repo", RepoFile, key)
 		default:
-			return nil, fmt.Errorf("%s %s: unknown key; a repo holds only role and level", RepoFile, key)
+			return nil, fmt.Errorf("%s %s: unknown key; a repo holds only role, level and skills", RepoFile, key)
 		}
 	}
 	if root.Has("role") {
@@ -56,6 +58,9 @@ func ParseRepo(text string) (*RepoProfile, error) {
 		if r.Level, ok = root.Value("level").(string); !ok || !contains(Levels, r.Level) {
 			return nil, fmt.Errorf("%s level: expected one of %s", RepoFile, strings.Join(Levels, ", "))
 		}
+	}
+	if r.Skills, err = namesIn(RepoFile, root.Value("skills"), "skills", validSkillName); err != nil {
+		return nil, err
 	}
 	return r, nil
 }
@@ -74,13 +79,16 @@ func LoadRepo(dir string) (*RepoProfile, error) {
 
 // Text is the repo profile as `.ai/me.yaml`.
 func (r *RepoProfile) Text() string {
-	out := "# Your role and level in this repo only, from dashcrew me init. Never committed (listed in .git/info/exclude).\n" +
+	out := "# Your role, level and optional skills in this repo only. Never committed (listed in .git/info/exclude).\n" +
 		"# stacks, chat_language and agents live in ~/.dashcrew/me.yaml. Run dashcrew me sync after editing.\n"
 	if r.Role != "" {
 		out += "role: " + r.Role + "   # " + strings.Join(Roles, " | ") + "\n"
 	}
 	if r.Level != "" {
 		out += "level: " + r.Level + "   # " + strings.Join(Levels, " | ") + "\n"
+	}
+	if len(r.Skills) > 0 {
+		out += "skills: [" + strings.Join(r.Skills, ", ") + "]   # optional skills of this repo (.ai/skills) you turn on\n"
 	}
 	return out
 }

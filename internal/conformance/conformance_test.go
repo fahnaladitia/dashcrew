@@ -30,6 +30,7 @@ var samples = []string{
 	"sample-links",
 	"sample-go",
 	"sample-github-tracker",
+	"sample-project-skills",
 }
 
 // update rewrites the goldens from the current output instead of comparing:
@@ -110,7 +111,7 @@ func TestGoldenSamplesAreByteIdentical(t *testing.T) {
 				t.Fatal(err)
 			}
 			copyInto(t, map[string]string{".ai/project.yaml": string(profileYaml)}, project)
-			for _, folder := range []string{"packs", "platforms"} {
+			for _, folder := range []string{"packs", "platforms", "skills"} {
 				copyInto(t, tree(t, filepath.Join(fixture, folder)), filepath.Join(project, ".ai", folder))
 			}
 			// A fixture with a `starter` file takes its platform from the embedded starter, so the two never drift.
@@ -129,7 +130,7 @@ func TestGoldenSamplesAreByteIdentical(t *testing.T) {
 			actual := tree(t, project)
 			delete(actual, ".ai/project.yaml")
 			for path := range actual {
-				if strings.HasPrefix(path, ".ai/packs/") || strings.HasPrefix(path, ".ai/platforms/") {
+				if strings.HasPrefix(path, ".ai/packs/") || strings.HasPrefix(path, ".ai/platforms/") || strings.HasPrefix(path, ".ai/skills/") {
 					delete(actual, path)
 				}
 			}

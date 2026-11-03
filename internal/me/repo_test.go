@@ -13,11 +13,11 @@ func TestParseRepo(t *testing.T) {
 	if err != nil || !reflect.DeepEqual(r, &RepoProfile{Role: "lead", Level: "new"}) {
 		t.Fatalf("got %+v %v", r, err)
 	}
-	if r, err := ParseRepo("# only comments\n"); err != nil || *r != (RepoProfile{}) {
+	if r, err := ParseRepo("# only comments\n"); err != nil || !reflect.DeepEqual(r, &RepoProfile{}) {
 		t.Fatalf("empty: %+v %v", r, err)
 	}
 	back, err := ParseRepo((&RepoProfile{Level: "new"}).Text())
-	if err != nil || *back != (RepoProfile{Level: "new"}) {
+	if err != nil || !reflect.DeepEqual(back, &RepoProfile{Level: "new"}) {
 		t.Fatalf("round trip: %+v %v", back, err)
 	}
 	for text, want := range map[string]string{
@@ -45,7 +45,7 @@ func TestLoadAndSaveRepo(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(dir, ".ai", "me.yaml")); err != nil {
 		t.Fatal(err)
 	}
-	if r, err := LoadRepo(dir); err != nil || *r != (RepoProfile{Role: "lead"}) {
+	if r, err := LoadRepo(dir); err != nil || !reflect.DeepEqual(r, &RepoProfile{Role: "lead"}) {
 		t.Fatalf("loaded %+v %v", r, err)
 	}
 }
@@ -159,7 +159,7 @@ func TestSyncPerRepo(t *testing.T) {
 
 func TestRepoRuleTurnsHomeSectionsOff(t *testing.T) {
 	home := &Profile{Role: "lead", Stacks: []string{"go"}, Level: "new", Agents: []string{"claude-code"}}
-	text, err := renderRepo(home, &RepoProfile{Role: "be", Level: "regular"}, "/r", personal(t), "claude-code", nil)
+	text, err := renderRepo(home, &RepoProfile{Role: "be", Level: "regular"}, "/r", personal(t), "claude-code", nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

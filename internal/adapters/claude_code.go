@@ -72,7 +72,7 @@ func (a *ClaudeCode) Files(p *profile.Profile, targets []render.RenderedTarget, 
 		return nil, err
 	}
 	for _, doc := range docs {
-		files.Set(".claude/skills/"+doc.Name+"/SKILL.md", claudeSkill(doc.Name, doc.Meta, doc.Body))
+		files.Set(SkillFile(a.Agent(), doc.Name), ClaudeSkillFile(doc.Name, doc.Meta, doc.Body))
 	}
 
 	_, locked := lockedFiles["CLAUDE.md"]
@@ -136,7 +136,8 @@ func claudeAgent(role catalog.RoleMeta, body string) string {
 	return b.String() + "\n" + body
 }
 
-func claudeSkill(name string, meta catalog.DocMeta, body string) string {
+// ClaudeSkillFile is `.claude/skills/<name>/SKILL.md`: Claude Code front matter, then the body.
+func ClaudeSkillFile(name string, meta catalog.DocMeta, body string) string {
 	var b strings.Builder
 	b.WriteString("---\n")
 	b.WriteString("name: " + name + "\n")
