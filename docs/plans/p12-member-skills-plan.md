@@ -96,4 +96,4 @@ Ten findings, each fixed with a test unless noted:
 - `skill adopt` needs `.ai/project.yaml` in the project folder.
 - Shared helpers: `catalog.ValidProjectSkillName`, `adapters.SkillFile` (the agent skill paths), `linkOrCopy`.
 - Then by design, since fixed in P12b (`docs/plans/p12b-skill-supporting-files-plan.md`): only `SKILL.md` reached the agents.
-- Not fixed: `me sync` overlays the project packs per repo to read `.ai/skills`; the shipped catalog is read once per run.
+- Then not fixed, done in P12c: `me sync` overlaid the project packs per repo to read `.ai/skills`; it now reads `.ai/skills` alone.

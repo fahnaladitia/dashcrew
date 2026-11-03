@@ -108,24 +108,26 @@ func ownLinksLeftOver(places Places, wanted map[string]bool) []string {
 
 // ---- optional project skills: written into the clone of a member who turns them on ----
 
-// projectSkillsLoader loads a repo's project skills; the shipped catalog is read once.
+// projectSkillsLoader loads a repo's `.ai/skills` alone; the names dashcrew ships are read once per run, the names
+// the repo's own packs and platforms take are read from their folder layout.
 type projectSkillsLoader struct {
-	shipped *catalog.Catalog
+	shipped map[string]bool
 }
 
+// load reads the repo's project skills; a name its own packs or platforms take is refused, as sync refuses it.
 func (l *projectSkillsLoader) load(dir string) ([]catalog.ProjectSkill, error) {
 	if l.shipped == nil {
 		shipped, err := catalog.LoadEmbedded()
 		if err != nil {
 			return nil, err
 		}
-		l.shipped = shipped
+		l.shipped = shipped.TakenSkillNames()
 	}
-	overlaid, err := l.shipped.WithProjectPacks(dir)
-	if err != nil {
-		return nil, err
+	taken := catalog.ProjectSkillNames(dir)
+	for name := range l.shipped {
+		taken[name] = true
 	}
-	return overlaid.ProjectSkills, nil
+	return catalog.LoadProjectSkills(dir, taken)
 }
 
 // repoSkills are the optional project skills a repo profile turns on, and a change for each name it cannot turn
@@ -151,6 +153,9 @@ func repoSkills(r repo, loader *projectSkillsLoader) (on []catalog.ProjectSkill,
 			notes = append(notes, Change{r.dir, "skill " + name + ": required in this repo, on for everyone", false})
 		default:
 			on = append(on, skill)
+			for _, warning := range skill.Warnings() {
+				notes = append(notes, Change{r.dir, warning, false})
+			}
 		}
 	}
 	return on, notes, false

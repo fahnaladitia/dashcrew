@@ -450,6 +450,11 @@ func (s Sync) Render(adopt bool, warnings *[]string) (*Rendered, error) {
 	}
 	if warnings != nil {
 		*warnings = append(*warnings, p.Warnings...)
+		for _, skill := range c.ProjectSkills {
+			if !skill.Optional {
+				*warnings = append(*warnings, skill.Warnings()...)
+			}
+		}
 	}
 	var agentAdapters []adapters.Adapter
 	for _, agent := range p.Agents {
