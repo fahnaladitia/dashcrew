@@ -1,3 +1,7 @@
+## Unreleased
+
+- `check --ports` and the release ledger no longer lose a line's branch point when the line is merged into the main line by fast-forward (the main line had not moved since the cut): the older merge-base with a newer line wins, so the line's fixes are still checked instead of passing silently.
+
 ## 0.3.0
 
 The personal profile: how agents work with each member, outside every repo. Nothing changes for a project or its guard; `doctor` adds one `me` line.

@@ -335,9 +335,35 @@ func Pairs(all []Line) [][2]Line {
 }
 
 // BranchPoint is the commit where line left the main line: the newest commit of its history on the main line's
-// first-parent chain, so a later merge of the line back into the main line does not move it. Without a main line
+// first-parent chain, so a later merge of the line back into the main line does not move it. A fast-forward merge
+// does put the line's commits on that chain, so an older merge-base with a newer line wins. Without a main line
 // branch it is the merge-base with the previous line. Empty base means the line's whole history.
 func BranchPoint(dir string, all []Line, line Line) (base, from string) {
+	base, from = mainChainPoint(dir, all, line)
+	if base == "" {
+		return base, from
+	}
+	newer := false
+	for _, other := range all {
+		if other.Branch == line.Branch {
+			newer = true
+			continue
+		}
+		if !newer || other.Kind == profile.MainLine {
+			continue
+		}
+		mb, err := git(dir, "merge-base", line.Head, other.Head)
+		if err != nil || mb == base {
+			continue
+		}
+		if _, err := git(dir, "merge-base", "--is-ancestor", mb, base); err == nil {
+			base = mb
+		}
+	}
+	return base, from
+}
+
+func mainChainPoint(dir string, all []Line, line Line) (base, from string) {
 	main := Main(all)
 	if main == nil || main.Branch == line.Branch {
 		return mergeBaseWithPrevious(dir, all, line)

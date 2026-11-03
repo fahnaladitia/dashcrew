@@ -234,3 +234,24 @@ func TestLinesPrintsOneLinePerFix(t *testing.T) {
 		t.Errorf("got  %q\nwant %q", got, want)
 	}
 }
+
+// A line merged into the main line by fast-forward, while the main line had not moved since the cut, puts the
+// line's own fixes on the main line's first-parent chain; they must still count from the cut.
+func TestAFastForwardMergeIntoTheMainLineKeepsTheCut(t *testing.T) {
+	root, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := repo{t, root}
+	r.git("init", "-q", "-b", "develop")
+	r.commit("a.txt", "a\n", "chore: init")
+	r.git("branch", "release/2.5.0")
+	r.git("checkout", "-q", "-b", "release/2.4.0")
+	fix := r.commit("f.txt", "f\n", "fix: only on the older line")
+	r.git("checkout", "-q", "develop")
+	r.git("merge", "-q", "--ff-only", "release/2.4.0")
+	pair := run(t, r, "2.4.0", "2.5.0")
+	if got, want := statuses(pair), []string{fix + " missing  "}; !reflect.DeepEqual(got, want) {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
