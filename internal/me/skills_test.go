@@ -5,6 +5,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -258,5 +259,154 @@ func TestSyncUnlinksOnlyOwnSkillsItLinked(t *testing.T) {
 
 	if !exists(link) {
 		t.Error("me sync removed a link the member made by hand")
+	}
+}
+
+func TestAnOptionalSkillCarriesItsFilesAndTakesOnlyThoseAway(t *testing.T) {
+	pl := places(t)
+	home := &Profile{Role: "mobile", Stacks: []string{"flutter"}, Level: "regular", Agents: []string{"claude-code"}}
+	repo := gitRepo(t)
+	source := filepath.Join(repo, ".ai", "skills", "ui-slop")
+	writeFile(t, filepath.Join(source, "meta.yaml"), "description: d\noptional: true\n")
+	writeFile(t, filepath.Join(source, "SKILL.md"), "# UI slop\n")
+	writeFile(t, filepath.Join(source, "references", "checklist.md"), "- one\n")
+	writeFile(t, filepath.Join(source, "scripts", "run.sh"), "#!/bin/sh\n")
+	if err := os.Chmod(filepath.Join(source, "scripts", "run.sh"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := (&RepoProfile{Skills: []string{"ui-slop"}}).Save(repo); err != nil {
+		t.Fatal(err)
+	}
+	if err := Register(pl, repo); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Sync(home, pl, personal(t)); err != nil {
+		t.Fatal(err)
+	}
+
+	folder := filepath.Join(repo, ".claude", "skills", "ui-slop")
+	if read(t, filepath.Join(folder, "references", "checklist.md")) != "- one\n" {
+		t.Error("references/checklist.md not written")
+	}
+	if info, err := os.Stat(filepath.Join(folder, "scripts", "run.sh")); err != nil || (runtime.GOOS != "windows" && info.Mode().Perm()&0o111 == 0) {
+		t.Errorf("scripts/run.sh not written executable: %v", err)
+	}
+
+	writeFile(t, filepath.Join(source, "references", "checklist.md"), "- two\n")
+	if changes, err := Status(home, pl, personal(t)); err != nil || !containsChange(changes, Change{filepath.Join(folder, "references", "checklist.md"), "stale", false}) {
+		t.Errorf("status misses the changed file: %v %v", changes, err)
+	}
+	if _, err := Sync(home, pl, personal(t)); err != nil {
+		t.Fatal(err)
+	}
+	if read(t, filepath.Join(folder, "references", "checklist.md")) != "- two\n" {
+		t.Error("a changed supporting file is not updated")
+	}
+
+	writeFile(t, filepath.Join(folder, "notes.md"), "mine\n")
+	if err := (&RepoProfile{}).Save(repo); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Sync(home, pl, personal(t)); err != nil {
+		t.Fatal(err)
+	}
+	for _, gone := range []string{"SKILL.md", "references", "scripts", ".dashcrew-me"} {
+		if exists(filepath.Join(folder, gone)) {
+			t.Errorf("%s stays after the skill was turned off", gone)
+		}
+	}
+	if !exists(filepath.Join(folder, "notes.md")) {
+		t.Error("me sync removed a file it did not write")
+	}
+}
+
+func TestAManifestNeverReachesOutsideItsSkillFolder(t *testing.T) {
+	pl := places(t)
+	home := &Profile{Role: "mobile", Stacks: []string{"flutter"}, Level: "regular", Agents: []string{"claude-code"}}
+	repo := gitRepo(t)
+	victim := filepath.Join(repo, "victim.txt")
+	writeFile(t, victim, "keep me\n")
+	folder := filepath.Join(repo, ".claude", "skills", "evil")
+	writeFile(t, filepath.Join(folder, "SKILL.md"), skillMarker+"\n")
+	writeFile(t, filepath.Join(folder, skillManifest), "../../../victim.txt\n"+victim+"\n")
+	if err := (&RepoProfile{}).Save(repo); err != nil {
+		t.Fatal(err)
+	}
+	if err := Register(pl, repo); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := Sync(home, pl, personal(t)); err != nil {
+		t.Fatal(err)
+	}
+
+	if !exists(victim) {
+		t.Fatal("a manifest path outside the skill folder was removed")
+	}
+}
+
+func TestStatusAndSyncFollowRemovedFilesAndExecuteBits(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("no execute bits on Windows")
+	}
+	pl := places(t)
+	home := &Profile{Role: "mobile", Stacks: []string{"flutter"}, Level: "regular", Agents: []string{"claude-code"}}
+	repo := gitRepo(t)
+	source := filepath.Join(repo, ".ai", "skills", "ui-slop")
+	writeFile(t, filepath.Join(source, "meta.yaml"), "description: d\noptional: true\n")
+	writeFile(t, filepath.Join(source, "SKILL.md"), "# UI slop\n")
+	for _, name := range []string{"b.md", "a.md", "run.sh"} {
+		writeFile(t, filepath.Join(source, name), name+"\n")
+	}
+	if err := os.Chmod(filepath.Join(source, "run.sh"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := (&RepoProfile{Skills: []string{"ui-slop"}}).Save(repo); err != nil {
+		t.Fatal(err)
+	}
+	if err := Register(pl, repo); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Sync(home, pl, personal(t)); err != nil {
+		t.Fatal(err)
+	}
+	folder := filepath.Join(repo, ".claude", "skills", "ui-slop")
+
+	for _, name := range []string{"a.md", "b.md"} {
+		if err := os.Remove(filepath.Join(source, name)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.Chmod(filepath.Join(source, "run.sh"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	changes, err := Status(home, pl, personal(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []Change{
+		{filepath.Join(folder, "a.md"), "left over", false},
+		{filepath.Join(folder, "run.sh"), "stale", false},
+	} {
+		if !containsChange(changes, want) {
+			t.Errorf("status misses %v: %v", want, changes)
+		}
+	}
+
+	changes, err = Sync(home, pl, personal(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var removed []string
+	for _, change := range changes {
+		if change.What == "removed" {
+			removed = append(removed, filepath.Base(change.Path))
+		}
+	}
+	if !reflect.DeepEqual(removed, []string{"a.md", "b.md"}) {
+		t.Errorf("removed %v, want a.md then b.md", removed)
+	}
+	if info, err := os.Stat(filepath.Join(folder, "run.sh")); err != nil || info.Mode().Perm()&0o111 != 0 {
+		t.Errorf("run.sh keeps its execute bits after the source lost them: %v", err)
 	}
 }

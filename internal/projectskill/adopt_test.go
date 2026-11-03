@@ -3,6 +3,8 @@ package projectskill
 import (
 	"os"
 	"path/filepath"
+	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -62,13 +64,29 @@ func TestAdoptAFolderAsRequired(t *testing.T) {
 	home, project, folder := t.TempDir(), project(t), filepath.Join(t.TempDir(), "api-style")
 	write(t, filepath.Join(folder, "SKILL.md"), "---\ndescription: Team API style.\n---\n# API style\n")
 	write(t, filepath.Join(folder, "references", "checklist.md"), "x\n")
+	write(t, filepath.Join(folder, "scripts", "run.sh"), "#!/bin/sh\n")
+	write(t, filepath.Join(folder, ".DS_Store"), "junk")
+	write(t, filepath.Join(folder, "references", ".env"), "junk")
+	if err := os.Chmod(filepath.Join(folder, "scripts", "run.sh"), 0o755); err != nil {
+		t.Fatal(err)
+	}
 
 	_, skipped, err := Adopt(project, home, folder, true)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(skipped) != 1 || skipped[0] != "references/checklist.md" {
-		t.Errorf("skipped %v, want the supporting file reported", skipped)
+	if !reflect.DeepEqual(skipped, []string{".DS_Store", "references/.env"}) {
+		t.Errorf("skipped %v, want every hidden file, nested ones included", skipped)
+	}
+	adopted := filepath.Join(project, ".ai", "skills", "api-style")
+	if data, err := os.ReadFile(filepath.Join(adopted, "references", "checklist.md")); err != nil || string(data) != "x\n" {
+		t.Errorf("references/checklist.md not adopted: %q %v", data, err)
+	}
+	if info, err := os.Stat(filepath.Join(adopted, "scripts", "run.sh")); err != nil || (runtime.GOOS != "windows" && info.Mode().Perm()&0o111 == 0) {
+		t.Errorf("scripts/run.sh not adopted executable: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(adopted, ".DS_Store")); err == nil {
+		t.Error("the hidden file was adopted")
 	}
 
 	meta, err := os.ReadFile(filepath.Join(project, ".ai", "skills", "api-style", "meta.yaml"))
@@ -120,5 +138,22 @@ func TestAdoptNeedsTheProjectRoot(t *testing.T) {
 	}
 	if _, statErr := os.Stat(filepath.Join(notRoot, ".ai")); statErr == nil {
 		t.Error("adopt wrote .ai/ outside a project root")
+	}
+}
+
+func TestAdoptRefusesAFolderOverTheLimits(t *testing.T) {
+	home, project, folder := t.TempDir(), project(t), filepath.Join(t.TempDir(), "api-style")
+	write(t, filepath.Join(folder, "SKILL.md"), "---\ndescription: d\n---\n# x\n")
+	if err := os.Symlink("/etc/hosts", filepath.Join(folder, "hosts")); err != nil {
+		t.Skip("no symlinks here")
+	}
+
+	_, _, err := Adopt(project, home, folder, false)
+
+	if err == nil || !strings.Contains(err.Error(), "hosts: a symlink") {
+		t.Errorf("got %v", err)
+	}
+	if _, statErr := os.Stat(filepath.Join(project, ".ai", "skills", "api-style")); statErr == nil {
+		t.Error("a refused skill left a folder behind")
 	}
 }

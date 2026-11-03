@@ -95,5 +95,5 @@ Ten findings, each fixed with a test unless noted:
 - `me sync` unlinks only own skills it linked (`~/.dashcrew/me-linked-skills`), and never one still listed.
 - `skill adopt` needs `.ai/project.yaml` in the project folder.
 - Shared helpers: `catalog.ValidProjectSkillName`, `adapters.SkillFile` (the agent skill paths), `linkOrCopy`.
-- Not fixed, by design: only `SKILL.md` reaches the agents. `adopt` lists the other files of the folder it did not carry.
+- Then by design, since fixed in P12b (`docs/plans/p12b-skill-supporting-files-plan.md`): only `SKILL.md` reached the agents.
 - Not fixed: `me sync` overlays the project packs per repo to read `.ai/skills`; the shipped catalog is read once per run.

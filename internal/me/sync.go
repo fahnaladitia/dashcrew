@@ -241,6 +241,8 @@ type target struct {
 	want bool
 	// skill marks an optional project skill file in a repo; its folder goes when the file goes.
 	skill bool
+	// files are a wanted skill's supporting files, written next to it.
+	files []catalog.SkillFile
 }
 
 func homeInstructionPath(places Places, agent string) string {
@@ -419,13 +421,26 @@ func Sync(home *Profile, places Places, personal fs.FS) ([]Change, error) {
 	written, removed := map[string][]target{}, map[string][]target{}
 	for _, t := range all {
 		var change Change
-		if t.want {
-			change, err = write(t)
-		} else {
-			change, err = remove(t)
-			if err == nil && t.skill && change.What != "" {
-				err = dropEmptySkillDir(t.path)
+		switch {
+		case t.skill && t.want:
+			var skillChanges []Change
+			skillChanges, err = writeSkill(t)
+			if len(skillChanges) > 0 {
+				change, skillChanges = skillChanges[0], skillChanges[1:]
 			}
+			for _, extra := range skillChanges {
+				changes = appendChange(changes, extra)
+			}
+		case t.skill:
+			var skillChanges []Change
+			skillChanges, err = removeSkill(t)
+			if len(skillChanges) > 0 {
+				change = skillChanges[len(skillChanges)-1]
+			}
+		case t.want:
+			change, err = write(t)
+		default:
+			change, err = remove(t)
 		}
 		if err != nil {
 			return changes, err
@@ -520,6 +535,9 @@ func Status(home *Profile, places Places, personal fs.FS) ([]Change, error) {
 		case current.text != t.text:
 			changes = append(changes, Change{t.path, "stale", false})
 		}
+		if t.want && t.skill && current.owned {
+			changes = append(changes, skillFileStatus(t)...)
+		}
 	}
 	for _, r := range repos {
 		if r.profile == nil {
@@ -573,17 +591,16 @@ func Remove(places Places) ([]Change, error) {
 		all = append(all, repoSkillTargets(&Profile{}, dir, nil)...)
 	}
 	for _, t := range all {
-		change, err := remove(t)
-		if err == nil && t.skill && change.What != "" {
-			err = dropEmptySkillDir(t.path)
-		}
-		if err == nil && t.skill && change.What != "" {
+		removed, err := removeTarget(t)
+		if err == nil && t.skill && len(removed) > 0 {
 			err = unexcludeSkills(repoOf(t.path), []target{t})
 		}
 		if err != nil {
 			return changes, err
 		}
-		changes = appendChange(changes, change)
+		for _, change := range removed {
+			changes = appendChange(changes, change)
+		}
 	}
 	return changes, saveRepos(places, nil)
 }
@@ -594,12 +611,13 @@ func RemoveRepo(home *Profile, places Places, personal fs.FS, dir string) ([]Cha
 	var changes []Change
 	all := []target{{path: repoInstructionPath(dir, "claude-code")}, {path: repoInstructionPath(dir, "antigravity")}}
 	for _, t := range append(all, repoSkillTargets(&Profile{}, dir, nil)...) {
-		change, err := remove(t)
-		if err == nil && t.skill && change.What != "" {
-			err = dropEmptySkillDir(t.path)
-		}
-		if err == nil && t.skill && change.What != "" {
+		removed, err := removeTarget(t)
+		if err == nil && t.skill && len(removed) > 0 {
 			err = unexcludeSkills(dir, []target{t})
+		}
+		change := Change{}
+		if len(removed) > 0 {
+			change = removed[len(removed)-1]
 		}
 		if err != nil {
 			return changes, err
@@ -814,4 +832,13 @@ func unlinkSkill(places Places, name string) (Change, error) {
 // repoOf is the skill file's repo: the folder above its agent skills folder (`<repo>/.claude/skills/<name>/SKILL.md`).
 func repoOf(file string) string {
 	return filepath.Dir(filepath.Dir(filepath.Dir(filepath.Dir(file))))
+}
+
+// removeTarget removes a target; a skill target takes its supporting files and emptied folders with it.
+func removeTarget(t target) ([]Change, error) {
+	if t.skill {
+		return removeSkill(t)
+	}
+	change, err := remove(t)
+	return []Change{change}, err
 }

@@ -24,7 +24,25 @@ type ProjectSkill struct {
 	Optional bool
 	// Body is SKILL.md without its front matter, ending in one newline.
 	Body string
+	// Files are the skill folder's other files (not SKILL.md or meta.yaml), sorted by path; each agent gets them
+	// next to its SKILL.md.
+	Files []SkillFile
 }
+
+// SkillFile is a supporting file of a project skill, copied verbatim.
+type SkillFile struct {
+	// Path is relative to the skill folder, slash-separated.
+	Path    string
+	Content string
+	// Executable is set when the source file has an execute bit; the written file gets one too.
+	Executable bool
+}
+
+// Supporting file limits: a skill folder carries at most MaxSkillFiles files of at most MaxSkillFileBytes each.
+const (
+	MaxSkillFiles     = 50
+	MaxSkillFileBytes = 1 << 20
+)
 
 var projectSkillName = regexp.MustCompile(`^[a-z][a-z0-9-]*$`)
 
@@ -112,7 +130,11 @@ func projectSkillsIn(fsys fs.FS, dir string, taken map[string]bool) ([]ProjectSk
 		if err != nil {
 			return nil, err
 		}
-		out = append(out, ProjectSkill{Name: name, Meta: meta, Optional: optional, Body: skillBody(string(data))})
+		files, err := supportingFiles(fsys, sub)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, ProjectSkill{Name: name, Meta: meta, Optional: optional, Body: skillBody(string(data)), Files: files})
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 	return out, nil
@@ -171,4 +193,62 @@ func SkillFrontMatter(text string) map[string]string {
 		}
 	}
 	return out
+}
+
+// SkillFolderFiles are the supporting files of the skill folder dir in fsys, under the same rules and limits as a
+// project skill; `dashcrew skill adopt` copies them.
+func SkillFolderFiles(fsys fs.FS, dir string) ([]SkillFile, error) { return supportingFiles(fsys, dir) }
+
+// supportingFiles reads every file of a skill folder but SKILL.md and meta.yaml. Hidden files and folders are
+// skipped; a symlink, a file over MaxSkillFileBytes or more than MaxSkillFiles files is an error.
+func supportingFiles(fsys fs.FS, dir string) ([]SkillFile, error) {
+	var out []SkillFile
+	err := fs.WalkDir(fsys, dir, func(file string, entry fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if file == dir {
+			return nil
+		}
+		if strings.HasPrefix(entry.Name(), ".") {
+			if entry.IsDir() {
+				return fs.SkipDir
+			}
+			return nil
+		}
+		if entry.Type()&fs.ModeSymlink != 0 {
+			return fail(file, "a symlink; copy the file into the skill folder instead")
+		}
+		if entry.IsDir() {
+			return nil
+		}
+		if !entry.Type().IsRegular() {
+			return fail(file, "not a regular file (a pipe, socket or device); a skill carries plain files")
+		}
+		relative := strings.TrimPrefix(file, dir+"/")
+		if relative == "SKILL.md" || relative == "meta.yaml" {
+			return nil
+		}
+		info, err := entry.Info()
+		if err != nil {
+			return err
+		}
+		if info.Size() > MaxSkillFileBytes {
+			return fail(file, "over 1 MiB; a skill carries small reference files and scripts")
+		}
+		if len(out) == MaxSkillFiles {
+			return fail(dir, "more than 50 supporting files")
+		}
+		data, err := fs.ReadFile(fsys, file)
+		if err != nil {
+			return err
+		}
+		out = append(out, SkillFile{Path: relative, Content: string(data), Executable: info.Mode().Perm()&0o111 != 0})
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Path < out[j].Path })
+	return out, nil
 }

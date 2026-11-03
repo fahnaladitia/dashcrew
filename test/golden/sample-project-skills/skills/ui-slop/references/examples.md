@@ -1,0 +1,2 @@
+- a gradient on every card
+- emoji as icons

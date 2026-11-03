@@ -140,6 +140,7 @@ A project keeps the skills it adopted in `.ai/skills/<name>/` (`dashcrew skill a
 
 - `meta.yaml`: `description` (required), `when_to_use`, `review`, `optional` (default `false`).
 - `SKILL.md`: the body, copied verbatim to every agent with that agent's front matter; its own front matter is dropped. It is not rendered as Mustache and cannot use catalog variables.
+- Every other file is a supporting file, written verbatim next to each agent's `SKILL.md` at the same relative path; an executable source stays executable. Hidden files and folders are skipped; a symlink, a file over 1 MiB or more than 50 files is an error. `dashcrew me sync` lists the files it wrote for an optional skill in `.dashcrew-me` in that folder and removes only those.
 - A name is lowercase letters, digits and hyphens, and may not be a catalog skill, workflow or pack skill of any platform.
 - `optional: true` with `review: true` is an error: a review checklist applies to the whole team.
 - Required: a `skill/<name>` target for every agent and a line in the skill index. Optional: no target and no index line; `dashcrew me sync` writes it, git-excluded, into the clone of each member whose `.ai/me.yaml` lists it.

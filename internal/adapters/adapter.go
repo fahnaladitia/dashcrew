@@ -5,6 +5,7 @@ package adapters
 import (
 	"errors"
 	"fmt"
+	"path"
 	"strings"
 
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
@@ -63,11 +64,13 @@ func warn(warnings *[]string, message string) {
 	}
 }
 
-// SkillDoc is a skill or workflow ready to write: its description and rendered body.
+// SkillDoc is a skill or workflow ready to write: its description and rendered body, and for a project skill the
+// supporting files that go next to SKILL.md.
 type SkillDoc struct {
-	Name string
-	Meta catalog.DocMeta
-	Body string
+	Name  string
+	Meta  catalog.DocMeta
+	Body  string
+	Files []catalog.SkillFile
 }
 
 // SkillDocs are the skills and workflows among targets, for every adapter alike.
@@ -94,16 +97,17 @@ func SkillDocs(c *catalog.Catalog, p *profile.Profile, targets []render.Rendered
 			if !ok {
 				meta, ok = packSkills[name]
 			}
+			var files []catalog.SkillFile
 			if !ok {
 				var skill catalog.ProjectSkill
 				skill, ok = c.ProjectSkill(name)
-				meta = skill.Meta
+				meta, files = skill.Meta, skill.Files
 			}
 			if !ok {
 				warn(warnings, "skill "+name+" skipped: no selected pack defines skills/"+name+".yaml")
 				continue
 			}
-			docs = append(docs, SkillDoc{Name: name, Meta: meta, Body: target.Content})
+			docs = append(docs, SkillDoc{Name: name, Meta: meta, Body: target.Content, Files: files})
 		case "workflow":
 			meta, ok := workflows[name]
 			if !ok {
@@ -127,6 +131,19 @@ func SkillFile(agent, name string) string {
 		return ".claude/skills/" + name + "/SKILL.md"
 	}
 	return ".agents/skills/" + name + "/SKILL.md"
+}
+
+// SupportingFile is where agent reads a supporting file of skill name: next to its SKILL.md.
+func SupportingFile(agent, name, relative string) string {
+	return path.Dir(SkillFile(agent, name)) + "/" + relative
+}
+
+// setSkill adds a skill's SKILL.md text and its supporting files to files.
+func setSkill(files *omap.Map[string], agent string, doc SkillDoc, text string) {
+	files.Set(SkillFile(agent, doc.Name), text)
+	for _, file := range doc.Files {
+		files.Set(SupportingFile(agent, doc.Name, file.Path), file.Content)
+	}
 }
 
 // AgentsSkillFile is `.agents/skills/<name>/SKILL.md`, the format Codex and Antigravity both read: front matter

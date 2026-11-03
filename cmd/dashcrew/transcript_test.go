@@ -977,7 +977,9 @@ func cliCases() []cliCase {
 			s.write(t, "w/.ai/project.yaml", "toolkit: 1\nagents: [claude-code, codex]\n")
 			s.git(t, "w", "init", "-q", "-b", "main")
 			s.write(t, "home/.dashcrew/me.yaml", "role: mobile\nstacks: [flutter]\nagents: [claude-code, codex]\nskills: [ui-slop]\n")
-			s.write(t, "home/.dashcrew/skills/ui-slop/SKILL.md", "---\nname: ui-slop\ndescription: Catch generic UI.\nwhen_to_use: When a screen is built.\n---\n# UI slop\n")
+			s.write(t, "home/.dashcrew/skills/ui-slop/SKILL.md", "---\nname: ui-slop\ndescription: Catch generic UI.\nwhen_to_use: When a screen is built.\n---\n# UI slop\n\nSee references/examples.md.\n")
+			s.write(t, "home/.dashcrew/skills/ui-slop/references/examples.md", "- a gradient on every card\n")
+			s.write(t, "home/.dashcrew/skills/ui-slop/.DS_Store", "junk")
 			s.write(t, "api-style/SKILL.md", "---\ndescription: Team API style.\n---\n# API style\n")
 		}, steps: []step{
 			cli("sync"),
