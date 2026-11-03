@@ -177,7 +177,7 @@ files:
 ~ w/.agents/skills/worktree/SKILL.md  -rw-r--r-- sha256:05e374e3165f3e56
 ~ w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 ~ w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-~ w/.ai/lock.json  -rw-r--r-- sha256:16e2e87f833db5d1
+~ w/.ai/lock.json  -rw-r--r-- sha256:eff9b80ec608053e
 - w/.claude/agents/dart-tdd-guide.md
 - w/.claude/agents/design-refiner.md
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
@@ -237,7 +237,7 @@ files:
 - w/.codex/agents/tech-lead.toml
 - w/.codex/agents/worktree-monitor.toml
 ~ w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
-~ w/AGENTS.md  -rw-r--r-- sha256:cddbcdf1243bd155
+~ w/AGENTS.md  -rw-r--r-- sha256:18fbe8c5ce6565ce
 
 === step 3: dashcrew "sync"
 exit: 0
@@ -269,7 +269,7 @@ stdout:
 | ok    antigravity-hookPreToolUse guard hook present under dashcrew-guard
 | ok    antigravity-mcp defined: dart-mcp-server
 | ok    antigravity-roles2 roles, every tool name known
-| ok    agents-md-size  AGENTS.md 17591 of 24000 bytes
+| ok    agents-md-size  AGENTS.md 17587 of 24000 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 | info  handoff-rosters .ai/plans/todo-filter/handoff/00-roster.md left from the pre-P4 team flow; nothing reads them now, delete them when done
 stderr: (empty)

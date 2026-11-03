@@ -42,7 +42,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-+ w/.ai/lock.json  -rw-r--r-- sha256:20329a7bc8dab18b
++ w/.ai/lock.json  -rw-r--r-- sha256:8f40c09993b678d9
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
@@ -102,7 +102,7 @@ files:
 + w/.github  dir
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
 + w/.mcp.json  -rw-r--r-- sha256:745dcf12d577148c
-+ w/AGENTS.md  -rw-r--r-- sha256:4438555ddf397afb
++ w/AGENTS.md  -rw-r--r-- sha256:2c0a12020254c33d
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 2: dashcrew "sync"
@@ -134,7 +134,7 @@ stdout:
 | ok    mcp             defined: dart-mcp-server
 | warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
 | info  release-line    release/2.4.0 is the release line 2.4.0: toolkit 0.0.0, the main line develop has 0.0.1; dashcrew sync --upgrade moves this line
-| ok    agents-md-size  AGENTS.md 16166 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16162 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)
@@ -152,7 +152,7 @@ stderr:
 |   dashcrew sync --upgrade (the upgrade lands on this line), or
 |   upgrade on the main line develop (dashcrew sync there, commit) and merge it down to this line.
 files:
-~ w/.ai/lock.json  -rw-r--r-- sha256:e02c7af148be3cfb
+~ w/.ai/lock.json  -rw-r--r-- sha256:3eab2c10e89b83cb
 ~ w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:90081279a81f5463
 
 === step 5: dashcrew "sync" "--upgrade"
@@ -161,8 +161,8 @@ stdout:
 | wrote   AGENTS.md
 stderr: (empty)
 files:
-~ w/.ai/lock.json  -rw-r--r-- sha256:7cc3238ca9cde2f9
-~ w/AGENTS.md  -rw-r--r-- sha256:bb325941245d2f35
+~ w/.ai/lock.json  -rw-r--r-- sha256:f6d4e689c34f8a86
+~ w/AGENTS.md  -rw-r--r-- sha256:6221e416e52c875e
 
 === step 6: dashcrew "sync"
 exit: 0
@@ -191,5 +191,5 @@ stdout:
 | wrote   AGENTS.md
 stderr: (empty)
 files:
-~ w/.ai/lock.json  -rw-r--r-- sha256:20329a7bc8dab18b
-~ w/AGENTS.md  -rw-r--r-- sha256:4438555ddf397afb
+~ w/.ai/lock.json  -rw-r--r-- sha256:8f40c09993b678d9
+~ w/AGENTS.md  -rw-r--r-- sha256:2c0a12020254c33d

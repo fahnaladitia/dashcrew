@@ -87,7 +87,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-+ w/.ai/lock.json  -rw-r--r-- sha256:cec77547377508b6
++ w/.ai/lock.json  -rw-r--r-- sha256:1aedd66eb55d618f
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
@@ -141,7 +141,7 @@ files:
 + w/.github  dir
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
 + w/.mcp.json  -rw-r--r-- sha256:d8e397af03b5b032
-+ w/AGENTS.md  -rw-r--r-- sha256:3a9582a62fd9b529
++ w/AGENTS.md  -rw-r--r-- sha256:ce42df2bd22db804
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 6: dashcrew "doctor"
@@ -159,7 +159,7 @@ stdout:
 | ok    claude-md       CLAUDE.md imports AGENTS.md
 | ok    mcp             defined: 
 | warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
-| ok    agents-md-size  AGENTS.md 14234 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 14230 of 32768 bytes
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)

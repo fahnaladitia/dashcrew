@@ -144,4 +144,8 @@ The patterns are the team's own. A team with `development/app-v2.4.0` writes `de
   - CI fix: the transcript bin folder holds a `gh` stub that exits 127, because Ubuntu runners ship `/usr/bin/gh`. `ci.yaml` uses `setup-go@v6`; the generated workflow still uses v5.
   - Known: a fast-forward merge of a line into main moves its branch point (documented in the README).
 
-P6 is complete in code. Left: the live check in "How we check".
+P6 is complete in code. Live check (3 Nov, sample `shop-api` with `release/1.0.0`, `release/1.1.0` and `main`, dashcrew 0.2.0 from brew):
+- A fix on 1.0.0 (server timeouts) had `Release: 1.0.0` at step 0, `dashcrew-release` on its branch and its plan in `.ai/plans/1.0.0/`; the port workflow brought it to 1.1.0 and main as `--no-ff` merges with `Ported-from:`, each target's branch recording its release (main none).
+- `check --ports` found the fix on both lines; `release status 1.0.0` wrote the ledger with the task, its branch and PR description, and no pending port.
+- In a throwaway clone: `git revert` of the fix on 1.1.0 made `check --ports` report it lost (exit 1).
+- Found and fixed: `git revert -m 1` of the port merge on 1.1.0 left the fix reported as merged, since it stays in history; a revert of the merge that brought a fix in now loses it.

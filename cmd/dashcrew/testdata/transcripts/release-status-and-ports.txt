@@ -282,8 +282,7 @@ stdout:
 | scope:   -              (no scopes in project.commit)
 | files:   1 changed
 | 
-| git add -- README.md
-| git commit -m 'fix: totals round down' -m 'Ported-from: 1a2b3c4'
+| git add -- README.md && git commit -m 'fix: totals round down' -m 'Ported-from: 1a2b3c4'
 stderr: (empty)
 files: (unchanged)
 
