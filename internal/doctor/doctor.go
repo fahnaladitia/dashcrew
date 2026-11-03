@@ -313,13 +313,65 @@ func (d Doctor) antigravityHook() Check {
 	}
 	entry := config.Value(adapters.AntigravityGuardKey)
 	if encode(entry) == encode(adapters.AntigravityGuardHook()) {
-		return Check{id, OK, "PreToolUse guard hook present under " + adapters.AntigravityGuardKey}
+		present := "PreToolUse guard hook present under " + adapters.AntigravityGuardKey
+		switch loaded, ok := d.agyLoadsGuard(); {
+		case !ok:
+			return Check{id, OK, present}
+		case !loaded:
+			return Check{id, Warn, present + ", but agy does not load it here: trust this folder in agy, since workspace hooks load only in a trusted folder"}
+		}
+		return Check{id, OK, present + "; agy loads it"}
 	}
 	problem := "guard hook differs from what sync writes"
 	if entry == nil {
 		problem = "guard hook missing"
 	}
 	return Check{id, Fail, problem + "; run dashcrew sync"}
+}
+
+// agyLoadsGuard asks agy for its active hooks in the project (`agy -p /hooks`, one tab-separated record per line).
+// loaded needs a record whose first field is the guard key and that says nothing of being skipped; a failing agy
+// that names trust means not loaded. ok is false when agy is not on PATH, does not answer within 15 seconds or fails
+// for another reason, signed out for one; the file check then stands.
+func (d Doctor) agyLoadsGuard() (loaded, ok bool) {
+	pathEnv := d.searchPath()
+	agy, found := lookPath("agy", pathEnv)
+	if !found {
+		return false, false
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, agy, "-p", "/hooks")
+	cmd.Dir = d.ProjectDir
+	cmd.Env = append(os.Environ(), "PATH="+pathEnv)
+	// A child that keeps the pipes open would hold Output past the timeout; WaitDelay closes them.
+	cmd.WaitDelay = 2 * time.Second
+	var stderr strings.Builder
+	cmd.Stderr = &stderr
+	out, err := cmd.Output()
+	if err != nil {
+		if strings.Contains(strings.ToLower(string(out)+stderr.String()), "trust") {
+			return false, true
+		}
+		return false, false
+	}
+	for _, line := range strings.Split(string(out), "\n") {
+		fields := strings.FieldsFunc(line, func(r rune) bool { return r == '\t' || r == ' ' })
+		lower := strings.ToLower(line)
+		if len(fields) > 0 && fields[0] == adapters.AntigravityGuardKey &&
+			!strings.Contains(lower, "skip") && !strings.Contains(lower, "disabled") && !strings.Contains(lower, "trust") {
+			return true, true
+		}
+	}
+	return false, true
+}
+
+// searchPath is the PATH doctor searches: PathEnv, else this process's.
+func (d Doctor) searchPath() string {
+	if d.PathEnv != "" {
+		return d.PathEnv
+	}
+	return os.Getenv("PATH")
 }
 
 func (d Doctor) antigravityMcp() Check {
@@ -814,10 +866,7 @@ func (d Doctor) guardBinary(lock *omap.Map[any]) Check {
 			minimum = recorded
 		}
 	}
-	pathEnv := d.PathEnv
-	if pathEnv == "" {
-		pathEnv = os.Getenv("PATH")
-	}
+	pathEnv := d.searchPath()
 	install := "install dashcrew " + minimum + " or newer (brew install fahnaladitia/tap/dashcrew)"
 	found, ok := lookPath("dashcrew", pathEnv)
 	if !ok {

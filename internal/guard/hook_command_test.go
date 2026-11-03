@@ -78,13 +78,16 @@ var hookCommandCases = []struct {
 	}},
 	{"codex reaches the guard from a subfolder through git rev-parse", func(t *testing.T) {
 		root, calls := hookProject(t)
-		code, out := runHook(t, adapters.CodexGuardCommand, filepath.Join(root, "lib", "feature"), nil)
+		code, out := runHook(t, adapters.GitGuardCommand, filepath.Join(root, "lib", "feature"), nil)
 		assertCalled(t, code, out, calls, "called "+filepath.Join(root, ".ai", "guard.json")+"\n")
 	}},
-	{"antigravity reaches the guard from the workspace root", func(t *testing.T) {
+	{"antigravity reaches the guard from .agents, the folder of hooks.json, with the policy", func(t *testing.T) {
 		root, calls := hookProject(t)
-		code, out := runHook(t, antigravityGuardCommand(t), root, nil)
-		assertCalled(t, code, out, calls, "called \n")
+		if err := os.MkdirAll(filepath.Join(root, ".agents"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		code, out := runHook(t, antigravityGuardCommand(t), filepath.Join(root, ".agents"), nil)
+		assertCalled(t, code, out, calls, "called "+filepath.Join(root, ".ai", "guard.json")+"\n")
 	}},
 }
 

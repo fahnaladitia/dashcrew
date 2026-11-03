@@ -503,7 +503,8 @@ func (s Sync) Render(adopt bool, warnings *[]string) (*Rendered, error) {
 	files := omap.New[string]()
 	files.Set("AGENTS.md", agentsMd)
 	files.Set(GuardPolicyPath, policy+"\n")
-	files.Set(guard.ShimPath, guard.Shim(compiled.Minimum()))
+	minimum := guardMinimum(compiled, p.Agents)
+	files.Set(guard.ShimPath, guard.Shim(minimum))
 	for _, target := range targets {
 		if target.Target != "pr_template" {
 			continue
@@ -541,7 +542,19 @@ func (s Sync) Render(adopt bool, warnings *[]string) (*Rendered, error) {
 		}
 	}
 	return &Rendered{Files: files, Packs: packs, Adapters: agentAdapters, Knowledge: p.Knowledge, Profile: p,
-		GuardMinimum: compiled.Minimum(), SkillModes: skillModes(c, p.Agents, files)}, nil
+		GuardMinimum: minimum, SkillModes: skillModes(c, p.Agents, files)}, nil
+}
+
+// guardMinimum is the oldest dashcrew the shim accepts: the policy's minimum, raised to
+// version.AntigravityGuardMinimum when Antigravity is among the agents.
+func guardMinimum(policy guard.Policy, agents []string) string {
+	minimum := policy.Minimum()
+	for _, agent := range agents {
+		if agent == "antigravity" && version.Compare(version.AntigravityGuardMinimum, minimum) > 0 {
+			minimum = version.AntigravityGuardMinimum
+		}
+	}
+	return minimum
 }
 
 // skillModes are the supporting files of required project skills that files holds, with their executable flag.

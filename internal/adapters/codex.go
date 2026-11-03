@@ -16,8 +16,9 @@ import (
 const (
 	// CodexGuardMatcher is the PreToolUse matcher of the guard entry.
 	CodexGuardMatcher = `^(Bash|apply_patch|Edit|Write)$`
-	// CodexGuardCommand finds the project root through git, since Codex runs hooks in the session's directory.
-	CodexGuardCommand = `"$(git rev-parse --show-toplevel)/.ai/bin/guard" "$(git rev-parse --show-toplevel)/.ai/guard.json"`
+	// GitGuardCommand finds the project root through git and passes the policy, since Codex runs hooks through sh in
+	// the session's directory.
+	GitGuardCommand = `"$(git rev-parse --show-toplevel)/.ai/bin/guard" "$(git rev-parse --show-toplevel)/.ai/guard.json"`
 	// SkillListBudget is the characters Codex gives the initial skill list when it does not know the context window.
 	SkillListBudget = 8000
 
@@ -27,7 +28,7 @@ const (
 
 // CodexGuardHook is the PreToolUse entry sync keeps in `.codex/hooks.json`.
 func CodexGuardHook() *omap.Map[any] {
-	return omap.Of[any]("matcher", CodexGuardMatcher, "hooks", []any{omap.Of[any]("type", "command", "command", CodexGuardCommand, "timeout", 30)})
+	return omap.Of[any]("matcher", CodexGuardMatcher, "hooks", []any{omap.Of[any]("type", "command", "command", GitGuardCommand, "timeout", 30)})
 }
 
 // Codex writes `.agents/skills/<name>/SKILL.md` and `.codex/agents/<role>.toml`, and merges the guard into

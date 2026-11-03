@@ -30,10 +30,7 @@ func (d Doctor) githubTracker() (Check, bool) {
 	if mode != "project" {
 		return Check{}, false
 	}
-	pathEnv := d.PathEnv
-	if pathEnv == "" {
-		pathEnv = os.Getenv("PATH")
-	}
+	pathEnv := d.searchPath()
 	gh, found := lookPath("gh", pathEnv)
 	if !found {
 		return Check{id, Warn, "gh is not on PATH; the GitHub tracker sets status with gh project (gh 2.31 or newer)"}, true

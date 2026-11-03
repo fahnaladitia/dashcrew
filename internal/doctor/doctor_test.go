@@ -113,6 +113,19 @@ func (f *fixture) writeBin(script string) {
 	}
 }
 
+// writeAgy puts a stand-in agy on the fixture's PATH.
+func (f *fixture) writeAgy(script string) {
+	f.t.Helper()
+	if runtime.GOOS == "windows" {
+		f.t.Skip("the stand-in agy is a POSIX sh script")
+	}
+	path := filepath.Join(f.bin, "agy")
+	writeFile(f.t, path, script)
+	if err := os.Chmod(path, 0o755); err != nil {
+		f.t.Fatal(err)
+	}
+}
+
 func (f *fixture) doctor() map[string]Check {
 	f.t.Helper()
 	return byID(Doctor{
@@ -677,6 +690,53 @@ func TestAntigravity(t *testing.T) {
 
 		expect(t, checks, "antigravity-hook", Fail, "guard hook missing")
 		expect(t, checks, "antigravity-roles", Fail, "reviewer: view_files")
+	})
+
+	t.Run("the old relative hook command fails until a resync", func(t *testing.T) {
+		f := setup(t, antigravityProfile)
+		f.sync()
+		f.write(".agents/hooks.json", `{"dashcrew-guard":{"PreToolUse":[{"matcher":"^(run_command|write_to_file|replace_file_content|multi_replace_file_content)$","hooks":[{"type":"command","command":"./.ai/bin/guard","timeout":30}]}]}}`)
+
+		expect(t, f.doctor(), "antigravity-hook", Fail, "differs from what sync writes")
+		f.sync()
+		expect(t, f.doctor(), "antigravity-hook", OK)
+	})
+
+	t.Run("agy on PATH that does not load dashcrew-guard warns to trust the folder", func(t *testing.T) {
+		f := setup(t, antigravityProfile)
+		f.sync()
+		f.writeAgy("#!/bin/sh\n[ \"$1 $2\" = \"-p /hooks\" ] || exit 64\nprintf 'lint-checker\\tPreToolUse\\n'\n")
+
+		expect(t, f.doctor(), "antigravity-hook", Warn, "trust this folder in agy")
+	})
+
+	t.Run("agy on PATH that loads dashcrew-guard passes", func(t *testing.T) {
+		f := setup(t, antigravityProfile)
+		f.sync()
+		f.writeAgy("#!/bin/sh\nprintf 'dashcrew-guard\\tPreToolUse\\n'\n")
+
+		expect(t, f.doctor(), "antigravity-hook", OK, "agy loads it")
+	})
+
+	t.Run("agy naming dashcrew-guard as skipped or failing over trust warns", func(t *testing.T) {
+		for _, script := range []string{
+			"#!/bin/sh\nprintf 'dashcrew-guard\\tPreToolUse\\tskipped: folder not trusted\\n'\n",
+			"#!/bin/sh\necho 'this folder is not trusted' >&2\nexit 1\n",
+		} {
+			f := setup(t, antigravityProfile)
+			f.sync()
+			f.writeAgy(script)
+
+			expect(t, f.doctor(), "antigravity-hook", Warn, "trust this folder in agy")
+		}
+	})
+
+	t.Run("agy on PATH that fails keeps the file check", func(t *testing.T) {
+		f := setup(t, antigravityProfile)
+		f.sync()
+		f.writeAgy("#!/bin/sh\necho 'not signed in' >&2\nexit 1\n")
+
+		expect(t, f.doctor(), "antigravity-hook", OK, "PreToolUse guard hook present")
 	})
 
 	t.Run("AGENTS.md over 24000 bytes warns when antigravity is selected", func(t *testing.T) {
