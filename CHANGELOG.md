@@ -1,6 +1,6 @@
-## Unreleased
+## 0.5.0
 
-Readable chat blocks, skills a team can adopt and each member can switch on, and a guard that runs under Antigravity. A project's generated files change: run `dashcrew sync` and commit what it writes.
+Readable chat blocks, skills a team can adopt and each member can switch on, and a guard that runs under Antigravity. A project's generated files change: run `dashcrew sync` and commit what it writes. In a project with the antigravity agent the shim then accepts dashcrew 0.5.0 or newer only, so every member installs 0.5.0 before that sync is committed.
 
 - Readable chat blocks (#18): step 0, review, verify, learn, build-fix and the end-of-task summary print as plain-text blocks with one layout: a title line, a 72-column `=` rule, `Label  value` rows, then each list under its own `-- Name ---` rule, columns aligned with spaces so every value copies clean. A comparison is a table in that layout. Step 0 numbers its assumptions and questions (`A1`, `Q1`), lists skills, criteria and branches as rows, and ends with the reply it expects; with a question tool the agent asks through it. The review verdict comes first. The full step 0 template moves from AGENTS.md to the `prompt-polish` skill, and the `SUMMARY` template to `pr-description`, where tracker and analytics packs add their rows. The main session always asks an open question, with the agent's question tool when it has one, and waits.
 - One source per chat block (#21): a platform overrides the prose around a block, never the block, so a layout change is made in one file; the `reviewer` role names the `code-review` verdict format instead of copying it, and the verify QA line reads the same on every platform.
