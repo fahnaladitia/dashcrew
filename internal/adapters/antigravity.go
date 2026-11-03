@@ -31,12 +31,24 @@ var AntigravityToolsByCapability = map[string][]string{
 	"write-code":  append(append([]string{}, antigravityReadTools...), "write_to_file", "replace_file_content", "multi_replace_file_content"),
 }
 
-// AntigravityGuardHook is the value under AntigravityGuardKey: hooks name the tool in `toolCall.name`, and the
-// command is a plain relative path because Antigravity documents no shell or working directory for it.
+// AntigravityGuardMatcher is run_command plus every write tool of agy's own permission vetting: the three of the
+// hooks reference and seven more some models use, whose arguments the guard reads by the usual keys.
+const AntigravityGuardMatcher = `^(run_command|write_to_file|replace_file_content|multi_replace_file_content|create_file|edit_file|write_file|file_write|str_replace_editor|delete_file|file_delete)$`
+
+// AntigravityGuardCommand runs the shim with the policy, from the first of three folders that holds it: the one
+// above the hooks folder (agy runs a hook through sh in the folder of its hooks.json, `.agents/`), the hook's own
+// folder (older agy builds ran it at the workspace root), and the git toplevel. The first two also serve a project
+// below the git toplevel and a checkout without git. With no shim it denies, with the reason, as agy would fail
+// closed anyway.
+const AntigravityGuardCommand = `for d in .. . "$(git rev-parse --show-toplevel 2>/dev/null)"; do ` +
+	`if [ -n "$d" ] && [ -x "$d/.ai/bin/guard" ]; then d=$(cd "$d" && pwd) && exec "$d/.ai/bin/guard" "$d/.ai/guard.json"; fi; ` +
+	`done; echo '{"decision":"deny","reason":"[dashcrew guard] .ai/bin/guard not found from the hooks folder; run dashcrew sync"}'`
+
+// AntigravityGuardHook is the value under AntigravityGuardKey: hooks name the tool in `toolCall.name`.
 func AntigravityGuardHook() *omap.Map[any] {
 	return omap.Of[any]("PreToolUse", []any{omap.Of[any](
-		"matcher", `^(run_command|write_to_file|replace_file_content|multi_replace_file_content)$`,
-		"hooks", []any{omap.Of[any]("type", "command", "command", "./.ai/bin/guard", "timeout", 30)},
+		"matcher", AntigravityGuardMatcher,
+		"hooks", []any{omap.Of[any]("type", "command", "command", AntigravityGuardCommand, "timeout", 30)},
 	)})
 }
 

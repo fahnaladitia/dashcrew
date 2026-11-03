@@ -420,6 +420,7 @@ them in the format it reads.
 - Run `dashcrew doctor` to confirm.
 - Optional: `dashcrew me init` and `dashcrew me sync` for your personal profile (see [`dashcrew me`](#dashcrew-me)).
 - Codex users: trust the project when Codex asks, then approve the dashcrew hook in `/hooks`. Codex ignores a project's `.codex/` until both are done.
+- Antigravity users: trust the folder when agy asks; agy loads `.agents/hooks.json` only in a trusted folder. `dashcrew doctor` asks `agy -p /hooks` whether the guard is active when `agy` is on `PATH`.
 
 ### Day to day
 
@@ -433,7 +434,7 @@ them in the format it reads.
 | | Claude Code | Codex | Antigravity |
 |---|---|---|---|
 | Rules (AGENTS.md), skills, subagents | yes | yes | yes |
-| Guard: no push, commit, history rewrite, formatter or vendor import | yes | yes, once trusted | yes, by its documented hook format |
+| Guard: no push, commit, history rewrite, formatter or vendor import | yes | yes, once trusted | yes, once the folder is trusted |
 | `reviewer` and `explorer` cannot write | guard | guard | the subagent's `tools` allowlist |
 | AGENTS.md cut at | no documented cut | 32 KiB | 24,000 bytes |
 
@@ -535,6 +536,8 @@ Not done: creating, tagging or deleting release branches; pushing, merging or op
 | `Files changed outside dashcrew` | move the change to its source (profile, project pack, project block), then `dashcrew sync --force` |
 | `.ai/lock.json was written by dashcrew X` | install that dashcrew (or the team's pinned ref) |
 | `[dashcrew guard] dashcrew is not on PATH, so this tool call is refused` | install dashcrew (see [Install](#install)); the agent's next tool call goes through |
+| agy runs `.agents/.ai/bin/guard`, which does not exist | an older hook entry: agy runs hooks in the folder of `hooks.json`; run `dashcrew sync`, which writes a command that finds the shim from the hooks folder, the folder above it or the git toplevel (`antigravity-hook` fails until then); the project then needs dashcrew 0.5.0 or newer |
+| `antigravity-hook`: `agy does not load it here` | trust the folder in agy; workspace hooks load only in a trusted folder |
 | `[dashcrew guard] the dashcrew on PATH is older than X` | install dashcrew X or newer; `doctor` names the `dashcrew` it found |
 | `guard-binary`: `is the Dart one` | an old Dart-installed dashcrew (from before 0.1.0) comes first on `PATH`: run `dart pub global deactivate dashcrew`, then install dashcrew (see [Install](#install)) |
 | `guard-log`: `the guard let N malformed payloads through` | update dashcrew if an agent changed its hook format; the log names the agent |

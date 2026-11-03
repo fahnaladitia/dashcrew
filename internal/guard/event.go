@@ -337,8 +337,8 @@ func dartTrim(text string) string {
 	})
 }
 
-// antigravity reads a `toolCall`: `run_command`, `write_to_file`, `replace_file_content` and
-// `multi_replace_file_content`. Its hooks carry no subagent identity, so the role stays nil.
+// antigravity reads a `toolCall`: `run_command`, `write_to_file`, `replace_file_content`,
+// `multi_replace_file_content`, and the undocumented write tools of antigravityWriteTools. Its hooks carry no subagent identity, so the role stays nil.
 func antigravity(toolCall *omap.Map[any]) (Event, error) {
 	args := objectAt(toolCall, "args")
 	path, err := optionalString("TargetFile", args.Value("TargetFile"))
@@ -360,20 +360,73 @@ func antigravity(toolCall *omap.Map[any]) (Event, error) {
 		content, err := text("ReplacementContent")
 		return Event{Kind: Edit, FilePath: orEmpty(path), Content: content}, err
 	case "multi_replace_file_content":
-		var replacements []string
-		chunks, _ := args.Value("ReplacementChunks").([]any)
-		for _, chunk := range chunks {
-			object, ok := chunk.(*omap.Map[any])
-			if !ok {
-				continue
-			}
-			for _, key := range object.Keys() {
-				if value, ok := object.Value(key).(string); ok && strings.HasPrefix(key, "Replacement") {
-					replacements = append(replacements, value)
-				}
-			}
+		return Event{Kind: Edit, FilePath: orEmpty(path), Content: strings.Join(replacementTexts(args), "\n")}, nil
+	}
+	if name, ok := toolCall.Value("name").(string); ok {
+		if kind, ok := antigravityWriteTools[name]; ok {
+			return antigravityWrite(kind, args), nil
 		}
-		return Event{Kind: Edit, FilePath: orEmpty(path), Content: strings.Join(replacements, "\n")}, nil
 	}
 	return Event{Kind: Other}, nil
+}
+
+// antigravityWriteTools are the write tools of agy's own permission vetting beyond the documented three, with the
+// event each one is. Their arguments are not documented, so antigravityWrite reads the usual keys; a delete is a
+// write of nothing, which keeps the path rules.
+var antigravityWriteTools = map[string]Kind{
+	"create_file": Write, "write_file": Write, "file_write": Write, "delete_file": Write, "file_delete": Write,
+	"edit_file": Edit, "str_replace_editor": Edit,
+}
+
+// antigravityPathKeys and antigravityTextKeys are the argument names an undocumented write tool may use for its
+// path and its new text, from Antigravity's own tools and the shapes other agents' tools share.
+var (
+	antigravityPathKeys = []string{"TargetFile", "AbsolutePath", "file_path", "path", "target_file", "filePath", "file"}
+	antigravityTextKeys = []string{"CodeContent", "content", "file_text", "new_str", "code_edit"}
+)
+
+// antigravityWrite is an undocumented write tool's event: the path from the first string of antigravityPathKeys,
+// the new text from every string of antigravityTextKeys plus the replacement values of ReplacementChunks. A call
+// with no path, and `str_replace_editor` with `command: view`, is allowed, as an unknown tool is.
+func antigravityWrite(kind Kind, args *omap.Map[any]) Event {
+	if command, _ := args.Value("command").(string); command == "view" {
+		return Event{Kind: Other}
+	}
+	path := ""
+	for _, key := range antigravityPathKeys {
+		if value, ok := args.Value(key).(string); ok && value != "" {
+			path = value
+			break
+		}
+	}
+	if path == "" {
+		return Event{Kind: Other}
+	}
+	var texts []string
+	for _, key := range antigravityTextKeys {
+		if value, ok := args.Value(key).(string); ok && value != "" {
+			texts = append(texts, value)
+		}
+	}
+	texts = append(texts, replacementTexts(args)...)
+	return Event{Kind: kind, FilePath: path, Content: strings.Join(texts, "\n")}
+}
+
+// replacementTexts are the string values of every ReplacementChunks entry whose key starts with Replacement: the
+// new text of a multi-chunk edit, never the text it replaces.
+func replacementTexts(args *omap.Map[any]) []string {
+	var out []string
+	chunks, _ := args.Value("ReplacementChunks").([]any)
+	for _, chunk := range chunks {
+		object, ok := chunk.(*omap.Map[any])
+		if !ok {
+			continue
+		}
+		for _, key := range object.Keys() {
+			if value, ok := object.Value(key).(string); ok && strings.HasPrefix(key, "Replacement") {
+				out = append(out, value)
+			}
+		}
+	}
+	return out
 }

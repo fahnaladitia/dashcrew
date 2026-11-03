@@ -24,6 +24,10 @@ const GuardMinimum = "0.1.0"
 // holds them requires it; an older guard would ignore them without a word.
 const BackendGuardMinimum = "0.2.0"
 
+// AntigravityGuardMinimum is the oldest dashcrew whose guard answers Antigravity with an allow decision (agy fails
+// closed on a missing one) and reads agy's other write tools (P3h). A project with the antigravity agent needs it.
+const AntigravityGuardMinimum = "0.5.0"
+
 // Current is the stamped Version, else the module version of a `go install <module>@<version>` build, else
 // Unstamped. A leading `v` is dropped.
 func Current() string {

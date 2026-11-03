@@ -27,9 +27,24 @@ var ProcessEnv = Env{LookupEnv: os.LookupEnv, Getwd: os.Getwd, Now: time.Now}
 
 // Run is `dashcrew guard`: hook JSON on stdin, the answer per HookResponse, the exit code returned.
 // Policy path: first argument, else `DASHCREW_GUARD_POLICY`, else `<hook cwd or first workspace path>/.ai/guard.json`.
-// Any read or parse failure allows the call (exit 0, no output); `dashcrew doctor` reports a broken install.
+// Any read or parse failure allows the call (exit 0; Antigravity still gets its allow decision); `dashcrew doctor`
+// reports a broken install.
 // A malformed hook input is also recorded in the malformed log (see logMalformed), which doctor reports.
 func Run(args []string, stdin io.Reader, stdout, stderr io.Writer, env Env) int {
+	object, decision := judge(args, stdin, env)
+	response := HookResponse(object, decision)
+	if response.Stdout != "" {
+		fmt.Fprintln(stdout, response.Stdout)
+	}
+	if response.Stderr != "" {
+		fmt.Fprintln(stderr, response.Stderr)
+	}
+	return response.ExitCode
+}
+
+// judge reads the hook input and the policy and evaluates the call; every failure allows it. object is nil when the
+// input is not a JSON object, so HookResponse answers only once it knows which agent called.
+func judge(args []string, stdin io.Reader, env Env) (*omap.Map[any], Decision) {
 	input, err := readJSON(stdin)
 	if err != nil {
 		reason := "input is not JSON"
@@ -37,17 +52,17 @@ func Run(args []string, stdin io.Reader, stdout, stderr io.Writer, env Env) int 
 			reason = "input is not UTF-8"
 		}
 		logMalformed(env, nil, reason)
-		return 0
+		return nil, Allow()
 	}
 	object, ok := input.(*omap.Map[any])
 	if !ok {
 		logMalformed(env, nil, "input is not a JSON object")
-		return 0
+		return nil, Allow()
 	}
 	policyPath, err := policyPath(args, object, env)
 	if err != nil {
 		logMalformed(env, object, malformedReason(err))
-		return 0
+		return object, Allow()
 	}
 	resolver := newProjects(hookDir(object, env), homeOf(env))
 	resolver.project = projectOf(policyPath)
@@ -56,16 +71,16 @@ func Run(args []string, stdin io.Reader, stdout, stderr io.Writer, env Env) int 
 	case err == nil && !info.IsDir():
 		file, err := os.Open(policyPath)
 		if err != nil {
-			return 0
+			return object, Allow()
 		}
 		value, err := readJSON(file)
 		file.Close()
 		if err != nil {
-			return 0
+			return object, Allow()
 		}
 		policy, err := LoadPolicy(value)
 		if err != nil {
-			return 0
+			return object, Allow()
 		}
 		policy = policy.at(hookDir(object, env), resolver.project, homeOf(env))
 		resolver.policy = &policy
@@ -75,12 +90,12 @@ func Run(args []string, stdin io.Reader, stdout, stderr io.Writer, env Env) int 
 		resolver.project = ""
 		resolver.perPath = true
 	default:
-		return 0
+		return object, Allow()
 	}
 	events, err := AllFromHook(object)
 	if err != nil {
 		logMalformed(env, object, malformedReason(err))
-		return 0
+		return object, Allow()
 	}
 	for _, event := range events {
 		if event.Malformed != "" {
@@ -90,16 +105,9 @@ func Run(args []string, stdin io.Reader, stdout, stderr io.Writer, env Env) int 
 	}
 	decision, err := resolver.evaluateAll(events)
 	if err != nil {
-		return 0
+		return object, Allow()
 	}
-	response := HookResponse(object, decision)
-	if response.Stdout != "" {
-		fmt.Fprintln(stdout, response.Stdout)
-	}
-	if response.Stderr != "" {
-		fmt.Fprintln(stderr, response.Stderr)
-	}
-	return response.ExitCode
+	return object, decision
 }
 
 var errNotUTF8 = errors.New("input is not UTF-8")

@@ -30,14 +30,23 @@ type Response struct {
 	Stderr   string
 }
 
-// HookResponse answers the agent that called: Antigravity (`toolCall` input) reads a JSON decision on stdout,
-// Claude Code and Codex read exit code 2 with the reason on stderr. An allowed call prints nothing.
+// HookResponse answers the agent that called: Antigravity (`toolCall` input) reads a JSON decision on stdout, and
+// gets `allow` for an allowed call since it fails closed on a missing one (`allow` hands the call on to the next hook
+// or its default policy, it approves nothing). Claude Code and Codex read exit code 2 with the reason on stderr, and
+// nothing for an allowed call. input may be nil when the hook input did not parse.
 func HookResponse(input *omap.Map[any], decision Decision) Response {
+	antigravity := false
+	if input != nil {
+		_, antigravity = input.Value("toolCall").(*omap.Map[any])
+	}
 	if !decision.Blocked {
+		if antigravity {
+			return Response{Stdout: `{"decision":"allow"}`}
+		}
 		return Response{}
 	}
 	reason := "[dashcrew guard] " + decision.Reason
-	if _, ok := input.Value("toolCall").(*omap.Map[any]); ok {
+	if antigravity {
 		text, _ := dartjson.Encode(omap.Of[any]("decision", "deny", "reason", reason))
 		return Response{Stdout: text}
 	}

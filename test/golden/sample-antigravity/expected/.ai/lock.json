@@ -30,7 +30,7 @@
     ".agents/skills/verify/SKILL.md": "1b2292236d130096e75db8381aef023a15192d143a678e64b56851dce1bee604",
     ".agents/skills/work-modes/SKILL.md": "cca07dc711f2e958a196efa2aae16742d89941e30fd2d01af1fb26026836ff16",
     ".agents/skills/worktree/SKILL.md": "05e374e3165f3e56463cf7a52366a256bf3c0da3ed0a6fcb1a253ec4c57fdee5",
-    ".ai/bin/guard": "561e018a69e1d3ce725ff417961294867e563e4786f0d97d8e8e1bbb0eb9b1bb",
+    ".ai/bin/guard": "a4d846d82ed6094ab2c8a37400de7c2e81991d1b215bb017f5578edfc3de3a7e",
     ".ai/guard.json": "402ed0fcf76a6fbabf2dc4d8c0b2182d35b001880d0cc0a2b5abcf2781aa30eb",
     ".claude/agents/explorer.md": "67ca188ed554a6a4b7def8e1c3d49addc5a908d1afd00254bd517a6c2d4fe9e9",
     ".claude/agents/reviewer.md": "283487271d3e701ff401950a0e9c0d3122de69db8583ae620c666d645b84086f",
@@ -88,5 +88,5 @@
       "dart-mcp-server"
     ]
   },
-  "guard_min_version": "0.1.0"
+  "guard_min_version": "0.5.0"
 }

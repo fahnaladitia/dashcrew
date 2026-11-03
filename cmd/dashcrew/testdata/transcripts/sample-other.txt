@@ -69,7 +69,7 @@ files:
 + w/.agents/agents  dir
 + w/.agents/agents/explorer.md  -rw-r--r-- sha256:22beb633c8b9f5c3
 + w/.agents/agents/reviewer.md  -rw-r--r-- sha256:1e2bdb4fe9970c11
-+ w/.agents/hooks.json  -rw-r--r-- sha256:948bc96d3fae079c
++ w/.agents/hooks.json  -rw-r--r-- sha256:54e39fd507ae5d8e
 + w/.agents/mcp_config.json  -rw-r--r-- sha256:d8e397af03b5b032
 + w/.agents/skills  dir
 + w/.agents/skills/acceptance-criteria  dir
@@ -117,9 +117,9 @@ files:
 + w/.agents/skills/worktree  dir
 + w/.agents/skills/worktree/SKILL.md  -rw-r--r-- sha256:33a709eb74610b8e
 + w/.ai/bin  dir
-+ w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
++ w/.ai/bin/guard  -rwxr-xr-x sha256:a4d846d82ed6094a
 + w/.ai/guard.json  -rw-r--r-- sha256:52606fcc3d47573e
-+ w/.ai/lock.json  -rw-r--r-- sha256:0905ce0316d94f1b
++ w/.ai/lock.json  -rw-r--r-- sha256:2f4e3d65d9d0c316
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
@@ -222,7 +222,7 @@ stdout:
 | ok    drift           55 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| fail  guard-binary    dashcrew is not on PATH, so .ai/bin/guard refuses every tool call: install dashcrew 0.1.0 or newer (brew install fahnaladitia/tap/dashcrew)
+| fail  guard-binary    dashcrew is not on PATH, so .ai/bin/guard refuses every tool call: install dashcrew 0.5.0 or newer (brew install fahnaladitia/tap/dashcrew)
 | ok    hook            PreToolUse guard hook present
 | ok    claude-md       CLAUDE.md imports AGENTS.md
 | ok    mcp             defined: 
@@ -251,7 +251,7 @@ stdout:
 | ok    drift           55 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| fail  guard-binary    dashcrew is not on PATH, so .ai/bin/guard refuses every tool call: install dashcrew 0.1.0 or newer (brew install fahnaladitia/tap/dashcrew)
+| fail  guard-binary    dashcrew is not on PATH, so .ai/bin/guard refuses every tool call: install dashcrew 0.5.0 or newer (brew install fahnaladitia/tap/dashcrew)
 | ok    hook            PreToolUse guard hook present
 | ok    claude-md       CLAUDE.md imports AGENTS.md
 | ok    mcp             defined: 

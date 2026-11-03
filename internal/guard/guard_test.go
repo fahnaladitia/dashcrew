@@ -344,11 +344,12 @@ func guardCases() []guardCase {
 				t.Errorf("%+v", response)
 			}
 		}},
-		guardCase{"hookResponse an allowed call prints nothing for every agent", func(t *testing.T) {
-			for _, input := range []string{`{"tool_name": "Bash"}`, `{"toolCall": {"name": "run_command"}}`} {
-				if response := HookResponse(hook(t, input), Allow()); response != (Response{}) {
-					t.Errorf("%s: %+v", input, response)
-				}
+		guardCase{"hookResponse an allowed call prints nothing for claude code and codex, an allow decision for antigravity", func(t *testing.T) {
+			if response := HookResponse(hook(t, `{"tool_name": "Bash"}`), Allow()); response != (Response{}) {
+				t.Errorf("claude code: %+v", response)
+			}
+			if response := HookResponse(hook(t, `{"toolCall": {"name": "run_command"}}`), Allow()); response != (Response{Stdout: `{"decision":"allow"}`}) {
+				t.Errorf("antigravity: %+v", response)
 			}
 		}},
 

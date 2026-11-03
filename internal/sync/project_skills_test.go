@@ -6,6 +6,8 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/fahnaladitia/dashcrew/internal/version"
 )
 
 func TestARequiredProjectSkillWritesItsFilesAndKeepsScriptsExecutable(t *testing.T) {
@@ -73,6 +75,24 @@ func TestSyncDoesNotWarnAboutAnOptionalSkillItNeverWrites(t *testing.T) {
 	for _, warning := range run(t, s, false, false).Warnings {
 		if strings.Contains(warning, "ui-slop") {
 			t.Errorf("warning about an optional skill: %s", warning)
+		}
+	}
+}
+
+func TestAntigravityRaisesTheGuardMinimum(t *testing.T) {
+	for profile, want := range map[string]string{
+		"toolkit: 1\nagents: [claude-code]\n":              version.GuardMinimum,
+		"toolkit: 1\nagents: [claude-code, antigravity]\n": version.AntigravityGuardMinimum,
+	} {
+		s, project := newProject(t, profile)
+
+		run(t, s, false, false)
+
+		if got := lock(t, project).Value("guard_min_version"); got != want {
+			t.Errorf("%q: lock guard_min_version %v, want %s", profile, got, want)
+		}
+		if shim := read(t, project, ".ai/bin/guard"); !strings.Contains(shim, "need="+want+"\n") {
+			t.Errorf("%q: shim does not need %s", profile, want)
 		}
 	}
 }

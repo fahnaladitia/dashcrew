@@ -2,11 +2,11 @@
   "dashcrew-guard": {
     "PreToolUse": [
       {
-        "matcher": "^(run_command|write_to_file|replace_file_content|multi_replace_file_content)$",
+        "matcher": "^(run_command|write_to_file|replace_file_content|multi_replace_file_content|create_file|edit_file|write_file|file_write|str_replace_editor|delete_file|file_delete)$",
         "hooks": [
           {
             "type": "command",
-            "command": "./.ai/bin/guard",
+            "command": "for d in .. . \"$(git rev-parse --show-toplevel 2>/dev/null)\"; do if [ -n \"$d\" ] && [ -x \"$d/.ai/bin/guard\" ]; then d=$(cd \"$d\" && pwd) && exec \"$d/.ai/bin/guard\" \"$d/.ai/guard.json\"; fi; done; echo '{\"decision\":\"deny\",\"reason\":\"[dashcrew guard] .ai/bin/guard not found from the hooks folder; run dashcrew sync\"}'",
             "timeout": 30
           }
         ]
