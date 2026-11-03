@@ -248,7 +248,7 @@ Commit messages in the pattern of `project.commit`. Neither subcommand commits; 
 
 | Subcommand | |
 |---|---|
-| `suggest [--subject <s>] [--body <b>] [--type <t>] [--scope <s>] [--ported-from <sha>[,<sha>...]] [--json]` | prints `git add -- <files>` with the changed tracked files listed one by one, and `git commit -m ...` quoted for bash and zsh. Type, scope and ticket come from the branch and the files; untracked files are listed apart, never added. With a verify record it says which files changed after the last verify. `--ported-from` adds one `Ported-from:` trailer per commit, after the ticket trailer. With `--subject` the message is linted; a problem exits 1. Never shows an email address from the branch or the git config |
+| `suggest [--subject <s>] [--body <b>] [--type <t>] [--scope <s>] [--ported-from <sha>[,<sha>...]] [--json]` | prints one line, `git add -- <files> && git commit -m ...`, with the changed tracked files listed one by one and every value quoted for bash and zsh. Type, scope and ticket come from the branch and the files; untracked files are listed apart, never added. With a verify record it says which files changed after the last verify. `--ported-from` adds one `Ported-from:` trailer per commit, after the ticket trailer. With `--subject` the message is linted; a problem exits 1. Never shows an email address from the branch or the git config |
 | `lint <message> \| - \| --range <base>..<head>` | checks the pattern, type, subject length, body rule, trailers, email addresses (`name@host.tld`, also inside `<...>`; `@mention` and image suffixes such as `icon@2x.png` are not addresses) and AI attribution (generated-with footers, AI co-author trailers, robot lines). One line per problem, exit 1 |
 
 ### `dashcrew release`

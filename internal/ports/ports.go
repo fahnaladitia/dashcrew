@@ -161,6 +161,9 @@ func Check(dir string, cfg *profile.Commit, all []lines.Line, from, to lines.Lin
 		candidates := find(dir, c, to.Head, newer, patchIDs)
 		for i, candidate := range candidates {
 			revert := matchesAny(revertedOnNewer, candidate.by)
+			if revert == "" && candidate.status == Merged {
+				revert = revertOfMerge(dir, c.hash, revertedOnNewer)
+			}
 			if revert == "" || i == len(candidates)-1 {
 				fix.Status, fix.By, fix.RevertedBy = candidate.status, candidate.by, revert
 				if revert != "" {
@@ -253,6 +256,31 @@ func revertsIn(commits []logged) map[string]string {
 		}
 	}
 	return out
+}
+
+// revertOfMerge is the revert, in reverted, of a merge commit that brought sha in: a merge whose first parent lacks
+// sha and whose other parent has it. `git revert -m 1` of a port merge undoes the fix while sha stays in history,
+// which ancestry alone reads as merged. Empty when no such revert exists.
+func revertOfMerge(dir, sha string, reverted map[string]string) string {
+	for target, revert := range reverted {
+		out, err := git(dir, "rev-list", "--parents", "-n", "1", target)
+		if err != nil {
+			continue
+		}
+		parents := strings.Fields(out)
+		if len(parents) < 3 {
+			continue
+		}
+		if _, err := git(dir, "merge-base", "--is-ancestor", sha, parents[1]); err == nil {
+			continue
+		}
+		for _, parent := range parents[2:] {
+			if _, err := git(dir, "merge-base", "--is-ancestor", sha, parent); err == nil {
+				return revert
+			}
+		}
+	}
+	return ""
 }
 
 // matchesAny is the revert of sha in reverted; empty when none.

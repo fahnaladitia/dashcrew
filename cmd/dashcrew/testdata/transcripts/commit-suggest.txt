@@ -46,8 +46,7 @@ stdout:
 | ticket:  ABC-123        (branch fix/ABC-123-cart-total)
 | files:   3 changed, 2 untracked (listed below, not included)
 | 
-| git add -- lib/features/cart/cart_cubit.dart lib/features/cart/cart_page.dart 'lib/features/cart/it'\''s $1.dart'
-| git commit -m 'fix(cart): <subject>' -m '<body>' -m 'Refs: ABC-123'
+| git add -- lib/features/cart/cart_cubit.dart lib/features/cart/cart_page.dart 'lib/features/cart/it'\''s $1.dart' && git commit -m 'fix(cart): <subject>' -m '<body>' -m 'Refs: ABC-123'
 | 
 | untracked, not included; add the ones that belong to this commit on purpose:
 |   notes.md
@@ -63,8 +62,7 @@ stdout:
 | ticket:  ABC-123        (branch fix/ABC-123-cart-total)
 | files:   3 changed, 2 untracked (listed below, not included)
 | 
-| git add -- lib/features/cart/cart_cubit.dart lib/features/cart/cart_page.dart 'lib/features/cart/it'\''s $1.dart'
-| git commit -m 'fix(cart): keep the $total `right` when it'\''s "0" é' -m 'Line one.
+| git add -- lib/features/cart/cart_cubit.dart lib/features/cart/cart_page.dart 'lib/features/cart/it'\''s $1.dart' && git commit -m 'fix(cart): keep the $total `right` when it'\''s "0" é' -m 'Line one.
 | Line two.' -m 'Refs: ABC-123'
 | 
 | untracked, not included; add the ones that belong to this commit on purpose:
@@ -120,8 +118,7 @@ stdout:
 | files:   3 changed, 2 untracked (listed below, not included)
 | since verify: no file changed after the last verify
 | 
-| git add -- lib/features/cart/cart_cubit.dart lib/features/cart/cart_page.dart 'lib/features/cart/it'\''s $1.dart'
-| git commit -m 'fix(cart): <subject>' -m '<body>' -m 'Refs: ABC-123'
+| git add -- lib/features/cart/cart_cubit.dart lib/features/cart/cart_page.dart 'lib/features/cart/it'\''s $1.dart' && git commit -m 'fix(cart): <subject>' -m '<body>' -m 'Refs: ABC-123'
 | 
 | untracked, not included; add the ones that belong to this commit on purpose:
 |   notes.md
@@ -141,8 +138,7 @@ stdout:
 |   lib/core/net.dart
 |   lib/features/cart/cart_cubit.dart
 | 
-| git add -- lib/core/net.dart lib/features/cart/cart_cubit.dart lib/features/cart/cart_page.dart 'lib/features/cart/it'\''s $1.dart'
-| git commit -m 'fix(cart): <subject>' -m '<body>' -m 'Refs: ABC-123'
+| git add -- lib/core/net.dart lib/features/cart/cart_cubit.dart lib/features/cart/cart_page.dart 'lib/features/cart/it'\''s $1.dart' && git commit -m 'fix(cart): <subject>' -m '<body>' -m 'Refs: ABC-123'
 | 
 | untracked, not included; add the ones that belong to this commit on purpose:
 |   notes.md
@@ -162,8 +158,7 @@ stdout:
 |   lib/core/net.dart
 |   lib/features/cart/cart_cubit.dart
 | 
-| git add -- ../core/net.dart cart/cart_cubit.dart cart/cart_page.dart 'cart/it'\''s $1.dart'
-| git commit -m 'docs: explain the cart' -m 'Refs: ABC-123'
+| git add -- ../core/net.dart cart/cart_cubit.dart cart/cart_page.dart 'cart/it'\''s $1.dart' && git commit -m 'docs: explain the cart' -m 'Refs: ABC-123'
 | 
 | untracked, not included; add the ones that belong to this commit on purpose:
 |   notes.md
@@ -189,8 +184,7 @@ stdout:
 |   lib/core/net.dart
 |   lib/features/cart/cart_cubit.dart
 | 
-| git add -- lib/core/net.dart lib/features/cart/cart_cubit.dart lib/features/cart/cart_page.dart 'lib/features/cart/it'\''s $1.dart'
-| git commit -m 'fix(cart): Keep the total right on the cart page even when the count reaches zero' -m 'Refs: ABC-123'
+| git add -- lib/core/net.dart lib/features/cart/cart_cubit.dart lib/features/cart/cart_page.dart 'lib/features/cart/it'\''s $1.dart' && git commit -m 'fix(cart): Keep the total right on the cart page even when the count reaches zero' -m 'Refs: ABC-123'
 | 
 | untracked, not included; add the ones that belong to this commit on purpose:
 |   notes.md

@@ -49,8 +49,8 @@ func TestSuggestTemplateListsFilesExplicitlyAndUntrackedApart(t *testing.T) {
 		"ticket:  ABC-123        (branch fix/ABC-123-cart-total)",
 		"files:   3 changed, 1 untracked (listed below, not included)",
 		"",
-		"git add -- a.txt lib/features/cart/cart_cubit.dart lib/features/cart/cart_page.dart",
-		"git commit -m 'fix(cart): <subject>' -m '<body>' -m 'Refs: ABC-123'",
+		"git add -- a.txt lib/features/cart/cart_cubit.dart lib/features/cart/cart_page.dart && " +
+			"git commit -m 'fix(cart): <subject>' -m '<body>' -m 'Refs: ABC-123'",
 		"",
 		"untracked, not included; add the ones that belong to this commit on purpose:",
 		"  notes.md",

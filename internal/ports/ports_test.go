@@ -156,6 +156,38 @@ func TestAFixMergedUpwardIsFoundByAncestryAndARevertAfterTheMergeLosesIt(t *test
 	}
 }
 
+// TestRevertingAPortMergeLosesTheFix is the case from the P6 live run: the port workflow merges the older line with
+// --no-ff and a Ported-from trailer, and `git revert -m 1` of that merge on the newer line undoes the fix while the fix
+// stays in its history. A later revert of that revert brings it back.
+func TestRevertingAPortMergeLosesTheFix(t *testing.T) {
+	r, h := fixture(t)
+	r.git("checkout", "-q", "-b", "release/2.6.0", "develop")
+	r.git("merge", "-q", "--no-ff", "--no-commit", "release/2.4.0")
+	r.git("commit", "-q", "-m", "fix: port 2.4.0 fixes\n\nPorted-from: "+h["trailer"])
+	merge := r.git("rev-parse", "--short=7", "HEAD")
+	pair := run(t, r, "2.4.0", "2.6.0")
+	for _, fix := range pair.Fixes {
+		if fix.Status != Merged {
+			t.Errorf("before the revert: %s %s", short(fix.Hash), fix.Status)
+		}
+	}
+	r.git("revert", "--no-edit", "-m", "1", merge)
+	revert := r.git("rev-parse", "--short=7", "HEAD")
+	pair = run(t, r, "2.4.0", "2.6.0")
+	if len(pair.Fixes) == 0 {
+		t.Fatal("no fixes")
+	}
+	for _, fix := range pair.Fixes {
+		if fix.Status != Lost || short(fix.RevertedBy) != revert {
+			t.Errorf("after the revert: %s %s by %s", short(fix.Hash), fix.Status, short(fix.RevertedBy))
+		}
+	}
+	r.git("revert", "--no-edit", "HEAD")
+	if pair = run(t, r, "2.4.0", "2.6.0"); pair.Problems() != 0 {
+		t.Errorf("a reverted revert still loses the fixes: %q", statuses(pair))
+	}
+}
+
 func TestTheHotfixLineCarriesTheFixesItInheritedSoPairsChain(t *testing.T) {
 	r, h := fixture(t)
 	pair := run(t, r, "2.4.5", "2.5.0")

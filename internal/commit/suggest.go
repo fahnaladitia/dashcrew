@@ -145,7 +145,7 @@ func (s *Suggestion) Lines() []string {
 	if s.AddCommand == "" {
 		lines = append(lines, "nothing to commit: no tracked file changed")
 	} else {
-		lines = append(lines, s.AddCommand, s.CommitCommand)
+		lines = append(lines, s.AddCommand+" && "+s.CommitCommand)
 	}
 	if len(s.Untracked) > 0 {
 		lines = append(lines, "", "untracked, not included; add the ones that belong to this commit on purpose:")
