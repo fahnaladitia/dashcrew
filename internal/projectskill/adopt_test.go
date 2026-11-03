@@ -75,7 +75,7 @@ func TestAdoptAFolderAsRequired(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(skipped, []string{".DS_Store", "references/.env"}) {
+	if !reflect.DeepEqual(skipped, []string{".DS_Store: hidden", "references/.env: hidden"}) {
 		t.Errorf("skipped %v, want every hidden file, nested ones included", skipped)
 	}
 	adopted := filepath.Join(project, ".ai", "skills", "api-style")
@@ -141,19 +141,27 @@ func TestAdoptNeedsTheProjectRoot(t *testing.T) {
 	}
 }
 
-func TestAdoptRefusesAFolderOverTheLimits(t *testing.T) {
+func TestAdoptSkipsAndNamesAFileOverTheLimits(t *testing.T) {
 	home, project, folder := t.TempDir(), project(t), filepath.Join(t.TempDir(), "api-style")
 	write(t, filepath.Join(folder, "SKILL.md"), "---\ndescription: d\n---\n# x\n")
+	write(t, filepath.Join(folder, "notes.md"), "x\n")
 	if err := os.Symlink("/etc/hosts", filepath.Join(folder, "hosts")); err != nil {
 		t.Skip("no symlinks here")
 	}
 
-	_, _, err := Adopt(project, home, folder, false)
-
-	if err == nil || !strings.Contains(err.Error(), "hosts: a symlink") {
-		t.Errorf("got %v", err)
+	_, skipped, err := Adopt(project, home, folder, false)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if _, statErr := os.Stat(filepath.Join(project, ".ai", "skills", "api-style")); statErr == nil {
-		t.Error("a refused skill left a folder behind")
+
+	if len(skipped) != 1 || skipped[0] != "hosts: a symlink, copy the file into the skill folder" {
+		t.Errorf("skipped %v", skipped)
+	}
+	adopted := filepath.Join(project, ".ai", "skills", "api-style")
+	if _, err := os.Lstat(filepath.Join(adopted, "hosts")); err == nil {
+		t.Error("the symlink was adopted")
+	}
+	if _, err := os.Stat(filepath.Join(adopted, "notes.md")); err != nil {
+		t.Error("the plain file was not adopted")
 	}
 }

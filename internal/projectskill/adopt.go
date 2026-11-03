@@ -17,7 +17,7 @@ import (
 // Adopt copies a skill into `<projectDir>/.ai/skills/<name>/` and writes its meta.yaml from the SKILL.md front matter.
 // source is the name of a skill in `<home>/.dashcrew/skills/`, or a local folder holding a SKILL.md (the skill is
 // named after the folder). Its supporting files come along under the project skill limits. An adopted skill is
-// optional unless required. It returns the skill's name and the hidden files it left out.
+// optional unless required. It returns the skill's name and the files it left out, each as `<path>: <reason>`.
 func Adopt(projectDir, home, source string, required bool) (string, []string, error) {
 	if strings.Contains(source, "://") {
 		return "", nil, errors.New(source + ": adopt takes a local folder or a skill in ~/.dashcrew/skills, not a URL")
@@ -42,7 +42,7 @@ func Adopt(projectDir, home, source string, required bool) (string, []string, er
 	if err != nil {
 		return "", nil, err
 	}
-	files, err := catalog.SkillFolderFiles(os.DirFS(folder), ".")
+	files, overLimit, err := catalog.SkillFolderFiles(os.DirFS(folder), ".")
 	if err != nil {
 		return "", nil, fmt.Errorf("%s: %w", folder, err)
 	}
@@ -78,7 +78,7 @@ func Adopt(projectDir, home, source string, required bool) (string, []string, er
 		_ = os.RemoveAll(target)
 		return "", nil, err
 	}
-	return name, hiddenFiles(folder), nil
+	return name, append(hiddenFiles(folder), overLimit...), nil
 }
 
 // writeSkillFolder creates the adopted skill folder: meta.yaml, SKILL.md and the supporting files with their execute bits.
@@ -116,7 +116,7 @@ func hiddenFiles(folder string) []string {
 			return nil
 		}
 		if relative, err := filepath.Rel(folder, file); err == nil {
-			out = append(out, filepath.ToSlash(relative))
+			out = append(out, filepath.ToSlash(relative)+": hidden")
 		}
 		if entry.IsDir() {
 			return fs.SkipDir

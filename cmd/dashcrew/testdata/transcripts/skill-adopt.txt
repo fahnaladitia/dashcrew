@@ -207,7 +207,7 @@ files:
 exit: 0
 stdout:
 | wrote .ai/skills/ui-slop/meta.yaml and .ai/skills/ui-slop/SKILL.md
-| left out, hidden: .DS_Store
+| left out  .DS_Store: hidden
 | next: dashcrew sync, commit .ai/skills/ui-slop; members turn it on with skills: [ui-slop] in .ai/me.yaml, then dashcrew me sync
 | then remove your own copy from ~/.dashcrew/skills and me.yaml skills, if it came from there
 stderr: (empty)

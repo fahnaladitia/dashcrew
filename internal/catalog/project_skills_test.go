@@ -124,26 +124,27 @@ func TestProjectSkillsCarryTheirSupportingFiles(t *testing.T) {
 	}
 }
 
-func TestProjectSkillFileLimits(t *testing.T) {
+func TestAFileOverTheLimitsIsSkippedNotFatal(t *testing.T) {
 	for _, c := range []struct {
 		name    string
 		prepare func(t *testing.T, folder string)
-		source  string
-		message string
+		skipped string
+		kept    int
 	}{
 		{"a symlink", func(t *testing.T, folder string) {
 			if err := os.Symlink("/etc/hosts", filepath.Join(folder, "hosts")); err != nil {
 				t.Skip("no symlinks here")
 			}
-		}, ".ai/skills/api-style/hosts", "a symlink"},
+		}, ".ai/skills/api-style/hosts: a symlink", 0},
 		{"a file over 1 MiB", func(t *testing.T, folder string) {
 			write(t, folder, "big.bin", strings.Repeat("x", 1<<20+1))
-		}, ".ai/skills/api-style/big.bin", "over 1 MiB"},
-		{"more than 50 files", func(t *testing.T, folder string) {
+			write(t, folder, "small.md", "x\n")
+		}, ".ai/skills/api-style/big.bin: over 1 MiB", 1},
+		{"a 51st file", func(t *testing.T, folder string) {
 			for i := 0; i < 51; i++ {
 				write(t, folder, fmt.Sprintf("refs/%02d.md", i), "x\n")
 			}
-		}, ".ai/skills/api-style", "more than 50 supporting files"},
+		}, ".ai/skills/api-style: 1 files past the first 50 (refs/50.md)", 50},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			root, project := projectPacksRoot(t)
@@ -151,12 +152,84 @@ func TestProjectSkillFileLimits(t *testing.T) {
 			write(t, project, ".ai/skills/api-style/SKILL.md", "# API style\n")
 			c.prepare(t, filepath.Join(project, ".ai", "skills", "api-style"))
 
+			catalog, err := load(t, root).WithProjectPacks(project)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			skill, _ := catalog.ProjectSkill("api-style")
+			if len(skill.Files) != c.kept || len(skill.Skipped) != 1 || !strings.HasPrefix(skill.Skipped[0], c.skipped) {
+				t.Errorf("files %d, skipped %v", len(skill.Files), skill.Skipped)
+			}
+		})
+	}
+}
+
+func TestLoadProjectSkillsReadsOnlyDotAiSkills(t *testing.T) {
+	_, project := projectPacksRoot(t)
+	write(t, project, ".ai/packs/broken/x/rules.md", "---\ntarget: agents_md\n---\nx\n")
+	write(t, project, ".ai/skills/ui-slop/meta.yaml", "description: d\noptional: true\n")
+	write(t, project, ".ai/skills/ui-slop/SKILL.md", "# UI slop\n")
+	write(t, project, ".ai/skills/branching/meta.yaml", "description: d\n")
+	write(t, project, ".ai/skills/branching/SKILL.md", "x\n")
+
+	skills, err := LoadProjectSkills(project, map[string]bool{})
+	if err != nil || len(skills) != 2 || skills[1].Name != "ui-slop" {
+		t.Fatalf("skills %+v %v", skills, err)
+	}
+	if _, err := LoadProjectSkills(project, map[string]bool{"branching": true}); err == nil {
+		t.Error("a taken name loads")
+	}
+}
+
+func TestASymlinkedSkillMdOrMetaYamlIsFatal(t *testing.T) {
+	for _, name := range []string{"SKILL.md", "meta.yaml"} {
+		t.Run(name, func(t *testing.T) {
+			root, project := projectPacksRoot(t)
+			outside := filepath.Join(t.TempDir(), "secret")
+			write(t, filepath.Dir(outside), "secret", "description: stolen\n")
+			write(t, project, ".ai/skills/api-style/meta.yaml", "description: d\n")
+			write(t, project, ".ai/skills/api-style/SKILL.md", "# API style\n")
+			link := filepath.Join(project, ".ai/skills/api-style", name)
+			if err := os.Remove(link); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.Symlink(outside, link); err != nil {
+				t.Skip("no symlinks here")
+			}
+
 			_, err := load(t, root).WithProjectPacks(project)
 
-			got := catalogError(t, err)
-			if got.Source != c.source || !strings.Contains(got.Message, c.message) {
+			if got := catalogError(t, err); got.Source != ".ai/skills/api-style/"+name || !strings.Contains(got.Message, "a symlink") {
 				t.Errorf("error %s: %s", got.Source, got.Message)
 			}
 		})
+	}
+}
+
+func TestFilesPastTheLimitAreOneWarningAndTheFirstFiftyByFullPathStay(t *testing.T) {
+	root, project := projectPacksRoot(t)
+	write(t, project, ".ai/skills/api-style/meta.yaml", "description: d\n")
+	write(t, project, ".ai/skills/api-style/SKILL.md", "# API style\n")
+	for i := 0; i < 50; i++ {
+		write(t, project, fmt.Sprintf(".ai/skills/api-style/refs/%02d.md", i), "x\n")
+	}
+	write(t, project, ".ai/skills/api-style/refs-a.md", "x\n")
+	write(t, project, ".ai/skills/api-style/zz.md", "x\n")
+
+	catalog, err := load(t, root).WithProjectPacks(project)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	skill, _ := catalog.ProjectSkill("api-style")
+	if !reflect.DeepEqual(skill.Skipped, []string{".ai/skills/api-style: 2 files past the first 50 (refs/49.md, zz.md)"}) {
+		t.Errorf("skipped %v", skill.Skipped)
+	}
+	if skill.Files[0].Path != "refs-a.md" {
+		t.Errorf("first kept file %s, want refs-a.md, first by full path", skill.Files[0].Path)
+	}
+	if warnings := skill.Warnings(); len(warnings) != 1 || strings.Contains(warnings[0], ";") {
+		t.Errorf("warnings %v", warnings)
 	}
 }

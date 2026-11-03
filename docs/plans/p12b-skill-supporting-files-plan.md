@@ -51,4 +51,4 @@ Ten findings; fixed with a test unless noted:
 - `me sync` status reports a manifest file the skill no longer carries ("left over") and a wrong execute bit ("stale"); `me sync` removes in sorted order and reports only files it removed.
 - A pipe, socket or device in a skill folder is refused instead of read.
 - `adopt` names hidden files at any depth and removes a half-written skill folder when a write fails (no dedicated test: the failure needs injection).
-- Not changed, by decision (Q2): a skill folder over the limits stops every command that loads the project's `.ai/`, as a broken project pack does.
+- Then by decision (Q2), changed in P12c (`docs/plans/p12c-skill-limits-and-me-load-plan.md`): a skill folder over the limits stopped every command that loads `.ai/`; it now skips the file with a warning.

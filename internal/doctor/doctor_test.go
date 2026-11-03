@@ -351,6 +351,30 @@ func TestSkills(t *testing.T) {
 		expect(t, f.doctor(), "skills", Fail, "api-style")
 	})
 
+	t.Run("a project skill file over the limits warns", func(t *testing.T) {
+		f := setup(t, blocProfile)
+		f.write(".ai/skills/api-style/meta.yaml", "description: Team API style.\n")
+		f.write(".ai/skills/api-style/SKILL.md", "# API style\n")
+		f.sync()
+		f.write(".ai/skills/api-style/big.bin", strings.Repeat("x", 1<<20+1))
+
+		expect(t, f.doctor(), "skills", Warn, ".ai/skills/api-style/big.bin: over 1 MiB")
+	})
+
+	t.Run("a file left out is named even when a skill is missing", func(t *testing.T) {
+		f := setup(t, blocProfile)
+		f.write(".ai/skills/api-style/meta.yaml", "description: Team API style.\n")
+		f.write(".ai/skills/api-style/SKILL.md", "# API style\n")
+		f.sync()
+		f.write(".ai/skills/api-style/big.bin", strings.Repeat("x", 1<<20+1))
+		f.delete(".claude/skills/prompt-polish/SKILL.md")
+
+		checks := f.doctor()
+
+		expect(t, checks, "skills", Fail, "prompt-polish")
+		expect(t, checks, "skills", Fail, "big.bin")
+	})
+
 	t.Run("an unknown external skill warns, one in the user skills dir does not", func(t *testing.T) {
 		f := setup(t, blocProfile)
 		f.sync()

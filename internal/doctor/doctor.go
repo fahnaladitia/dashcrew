@@ -1064,11 +1064,21 @@ func (d Doctor) skills(lockedFiles *omap.Map[string]) Check {
 			external = append(external, name)
 		}
 	}
-	if len(missing) > 0 {
-		return Check{id, Fail, "dashcrew skills missing: " + strings.Join(missing, ", ") + "; run dashcrew sync"}
+	var leftOut []string
+	for _, skill := range d.Catalog.ProjectSkills {
+		if !skill.Optional {
+			leftOut = append(leftOut, skill.Warnings()...)
+		}
 	}
+	if len(missing) > 0 {
+		return Check{id, Fail, strings.Join(append([]string{"dashcrew skills missing: " + strings.Join(missing, ", ") + ", run dashcrew sync"}, leftOut...), "; ")}
+	}
+	warnings := leftOut
 	if len(external) > 0 {
-		return Check{id, Warn, "not found locally (install, or ignore if a plugin provides them): " + strings.Join(external, ", ")}
+		warnings = append([]string{"not found locally (install, or ignore if a plugin provides them): " + strings.Join(external, ", ")}, warnings...)
+	}
+	if len(warnings) > 0 {
+		return Check{id, Warn, strings.Join(warnings, "; ")}
 	}
 	return Check{id, OK, fmt.Sprintf("%d referenced skills found", len(referenced))}
 }

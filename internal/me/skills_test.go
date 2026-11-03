@@ -181,7 +181,7 @@ func TestSyncLeavesARepoAloneWhenItsAiFolderDoesNotLoad(t *testing.T) {
 		t.Fatal(err)
 	}
 	skill := filepath.Join(repo, ".claude", "skills", "ui-slop", "SKILL.md")
-	writeFile(t, filepath.Join(repo, ".ai", "packs", "broken", "x", "rules.md"), "---\ntarget: agents_md\n---\nx\n")
+	writeFile(t, filepath.Join(repo, ".ai", "skills", "broken", "SKILL.md"), "# no meta.yaml next to it\n")
 
 	if _, err := Sync(home, pl, personal(t)); err != nil {
 		t.Fatal(err)
@@ -408,5 +408,51 @@ func TestStatusAndSyncFollowRemovedFilesAndExecuteBits(t *testing.T) {
 	}
 	if info, err := os.Stat(filepath.Join(folder, "run.sh")); err != nil || info.Mode().Perm()&0o111 != 0 {
 		t.Errorf("run.sh keeps its execute bits after the source lost them: %v", err)
+	}
+}
+
+func TestABrokenProjectPackNoLongerStopsOptionalSkills(t *testing.T) {
+	pl := places(t)
+	home := &Profile{Role: "mobile", Stacks: []string{"flutter"}, Level: "regular", Agents: []string{"claude-code"}}
+	repo := gitRepo(t)
+	writeFile(t, filepath.Join(repo, ".ai", "packs", "broken", "x", "rules.md"), "---\ntarget: agents_md\n---\nx\n")
+	writeFile(t, filepath.Join(repo, ".ai", "skills", "ui-slop", "meta.yaml"), "description: d\noptional: true\n")
+	writeFile(t, filepath.Join(repo, ".ai", "skills", "ui-slop", "SKILL.md"), "# UI slop\n")
+	if err := (&RepoProfile{Skills: []string{"ui-slop"}}).Save(repo); err != nil {
+		t.Fatal(err)
+	}
+	if err := Register(pl, repo); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := Sync(home, pl, personal(t)); err != nil {
+		t.Fatal(err)
+	}
+
+	if !exists(filepath.Join(repo, ".claude", "skills", "ui-slop", "SKILL.md")) {
+		t.Error("a broken project pack, which me sync does not need, kept the optional skill out")
+	}
+}
+
+func TestAnOptionalSkillNamedLikeAProjectPackSkillIsNotWritten(t *testing.T) {
+	pl := places(t)
+	home := &Profile{Role: "mobile", Stacks: []string{"flutter"}, Level: "regular", Agents: []string{"claude-code"}}
+	repo := gitRepo(t)
+	writeFile(t, filepath.Join(repo, ".ai", "packs", "ui", "mine", "skills", "ui-slop.yaml"), "description: d\n")
+	writeFile(t, filepath.Join(repo, ".ai", "skills", "ui-slop", "meta.yaml"), "description: d\noptional: true\n")
+	writeFile(t, filepath.Join(repo, ".ai", "skills", "ui-slop", "SKILL.md"), "# UI slop\n")
+	if err := (&RepoProfile{Skills: []string{"ui-slop"}}).Save(repo); err != nil {
+		t.Fatal(err)
+	}
+	if err := Register(pl, repo); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := Sync(home, pl, personal(t)); err != nil {
+		t.Fatal(err)
+	}
+
+	if exists(filepath.Join(repo, ".claude", "skills", "ui-slop")) {
+		t.Error("me sync wrote a skill whose name a project pack skill takes, which sync refuses")
 	}
 }

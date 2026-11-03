@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func TestAFifoInASkillFolderIsRefusedNotRead(t *testing.T) {
+func TestAFifoInASkillFolderIsSkippedNotRead(t *testing.T) {
 	root, project := projectPacksRoot(t)
 	write(t, project, ".ai/skills/api-style/meta.yaml", "description: d\n")
 	write(t, project, ".ai/skills/api-style/SKILL.md", "# API style\n")
@@ -17,9 +17,12 @@ func TestAFifoInASkillFolderIsRefusedNotRead(t *testing.T) {
 		t.Skip("mkfifo: " + err.Error())
 	}
 
-	_, err := load(t, root).WithProjectPacks(project)
+	catalog, err := load(t, root).WithProjectPacks(project)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	if got := catalogError(t, err); got.Source != ".ai/skills/api-style/pipe" || !strings.Contains(got.Message, "not a regular file") {
-		t.Errorf("error %s: %s", got.Source, got.Message)
+	if skill, _ := catalog.ProjectSkill("api-style"); len(skill.Skipped) != 1 || !strings.HasPrefix(skill.Skipped[0], ".ai/skills/api-style/pipe: not a regular file") {
+		t.Errorf("skipped %v", skill.Skipped)
 	}
 }

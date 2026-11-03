@@ -2,7 +2,6 @@ package main
 
 import (
 	"path/filepath"
-	"strings"
 
 	"github.com/fahnaladitia/dashcrew/internal/me"
 	"github.com/fahnaladitia/dashcrew/internal/projectskill"
@@ -33,8 +32,8 @@ func skillCommand(cli cliIO) *command {
 			return 1, &exitError{1, err.Error()}
 		}
 		cli.out("wrote .ai/skills/" + name + "/meta.yaml and .ai/skills/" + name + "/SKILL.md")
-		if len(skipped) > 0 {
-			cli.out("left out, hidden: " + strings.Join(skipped, ", "))
+		for _, file := range skipped {
+			cli.out("left out  " + file)
 		}
 		if required {
 			cli.out("next: dashcrew sync, then commit .ai/skills/" + name + " and the files sync writes")
