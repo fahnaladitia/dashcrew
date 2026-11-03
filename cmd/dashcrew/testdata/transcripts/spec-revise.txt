@@ -7,7 +7,10 @@ stdout:
 | A member runs it; it prints the git commands for the pull request and never runs them.
 | 
 | Usage: dashcrew spec revise <path>
-| -h, --help    Print this usage information.
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml; finds the clone for a path that starts with specs/.
+|                  (defaults to ".")
+|     --clone      Knowledge clone a specs/ path is read from; defaults to the profile's.
 | 
 | Run "dashcrew help" to see global options.
 stderr: (empty)
@@ -56,7 +59,10 @@ stderr:
 | Pass the spec folder or one of its files.
 | 
 | Usage: dashcrew spec revise <path>
-| -h, --help    Print this usage information.
+| -h, --help       Print this usage information.
+| -p, --project    Project root holding .ai/project.yaml; finds the clone for a path that starts with specs/.
+|                  (defaults to ".")
+|     --clone      Knowledge clone a specs/ path is read from; defaults to the profile's.
 | 
 | Run "dashcrew help" to see global options.
 files: (unchanged)

@@ -60,7 +60,11 @@ func specCommand(cli cliIO) *command {
 		}
 		var path string
 		if len(r.rest) == 1 {
-			path = r.rest[0]
+			resolved, err := specPath(r, r.rest[0])
+			if err != nil {
+				return 0, &exitError{1, err.Error()}
+			}
+			path = resolved
 		} else {
 			clone, _, err := knowledgeClone(r)
 			if err != nil {
@@ -91,11 +95,17 @@ func specCommand(cli cliIO) *command {
 	revise := newCommand("revise", "Set an approved spec back to review and raise rev in prd.md and trd.md, so agents may edit it again.\n"+
 		"A member runs it; it prints the git commands for the pull request and never runs them.")
 	revise.invocation = "dashcrew spec revise <path>"
+	revise.option("project", "p", "Project root holding .ai/project.yaml; finds the clone for a path that starts with specs/.", ptr("."))
+	revise.option("clone", "", "Knowledge clone a specs/ path is read from; defaults to the profile's.", nil)
 	revise.run = func(r *results) (int, error) {
 		if len(r.rest) != 1 {
 			return 0, &usageError{revise, "Pass the spec folder or one of its files."}
 		}
-		revised, err := spec.Revise(r.rest[0])
+		path, err := specPath(r, r.rest[0])
+		if err != nil {
+			return 0, &exitError{1, err.Error()}
+		}
+		revised, err := spec.Revise(path)
 		if err != nil {
 			return 0, &exitError{1, err.Error()}
 		}
@@ -250,4 +260,26 @@ func specsOf(clone string) ([]spec.FileResult, error) {
 		return nil, err
 	}
 	return spec.LintFiles(files, "")
+}
+
+// specPath is the spec path a member typed: as given when it exists, else, for a path that starts with `specs/`, the
+// same path inside the knowledge clone, since that is how specs are named in a plan's Spec line. The error says
+// where it looked.
+func specPath(r *results, path string) (string, error) {
+	if _, err := os.Stat(path); err == nil {
+		return path, nil
+	}
+	slash := filepath.ToSlash(path)
+	if !strings.HasPrefix(slash, "specs/") {
+		return "", fmt.Errorf("no such spec: %s", path)
+	}
+	clone, _, err := knowledgeClone(r)
+	if err != nil {
+		return "", fmt.Errorf("no such spec: %s, and no knowledge clone to look in: %v", path, err)
+	}
+	candidate := filepath.Join(clone, filepath.FromSlash(strings.TrimSuffix(slash, "/")))
+	if _, err := os.Stat(candidate); err != nil {
+		return "", fmt.Errorf("no such spec: %s (looked in . and in the knowledge clone %s)", path, clone)
+	}
+	return candidate, nil
 }

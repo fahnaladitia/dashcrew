@@ -87,7 +87,7 @@ files: (unchanged)
 exit: 1
 stdout: (empty)
 stderr:
-| No spec file or folder at ../missing.
+| no such spec: ../missing
 files: (unchanged)
 
 === step 9: dashcrew "spec" "lint" "a" "b"
