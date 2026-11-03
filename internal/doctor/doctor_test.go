@@ -341,6 +341,16 @@ func TestSkills(t *testing.T) {
 		expect(t, f.doctor(), "skills", Fail, "work-modes")
 	})
 
+	t.Run("a missing required project skill fails like a dashcrew skill", func(t *testing.T) {
+		f := setup(t, blocProfile)
+		f.write(".ai/skills/api-style/meta.yaml", "description: Team API style.\n")
+		f.write(".ai/skills/api-style/SKILL.md", "# API style\n")
+		f.sync()
+		f.delete(".claude/skills/api-style/SKILL.md")
+
+		expect(t, f.doctor(), "skills", Fail, "api-style")
+	})
+
 	t.Run("an unknown external skill warns, one in the user skills dir does not", func(t *testing.T) {
 		f := setup(t, blocProfile)
 		f.sync()

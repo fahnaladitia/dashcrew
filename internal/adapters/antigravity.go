@@ -80,7 +80,7 @@ func (a *Antigravity) Files(p *profile.Profile, targets []render.RenderedTarget,
 		return nil, err
 	}
 	for _, doc := range docs {
-		files.Set(".agents/skills/"+doc.Name+"/SKILL.md", AgentsSkillFile(doc.Name, doc.Meta, doc.Body))
+		files.Set(SkillFile(a.Agent(), doc.Name), AgentsSkillFile(doc.Name, doc.Meta, doc.Body))
 	}
 	return files, nil
 }

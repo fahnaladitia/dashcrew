@@ -71,7 +71,8 @@ type SkillDoc struct {
 }
 
 // SkillDocs are the skills and workflows among targets, for every adapter alike.
-// A skill no selected pack describes is skipped with a warning; a workflow without a description is an error.
+// A skill neither the catalog, a selected pack nor the project describes is skipped with a warning; a workflow
+// without a description is an error.
 func SkillDocs(c *catalog.Catalog, p *profile.Profile, targets []render.RenderedTarget, warnings *[]string) ([]SkillDoc, error) {
 	packSkills := map[string]catalog.DocMeta{}
 	for _, pack := range render.New(c).SelectedPacks(p) {
@@ -94,6 +95,11 @@ func SkillDocs(c *catalog.Catalog, p *profile.Profile, targets []render.Rendered
 				meta, ok = packSkills[name]
 			}
 			if !ok {
+				var skill catalog.ProjectSkill
+				skill, ok = c.ProjectSkill(name)
+				meta = skill.Meta
+			}
+			if !ok {
 				warn(warnings, "skill "+name+" skipped: no selected pack defines skills/"+name+".yaml")
 				continue
 			}
@@ -112,6 +118,15 @@ func SkillDocs(c *catalog.Catalog, p *profile.Profile, targets []render.Rendered
 func jsonString(s string) string {
 	text, _ := dartjson.Encode(s)
 	return text
+}
+
+// SkillFile is where agent reads skill name, relative to the project: Claude Code's own folder, or the
+// `.agents/skills` folder Codex and Antigravity share.
+func SkillFile(agent, name string) string {
+	if agent == "claude-code" {
+		return ".claude/skills/" + name + "/SKILL.md"
+	}
+	return ".agents/skills/" + name + "/SKILL.md"
 }
 
 // AgentsSkillFile is `.agents/skills/<name>/SKILL.md`, the format Codex and Antigravity both read: front matter

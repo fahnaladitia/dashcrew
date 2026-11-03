@@ -1,0 +1,2 @@
+description: Team API style for request and response shapes.
+when_to_use: When an endpoint, a DTO or a mapper changes.

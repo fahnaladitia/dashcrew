@@ -222,7 +222,10 @@ func meCommand(cli cliIO) *command {
 			if repoProfile.Level == home.Level {
 				repoProfile.Level = ""
 			}
-			if *repoProfile == (me.RepoProfile{}) {
+			if proposed != nil {
+				repoProfile.Skills = proposed.Skills
+			}
+			if repoProfile.Role == "" && repoProfile.Level == "" && len(repoProfile.Skills) == 0 {
 				return meForget(cli, pl, home, repo)
 			}
 		}

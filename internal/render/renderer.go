@@ -36,7 +36,8 @@ type Renderer struct {
 // New returns a renderer for c.
 func New(c *catalog.Catalog) *Renderer { return &Renderer{Catalog: c} }
 
-// Render returns every target sorted by name; an unknown template variable is an error.
+// Render returns every target sorted by name; an unknown template variable is an error. A required project skill is
+// a skill target whose body is copied as written; an optional one is left to `dashcrew me sync`.
 func (r *Renderer) Render(p *profile.Profile) ([]RenderedTarget, error) {
 	context := r.ContextFor(p)
 	fragments := append([]catalog.Fragment{}, r.Catalog.FragmentsFor(p.Platform)...)
@@ -53,6 +54,13 @@ func (r *Renderer) Render(p *profile.Profile) ([]RenderedTarget, error) {
 	targets := make([]string, 0, len(byTarget))
 	for target := range byTarget {
 		targets = append(targets, target)
+	}
+	projectSkills := map[string]string{}
+	for _, skill := range r.Catalog.ProjectSkills {
+		if !skill.Optional {
+			projectSkills["skill/"+skill.Name] = skill.Body
+			targets = append(targets, "skill/"+skill.Name)
+		}
 	}
 	sort.Strings(targets)
 	context["skill_index"] = r.skillIndex(p, targets)
@@ -71,6 +79,10 @@ func (r *Renderer) Render(p *profile.Profile) ([]RenderedTarget, error) {
 	for _, target := range targets {
 		if target == TrdTarget {
 			out = append(out, *trd)
+			continue
+		}
+		if body, ok := projectSkills[target]; ok {
+			out = append(out, RenderedTarget{Target: target, Content: body})
 			continue
 		}
 		rendered, err := renderTarget(target, byTarget[target], context)
@@ -137,6 +149,11 @@ func (r *Renderer) skillIndex(p *profile.Profile, targets []string) []any {
 	}
 	for name, meta := range r.Catalog.SkillsFor(p.Platform) {
 		metas[name] = meta
+	}
+	for _, skill := range r.Catalog.ProjectSkills {
+		if !skill.Optional {
+			metas[skill.Name] = skill.Meta
+		}
 	}
 	var names []string
 	for _, target := range targets {

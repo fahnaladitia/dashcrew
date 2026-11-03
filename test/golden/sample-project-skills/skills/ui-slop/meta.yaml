@@ -1,0 +1,3 @@
+description: Catch generic, template-looking UI before review.
+when_to_use: When a screen is built or restyled.
+optional: true
