@@ -108,7 +108,7 @@ Tests      <x>/<y> passed (scoped)
 Manual     <n items handed to the user | none>
 Secrets    <OK | n findings>
 Arch       <OK | n violations>
-QA ids     <OK | n elements without identifier | N/A>
+QA ids     <OK | n missing an identifier | N/A>
 Diff       <n> files, <m> lines out of scope
 
 -- Issues --------------------------------------------------------------

@@ -1,14 +1,7 @@
 ---
 target: workflow/build-fix
 order: 10
-rules:
-  - build.no-clean-first
-  - build.diagnose-order
-  - build.one-error-one-fix
-  - build.output
-  - build.main-session
-  - build.read-before-theory
-  - build.persisted-type-change
+rules: [build.no-clean-first, build.diagnose-order, build.main-session, build.read-before-theory, build.persisted-type-change]
 ---
 # build-fix
 
@@ -63,24 +56,3 @@ Common causes: `Podfile.lock` out of sync after a dependency change, deployment 
 
 Only after steps 1 to 5, and only when the error still makes no sense, run `flutter clean` followed by `flutter pub get`.
 
-## Rules
-
-- One error, one fix, one rebuild. Never stack fixes before rebuilding.
-- If an error disappears and you do not know why, say so. Do not claim it is fixed.
-- Touch no line outside the cause of the error.
-
-## Output
-
-```text
-BUILD FIX
-========================================================================
-Error      <original message, trimmed>
-Cause      <root cause, at file:line>
-Fix        <what changed>
-
--- Verify --------------------------------------------------------------
-<command run>
-========================================================================
-```
-
-Paste the command's real output under the block. A claim without output is not verification.

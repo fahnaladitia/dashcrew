@@ -1,57 +1,8 @@
 ---
 target: skill/prompt-polish
-rules: [workflow.step0-block, step0.release, step0.spec, workflow.step0-idea-refine, workflow.step0-detect-category, workflow.step0-prompt-template-file, workflow.polish.scope-paths, workflow.polish.branch-proposals, workflow.step0-user-confirms-once, step0.questions-once, step0.skills-from-index, step0.skill-exclusions, step0.criteria-mapped]
+order: 20
+rules: [step0.release, step0.spec, workflow.step0-detect-category, workflow.polish.scope-paths, workflow.polish.branch-proposals, workflow.step0-user-confirms-once, step0.questions-once, step0.skills-from-index, step0.skill-exclusions, step0.criteria-mapped]
 ---
-# Prompt polish (step 0)
-
-Turn the request into the step 0 block below, print it in chat, and wait for the user to confirm it. If the project keeps its own prompt template, fill that one; it wins over this one.
-
-## Refine before writing
-
-- Who is this for, and what core problem does it solve?
-- Which assumptions hide in the request? Name each one; when the request reads two ways, name both.
-- Keep scope tight: what is left out goes on the `Not doing` row. Use the `idea-refine` skill when it is installed.
-
-## Block
-
-```text
-STEP 0  <feat | fix | hotfix>: <polished request, one sentence>
-========================================================================
-Scope      <directories and files>
-Not doing  <what stays out | none>
-Tier       <trivial | small | standard | large>  (<evidence>)
-{{#has_release_lines}}
-Release    <version> | none
-{{/has_release_lines}}
-{{#has_knowledge}}
-Spec       specs/<release>/<feature>@rev<n> | none
-{{/has_knowledge}}
-
--- Assumptions ---------------------------------------------------------
-A1    <assumption>
-
--- Questions -----------------------------------------------------------
-Q1    <question>
-
--- Skills --------------------------------------------------------------
-NAME                 WHY
-<name>               <why>
-
--- Success criteria ----------------------------------------------------
-ID    CRITERION                                 TEST
-<id>  <criterion>                               <test type>
-
--- Branch --------------------------------------------------------------
-1     <name>
-2     <name>
-3     <name>
-base  <ask>
-========================================================================
-Reply "ok", or answer by id (Q1 ...), pick a branch and a base, edit any line.
-```
-
-An empty list prints `none` under its rule. Columns line up with spaces; a long value wraps under its own column.
-
 ## Lines
 
 - `STEP 0`: the category, then the request in one sentence. `Scope` names the exact directories and files, plus what a pack asks step 0 to list (such as QA identifiers).
