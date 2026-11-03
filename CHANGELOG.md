@@ -1,3 +1,14 @@
+## Unreleased
+
+Readable chat blocks, and skills a team can adopt and each member can switch on. A project's generated files change: run `dashcrew sync` and commit what it writes. Nothing changes for the guard.
+
+- Readable chat blocks (#18): step 0, review, verify, learn, build-fix and the end-of-task summary print as plain-text blocks with one layout: a title line, a 72-column `=` rule, `Label  value` rows, then each list under its own `-- Name ---` rule, columns aligned with spaces so every value copies clean. A comparison is a table in that layout. Step 0 numbers its assumptions and questions (`A1`, `Q1`), lists skills, criteria and branches as rows, and ends with the reply it expects; with a question tool the agent asks through it. The review verdict comes first. The full step 0 template moves from AGENTS.md to the `prompt-polish` skill, and the `SUMMARY` template to `pr-description`, where tracker and analytics packs add their rows. The main session always asks an open question, with the agent's question tool when it has one, and waits.
+- One source per chat block (#21): a platform overrides the prose around a block, never the block, so a layout change is made in one file; the `reviewer` role names the `code-review` verdict format instead of copying it, and the verify QA line reads the same on every platform.
+- Project skills (#20): a skill the team adopts lives in `.ai/skills/<name>/` (`SKILL.md`, copied as written, never rendered, and `meta.yaml` with `description`, `when_to_use`, `review`, `optional`). A required one is written for every agent and joins the skill index. An optional one is written by `dashcrew me sync` only into the clone of a member who lists it in `.ai/me.yaml` `skills`, git-excluded, so no agent of another member can pick it; a `review` skill cannot be optional. A member tries a skill first in `~/.dashcrew/skills/<name>/` with `skills` in `~/.dashcrew/me.yaml`, linked for Claude Code. New `dashcrew skill adopt <name | folder> [--required]` copies it into the project.
+- Supporting files (#22): a project skill's other files (`references/`, `scripts/`, templates) are written next to each agent's `SKILL.md`, with the source's executable bit; `me sync` tracks the files it writes for an optional skill in `.dashcrew-me` and removes only those.
+- Skill limits warn (#23): a symlink, a pipe or device, a file over 1 MiB, or a file past the first 50 in a skill folder is left out with a `sync` and `doctor` warning instead of stopping every command; a symlinked `SKILL.md` or `meta.yaml` is still refused. `me sync` reads `.ai/skills` alone, so a broken project pack no longer blocks a member's optional skills.
+- The guard corpus record keeps its line order when the goldens are rewritten (#19).
+
 ## 0.4.0
 
 Role and level per repo on top of the 0.3.0 personal profile, and a fix for release lines merged by fast-forward. Nothing changes for a project or its guard.
