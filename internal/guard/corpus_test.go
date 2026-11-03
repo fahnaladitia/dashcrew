@@ -2,8 +2,11 @@ package guard
 
 import (
 	"fmt"
+	"maps"
 	"math/rand"
+	"slices"
 	"strings"
+	"testing"
 
 	"github.com/fahnaladitia/dashcrew/internal/dartjson"
 	"github.com/fahnaladitia/dashcrew/internal/omap"
@@ -357,7 +360,7 @@ func guardCorpus() []corpusCase {
 	for i, payload := range oddPayloads() {
 		add(fmt.Sprintf("odd %d", i), payload, policy("default"))
 	}
-	for name := range corpusPolicies {
+	for _, name := range slices.Sorted(maps.Keys(corpusPolicies)) {
 		for i, payload := range []string{
 			`{"tool_name":"Bash","tool_input":{"command":"git push"}}`,
 			`{"tool_name":"Bash","tool_input":{"command":"git commit -m x && dart format ."}}`,
@@ -474,4 +477,22 @@ func hookObject(stdin string) *omap.Map[any] {
 	}
 	object, _ := value.(*omap.Map[any])
 	return object
+}
+
+// TestGuardCorpusOrderIsStable pins the case order: DASHCREW_UPDATE_GOLDENS writes the record in corpus order, so an
+// order that changed between runs would reorder testdata/corpus_outcomes.txt with no guard change.
+func TestGuardCorpusOrderIsStable(t *testing.T) {
+	names := func() []string {
+		var out []string
+		for _, c := range guardCorpus() {
+			out = append(out, c.name)
+		}
+		return out
+	}
+	first := names()
+	for run := 0; run < 5; run++ {
+		if again := names(); !slices.Equal(first, again) {
+			t.Fatalf("run %d: the corpus order changed between two calls", run)
+		}
+	}
 }
