@@ -1,4 +1,6 @@
-## Unreleased
+## 0.6.0
+
+Token savings for the projects that use dashcrew: a report of what each session spends, a budget for what agents load before the first answer, and a leaner review and test loop. Includes the 0.5.1 security patch. A project's generated files change: run `dashcrew sync` and commit what it writes.
 
 - New `dashcrew usage` (#32): tokens per session and role (main, reviewer, explorer, other subagents) from the Claude Code and Codex transcripts of the project and its worktrees, the context loaded before the first answer, and the skills each role loaded; `--json` for a before and after comparison. Reads only.
 - Budget gate (#33): `doctor` `always-on` sums, per agent, what it loads from the project before the first answer (CLAUDE.md with its `@` imports, rules that are always on, AGENTS.md, the memory index) and warns over 40 KiB; `memory-index` warns for an index line over 150 characters; `always-on` also names the AGENTS.md project-section headings that repeat a generated one. The `continuous-learning` skill now limits an index line to 150 characters: run `dashcrew sync` and commit what it writes.
