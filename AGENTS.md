@@ -36,11 +36,12 @@ Doubt between two tiers means the higher one.
 ## Verify
 
 ```bash
+gofmt -l .
 go vet ./...
 go test ./...
 ```
 
-Scope `go test` to the touched packages (`go test ./internal/<pkg>/...`) for trivial and small tiers.
+`gofmt -l .` must print nothing: CI fails on any file it lists. Scope `go test` to the touched packages (`go test ./internal/<pkg>/...`) for trivial and small tiers.
 
 ## Goldens
 
