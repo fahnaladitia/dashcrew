@@ -41,7 +41,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-+ w/.ai/lock.json  -rw-r--r-- sha256:2bb4f46497da9969
++ w/.ai/lock.json  -rw-r--r-- sha256:0a2e66143e1dae10
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
@@ -59,7 +59,7 @@ files:
 + w/.claude/skills/code-review  dir
 + w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:f7225b8b8e7dea2e
 + w/.claude/skills/continuous-learning  dir
-+ w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:698f498fdff18b66
++ w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:eec6c28201da1802
 + w/.claude/skills/data-layer-tdd  dir
 + w/.claude/skills/data-layer-tdd/SKILL.md  -rw-r--r-- sha256:eb183dbb402be1e3
 + w/.claude/skills/design-fidelity  dir
@@ -151,6 +151,7 @@ stdout:
 | ok    links           no links; dashcrew link add <package> <path> points a dependency at a local checkout
 | skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 16122 of 32768 bytes
+| ok    always-on       claude-code 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)
@@ -174,6 +175,7 @@ stdout:
 | ok    links           no links; dashcrew link add <package> <path> points a dependency at a local checkout
 | skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 16122 of 32768 bytes
+| ok    always-on       claude-code 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)
@@ -189,6 +191,7 @@ stdout:
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
 | ok    agents-md-size  AGENTS.md 16122 of 32768 bytes
+| ok    always-on       claude-code 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | skip  pr-sections     no PR body; pass --pr-body <file> or run on a pull_request event
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
@@ -208,6 +211,7 @@ stdout:
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
 | ok    agents-md-size  AGENTS.md 16122 of 32768 bytes
+| ok    always-on       claude-code 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | fail  pr-sections     missing: ## Changes, ## Affected files, ## Testing, ## Dependencies, ## Notes / not done (write "None" under a heading that does not apply)
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
@@ -227,6 +231,7 @@ stdout:
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
 | ok    agents-md-size  AGENTS.md 16122 of 32768 bytes
+| ok    always-on       claude-code 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | fail  pr-sections     missing: ## Changes, ## Affected files, ## Testing, ## Dependencies, ## Notes / not done (write "None" under a heading that does not apply)
 | ::error title=dashcrew pr-sections::missing: ## Changes, ## Affected files, ## Testing, ## Dependencies, ## Notes / not done (write "None" under a heading that does not apply)
@@ -248,6 +253,7 @@ stdout:
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
 | ok    agents-md-size  AGENTS.md 16122 of 32768 bytes
+| ok    always-on       claude-code 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | ok    pr-sections     6 required sections present
 | skip  commits         no base; pass --base <branch> or run on a pull_request event

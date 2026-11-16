@@ -24,6 +24,7 @@ stdout:
 | ok    antigravity-roles13 roles, every tool name known
 | skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 17029 of 24000 bytes
+| ok    always-on       claude-code 16.6 KiB of 40.0 KiB; codex 16.6 KiB of 40.0 KiB; antigravity 16.6 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | info  handoff-rosters .ai/plans/todo-filter/handoff/00-roster.md left from the pre-P4 team flow; nothing reads them now, delete them when done
 stderr: (empty)
@@ -159,7 +160,7 @@ files:
 ~ w/.agents/skills/build-fix/SKILL.md  -rw-r--r-- sha256:d2ca338a6b26f35f
 - w/.agents/skills/checkpoint/SKILL.md
 ~ w/.agents/skills/code-review/SKILL.md  -rw-r--r-- sha256:960a5a53fcad369e
-~ w/.agents/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:8e75f35233aaf6c4
+~ w/.agents/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:431c618305dd537a
 ~ w/.agents/skills/data-layer-tdd/SKILL.md  -rw-r--r-- sha256:b05e453a7d2a9d54
 ~ w/.agents/skills/design-fidelity/SKILL.md  -rw-r--r-- sha256:9abbb4c8c13a9e88
 + w/.agents/skills/feature-architecture  dir
@@ -183,7 +184,7 @@ files:
 ~ w/.agents/skills/worktree/SKILL.md  -rw-r--r-- sha256:05e374e3165f3e56
 ~ w/.ai/bin/guard  -rwxr-xr-x sha256:a4d846d82ed6094a
 ~ w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-~ w/.ai/lock.json  -rw-r--r-- sha256:2505b8a67d2fe2fa
+~ w/.ai/lock.json  -rw-r--r-- sha256:f4f64716b4cab71a
 - w/.claude/agents/dart-tdd-guide.md
 - w/.claude/agents/design-refiner.md
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
@@ -206,7 +207,7 @@ files:
 ~ w/.claude/skills/build-fix/SKILL.md  -rw-r--r-- sha256:58e0130412db7da5
 - w/.claude/skills/checkpoint/SKILL.md
 ~ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:f7225b8b8e7dea2e
-~ w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:698f498fdff18b66
+~ w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:eec6c28201da1802
 ~ w/.claude/skills/data-layer-tdd/SKILL.md  -rw-r--r-- sha256:eb183dbb402be1e3
 ~ w/.claude/skills/design-fidelity/SKILL.md  -rw-r--r-- sha256:2659d95907aab02c
 + w/.claude/skills/feature-architecture  dir
@@ -278,6 +279,7 @@ stdout:
 | ok    antigravity-roles2 roles, every tool name known
 | skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 17618 of 24000 bytes
+| ok    always-on       claude-code 17.2 KiB of 40.0 KiB; codex 17.2 KiB of 40.0 KiB; antigravity 17.2 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | info  handoff-rosters .ai/plans/todo-filter/handoff/00-roster.md left from the pre-P4 team flow; nothing reads them now, delete them when done
 stderr: (empty)

@@ -4,6 +4,7 @@ order: 10
 rules:
   - learn.one-fact-per-file
   - learn.index-one-line
+  - learn.index-line-max
   - learn.update-not-duplicate
   - learn.link-related
 ---
@@ -44,7 +45,8 @@ Add one pointer line per memory to `{{paths.memory}}/MEMORY.md`:
 ```
 
 - The index holds one line per memory.
-- Never put memory content in the index.
+- A line is at most 150 characters: the title and a hook that says when the memory matters. The fact, the why and the dates live in the file.
+- Never put memory content in the index. Shorten a longer line when you next touch its memory.
 
 ## Before writing
 

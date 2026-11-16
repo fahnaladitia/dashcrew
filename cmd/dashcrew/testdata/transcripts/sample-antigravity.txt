@@ -92,7 +92,7 @@ files:
 + w/.agents/skills/code-review  dir
 + w/.agents/skills/code-review/SKILL.md  -rw-r--r-- sha256:960a5a53fcad369e
 + w/.agents/skills/continuous-learning  dir
-+ w/.agents/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:8e75f35233aaf6c4
++ w/.agents/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:431c618305dd537a
 + w/.agents/skills/data-layer-tdd  dir
 + w/.agents/skills/data-layer-tdd/SKILL.md  -rw-r--r-- sha256:b05e453a7d2a9d54
 + w/.agents/skills/design-fidelity  dir
@@ -136,7 +136,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:a4d846d82ed6094a
 + w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-+ w/.ai/lock.json  -rw-r--r-- sha256:4487baea48d33c3f
++ w/.ai/lock.json  -rw-r--r-- sha256:2a5f6dcc70886196
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
@@ -154,7 +154,7 @@ files:
 + w/.claude/skills/code-review  dir
 + w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:f7225b8b8e7dea2e
 + w/.claude/skills/continuous-learning  dir
-+ w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:698f498fdff18b66
++ w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:eec6c28201da1802
 + w/.claude/skills/data-layer-tdd  dir
 + w/.claude/skills/data-layer-tdd/SKILL.md  -rw-r--r-- sha256:eb183dbb402be1e3
 + w/.claude/skills/design-fidelity  dir
@@ -262,6 +262,7 @@ stdout:
 | ok    antigravity-roles2 roles, every tool name known
 | skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 18834 of 24000 bytes
+| ok    always-on       claude-code 18.4 KiB of 40.0 KiB; codex 18.4 KiB of 40.0 KiB; antigravity 18.4 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)
@@ -291,6 +292,7 @@ stdout:
 | ok    antigravity-roles2 roles, every tool name known
 | skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 18834 of 24000 bytes
+| ok    always-on       claude-code 18.4 KiB of 40.0 KiB; codex 18.4 KiB of 40.0 KiB; antigravity 18.4 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)
@@ -306,6 +308,7 @@ stdout:
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
 | ok    agents-md-size  AGENTS.md 18834 of 24000 bytes
+| ok    always-on       claude-code 18.4 KiB of 40.0 KiB; codex 18.4 KiB of 40.0 KiB; antigravity 18.4 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | skip  pr-sections     no PR body; pass --pr-body <file> or run on a pull_request event
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
@@ -324,6 +327,7 @@ stdout:
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
 | ok    agents-md-size  AGENTS.md 18834 of 24000 bytes
+| ok    always-on       claude-code 18.4 KiB of 40.0 KiB; codex 18.4 KiB of 40.0 KiB; antigravity 18.4 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | fail  pr-sections     missing: ## Changes, ## Affected files, ## Testing, ## QA Identifiers, ## Notes / not done (write "None" under a heading that does not apply)
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
@@ -342,6 +346,7 @@ stdout:
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
 | ok    agents-md-size  AGENTS.md 18834 of 24000 bytes
+| ok    always-on       claude-code 18.4 KiB of 40.0 KiB; codex 18.4 KiB of 40.0 KiB; antigravity 18.4 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | fail  pr-sections     missing: ## Changes, ## Affected files, ## Testing, ## QA Identifiers, ## Notes / not done (write "None" under a heading that does not apply)
 | ::error title=dashcrew pr-sections::missing: ## Changes, ## Affected files, ## Testing, ## QA Identifiers, ## Notes / not done (write "None" under a heading that does not apply)
@@ -361,6 +366,7 @@ stdout:
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
 | ok    agents-md-size  AGENTS.md 18834 of 24000 bytes
+| ok    always-on       claude-code 18.4 KiB of 40.0 KiB; codex 18.4 KiB of 40.0 KiB; antigravity 18.4 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | ok    pr-sections     6 required sections present
 | skip  commits         no base; pass --base <branch> or run on a pull_request event

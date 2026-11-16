@@ -24,6 +24,7 @@ stdout:
 | skip  skills          needs the lock
 | skip  me              no personal profile; dashcrew me init adds one
 | skip  agents-md-size  no AGENTS.md
+| ok    always-on       claude-code 0.0 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)
@@ -39,6 +40,7 @@ stdout:
 | skip  stale           needs a valid profile and the lock
 | fail  guard-policy    .ai/guard.json missing; run dashcrew sync
 | skip  agents-md-size  no AGENTS.md
+| ok    always-on       claude-code 0.0 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | fail  pr-sections     .github/pull_request_template.md missing; run dashcrew sync
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
