@@ -211,8 +211,19 @@ func digest(fsys fs.FS) (string, error) {
 			continue
 		}
 		err := fs.WalkDir(fsys, root, func(name string, entry fs.DirEntry, err error) error {
-			if err != nil || entry.IsDir() {
+			if err != nil {
 				return err
+			}
+			// A hidden file or folder (.DS_Store, an editor's swap file) is never catalog content; hashing it would
+			// give the same catalog another digest on a machine that has one, and a release line would hold its sync.
+			if name != root && strings.HasPrefix(entry.Name(), ".") {
+				if entry.IsDir() {
+					return fs.SkipDir
+				}
+				return nil
+			}
+			if entry.IsDir() {
+				return nil
 			}
 			data, err := fs.ReadFile(fsys, name)
 			if err != nil {

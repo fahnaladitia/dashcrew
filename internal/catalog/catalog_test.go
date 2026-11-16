@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"testing/fstest"
 
 	"github.com/fahnaladitia/dashcrew/internal/omap"
 	"github.com/fahnaladitia/dashcrew/internal/profile"
@@ -550,5 +551,25 @@ func TestDigestFollowsTheCatalogFilesAndSurvivesProjectPacks(t *testing.T) {
 	write(t, root, "core/notes.txt", "two\n")
 	if load(t, root).Digest == first.Digest {
 		t.Error("digest ignores a changed file")
+	}
+}
+
+func TestDigestIgnoresHiddenFilesAndFolders(t *testing.T) {
+	root := t.TempDir()
+	write(t, root, "core/notes.txt", "one\n")
+	clean := load(t, root).Digest
+	// Finder writes .DS_Store in every folder it opens; editors leave hidden swap and backup files.
+	write(t, root, "core/.DS_Store", "finder junk")
+	write(t, root, "packs/state/.DS_Store", "finder junk")
+	if got := load(t, root).Digest; got != clean {
+		t.Errorf("hidden files changed the digest: %s, want %s", got, clean)
+	}
+
+	plain := fstest.MapFS{"core/notes.txt": {Data: []byte("one\n")}}
+	hidden := fstest.MapFS{"core/notes.txt": {Data: []byte("one\n")}, "core/.cache/x.md": {Data: []byte("hidden folder")}}
+	a, errA := digest(plain)
+	b, errB := digest(hidden)
+	if errA != nil || errB != nil || a != b {
+		t.Errorf("a hidden folder changed the digest: %s, want %s (%v, %v)", b, a, errA, errB)
 	}
 }
