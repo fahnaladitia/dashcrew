@@ -6,7 +6,8 @@ rules:
   - review.reviewer-inputs
   - review.diff-against-rules
   - review.start-without-clarification
-  - review.read-whole-files
+  - review.function-context-diff
+  - review.reviewer-agent-type
   - review.impact-radius-graph
   - review.state-bug-fix-stop
   - review.no-out-of-scope-suggestions
@@ -22,10 +23,11 @@ The main session runs the `reviewer` subagent on the current change and acts on 
 
 ## Inputs to the reviewer
 
-Pass paths and facts, never copied file content:
+Run it as the `reviewer` agent type, never a general-purpose agent told to read the role file. Pass paths and facts, never copied file content or the diff:
 
 - the base branch chosen when the branch was created; never guess it
-- the step 0 success criteria, and the plan path when there is one
+- the step 0 success criteria, written out, and the plan path when there is one
+- the test and analyze results already in hand from `tdd` or `verify` (counts and scope)
 - the skills on the step 0 `Skills` list that the skill index marks `review`
 - for a re-review: the rework diff only
 
@@ -35,14 +37,13 @@ Pass paths and facts, never copied file content:
 - Covers the committed work on the branch plus the uncommitted working tree:
 
 ```bash
-git diff --stat <base>...HEAD
-git diff <base>...HEAD
-git diff --stat
-git diff
-git status --porcelain
+git diff --merge-base <base> --stat
+git diff --merge-base <base> --function-context
+git ls-files --others --exclude-standard
 ```
 
-- Reads every changed file in full, not only the hunks, and untracked new files too. Context outside the hunk often decides whether the change is right.
+- One diff against the merge base holds the committed and uncommitted work, each changed function whole. Untracked files are new: read them in full.
+- Opens a changed file in full only when the function context does not decide a finding (fields, constructor, imports, registration, a caller outside the hunk).
 - Reviews against AGENTS.md, the priorities below, and the checklist of every active review skill.
 - Spec: for each criterion, met, partial or not met, with the `file:line` that proves it and the covering test, or its manual checklist item. A criterion with neither is HIGH.
 - Scope: files changed outside the plan or inside its "not doing" list; a branch that tracks its base (reported, never fixed); every `Not in design` item recorded for the PR notes; every open question raised to the user.

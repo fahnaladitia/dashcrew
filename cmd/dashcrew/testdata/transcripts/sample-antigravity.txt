@@ -77,7 +77,7 @@ files:
 + w/.agents  dir
 + w/.agents/agents  dir
 + w/.agents/agents/explorer.md  -rw-r--r-- sha256:22beb633c8b9f5c3
-+ w/.agents/agents/reviewer.md  -rw-r--r-- sha256:1e2bdb4fe9970c11
++ w/.agents/agents/reviewer.md  -rw-r--r-- sha256:8e23c523e48175b4
 + w/.agents/hooks.json  -rw-r--r-- sha256:54e39fd507ae5d8e
 + w/.agents/mcp_config.json  -rw-r--r-- sha256:6e125435c8f65d17
 + w/.agents/skills  dir
@@ -90,7 +90,7 @@ files:
 + w/.agents/skills/build-fix  dir
 + w/.agents/skills/build-fix/SKILL.md  -rw-r--r-- sha256:d2ca338a6b26f35f
 + w/.agents/skills/code-review  dir
-+ w/.agents/skills/code-review/SKILL.md  -rw-r--r-- sha256:960a5a53fcad369e
++ w/.agents/skills/code-review/SKILL.md  -rw-r--r-- sha256:533536eecd3fbee4
 + w/.agents/skills/continuous-learning  dir
 + w/.agents/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:431c618305dd537a
 + w/.agents/skills/data-layer-tdd  dir
@@ -122,13 +122,13 @@ files:
 + w/.agents/skills/strategic-compact  dir
 + w/.agents/skills/strategic-compact/SKILL.md  -rw-r--r-- sha256:ef4f497b22288e0c
 + w/.agents/skills/tdd  dir
-+ w/.agents/skills/tdd/SKILL.md  -rw-r--r-- sha256:55aad03d0b7f363f
++ w/.agents/skills/tdd/SKILL.md  -rw-r--r-- sha256:fc475d8ce6a5ceab
 + w/.agents/skills/tracker-clickup  dir
 + w/.agents/skills/tracker-clickup/SKILL.md  -rw-r--r-- sha256:bcfd59a2be626203
 + w/.agents/skills/verification-loop  dir
 + w/.agents/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:487563193e58e790
 + w/.agents/skills/verify  dir
-+ w/.agents/skills/verify/SKILL.md  -rw-r--r-- sha256:1b2292236d130096
++ w/.agents/skills/verify/SKILL.md  -rw-r--r-- sha256:226aa63da3c01d8f
 + w/.agents/skills/work-modes  dir
 + w/.agents/skills/work-modes/SKILL.md  -rw-r--r-- sha256:cca07dc711f2e958
 + w/.agents/skills/worktree  dir
@@ -136,11 +136,11 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:a4d846d82ed6094a
 + w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-+ w/.ai/lock.json  -rw-r--r-- sha256:2a5f6dcc70886196
++ w/.ai/lock.json  -rw-r--r-- sha256:e5f4f47af888c323
 + w/.claude  dir
 + w/.claude/agents  dir
-+ w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
-+ w/.claude/agents/reviewer.md  -rw-r--r-- sha256:283487271d3e701f
++ w/.claude/agents/explorer.md  -rw-r--r-- sha256:c5027d9c25fbef11
++ w/.claude/agents/reviewer.md  -rw-r--r-- sha256:5c1f3688fe3eb344
 + w/.claude/settings.json  -rw-r--r-- sha256:ab785cea7a7a2c39
 + w/.claude/skills  dir
 + w/.claude/skills/acceptance-criteria  dir
@@ -152,7 +152,7 @@ files:
 + w/.claude/skills/build-fix  dir
 + w/.claude/skills/build-fix/SKILL.md  -rw-r--r-- sha256:58e0130412db7da5
 + w/.claude/skills/code-review  dir
-+ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:f7225b8b8e7dea2e
++ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:37bdb6306fa4963b
 + w/.claude/skills/continuous-learning  dir
 + w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:eec6c28201da1802
 + w/.claude/skills/data-layer-tdd  dir
@@ -184,27 +184,27 @@ files:
 + w/.claude/skills/strategic-compact  dir
 + w/.claude/skills/strategic-compact/SKILL.md  -rw-r--r-- sha256:a866040ed09e6f37
 + w/.claude/skills/tdd  dir
-+ w/.claude/skills/tdd/SKILL.md  -rw-r--r-- sha256:609c68287a05c3e6
++ w/.claude/skills/tdd/SKILL.md  -rw-r--r-- sha256:f2c8bea4c991f31f
 + w/.claude/skills/tracker-clickup  dir
 + w/.claude/skills/tracker-clickup/SKILL.md  -rw-r--r-- sha256:f9a02c3f916df1b4
 + w/.claude/skills/verification-loop  dir
 + w/.claude/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:d54707cb287e4465
 + w/.claude/skills/verify  dir
-+ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:5728520b66449d20
++ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:1bac5d2d073976a3
 + w/.claude/skills/work-modes  dir
 + w/.claude/skills/work-modes/SKILL.md  -rw-r--r-- sha256:42e7df44abe766f6
 + w/.claude/skills/worktree  dir
 + w/.claude/skills/worktree/SKILL.md  -rw-r--r-- sha256:5ec38c7fbd7746bb
 + w/.codex  dir
 + w/.codex/agents  dir
-+ w/.codex/agents/explorer.toml  -rw-r--r-- sha256:b45965989f03244c
-+ w/.codex/agents/reviewer.toml  -rw-r--r-- sha256:2b5ab13445ec4b09
++ w/.codex/agents/explorer.toml  -rw-r--r-- sha256:8bd5bad7e3e918d0
++ w/.codex/agents/reviewer.toml  -rw-r--r-- sha256:bfaed170690c1348
 + w/.codex/config.toml  -rw-r--r-- sha256:75476fb2976c79a3
 + w/.codex/hooks.json  -rw-r--r-- sha256:5d43adc427460026
 + w/.github  dir
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:26f44f98656befb9
 + w/.mcp.json  -rw-r--r-- sha256:745dcf12d577148c
-+ w/AGENTS.md  -rw-r--r-- sha256:53d9a80d8bd35e0d
++ w/AGENTS.md  -rw-r--r-- sha256:31549b56b1769613
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 2: dashcrew "sync" "-p" "."
@@ -261,7 +261,7 @@ stdout:
 | ok    antigravity-mcp defined: dart-mcp-server
 | ok    antigravity-roles2 roles, every tool name known
 | skip  me              no personal profile; dashcrew me init adds one
-| ok    agents-md-size  AGENTS.md 18834 of 24000 bytes
+| ok    agents-md-size  AGENTS.md 18848 of 24000 bytes
 | ok    always-on       claude-code 18.4 KiB of 40.0 KiB; codex 18.4 KiB of 40.0 KiB; antigravity 18.4 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
@@ -291,7 +291,7 @@ stdout:
 | ok    antigravity-mcp defined: dart-mcp-server
 | ok    antigravity-roles2 roles, every tool name known
 | skip  me              no personal profile; dashcrew me init adds one
-| ok    agents-md-size  AGENTS.md 18834 of 24000 bytes
+| ok    agents-md-size  AGENTS.md 18848 of 24000 bytes
 | ok    always-on       claude-code 18.4 KiB of 40.0 KiB; codex 18.4 KiB of 40.0 KiB; antigravity 18.4 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
@@ -307,7 +307,7 @@ stdout:
 | ok    drift           63 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 18834 of 24000 bytes
+| ok    agents-md-size  AGENTS.md 18848 of 24000 bytes
 | ok    always-on       claude-code 18.4 KiB of 40.0 KiB; codex 18.4 KiB of 40.0 KiB; antigravity 18.4 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | skip  pr-sections     no PR body; pass --pr-body <file> or run on a pull_request event
@@ -326,7 +326,7 @@ stdout:
 | ok    drift           63 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 18834 of 24000 bytes
+| ok    agents-md-size  AGENTS.md 18848 of 24000 bytes
 | ok    always-on       claude-code 18.4 KiB of 40.0 KiB; codex 18.4 KiB of 40.0 KiB; antigravity 18.4 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | fail  pr-sections     missing: ## Changes, ## Affected files, ## Testing, ## QA Identifiers, ## Notes / not done (write "None" under a heading that does not apply)
@@ -345,7 +345,7 @@ stdout:
 | ok    drift           63 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 18834 of 24000 bytes
+| ok    agents-md-size  AGENTS.md 18848 of 24000 bytes
 | ok    always-on       claude-code 18.4 KiB of 40.0 KiB; codex 18.4 KiB of 40.0 KiB; antigravity 18.4 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | fail  pr-sections     missing: ## Changes, ## Affected files, ## Testing, ## QA Identifiers, ## Notes / not done (write "None" under a heading that does not apply)
@@ -365,7 +365,7 @@ stdout:
 | ok    drift           63 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 18834 of 24000 bytes
+| ok    agents-md-size  AGENTS.md 18848 of 24000 bytes
 | ok    always-on       claude-code 18.4 KiB of 40.0 KiB; codex 18.4 KiB of 40.0 KiB; antigravity 18.4 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | ok    pr-sections     6 required sections present

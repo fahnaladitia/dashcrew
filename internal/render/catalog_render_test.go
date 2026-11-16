@@ -497,7 +497,7 @@ func TestKnowledgeTiesTasksToTheirSpec(t *testing.T) {
 			{"workflow/plan", "`departs from D-n: <what and why>`"},
 			{"workflow/plan", "makes the verdict NO-GO"},
 			{"workflow/plan", "needs a `spec revise` pull request on the knowledge repo, opened by a member; the summary names it as follow-up."},
-			{"role/reviewer", "the step 0 success criteria and `Spec`, the plan path"},
+			{"role/reviewer", "the step 0 success criteria written out and `Spec`, the plan path"},
 			{"role/reviewer", "- Spec: with a step 0 `Spec`, the plan names the spec and revision"},
 			{"role/reviewer", "that the plan does not declare as a departure is HIGH."},
 			{"workflow/learn", "propose its `features/<slug>.md` page the same way, through the inbox"},

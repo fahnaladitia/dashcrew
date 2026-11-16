@@ -42,11 +42,11 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-+ w/.ai/lock.json  -rw-r--r-- sha256:6fb3f43404e84faf
++ w/.ai/lock.json  -rw-r--r-- sha256:2e478dc8ebf3c834
 + w/.claude  dir
 + w/.claude/agents  dir
-+ w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
-+ w/.claude/agents/reviewer.md  -rw-r--r-- sha256:283487271d3e701f
++ w/.claude/agents/explorer.md  -rw-r--r-- sha256:c5027d9c25fbef11
++ w/.claude/agents/reviewer.md  -rw-r--r-- sha256:5c1f3688fe3eb344
 + w/.claude/settings.json  -rw-r--r-- sha256:ab785cea7a7a2c39
 + w/.claude/skills  dir
 + w/.claude/skills/acceptance-criteria  dir
@@ -58,7 +58,7 @@ files:
 + w/.claude/skills/build-fix  dir
 + w/.claude/skills/build-fix/SKILL.md  -rw-r--r-- sha256:58e0130412db7da5
 + w/.claude/skills/code-review  dir
-+ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:f7225b8b8e7dea2e
++ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:37bdb6306fa4963b
 + w/.claude/skills/continuous-learning  dir
 + w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:eec6c28201da1802
 + w/.claude/skills/data-layer-tdd  dir
@@ -90,11 +90,11 @@ files:
 + w/.claude/skills/strategic-compact  dir
 + w/.claude/skills/strategic-compact/SKILL.md  -rw-r--r-- sha256:a866040ed09e6f37
 + w/.claude/skills/tdd  dir
-+ w/.claude/skills/tdd/SKILL.md  -rw-r--r-- sha256:609c68287a05c3e6
++ w/.claude/skills/tdd/SKILL.md  -rw-r--r-- sha256:f2c8bea4c991f31f
 + w/.claude/skills/verification-loop  dir
 + w/.claude/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:d54707cb287e4465
 + w/.claude/skills/verify  dir
-+ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:5728520b66449d20
++ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:1bac5d2d073976a3
 + w/.claude/skills/work-modes  dir
 + w/.claude/skills/work-modes/SKILL.md  -rw-r--r-- sha256:42e7df44abe766f6
 + w/.claude/skills/worktree  dir
@@ -102,7 +102,7 @@ files:
 + w/.github  dir
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
 + w/.mcp.json  -rw-r--r-- sha256:745dcf12d577148c
-+ w/AGENTS.md  -rw-r--r-- sha256:1b4552866efaf41d
++ w/AGENTS.md  -rw-r--r-- sha256:7302a7573d58369c
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 2: dashcrew "sync"
@@ -135,7 +135,7 @@ stdout:
 | warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
 | info  release-line    release/2.4.0 is the release line 2.4.0: toolkit 0.0.0, the main line develop has 0.0.1; dashcrew sync --upgrade moves this line
 | skip  me              no personal profile; dashcrew me init adds one
-| ok    agents-md-size  AGENTS.md 16158 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16172 of 32768 bytes
 | ok    always-on       claude-code 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
@@ -154,7 +154,7 @@ stderr:
 |   dashcrew sync --upgrade (the upgrade lands on this line), or
 |   upgrade on the main line develop (dashcrew sync there, commit) and merge it down to this line.
 files:
-~ w/.ai/lock.json  -rw-r--r-- sha256:1de4a2cfe961060b
+~ w/.ai/lock.json  -rw-r--r-- sha256:75f965c5b0271231
 ~ w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:f618e3cf9a69c104
 
 === step 5: dashcrew "sync" "--upgrade"
@@ -163,8 +163,8 @@ stdout:
 | wrote   AGENTS.md
 stderr: (empty)
 files:
-~ w/.ai/lock.json  -rw-r--r-- sha256:74a9b051d03580a6
-~ w/AGENTS.md  -rw-r--r-- sha256:5996fe1e61f7c189
+~ w/.ai/lock.json  -rw-r--r-- sha256:b3449ab943612d0c
+~ w/AGENTS.md  -rw-r--r-- sha256:27ea575f27b74981
 
 === step 6: dashcrew "sync"
 exit: 0
@@ -193,5 +193,5 @@ stdout:
 | wrote   AGENTS.md
 stderr: (empty)
 files:
-~ w/.ai/lock.json  -rw-r--r-- sha256:6fb3f43404e84faf
-~ w/AGENTS.md  -rw-r--r-- sha256:1b4552866efaf41d
+~ w/.ai/lock.json  -rw-r--r-- sha256:2e478dc8ebf3c834
+~ w/AGENTS.md  -rw-r--r-- sha256:7302a7573d58369c

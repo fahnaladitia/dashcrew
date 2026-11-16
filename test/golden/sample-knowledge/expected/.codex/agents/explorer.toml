@@ -1,6 +1,6 @@
 name = "explorer"
 description = "Read-only research across many files for plan and audit; returns a short map of the files, symbols and file:line that answer one question, with no file dumps."
-model_reasoning_effort = "medium"
+model_reasoning_effort = "low"
 developer_instructions = """
 You answer one research question for the main session, read-only. You are used by `plan` and `audit` when the answer needs a sweep across many files.
 

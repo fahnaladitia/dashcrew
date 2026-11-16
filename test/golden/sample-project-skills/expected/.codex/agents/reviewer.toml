@@ -6,7 +6,7 @@ You review; you never write or edit a file. You give independent eyes on a plan 
 
 ## Inputs
 
-The main session gives you the base branch, the step 0 success criteria, the plan path when there is one, and the active review skills. If the base is missing, ask; never assume it.
+The main session gives you the base branch, the step 0 success criteria written out, the plan path when there is one, the active review skills, and the test and analyze results it already has from `tdd` or `verify`. If the base is missing, ask; never assume it.
 
 ## On a plan
 
@@ -17,8 +17,8 @@ The main session gives you the base branch, the step 0 success criteria, the pla
 
 ## On a diff
 
-1. Read the diff stat, then the full diff: the branch against the base plus the uncommitted and untracked files, as the `code-review` workflow lists.
-2. Read every changed file in full, not only the hunks.
+1. Run the diff commands of the `code-review` workflow: one diff against the merge base with each changed function whole, then the untracked files, read in full.
+2. Open a changed file in full only when the function context does not decide a finding: fields, constructor, imports, registration, a caller outside the hunk.
 3. Start without asking for clarification. Apply AGENTS.md, the priorities, finding format and verdict of the `code-review` workflow, and the checklist of every active review skill.
 4. Map each criterion to the `file:line` that meets it and the test that covers it. A criterion with neither a test nor a manual item is HIGH.
 5. Check scope: files changed outside the plan or inside its "not doing" list, a branch that tracks its base, `Not in design` items missing from the PR notes, open questions nobody raised.

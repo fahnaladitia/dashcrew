@@ -32,7 +32,7 @@ func TestClaudeCodeWritesRolesSkillsAndClaudeMd(t *testing.T) {
 	if !strings.HasPrefix(reviewer, "---\nname: reviewer\n") || !strings.Contains(reviewer, "tools: Read, Grep, Glob, Bash\nmodel: opus\neffort: high\n") {
 		t.Errorf("reviewer %q", reviewer[:200])
 	}
-	if !strings.Contains(out[".claude/agents/explorer.md"], "tools: Read, Grep, Glob, Bash\nmodel: sonnet\neffort: medium\n") {
+	if !strings.Contains(out[".claude/agents/explorer.md"], "tools: Read, Grep, Glob, Bash\nmodel: sonnet\neffort: low\n") {
 		t.Error("explorer front matter")
 	}
 	if !strings.HasPrefix(out[".claude/skills/plan/SKILL.md"], "---\nname: plan\ndescription: ") {
