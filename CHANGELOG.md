@@ -1,3 +1,10 @@
+## 0.5.1
+
+Security patch for 0.5.0. Nothing changes for a project, its generated toolkit or its guard; upgrade the binary.
+
+- Built with Go 1.26.11 for GO-2026-6859 in `net/http`, which `govulncheck` reports for 0.5.0's Go 1.26.10 (#35).
+- Release builds run `govulncheck` before publishing, use no Go cache, and carry build provenance: check an archive with `gh attestation verify <archive> -R fahnaladitia/dashcrew` (#37).
+
 ## 0.5.0
 
 Readable chat blocks, skills a team can adopt and each member can switch on, and a guard that runs under Antigravity. A project's generated files change: run `dashcrew sync` and commit what it writes. In a project with the antigravity agent the shim then accepts dashcrew 0.5.0 or newer only, so every member installs 0.5.0 before that sync is committed.
