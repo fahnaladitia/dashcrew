@@ -2,6 +2,7 @@
 
 - New `dashcrew usage` (P13): tokens per session and role (main, reviewer, explorer, other subagents) from the Claude Code and Codex transcripts of the project and its worktrees, the context loaded before the first answer, and the skills each role loaded; `--json` for a before and after comparison. Reads only.
 - Budget gate (P13b): `doctor` `always-on` sums, per agent, what it loads from the project before the first answer (CLAUDE.md with its `@` imports, rules that are always on, AGENTS.md, the memory index) and warns over 40 KiB; `memory-index` warns for an index line over 150 characters; `always-on` also names the AGENTS.md project-section headings that repeat a generated one. The `continuous-learning` skill now limits an index line to 150 characters: run `dashcrew sync` and commit what it writes.
+- Lean execution (P13c): the main session runs the `reviewer` as its agent type and passes the success criteria and the test results it has; the reviewer reads one `git diff --merge-base <base> --function-context` and opens a whole file only when the function does not decide a finding. The `explorer` runs at `effort: low`. Flutter tests run with `--reporter failures-only`: a pass is one line, a failure keeps its full output.
 
 ## 0.5.0
 

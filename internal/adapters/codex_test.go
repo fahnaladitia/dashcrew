@@ -242,7 +242,7 @@ func TestCodexRoleFiles(t *testing.T) {
 		!strings.Contains(reviewer, "\ndeveloper_instructions = \"\"\"\n") || !strings.HasSuffix(reviewer, "\"\"\"\n") {
 		t.Errorf("reviewer %q", reviewer[:200])
 	}
-	if !strings.Contains(out[".codex/agents/explorer.toml"], "\nmodel_reasoning_effort = \"medium\"\n") {
+	if !strings.Contains(out[".codex/agents/explorer.toml"], "\nmodel_reasoning_effort = \"low\"\n") {
 		t.Error("explorer effort")
 	}
 }

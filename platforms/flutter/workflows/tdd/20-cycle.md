@@ -18,7 +18,7 @@ Run the cycle per plan stage (mapper, state, widget), not per test.
 - Write all RED tests of the stage, then run them in one call:
 
 ```bash
-flutter test test/order_mapper_test.dart --reporter expanded
+flutter test test/order_mapper_test.dart --reporter failures-only
 ```
 
 - A valid RED fails on an assertion.
@@ -50,7 +50,7 @@ Never settle it silently. The answer goes into the plan; against a spec it becom
 - At the end, run every test file you touched in one call:
 
 ```bash
-flutter test test/order_mapper_test.dart test/order_repository_test.dart --reporter expanded
+flutter test test/order_mapper_test.dart test/order_repository_test.dart --reporter failures-only
 ```
 
 - Never run the whole suite here. Regressions outside the scope are caught by `verify` on the diff.

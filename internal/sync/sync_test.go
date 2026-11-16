@@ -147,7 +147,7 @@ func TestFirstSyncWritesTheClaudeCodeToolkit(t *testing.T) {
 	if !strings.HasPrefix(reviewer, "---\nname: reviewer\n") || !strings.Contains(reviewer, "tools: Read, Grep, Glob, Bash\nmodel: opus\neffort: high\n") {
 		t.Errorf("reviewer %q", reviewer)
 	}
-	if !strings.Contains(read(t, project, ".claude/agents/explorer.md"), "tools: Read, Grep, Glob, Bash\nmodel: sonnet\neffort: medium\n") {
+	if !strings.Contains(read(t, project, ".claude/agents/explorer.md"), "tools: Read, Grep, Glob, Bash\nmodel: sonnet\neffort: low\n") {
 		t.Error("explorer")
 	}
 	if !strings.HasPrefix(read(t, project, ".claude/skills/plan/SKILL.md"), "---\nname: plan\ndescription: ") ||

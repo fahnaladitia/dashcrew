@@ -66,7 +66,7 @@ detect: [pubspec.yaml]          # required: files whose presence identifies the 
 commands:                       # required: analyze, test, test_scoped, deps; format is optional
   analyze: flutter analyze
   test: flutter test
-  test_scoped: flutter test --reporter expanded
+  test_scoped: flutter test --reporter failures-only
   deps: flutter pub get
   format: dart format
 link: pubspec_overrides.yaml    # optional: how repositories link a local package

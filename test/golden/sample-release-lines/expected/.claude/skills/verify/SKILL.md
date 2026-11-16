@@ -51,7 +51,7 @@ flutter analyze <files and folders from the scope> 2>&1 | tail -30
 Run every test file in scope in one call; each call pays a 10 to 20 second compile.
 
 ```bash
-flutter test test/<a>_test.dart test/<b>_test.dart --reporter expanded 2>&1 | tail -40
+flutter test test/<a>_test.dart test/<b>_test.dart --reporter failures-only 2>&1 | tail -40
 ```
 
 - Report passed and failed counts, and name the scope.
