@@ -41,7 +41,8 @@ Add one pointer line per memory to `.ai/memory/MEMORY.md`:
 ```
 
 - The index holds one line per memory.
-- Never put memory content in the index.
+- A line is at most 150 characters: the title and a hook that says when the memory matters. The fact, the why and the dates live in the file.
+- Never put memory content in the index. Shorten a longer line when you next touch its memory.
 
 ## Before writing
 

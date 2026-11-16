@@ -758,7 +758,7 @@ func TestWithoutMachineChecksOnlyTheProjectChecksRun(t *testing.T) {
 	for _, check := range checks {
 		ids = append(ids, check.ID)
 	}
-	if got := strings.Join(ids, " "); got != "profile project-packs lock version drift stale guard-policy agents-md-size gitignore" {
+	if got := strings.Join(ids, " "); got != "profile project-packs lock version drift stale guard-policy agents-md-size always-on gitignore" {
 		t.Errorf("checks %s", got)
 	}
 }

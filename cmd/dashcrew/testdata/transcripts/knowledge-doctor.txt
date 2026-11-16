@@ -74,7 +74,7 @@ files:
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:36bfb1be82c0b298
 + w/.ai/knowledge  link -> <root>/home/.dashcrew/knowledge/notes
-+ w/.ai/lock.json  -rw-r--r-- sha256:ace92a7980e0d692
++ w/.ai/lock.json  -rw-r--r-- sha256:e12a93fcbf3f2cf7
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:ac4fca699a608a65
@@ -92,7 +92,7 @@ files:
 + w/.claude/skills/code-review  dir
 + w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:f7225b8b8e7dea2e
 + w/.claude/skills/continuous-learning  dir
-+ w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:b128f630973c9956
++ w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:e01d70ae0ba3943e
 + w/.claude/skills/data-layer-tdd  dir
 + w/.claude/skills/data-layer-tdd/SKILL.md  -rw-r--r-- sha256:eb183dbb402be1e3
 + w/.claude/skills/design-fidelity  dir
@@ -158,6 +158,7 @@ stdout:
 | warn  knowledge-stale 1 stale pointer, 1 old proposal, 2 unverified pages; run dashcrew knowledge doctor
 | skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 16062 of 32768 bytes
+| ok    always-on       claude-code 15.7 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)

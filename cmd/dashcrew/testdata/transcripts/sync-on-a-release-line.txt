@@ -42,7 +42,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-+ w/.ai/lock.json  -rw-r--r-- sha256:3b828e66806f97ab
++ w/.ai/lock.json  -rw-r--r-- sha256:6fb3f43404e84faf
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
@@ -60,7 +60,7 @@ files:
 + w/.claude/skills/code-review  dir
 + w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:f7225b8b8e7dea2e
 + w/.claude/skills/continuous-learning  dir
-+ w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:698f498fdff18b66
++ w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:eec6c28201da1802
 + w/.claude/skills/data-layer-tdd  dir
 + w/.claude/skills/data-layer-tdd/SKILL.md  -rw-r--r-- sha256:eb183dbb402be1e3
 + w/.claude/skills/design-fidelity  dir
@@ -136,6 +136,7 @@ stdout:
 | info  release-line    release/2.4.0 is the release line 2.4.0: toolkit 0.0.0, the main line develop has 0.0.1; dashcrew sync --upgrade moves this line
 | skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 16158 of 32768 bytes
+| ok    always-on       claude-code 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)
@@ -153,7 +154,7 @@ stderr:
 |   dashcrew sync --upgrade (the upgrade lands on this line), or
 |   upgrade on the main line develop (dashcrew sync there, commit) and merge it down to this line.
 files:
-~ w/.ai/lock.json  -rw-r--r-- sha256:a69e800b38eeb091
+~ w/.ai/lock.json  -rw-r--r-- sha256:1de4a2cfe961060b
 ~ w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:f618e3cf9a69c104
 
 === step 5: dashcrew "sync" "--upgrade"
@@ -162,7 +163,7 @@ stdout:
 | wrote   AGENTS.md
 stderr: (empty)
 files:
-~ w/.ai/lock.json  -rw-r--r-- sha256:06f5d1b891220437
+~ w/.ai/lock.json  -rw-r--r-- sha256:74a9b051d03580a6
 ~ w/AGENTS.md  -rw-r--r-- sha256:5996fe1e61f7c189
 
 === step 6: dashcrew "sync"
@@ -192,5 +193,5 @@ stdout:
 | wrote   AGENTS.md
 stderr: (empty)
 files:
-~ w/.ai/lock.json  -rw-r--r-- sha256:3b828e66806f97ab
+~ w/.ai/lock.json  -rw-r--r-- sha256:6fb3f43404e84faf
 ~ w/AGENTS.md  -rw-r--r-- sha256:1b4552866efaf41d

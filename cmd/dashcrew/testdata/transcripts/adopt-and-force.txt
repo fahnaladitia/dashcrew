@@ -86,7 +86,7 @@ files:
 + w/.agents/skills/code-review  dir
 + w/.agents/skills/code-review/SKILL.md  -rw-r--r-- sha256:960a5a53fcad369e
 + w/.agents/skills/continuous-learning  dir
-+ w/.agents/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:8e75f35233aaf6c4
++ w/.agents/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:431c618305dd537a
 + w/.agents/skills/data-layer-tdd  dir
 + w/.agents/skills/data-layer-tdd/SKILL.md  -rw-r--r-- sha256:b05e453a7d2a9d54
 + w/.agents/skills/design-fidelity  dir
@@ -126,7 +126,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-+ w/.ai/lock.json  -rw-r--r-- sha256:d25244d40d0129fc
++ w/.ai/lock.json  -rw-r--r-- sha256:c1c9383556693a4f
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:67ca188ed554a6a4
@@ -144,7 +144,7 @@ files:
 + w/.claude/skills/code-review  dir
 + w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:f7225b8b8e7dea2e
 + w/.claude/skills/continuous-learning  dir
-+ w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:698f498fdff18b66
++ w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:eec6c28201da1802
 + w/.claude/skills/data-layer-tdd  dir
 + w/.claude/skills/data-layer-tdd/SKILL.md  -rw-r--r-- sha256:eb183dbb402be1e3
 + w/.claude/skills/design-fidelity  dir
@@ -223,6 +223,7 @@ stdout:
 | warn  codex-trust     project not trusted in the Codex config, so .codex/ is ignored; trust it when Codex asks, then approve the guard in /hooks
 | skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 16151 of 32768 bytes
+| ok    always-on       claude-code 15.8 KiB of 40.0 KiB; codex 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)
@@ -292,7 +293,7 @@ files:
 - w/.agents/skills/verify/SKILL.md
 - w/.agents/skills/work-modes/SKILL.md
 - w/.agents/skills/worktree/SKILL.md
-~ w/.ai/lock.json  -rw-r--r-- sha256:05b33cd9d7b4f622
+~ w/.ai/lock.json  -rw-r--r-- sha256:807463114bda3299
 - w/.codex/agents/explorer.toml
 - w/.codex/agents/reviewer.toml
 
@@ -321,6 +322,7 @@ stdout:
 | warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
 | skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 16151 of 32768 bytes
+| ok    always-on       claude-code 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
 files: (unchanged)
@@ -336,6 +338,7 @@ stdout:
 | skip  stale           needs a valid profile and the lock
 | ok    guard-policy    .ai/guard.json valid
 | ok    agents-md-size  AGENTS.md 16151 of 32768 bytes
+| ok    always-on       claude-code 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | skip  pr-sections     no PR body; pass --pr-body <file> or run on a pull_request event
 | skip  commits         no base; pass --base <branch> or run on a pull_request event

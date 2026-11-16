@@ -250,7 +250,7 @@ The guard hook: reads one tool call as hook JSON on stdin and answers per agent 
 | Codex | `codex-hook`, `codex-mcp`, `codex-skills-budget`, `codex-trust` |
 | Antigravity | `antigravity-hook`, `antigravity-mcp`, `antigravity-roles` |
 | Knowledge | `knowledge` (the link and the clone's last pull), `knowledge-stale`, `spec` (only when the branch records a spec; warns, never fails) |
-| Project | `agents-md-size`, `gitignore` (warns while `.ai/bin/` is ignored), `handoff-rosters` (only when found) |
+| Project | `agents-md-size`, `always-on` (per agent, what it loads from the project at session start: CLAUDE.md and its `@` imports, `.claude/rules` without `paths:`, `AGENTS.md` or `AGENTS.override.md`, Antigravity rules with `trigger: always_on`, and the memory index; warns over 40 KiB, about 10k tokens; also names the headings of the AGENTS.md project section that repeat a generated heading), `memory-index` (only when `{{paths.memory}}/MEMORY.md` exists; warns for a line over 150 characters), `gitignore` (warns while `.ai/bin/` is ignored), `handoff-rosters` (only when found) |
 | Personal | `me` (your role and level here with their source, and the personal files `dashcrew me sync` writes; warns, and fails only when git tracks a personal file) |
 
 Agent checks run only for the agents in the profile. Each line starts with `ok`, `warn`, `fail`, `skip` or `info`; only `fail` sets exit 1. `info` reports something that needs no fix, such as `handoff-rosters`: `<plans>/*/handoff/00-roster.md` files left by the pre-P4 team flow.

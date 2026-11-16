@@ -177,7 +177,11 @@ func (d Doctor) checks(projectPacks Check) []Check {
 			checks = append(checks, d.me())
 		}
 	}
-	checks = append(checks, d.agentsMdSize(AgentsMdLimitFor(agents)), d.gitignore())
+	checks = append(checks, d.agentsMdSize(AgentsMdLimitFor(agents)), d.alwaysOn(agents))
+	if memory, ok := d.memoryIndex(); ok {
+		checks = append(checks, memory)
+	}
+	checks = append(checks, d.gitignore())
 	if rosters, ok := d.handoffRosters(); ok {
 		checks = append(checks, rosters)
 	}
