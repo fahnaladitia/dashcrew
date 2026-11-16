@@ -973,6 +973,55 @@ func cliCases() []cliCase {
 			cli("me", "sync", "--remove"),
 			cli("me", "show"),
 		}},
+		{name: "usage report", setup: func(t *testing.T, s side) {
+			s.git(t, "w", "init", "-q", "-b", "main")
+			w := s.path("w")
+			encoded := strings.Map(func(r rune) rune {
+				if r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' {
+					return r
+				}
+				return '-'
+			}, w)
+			usageLine := func(id string, in, write, read, out int, tool string) string {
+				return `{"type":"assistant","timestamp":"2026-02-27T10:00:00Z","message":{"id":"` + id +
+					`","model":"claude-opus-5-5","content":[` + tool + `],"usage":{"input_tokens":` + strconv.Itoa(in) +
+					`,"cache_creation_input_tokens":` + strconv.Itoa(write) + `,"cache_read_input_tokens":` + strconv.Itoa(read) +
+					`,"output_tokens":` + strconv.Itoa(out) + `}}}` + "\n"
+			}
+			s.write(t, "w/.claude/skills/tdd/SKILL.md", "# tdd\n")
+			s.write(t, "home/.claude/projects/"+encoded+"/5e1f0c2a-0001.jsonl",
+				`{"type":"system","cwd":"`+w+`","timestamp":"2026-02-27T09:30:00Z"}`+"\n"+
+					`{"type":"user","message":{"role":"user","content":"<command-name>/tdd</command-name>"}}`+"\n"+
+					usageLine("m1", 3, 41000, 21000, 120, `{"type":"tool_use","name":"Skill","input":{"skill":"plan"}}`)+
+					usageLine("m1", 3, 41000, 21000, 120, `{"type":"text","text":"ok"}`)+
+					usageLine("m2", 5, 2000, 64000, 900, `{"type":"text","text":"ok"}`))
+			s.write(t, "home/.claude/projects/"+encoded+"/5e1f0c2a-0001/subagents/agent-a1.meta.json", `{"agentType":"general-purpose"}`)
+			s.write(t, "home/.claude/projects/"+encoded+"/5e1f0c2a-0001/subagents/agent-a1.jsonl",
+				`{"type":"user","isSidechain":true,"message":{"role":"user","content":"You are the reviewer in .claude/agents/reviewer.md."}}`+"\n"+
+					usageLine("r1", 2, 30000, 15000, 400, `{"type":"tool_use","name":"Read","input":{"file_path":"`+w+`/.claude/skills/review/SKILL.md"}}`))
+			s.write(t, "home/.claude/projects/"+encoded+"/7a7a0000-0002.jsonl",
+				`{"type":"system","cwd":"`+w+`","timestamp":"2026-02-23T08:00:00Z"}`+"\n"+
+					usageLine("m1", 1, 38000, 0, 50, `{"type":"text","text":"ok"}`))
+			s.write(t, "home/.codex/sessions/2026/02/28/rollout-2026-02-28T11-00-00-c0dec0de.jsonl",
+				`{"type":"session_meta","timestamp":"2026-02-28T11:00:00Z","payload":{"id":"c0dec0de-0003","cwd":"`+w+`","source":"cli"}}`+"\n"+
+					`{"type":"turn_context","payload":{"cwd":"`+w+`","model":"gpt-5-codex"}}`+"\n"+
+					`{"type":"event_msg","payload":{"type":"token_count","info":{"total_token_usage":{"input_tokens":30000,"cached_input_tokens":12000,"output_tokens":700},"last_token_usage":{"input_tokens":30000,"cached_input_tokens":12000,"output_tokens":700}}}}`+"\n")
+		}, steps: func() []step {
+			env := map[string]string{"SOURCE_DATE_EPOCH": recorded["SOURCE_DATE_EPOCH"], "TZ": "UTC"}
+			usageStep := func(dir string, args ...string) step {
+				return step{args: append([]string{"usage"}, args...), dir: dir, env: env}
+			}
+			return []step{
+				usageStep(""),
+				usageStep("", "--since", "2026-02-25"),
+				usageStep("", "--agent", "codex", "--json"),
+				usageStep("", "--session", "7a"),
+				usageStep("", "--since", "1d"),
+				usageStep("", "--agent", "gemini"),
+				usageStep("", "--since", "yesterday"),
+				usageStep("", "--agent", "codex", "--since", "2026-03-01"),
+			}
+		}()},
 		{name: "skill adopt", setup: func(t *testing.T, s side) {
 			s.write(t, "w/.ai/project.yaml", "toolkit: 1\nagents: [claude-code, codex]\n")
 			s.git(t, "w", "init", "-q", "-b", "main")
