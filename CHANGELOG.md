@@ -4,7 +4,13 @@
 - Budget gate (#33): `doctor` `always-on` sums, per agent, what it loads from the project before the first answer (CLAUDE.md with its `@` imports, rules that are always on, AGENTS.md, the memory index) and warns over 40 KiB; `memory-index` warns for an index line over 150 characters; `always-on` also names the AGENTS.md project-section headings that repeat a generated one. The `continuous-learning` skill now limits an index line to 150 characters: run `dashcrew sync` and commit what it writes.
 - Lean execution (#34): the main session runs the `reviewer` as its agent type and passes the success criteria and the test results it has; the reviewer reads one `git diff --merge-base <base> --function-context` and opens a whole file only when the function does not decide a finding. The `explorer` runs at `effort: low`. Flutter tests run with `--reporter failures-only`: a pass is one line, a failure keeps its full output.
 - The catalog digest leaves hidden files out (#31): a `.DS_Store` or an editor's swap file in `core/`, `platforms/` or `packs/` gave the same catalog another digest, so a binary built on such a checkout recorded a different digest in a release line's lock and held its sync.
-- Go toolchain 1.26.11 (#35) for GO-2026-6859 in `net/http`, which `govulncheck` reports for 1.26.10; release binaries are built with it.
+
+## 0.5.1
+
+Security patch for 0.5.0. Nothing changes for a project, its generated toolkit or its guard; upgrade the binary.
+
+- Built with Go 1.26.11 for GO-2026-6859 in `net/http`, which `govulncheck` reports for 0.5.0's Go 1.26.10 (#35).
+- Release builds run `govulncheck` before publishing, use no Go cache, and carry build provenance: check an archive with `gh attestation verify <archive> -R fahnaladitia/dashcrew` (#37).
 
 ## 0.5.0
 
