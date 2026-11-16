@@ -355,6 +355,10 @@ The instructions say what changes: outside your stacks (a project whose `platfor
 
 Copies a skill folder into `.ai/skills/<name>/`, supporting files included, and writes its `meta.yaml` from the `SKILL.md` front matter (`description` required, `when_to_use` kept). Hidden files and files over the limits are left out and named. `<name>` is a skill in `~/.dashcrew/skills/`; a path is a local folder holding a `SKILL.md`, and the skill takes the folder's name. It is optional unless `--required`. It refuses a name a dashcrew skill, workflow or existing project skill has, and a URL. It never commits; run `dashcrew sync` and commit `.ai/skills/<name>` and what sync writes.
 
+### `dashcrew usage`
+
+Reads the Claude Code (`$CLAUDE_CONFIG_DIR` or `~/.claude/projects/`) and Codex (`$CODEX_HOME` or `~/.codex/sessions/`) transcripts whose working directory is this checkout, one of its worktrees or a folder inside them, and prints per session: tokens (input, cache write, cache read, output) per role (`main`, `reviewer`, `explorer`, `other:<agent type>`), how many runs and responses each role had, `start` (the context of the first answer: what the agent loaded before doing anything) and the skills each role loaded (a `Skill` call, a `/<skill>` command, a `SKILL.md` read). `--since <yyyy-mm-dd | Nd>` (default `7d`), `--session <id prefix>`, `--agent claude|codex`, `--json` for a before and after comparison. Writes nothing and sends nothing anywhere. No cost in money: prices are not in the transcripts.
+
 ## What `sync` writes
 
 | | Claude Code | Codex | Antigravity |

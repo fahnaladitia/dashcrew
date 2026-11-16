@@ -1,0 +1,142 @@
+# usage report
+
+=== step 1: dashcrew "usage"
+env: SOURCE_DATE_EPOCH=1772323200
+env: TZ=UTC
+exit: 0
+stdout:
+| codex  c0dec0de  2026-02-28 11:00  gpt-5-codex  start 30.0k
+|   role  runs  responses  input  cache-write  cache-read  output
+|   main     1          1  18.0k            0       12.0k     700
+| claude  5e1f0c2a  2026-02-27 09:30  claude-opus-5-5  start 62.0k
+|   role      runs  responses  input  cache-write  cache-read  output
+|   main         1          2      8        43.0k       85.0k    1.0k
+|   reviewer     1          1      2        30.0k       15.0k     400
+|   skills    main: plan, tdd; reviewer: review
+| claude  7a7a0000  2026-02-23 08:00  claude-opus-5-5  start 38.0k
+|   role  runs  responses  input  cache-write  cache-read  output
+|   main     1          1      1        38.0k           0      50
+| total  3 sessions  input 18.0k  cache-write 111.0k  cache-read 112.0k  output 2.2k
+stderr: (empty)
+files: (unchanged)
+
+=== step 2: dashcrew "usage" "--since" "2026-02-25"
+env: SOURCE_DATE_EPOCH=1772323200
+env: TZ=UTC
+exit: 0
+stdout:
+| codex  c0dec0de  2026-02-28 11:00  gpt-5-codex  start 30.0k
+|   role  runs  responses  input  cache-write  cache-read  output
+|   main     1          1  18.0k            0       12.0k     700
+| claude  5e1f0c2a  2026-02-27 09:30  claude-opus-5-5  start 62.0k
+|   role      runs  responses  input  cache-write  cache-read  output
+|   main         1          2      8        43.0k       85.0k    1.0k
+|   reviewer     1          1      2        30.0k       15.0k     400
+|   skills    main: plan, tdd; reviewer: review
+| total  2 sessions  input 18.0k  cache-write 73.0k  cache-read 112.0k  output 2.1k
+stderr: (empty)
+files: (unchanged)
+
+=== step 3: dashcrew "usage" "--agent" "codex" "--json"
+env: SOURCE_DATE_EPOCH=1772323200
+env: TZ=UTC
+exit: 0
+stdout:
+| [
+|   {
+|     "agent": "codex",
+|     "id": "c0dec0de-0003",
+|     "start": "2026-02-28T11:00:00Z",
+|     "model": "gpt-5-codex",
+|     "start_context": 30000,
+|     "skipped_lines": 0,
+|     "roles": [
+|       {
+|         "role": "main",
+|         "runs": 1,
+|         "responses": 1,
+|         "input": 18000,
+|         "cache_write": 0,
+|         "cache_read": 12000,
+|         "output": 700
+|       }
+|     ]
+|   }
+| ]
+stderr: (empty)
+files: (unchanged)
+
+=== step 4: dashcrew "usage" "--session" "7a"
+env: SOURCE_DATE_EPOCH=1772323200
+env: TZ=UTC
+exit: 0
+stdout:
+| claude  7a7a0000  2026-02-23 08:00  claude-opus-5-5  start 38.0k
+|   role  runs  responses  input  cache-write  cache-read  output
+|   main     1          1      1        38.0k           0      50
+| total  1 session  input 1  cache-write 38.0k  cache-read 0  output 50
+stderr: (empty)
+files: (unchanged)
+
+=== step 5: dashcrew "usage" "--since" "1d"
+env: SOURCE_DATE_EPOCH=1772323200
+env: TZ=UTC
+exit: 0
+stdout:
+| codex  c0dec0de  2026-02-28 11:00  gpt-5-codex  start 30.0k
+|   role  runs  responses  input  cache-write  cache-read  output
+|   main     1          1  18.0k            0       12.0k     700
+| total  1 session  input 18.0k  cache-write 0  cache-read 12.0k  output 700
+stderr: (empty)
+files: (unchanged)
+
+=== step 6: dashcrew "usage" "--agent" "gemini"
+env: SOURCE_DATE_EPOCH=1772323200
+env: TZ=UTC
+exit: 64
+stdout: (empty)
+stderr:
+| --agent takes claude or codex.
+| 
+| Usage: dashcrew usage [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Any folder inside the repository.
+|                  (defaults to ".")
+|     --since      Sessions started on or after <yyyy-mm-dd>, or in the last <N>d.
+|                  (defaults to "7d")
+|     --session    Only the sessions whose id starts with this.
+|     --agent      Only claude or codex.
+|     --json       Print the sessions as JSON, numbers unformatted.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 7: dashcrew "usage" "--since" "yesterday"
+env: SOURCE_DATE_EPOCH=1772323200
+env: TZ=UTC
+exit: 64
+stdout: (empty)
+stderr:
+| --since takes <yyyy-mm-dd> or <N>d, such as 30d.
+| 
+| Usage: dashcrew usage [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Any folder inside the repository.
+|                  (defaults to ".")
+|     --since      Sessions started on or after <yyyy-mm-dd>, or in the last <N>d.
+|                  (defaults to "7d")
+|     --session    Only the sessions whose id starts with this.
+|     --agent      Only claude or codex.
+|     --json       Print the sessions as JSON, numbers unformatted.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 8: dashcrew "usage" "--agent" "codex" "--since" "2026-03-01"
+env: SOURCE_DATE_EPOCH=1772323200
+env: TZ=UTC
+exit: 0
+stdout:
+| no Claude Code or Codex sessions for <root>/w since 2026-03-01
+stderr: (empty)
+files: (unchanged)

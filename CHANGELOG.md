@@ -1,3 +1,7 @@
+## Unreleased
+
+- New `dashcrew usage` (P13): tokens per session and role (main, reviewer, explorer, other subagents) from the Claude Code and Codex transcripts of the project and its worktrees, the context loaded before the first answer, and the skills each role loaded; `--json` for a before and after comparison. Reads only.
+
 ## 0.5.0
 
 Readable chat blocks, skills a team can adopt and each member can switch on, and a guard that runs under Antigravity. A project's generated files change: run `dashcrew sync` and commit what it writes. In a project with the antigravity agent the shim then accepts dashcrew 0.5.0 or newer only, so every member installs 0.5.0 before that sync is committed.

@@ -25,6 +25,7 @@ stdout:
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   usage       Tokens per session and role from the Claude Code and Codex transcripts of this project. Writes nothing.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
@@ -57,6 +58,7 @@ stdout:
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   usage       Tokens per session and role from the Claude Code and Codex transcripts of this project. Writes nothing.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
@@ -89,6 +91,7 @@ stdout:
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   usage       Tokens per session and role from the Claude Code and Codex transcripts of this project. Writes nothing.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
@@ -121,6 +124,7 @@ stdout:
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   usage       Tokens per session and role from the Claude Code and Codex transcripts of this project. Writes nothing.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
@@ -327,6 +331,7 @@ stderr:
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   usage       Tokens per session and role from the Claude Code and Codex transcripts of this project. Writes nothing.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
@@ -359,6 +364,7 @@ stderr:
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   usage       Tokens per session and role from the Claude Code and Codex transcripts of this project. Writes nothing.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
@@ -391,6 +397,7 @@ stderr:
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   usage       Tokens per session and role from the Claude Code and Codex transcripts of this project. Writes nothing.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
@@ -741,6 +748,7 @@ stderr:
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   usage       Tokens per session and role from the Claude Code and Codex transcripts of this project. Writes nothing.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
@@ -778,6 +786,7 @@ stderr:
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   usage       Tokens per session and role from the Claude Code and Codex transcripts of this project. Writes nothing.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
@@ -814,6 +823,7 @@ stderr:
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   usage       Tokens per session and role from the Claude Code and Codex transcripts of this project. Writes nothing.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
@@ -851,6 +861,7 @@ stderr:
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   usage       Tokens per session and role from the Claude Code and Codex transcripts of this project. Writes nothing.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
@@ -887,6 +898,7 @@ stderr:
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   usage       Tokens per session and role from the Claude Code and Codex transcripts of this project. Writes nothing.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
@@ -1259,6 +1271,7 @@ stderr:
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   usage       Tokens per session and role from the Claude Code and Codex transcripts of this project. Writes nothing.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
@@ -1291,6 +1304,7 @@ stderr:
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   usage       Tokens per session and role from the Claude Code and Codex transcripts of this project. Writes nothing.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
@@ -1335,6 +1349,7 @@ stderr:
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   usage       Tokens per session and role from the Claude Code and Codex transcripts of this project. Writes nothing.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
@@ -1367,6 +1382,7 @@ stderr:
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   usage       Tokens per session and role from the Claude Code and Codex transcripts of this project. Writes nothing.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
@@ -1398,6 +1414,7 @@ stdout:
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   usage       Tokens per session and role from the Claude Code and Codex transcripts of this project. Writes nothing.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
@@ -1435,6 +1452,7 @@ stderr:
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
 |   sync        Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
+|   usage       Tokens per session and role from the Claude Code and Codex transcripts of this project. Writes nothing.
 |   verify      Helpers for the verify workflow.
 |   worktree    One worktree per parallel task. Never commits, pushes or deletes a branch.
 | 
