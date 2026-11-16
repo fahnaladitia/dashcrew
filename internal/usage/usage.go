@@ -217,7 +217,7 @@ var (
 	skillFile = regexp.MustCompile(`skills/([A-Za-z0-9_.:-]+)/SKILL\.md`)
 	// skillShellRead is a shell command that prints a SKILL.md: a read verb, then the path in the same command.
 	skillShellRead = regexp.MustCompile(`(?:^|[\s"';&|(])(?:cat|head|tail|nl|less|bat|sed)\s[^;&|"\n]*?skills/([A-Za-z0-9_.:-]+)/SKILL\.md`)
-	command   = regexp.MustCompile(`<command-name>/?([^<\s]+)</command-name>`)
+	command        = regexp.MustCompile(`<command-name>/?([^<\s]+)</command-name>`)
 )
 
 // roleOf names a subagent: its agent type when that is a role, else the role file its prompt names, else

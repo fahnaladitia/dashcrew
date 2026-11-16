@@ -104,7 +104,9 @@ type claudeRun struct {
 	model             string
 }
 
-func newClaudeRun() *claudeRun { return &claudeRun{seen: map[string]bool{}, first: -1, skills: map[string]int{}} }
+func newClaudeRun() *claudeRun {
+	return &claudeRun{seen: map[string]bool{}, first: -1, skills: map[string]int{}}
+}
 
 func (r *claudeRun) read(l claudeLine, p project) {
 	m := l.Message
