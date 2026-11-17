@@ -150,7 +150,33 @@ func FromHook(json *omap.Map[any]) (Event, error) {
 		}
 		return events[0], nil
 	}
-	return Event{Kind: Other, Role: role}, nil
+	if tool == nil {
+		return unknownTool(nil, json.Value("command"), role), nil
+	}
+	return unknownTool(tool, input.Value("command"), role), nil
+}
+
+// shownToolName is a tool name the malformed log may print: a plain identifier, so a log line never carries
+// payload text.
+var shownToolName = regexp.MustCompile(`^[A-Za-z0-9_.:-]{1,64}$`)
+
+// unknownTool is the event of a tool the guard does not know, which the hook matchers dashcrew writes never send: a
+// renamed tool, another agent running the hook, or a widened matcher. A non-empty command is checked as a shell
+// command whatever the tool is called; anything else is allowed. Either way Malformed puts it in the log that
+// doctor guard-log reports. A write-like tool is not guessed: a read also names a file.
+func unknownTool(name *string, command any, role *string) Event {
+	label := "input without a tool name"
+	if name != nil {
+		shown := "(name not shown)"
+		if shownToolName.MatchString(*name) {
+			shown = *name
+		}
+		label = "unknown tool " + shown
+	}
+	if text := shellText(command); strings.TrimSpace(text) != "" {
+		return Event{Kind: Shell, Command: text, Argv: argvOf(command), Role: role, Malformed: label + ", checked as a shell command"}
+	}
+	return Event{Kind: Other, Role: role, Malformed: label + ", allowed"}
 }
 
 // shellText is the script of a shell tool's `command`: a string as is, an argv list joined by spaces, and the
@@ -368,12 +394,17 @@ func antigravity(toolCall *omap.Map[any]) (Event, error) {
 	case "multi_replace_file_content":
 		return Event{Kind: Edit, FilePath: orEmpty(path), Content: strings.Join(replacementTexts(args), "\n")}, nil
 	}
-	if name, ok := toolCall.Value("name").(string); ok {
+	name, ok := toolCall.Value("name").(string)
+	if ok {
 		if kind, ok := antigravityWriteTools[name]; ok {
 			return antigravityWrite(kind, args), nil
 		}
 	}
-	return Event{Kind: Other}, nil
+	var named *string
+	if ok {
+		named = &name
+	}
+	return unknownTool(named, args.Value("CommandLine"), nil), nil
 }
 
 // antigravityWriteTools are the write tools of agy's own permission vetting beyond the documented three, with the
