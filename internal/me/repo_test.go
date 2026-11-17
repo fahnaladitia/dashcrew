@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/fahnaladitia/dashcrew/internal/agents"
 )
 
 func TestParseRepo(t *testing.T) {
@@ -66,7 +68,7 @@ func TestEffectiveIn(t *testing.T) {
 
 func TestSyncPerRepo(t *testing.T) {
 	pl := places(t)
-	home := &Profile{Role: "mobile", Stacks: []string{"flutter"}, Level: "regular", Agents: Agents}
+	home := &Profile{Role: "mobile", Stacks: []string{"flutter"}, Level: "regular", Agents: agents.Personal()}
 	lead, fresh := t.TempDir(), t.TempDir()
 	if err := (&RepoProfile{Role: "lead"}).Save(lead); err != nil {
 		t.Fatal(err)
@@ -180,4 +182,18 @@ func containsChange(changes []Change, want Change) bool {
 		}
 	}
 	return false
+}
+
+// TestEveryPersonalAgentHasItsOwnHomeFile fails when an agent joins agents.Personal without its case in
+// homeInstructionPath, which would write it into Claude Code's folder.
+func TestEveryPersonalAgentHasItsOwnHomeFile(t *testing.T) {
+	pl := places(t)
+	seen := map[string]string{}
+	for _, agent := range agents.Personal() {
+		path := homeInstructionPath(pl, agent)
+		if other, ok := seen[path]; ok {
+			t.Errorf("%s and %s both write %s", other, agent, path)
+		}
+		seen[path] = agent
+	}
 }

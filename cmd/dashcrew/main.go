@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fahnaladitia/dashcrew/internal/agents"
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
 	"github.com/fahnaladitia/dashcrew/internal/check"
 	"github.com/fahnaladitia/dashcrew/internal/doctor"
@@ -146,7 +147,7 @@ func initCommand(cli cliIO) *command {
 	c := newCommand("init", "Detect the platform and stack and write .ai/project.yaml. Writes nothing else.")
 	c.option("project", "p", "Project root.", ptr("."))
 	c.flag("yes", "y", "Write the detected profile without asking.", false, false)
-	c.multiOption("agents", "Agents to render for.", profile.SupportedAgents, []string{"claude-code"})
+	c.multiOption("agents", "Agents to render for.", agents.All(), []string{"claude-code"})
 	c.flag("force", "", "Replace an existing .ai/project.yaml.", false, false)
 	c.run = func(r *results) (int, error) {
 		projectDir, err := absolute(*r.option("project"))

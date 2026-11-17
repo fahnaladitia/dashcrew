@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	embedded "github.com/fahnaladitia/dashcrew"
+	"github.com/fahnaladitia/dashcrew/internal/agents"
 	"github.com/fahnaladitia/dashcrew/internal/me"
 	"github.com/fahnaladitia/dashcrew/internal/worktree"
 )
@@ -194,7 +195,7 @@ func meCommand(cli cliIO) *command {
 			p.Stacks = list(ask("stacks", "platforms you work on, comma separated", strings.Join(p.Stacks, ", ")))
 			p.Level = ask("level", strings.Join(me.Levels, " | "), p.Level)
 			p.ChatLanguage = ask("chat_language", "ISO 639-1 such as id, empty keeps each project's", p.ChatLanguage)
-			p.Agents = list(ask("agents", strings.Join(me.Agents, ", "), strings.Join(p.Agents, ", ")))
+			p.Agents = list(ask("agents", strings.Join(agents.Personal(), ", "), strings.Join(p.Agents, ", ")))
 			if home, err = me.Parse(p.Text()); err != nil {
 				return 1, &exitError{1, err.Error()}
 			}

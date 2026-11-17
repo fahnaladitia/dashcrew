@@ -55,9 +55,11 @@ func Propose(existing *Profile, platform string, places Places) *Profile {
 	if platform != "" {
 		p.Stacks = []string{platform}
 	}
-	for i, dir := range []string{places.ClaudeDir, places.CodexDir, places.GeminiDir} {
-		if info, err := os.Stat(dir); err == nil && info.IsDir() {
-			p.Agents = append(p.Agents, Agents[i])
+	for _, home := range []struct{ agent, dir string }{
+		{"claude-code", places.ClaudeDir}, {"codex", places.CodexDir}, {"antigravity", places.GeminiDir},
+	} {
+		if info, err := os.Stat(home.dir); err == nil && info.IsDir() {
+			p.Agents = append(p.Agents, home.agent)
 		}
 	}
 	if len(p.Agents) == 0 {

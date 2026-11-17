@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/fahnaladitia/dashcrew/internal/agents"
 	"github.com/fahnaladitia/dashcrew/internal/omap"
 	"github.com/fahnaladitia/dashcrew/internal/version"
 	"github.com/fahnaladitia/dashcrew/internal/yamlutil"
@@ -52,8 +53,6 @@ const (
 )
 
 var (
-	// SupportedAgents in the order error messages list them.
-	SupportedAgents = []string{"claude-code", "codex", "antigravity"}
 	// PlatformCommands a platform must declare.
 	PlatformCommands = []string{"analyze", "test", "test_scoped", "deps"}
 	// OptionalPlatformCommands a platform may leave out.
@@ -319,11 +318,12 @@ func parseAgents(value any) ([]string, error) {
 	if !ok || len(list) == 0 {
 		return nil, fail("agents", "required, a non-empty list")
 	}
+	supported := agents.All()
 	agents := make([]string, 0, len(list))
 	for _, agent := range list {
 		name, isString := agent.(string)
-		if !isString || !contains(SupportedAgents, name) {
-			return nil, fail("agents", `unsupported agent "`+yamlutil.DartString(agent)+`", expected one of `+strings.Join(SupportedAgents, ", "))
+		if !isString || !contains(supported, name) {
+			return nil, fail("agents", `unsupported agent "`+yamlutil.DartString(agent)+`", expected one of `+strings.Join(supported, ", "))
 		}
 		agents = append(agents, name)
 	}

@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/fahnaladitia/dashcrew/internal/adapters"
+	"github.com/fahnaladitia/dashcrew/internal/agents"
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
 	"github.com/fahnaladitia/dashcrew/internal/dartjson"
 	"github.com/fahnaladitia/dashcrew/internal/guard"
@@ -248,7 +249,7 @@ func TestALockWithTheOldMcpListIsReadAsClaudeCodeOwnership(t *testing.T) {
 
 func TestAdapterForNamesTheSupportedAgentsAndRejectsTheOthers(t *testing.T) {
 	s, project := newProject(t, "toolkit: 1\nagents: [claude-code]\n")
-	for _, agent := range []string{"claude-code", "codex", "antigravity"} {
+	for _, agent := range agents.All() {
 		adapter, err := adapters.AdapterFor(agent, s.Catalog, project, "flutter", nil)
 		if err != nil || adapter.Agent() != agent {
 			t.Errorf("%s: %v", agent, err)
