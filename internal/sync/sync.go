@@ -209,7 +209,10 @@ func (s Sync) RunWith(opts Options) (*Result, error) {
 		}
 		adoptedAgentsMd := path == "AGENTS.md" && !isLocked
 		generated, isGenerated := files.Get(path)
-		if !adoptedAgentsMd && (!isLocked || locked != FileHash(path, content)) && (isLocked || !isGenerated || generated != content) {
+		// A file that already holds what this sync renders is no conflict, whatever the lock says: a sync that
+		// stopped before writing the lock leaves exactly such files.
+		alreadyRendered := isGenerated && generated == content
+		if !adoptedAgentsMd && (!isLocked || locked != FileHash(path, content)) && !alreadyRendered {
 			conflicts = append(conflicts, path)
 		}
 	}

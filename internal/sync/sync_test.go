@@ -287,6 +287,63 @@ func TestAnUnlockedFileThatDiffersIsAConflictButAMatchingOneIsNot(t *testing.T) 
 	}
 }
 
+// stopBeforeLock leaves the project as a sync to the riverpod profile would if it stopped after writing only the
+// first changed file: that file new, the others old, the lock old. It returns the changed paths and the new content.
+func stopBeforeLock(t *testing.T, s Sync, project string) ([]string, *omap.Map[string]) {
+	t.Helper()
+	write(t, project, ".ai/project.yaml", strings.Replace(defaultProfile, "state: bloc", "state: riverpod", 1))
+	rendered, err := s.Render(false, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var changed []string
+	for _, path := range rendered.Files.Keys() {
+		if exists(project, path) && read(t, project, path) != rendered.Files.Value(path) {
+			changed = append(changed, path)
+		}
+	}
+	if len(changed) < 2 {
+		t.Fatalf("the profile change touches %v", changed)
+	}
+	write(t, project, changed[0], rendered.Files.Value(changed[0]))
+	return changed, rendered.Files
+}
+
+func TestASyncStoppedBeforeTheLockFinishesOnTheNextPlainSync(t *testing.T) {
+	s, project := newProject(t, defaultProfile)
+	run(t, s, false, false)
+	lockBefore := read(t, project, LockPath)
+	changed, files := stopBeforeLock(t, s, project)
+
+	run(t, s, false, false)
+
+	for _, path := range changed {
+		if read(t, project, path) != files.Value(path) {
+			t.Errorf("%s not rendered", path)
+		}
+	}
+	if read(t, project, LockPath) == lockBefore {
+		t.Error("lock not rewritten")
+	}
+}
+
+func TestAHandEditStillBlocksASyncThatFinishesAStoppedOne(t *testing.T) {
+	s, project := newProject(t, defaultProfile)
+	run(t, s, false, false)
+	changed, _ := stopBeforeLock(t, s, project)
+	edited := ".claude/agents/reviewer.md"
+	if slices.Contains(changed, edited) {
+		t.Fatalf("%s changes with the profile; pick another file", edited)
+	}
+	write(t, project, edited, "edited by hand\n")
+
+	_, err := s.Run(false, false)
+
+	if err == nil || err.Error() != "Files changed outside dashcrew (rerun with --force to overwrite):\n  "+edited {
+		t.Errorf("got %v", err)
+	}
+}
+
 func TestProjectBlockSurvivesSync(t *testing.T) {
 	s, project := newProject(t, defaultProfile)
 	run(t, s, false, false)

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -204,6 +205,36 @@ func TestSyncWritesEachAgentAndRemoves(t *testing.T) {
 	}
 	if got := read(t, codex); got != "# Mine\n\nKeep this.\n" {
 		t.Errorf("codex after remove: %q", got)
+	}
+}
+
+func TestSyncWritesThroughALinkedCodexFile(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("symlinks need privileges on Windows")
+	}
+	pl := places(t)
+	dotfiles := filepath.Join(t.TempDir(), "AGENTS.md")
+	if err := os.WriteFile(dotfiles, []byte("# Mine\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(pl.CodexDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	codex := filepath.Join(pl.CodexDir, "AGENTS.md")
+	if err := os.Symlink(dotfiles, codex); err != nil {
+		t.Fatal(err)
+	}
+	p := &Profile{Role: "be", Stacks: []string{"go"}, Level: "regular", Agents: []string{"codex"}}
+
+	if _, err := Sync(p, pl, personal(t)); err != nil {
+		t.Fatal(err)
+	}
+
+	if info, err := os.Lstat(codex); err != nil || info.Mode()&os.ModeSymlink == 0 {
+		t.Errorf("link replaced: %v", err)
+	}
+	if !strings.Contains(read(t, dotfiles), codexBegin) {
+		t.Error("the linked file did not get the block")
 	}
 }
 

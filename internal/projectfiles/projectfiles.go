@@ -78,5 +78,45 @@ func (p Project) WriteIfChanged(relative, content string) (bool, error) {
 	if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
 		return false, err
 	}
-	return true, os.WriteFile(target, []byte(content), 0o644)
+	return true, WriteAtomic(target, []byte(content), 0o644)
+}
+
+// WriteAtomic replaces the file at path in one rename, so an interrupted run leaves the old content or the new,
+// never part of it. An existing file keeps its permission bits; a new one gets perm. A link at path is followed:
+// its target is replaced and the link stays.
+func WriteAtomic(path string, data []byte, perm fs.FileMode) error {
+	if resolved, err := filepath.EvalSymlinks(path); err == nil {
+		path = resolved
+	}
+	if info, err := os.Stat(path); err == nil && info.Mode().IsRegular() {
+		perm = info.Mode().Perm()
+	}
+	temp, err := os.CreateTemp(filepath.Dir(path), "."+filepath.Base(path)+".dashcrew-*")
+	if err != nil {
+		return err
+	}
+	if err := fill(temp, data, perm); err != nil {
+		os.Remove(temp.Name())
+		return err
+	}
+	if err := os.Rename(temp.Name(), path); err != nil {
+		os.Remove(temp.Name())
+		return err
+	}
+	return nil
+}
+
+// fill writes data to file, flushes it to disk, sets perm and closes it.
+func fill(file *os.File, data []byte, perm fs.FileMode) error {
+	_, err := file.Write(data)
+	if err == nil {
+		err = file.Sync()
+	}
+	if err == nil {
+		err = file.Chmod(perm)
+	}
+	if closeErr := file.Close(); err == nil {
+		err = closeErr
+	}
+	return err
 }

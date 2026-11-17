@@ -1,3 +1,7 @@
+## Unreleased
+
+- Changed: `sync` and `me sync` write each file through a temporary file and a rename, so an interrupted run leaves a file's old content or its new one, never part of it. A file that already holds what `sync` renders is no longer a conflict, whatever the lock says, so a plain `dashcrew sync` finishes a sync that stopped before writing `.ai/lock.json` instead of asking for `--force`; a hand-edited file still stops it. An MCP server that already matches dashcrew's definition in `.mcp.json` or `.agents/mcp_config.json` becomes dashcrew's, and is removed when the catalog drops it. A linked `~/.codex/AGENTS.md` or other personal instruction file stays a link: its target is rewritten.
+
 ## 0.6.0
 
 Token savings for the projects that use dashcrew: a report of what each session spends, a budget for what agents load before the first answer, and a leaner review and test loop. Includes the 0.5.1 security patch. A project's generated files change: run `dashcrew sync` and commit what it writes.
