@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	embedded "github.com/fahnaladitia/dashcrew"
+	"github.com/fahnaladitia/dashcrew/internal/agents"
 )
 
 func personal(t *testing.T) fs.FS {
@@ -103,7 +104,7 @@ func TestInstructions(t *testing.T) {
 		t.Errorf("member line or marker missing:\n%s", text)
 	}
 
-	lead := &Profile{Role: "lead", Stacks: []string{"go", "flutter"}, Level: "new", ChatLanguage: "id", Agents: Agents}
+	lead := &Profile{Role: "lead", Stacks: []string{"go", "flutter"}, Level: "new", ChatLanguage: "id", Agents: agents.Personal()}
 	text, err = Instructions(lead, personal(t), "antigravity", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -143,7 +144,7 @@ func TestSyncWritesEachAgentAndRemoves(t *testing.T) {
 	if err := os.WriteFile(codex, []byte("# Mine\n\nKeep this.\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	p := &Profile{Role: "lead", Stacks: []string{"go"}, Level: "new", Agents: Agents}
+	p := &Profile{Role: "lead", Stacks: []string{"go"}, Level: "new", Agents: agents.Personal()}
 	changes, err := Sync(p, pl, personal(t))
 	if err != nil {
 		t.Fatal(err)

@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/fahnaladitia/dashcrew/internal/agents"
 )
 
 func TestEveryAdapterWritesARequiredProjectSkillAndNoOptionalOne(t *testing.T) {
@@ -28,7 +30,7 @@ func TestEveryAdapterWritesARequiredProjectSkillAndNoOptionalOne(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, agent := range SupportedAdapters {
+	for _, agent := range agents.All() {
 		adapter, err := AdapterFor(agent, c, project, "flutter", nil)
 		if err != nil {
 			t.Fatal(err)

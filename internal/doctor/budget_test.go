@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/fahnaladitia/dashcrew/internal/agents"
 	"github.com/fahnaladitia/dashcrew/internal/sync"
 )
 
@@ -206,4 +207,20 @@ func TestMemoryIndex(t *testing.T) {
 			t.Errorf("%v", names)
 		}
 	})
+}
+
+// TestEveryAgentHasAHookCheckAndAlwaysOnFiles fails when an agent joins internal/agents without its case in
+// HookChecks and alwaysOnParts.
+func TestEveryAgentHasAHookCheckAndAlwaysOnFiles(t *testing.T) {
+	f := setup(t, "toolkit: 1\nagents: ["+strings.Join(agents.All(), ", ")+"]\n")
+	f.sync()
+	d := Doctor{Catalog: shippedCatalog, ProjectDir: f.project}
+	if got := len(d.HookChecks()); got != len(agents.All()) {
+		t.Errorf("%d hook checks for %v", got, agents.All())
+	}
+	for _, agent := range agents.All() {
+		if names, _ := f.parts(agent); len(names) == 0 {
+			t.Errorf("%s: no always-on files", agent)
+		}
+	}
 }

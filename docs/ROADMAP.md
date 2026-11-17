@@ -113,7 +113,7 @@ Goal: a visitor understands dashcrew in 30 seconds, tries it in one command, and
   - [ ] The guard section opens with what it blocks and what it does not, and lists the known misses: protection against accidents, not a sandbox.
 - **Cursor**
   - [ ] Adapter for Cursor: rules plus the guard hook, golden-tested, covered by the doctor probe. Spike the hook first to confirm it can fail closed.
-  - [ ] Keep the agent list in one place (today it is defined three times: `adapters/adapter.go:40`, `profile.go:56`, `me/profile.go:25`).
+  - [x] Keep the agent list in one place: `internal/agents`. The per-agent cases in `doctor` and `me sync` have a test that fails for an agent without one.
   - [ ] `docs/adding-an-adapter.md`, written from the Cursor work, so Gemini CLI can be the first outside contribution.
 - **Front page**
   - [ ] README under 150 lines:

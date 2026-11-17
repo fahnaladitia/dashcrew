@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/fahnaladitia/dashcrew/internal/agents"
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
 	"github.com/fahnaladitia/dashcrew/internal/mustache"
 	"github.com/fahnaladitia/dashcrew/internal/projectfiles"
@@ -315,7 +316,7 @@ func targets(home *Profile, repos []repo, places Places, personal fs.FS, linked 
 		live = live || r.profile != nil
 	}
 	var out []target
-	for _, agent := range Agents {
+	for _, agent := range agents.Personal() {
 		t := target{path: homeInstructionPath(places, agent), block: agent == "codex", want: contains(home.Agents, agent)}
 		if t.want {
 			text, err := renderHome(home, personal, agent, linked, live, plan.own)
@@ -582,7 +583,7 @@ func Remove(places Places) ([]Change, error) {
 		return changes, err
 	}
 	var all []target
-	for _, agent := range Agents {
+	for _, agent := range agents.Personal() {
 		all = append(all, target{path: homeInstructionPath(places, agent), block: agent == "codex"})
 	}
 	for _, dir := range repos {

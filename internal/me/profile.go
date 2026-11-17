@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/fahnaladitia/dashcrew/internal/agents"
 	"github.com/fahnaladitia/dashcrew/internal/omap"
 	"github.com/fahnaladitia/dashcrew/internal/yamlutil"
 )
@@ -20,9 +21,6 @@ var Roles = []string{"be", "fe", "mobile", "devops", "fullstack", "lead"}
 
 // Levels a member may declare.
 var Levels = []string{"new", "regular"}
-
-// Agents me sync writes personal instructions for.
-var Agents = []string{"claude-code", "codex", "antigravity"}
 
 // Profile is me.yaml.
 type Profile struct {
@@ -93,8 +91,8 @@ func Parse(text string) (*Profile, error) {
 	default:
 		return nil, errors.New("me.yaml chat_language: expected a two-letter ISO 639-1 code such as id, or empty")
 	}
-	if p.Agents, err = names(root.Value("agents"), "agents", func(s string) bool { return contains(Agents, s) }); err != nil {
-		return nil, fmt.Errorf("%w (one of %s)", err, strings.Join(Agents, ", "))
+	if p.Agents, err = names(root.Value("agents"), "agents", func(s string) bool { return contains(agents.Personal(), s) }); err != nil {
+		return nil, fmt.Errorf("%w (one of %s)", err, strings.Join(agents.Personal(), ", "))
 	}
 	if len(p.Agents) == 0 {
 		p.Agents = []string{"claude-code"}
@@ -142,7 +140,7 @@ func (p *Profile) Text() string {
 		"level: " + p.Level + "\n" +
 		"# ISO 639-1 such as id; empty keeps each project's language.chat\n" +
 		"chat_language: " + p.ChatLanguage + "\n" +
-		"# " + strings.Join(Agents, ", ") + "\n" +
+		"# " + strings.Join(agents.Personal(), ", ") + "\n" +
 		"agents: [" + strings.Join(p.Agents, ", ") + "]\n" +
 		"# your own skills, each in ~/.dashcrew/skills/<name>/SKILL.md, linked for Claude Code\n" +
 		"skills: [" + strings.Join(p.Skills, ", ") + "]\n"

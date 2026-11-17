@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/fahnaladitia/dashcrew/internal/agents"
 	"github.com/fahnaladitia/dashcrew/internal/dartjson"
 	"github.com/fahnaladitia/dashcrew/internal/omap"
 )
@@ -186,7 +187,7 @@ func TestClaudeCodeMergeOwnsAServerThatMatchesItsOwnDefinition(t *testing.T) {
 
 func TestAdapterForNamesTheSupportedAgents(t *testing.T) {
 	c := shipped(t)
-	for _, agent := range []string{"claude-code", "codex", "antigravity"} {
+	for _, agent := range agents.All() {
 		adapter, err := AdapterFor(agent, c, t.TempDir(), "flutter", nil)
 		if err != nil || adapter.Agent() != agent {
 			t.Errorf("%s: %v", agent, err)

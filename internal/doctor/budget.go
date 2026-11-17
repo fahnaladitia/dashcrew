@@ -10,6 +10,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/fahnaladitia/dashcrew/internal/agents"
 	"github.com/fahnaladitia/dashcrew/internal/sync"
 )
 
@@ -202,12 +203,12 @@ func (d Doctor) memoryIndexPath() (string, bool) {
 func kib(n int) string { return fmt.Sprintf("%.1f", float64(n)/1024) }
 
 // alwaysOn sums, per selected agent, what it loads from the project at session start, against AlwaysOnBudget.
-func (d Doctor) alwaysOn(agents map[string]bool) Check {
+func (d Doctor) alwaysOn(selected map[string]bool) Check {
 	const id = "always-on"
 	status := OK
 	var lines []string
-	for _, agent := range []string{"claude-code", "codex", "antigravity"} {
-		if !agents[agent] {
+	for _, agent := range agents.All() {
+		if !selected[agent] {
 			continue
 		}
 		parts, outside := d.alwaysOnParts(agent)

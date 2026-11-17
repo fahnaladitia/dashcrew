@@ -8,6 +8,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/fahnaladitia/dashcrew/internal/agents"
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
 	"github.com/fahnaladitia/dashcrew/internal/dartjson"
 	"github.com/fahnaladitia/dashcrew/internal/knowledge"
@@ -36,9 +37,6 @@ type Adapter interface {
 	Merge(ownedMcp map[string]bool, warnings *[]string) (MergeResult, error)
 }
 
-// SupportedAdapters are the agents AdapterFor accepts, in message order.
-var SupportedAdapters = []string{"claude-code", "codex", "antigravity"}
-
 // AdapterFor returns the adapter for agent on platform; a non-nil k adds the knowledge MCP server.
 func AdapterFor(agent string, c *catalog.Catalog, projectDir, platform string, k *profile.Knowledge) (Adapter, error) {
 	switch agent {
@@ -55,7 +53,7 @@ func AdapterFor(agent string, c *catalog.Catalog, projectDir, platform string, k
 		a.Knowledge = k
 		return a, nil
 	}
-	return nil, fmt.Errorf("Agent adapter not available yet: %s. Supported: %s.", agent, strings.Join(SupportedAdapters, ", "))
+	return nil, fmt.Errorf("Agent adapter not available yet: %s. Supported: %s.", agent, strings.Join(agents.All(), ", "))
 }
 
 func warn(warnings *[]string, message string) {

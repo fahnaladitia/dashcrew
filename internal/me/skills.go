@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/fahnaladitia/dashcrew/internal/adapters"
+	"github.com/fahnaladitia/dashcrew/internal/agents"
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
 	"github.com/fahnaladitia/dashcrew/internal/filemode"
 	"github.com/fahnaladitia/dashcrew/internal/worktree"
@@ -164,7 +165,7 @@ func repoSkills(r repo, loader *projectSkillsLoader) (on []catalog.ProjectSkill,
 // skillFiles are the repo-relative skill files the member's agents read for name, one per folder.
 func skillFiles(home *Profile, name string) map[string]string {
 	out := map[string]string{}
-	for _, agent := range adapters.SupportedAdapters {
+	for _, agent := range agents.Personal() {
 		if contains(home.Agents, agent) {
 			out[adapters.SkillFile(agent, name)] = agent
 		}
@@ -176,7 +177,7 @@ func skillFiles(home *Profile, name string) map[string]string {
 func skillRoots() []string {
 	seen := map[string]bool{}
 	var out []string
-	for _, agent := range adapters.SupportedAdapters {
+	for _, agent := range agents.Personal() {
 		root := path.Dir(path.Dir(adapters.SkillFile(agent, "x")))
 		if !seen[root] {
 			seen[root] = true
