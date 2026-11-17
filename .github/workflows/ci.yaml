@@ -4,9 +4,12 @@ on:
   push:
     branches: [main]
   pull_request:
-  # Daily: a new Go advisory fails govulncheck on main without waiting for a PR. The other jobs skip.
+  # Daily: a new Go advisory fails govulncheck on main without waiting for a PR, and the fuzz targets run.
+  # The other jobs skip.
   schedule:
     - cron: '17 5 * * *'
+  # A manual run takes every job, the fuzz job included.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -80,3 +83,93 @@ jobs:
         with:
           go-version-file: go.mod
       - run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+
+  staticcheck:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      # Pinned by hand like govulncheck: Dependabot does not see a go run version.
+      - run: go run honnef.co/go/tools/cmd/staticcheck@2026.2.1 ./...
+
+  # The release config, built as a tag would build it but published nowhere: a broken .goreleaser.yaml, a target that
+  # no longer builds or an untidy go.mod fails here instead of after the tag. goreleaser check cannot gate this: it
+  # exits 2 on the brews block, kept on purpose (a formula installs on Linux too).
+  release-snapshot:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7.3.0
+        with:
+          distribution: goreleaser
+          version: v2.18.3
+          args: release --snapshot --clean --skip=publish
+        env:
+          # The formula's token template needs a value; a snapshot never pushes, so the real secret stays out of PRs.
+          HOMEBREW_TAP_TOKEN: snapshot-placeholder
+      - name: the built binary reports the snapshot version
+        run: |
+          version="$(./dist/dashcrew_linux_amd64_v1/dashcrew --version)"
+          echo "$version"
+          case "$version" in
+            "dashcrew "*SNAPSHOT*) ;;
+            *) echo "::error::unexpected --version output: $version"; exit 1 ;;
+          esac
+
+  # The previous final release syncs a project with every agent; this build must re-sync it without --force, and
+  # doctor must report no fail. go build stamps the version from git, so this build is newer than that release.
+  upgrade:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: previous release syncs, this build re-syncs
+        run: |
+          previous="$(git describe --tags --abbrev=0 --exclude='*-*')"
+          GOBIN="$RUNNER_TEMP/previous" go install "github.com/fahnaladitia/dashcrew/cmd/dashcrew@$previous"
+          go build -o "$RUNNER_TEMP/current/dashcrew" ./cmd/dashcrew
+          .github/scripts/upgrade-check.sh "$RUNNER_TEMP/previous/dashcrew" "$RUNNER_TEMP/current/dashcrew" test/golden/sample-other/project.yaml
+
+  # Nightly (and on a manual run): the fuzz targets past their seed corpus. A failing input is printed, so it can be
+  # added to testdata/fuzz with the fix.
+  fuzz:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - run: go test -run='^$' -fuzz='^FuzzEvaluateShell$' -fuzztime=3m ./internal/guard
+      - run: go test -run='^$' -fuzz='^FuzzCommands$' -fuzztime=3m ./internal/guard/shell
+      - name: failing inputs
+        if: failure()
+        run: |
+          git status --porcelain --untracked-files=all -- '*/testdata/fuzz/*' | while read -r _ file; do
+            echo "== $file"
+            cat "$file"
+          done

@@ -4,6 +4,7 @@
 - Changed: `dashcrew check` also runs the guard hook check of each agent in the profile (`hook`, `codex-hook`, `antigravity-hook`, from the committed files), so a pull request that loses the guard hook to a hand edit of `.claude/settings.json` or a merge fails the gate.
 - Changed: the guard logs a policy it was given but could not use (missing, not a file, unreadable, not JSON, invalid, or failing while it is applied) in the same log as malformed payloads, so `doctor` `guard-log` reports it. It still lets the call through. `guard-log` now reads "let N tool calls through unchecked".
 - Fixed: `worktree create`, `worktree link`, `link` and `me sync` no longer rewrite the git exclude file when they cannot read it; they stop with the read error, so the lines already there are kept. Outside a git repository they name the failing `git rev-parse` instead of `open : no such file or directory`.
+- Changed: a release candidate tag (`v0.7.0-rc.1`) is published as a GitHub pre-release and is not pushed to the Homebrew tap; `brew upgrade` installs final releases only. Try a candidate with `go install github.com/fahnaladitia/dashcrew/cmd/dashcrew@<tag>`.
 
 ## 0.6.0
 
