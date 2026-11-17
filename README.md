@@ -144,7 +144,7 @@ platform_config:
   commands: { analyze: go vet, test: go test ./..., test_scoped: go test, deps: go mod download, format: gofmt -l }
 ```
 
-**Starters.** `dashcrew platform new go [--http nethttp|chi|gin|echo|fiber|none] [--db pgx|sqlc|gorm|none]` writes a project platform for a Go service into `.ai/platforms/go/`: Go rules (context, error wrapping, goroutine ownership, `gofmt -l` as a check), backend architecture, security and testing rules in place of the app-oriented core ones, a `backend-security` review skill, the `data-layer-tdd` and `feature-architecture` skills for services, packs for the HTTP framework and the database layer, `link: go.work`, and the backend `guard:` rules. The packs default to what `go.mod` (and a `sqlc.yaml`) names. Without `.ai/project.yaml` it writes one; with one, it prints the keys to set. The folder is the team's from then on: dashcrew never overwrites it, so rename the layers and edit the rules to match the code. `init` points at the starter when it finds a `go.mod` and no matching platform.
+**Starters.** `dashcrew platform new go [--http nethttp|chi|gin|echo|fiber|none] [--db pgx|sqlc|gorm|none]` writes a project platform for a Go service into `.ai/platforms/go/`: Go rules (context, error wrapping, goroutine ownership, `gofmt -l` as a check), backend architecture, security and testing rules in place of the app-oriented core ones, a `backend-security` review skill, the `data-layer-tdd` and `feature-architecture` skills for services, packs for the HTTP framework and the database layer, `link: go.work`, and the backend `guard:` rules. The packs default to what `go.mod` (and a `sqlc.yaml`) names. Without `.ai/project.yaml` it writes one; with one, it prints the keys to set. The folder is the team's from then on: dashcrew never overwrites it, so rename the layers and edit the rules to match the code. `init` offers it first when it finds a `go.mod` and no matching platform, and `init --yes` takes it.
 
 A project platform with a built-in name replaces it whole. The format is in [docs/catalog-format.md](docs/catalog-format.md#platforms).
 
@@ -227,7 +227,7 @@ That is a flutter task; other platforms say `ui` where it says `widget`. Review,
 | `--agents` | `claude-code` | agents to list in the profile (repeatable) |
 | `--force` | off | replace an existing `.ai/project.yaml` |
 
-Writes only `.ai/project.yaml`.
+Writes only `.ai/project.yaml`, plus the starter platform you pick: a repo no platform matches is offered the starter its root files point at (`go` for a `go.mod`, written as `dashcrew platform new go` writes it), else `platform: other`. Under `other`, the root files that identify a stack (`pyproject.toml`, `package.json`, `Cargo.toml`, `Makefile` and the like) are printed first and proposed as `detect`; the commands are always asked. A required answer left empty is asked once more, then `init` stops.
 
 ### `dashcrew sync`
 
@@ -252,7 +252,7 @@ The guard hook: reads one tool call as hook JSON on stdin and answers per agent 
 |---|---|
 | Profile and lock | `profile`, `project-packs`, `lock`, `version`, `drift` (generated files edited by hand), `stale` (output differs from the current profile and catalog) |
 | Guard | `guard-policy`, `guard-binary` (the shim; the `dashcrew` first on `PATH`, which fails when missing and warns when it is an old Dart-installed one or older than the lock's `guard_min_version`; then a `git push` event through the shim), `guard-log` (only when the guard let tool calls through unchecked since the last sync: a malformed payload, an unknown tool, or a policy it could not use) |
-| Claude Code | `hook`, `claude-md`, `mcp`, `skills` |
+| Claude Code | `hook`, `claude-md`, `mcp`, `skills` (fails on a missing dashcrew skill; warns on a required project skill left out, or a skill the AGENTS.md project block names that is not installed; an outside skill the generated files use only when installed, such as `idea-refine`, is a note) |
 | Codex | `codex-hook`, `codex-mcp`, `codex-skills-budget`, `codex-trust` |
 | Antigravity | `antigravity-hook`, `antigravity-mcp`, `antigravity-roles` |
 | Knowledge | `knowledge` (the link and the clone's last pull), `knowledge-stale`, `spec` (only when the branch records a spec; warns, never fails) |

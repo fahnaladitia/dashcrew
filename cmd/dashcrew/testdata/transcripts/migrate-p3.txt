@@ -14,7 +14,7 @@ stdout:
 | ok    hook                 PreToolUse guard hook present
 | ok    claude-md            CLAUDE.md imports AGENTS.md
 | ok    mcp                  defined: dart-mcp-server
-| warn  skills               not found locally (install, or ignore if a plugin provides them): flutter-development, idea-refine, managing-hive-storage
+| ok    skills               8 referenced skills found; optional, not installed: flutter-development, idea-refine, managing-hive-storage
 | ok    codex-hook           PreToolUse guard hook present; Codex runs it once approved in /hooks
 | ok    codex-mcp            defined: dart-mcp-server
 | ok    codex-skills-budget  24 skills, list 4312 of 8000 characters
@@ -269,7 +269,7 @@ stdout:
 | ok    hook                 PreToolUse guard hook present
 | ok    claude-md            CLAUDE.md imports AGENTS.md
 | ok    mcp                  defined: dart-mcp-server
-| warn  skills               not found locally (install, or ignore if a plugin provides them): idea-refine, managing-hive-storage
+| ok    skills               18 referenced skills found; optional, not installed: idea-refine, managing-hive-storage
 | ok    codex-hook           PreToolUse guard hook present; Codex runs it once approved in /hooks
 | ok    codex-mcp            defined: dart-mcp-server
 | ok    codex-skills-budget  26 skills, list 4839 of 8000 characters

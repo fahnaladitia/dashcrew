@@ -122,7 +122,7 @@ stdout:
 | ok    hook            PreToolUse guard hook present
 | ok    claude-md       CLAUDE.md imports AGENTS.md
 | ok    mcp             defined: dart-mcp-server, dashcrew-knowledge
-| warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
+| ok    skills          16 referenced skills found; optional, not installed: idea-refine
 | warn  knowledge       no clone of notes at ~/.dashcrew/knowledge/notes; run dashcrew knowledge pull
 | skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 16076 of 32768 bytes
@@ -242,7 +242,7 @@ stdout:
 | ok    hook             PreToolUse guard hook present
 | ok    claude-md        CLAUDE.md imports AGENTS.md
 | ok    mcp              defined: dart-mcp-server, dashcrew-knowledge
-| warn  skills           not found locally (install, or ignore if a plugin provides them): idea-refine
+| ok    skills           16 referenced skills found; optional, not installed: idea-refine
 | warn  knowledge        linked to ~/.dashcrew/knowledge/notes, pulled less than an hour ago, 1 commit behind its remote; run dashcrew knowledge pull
 | warn  knowledge-stale  2 unverified pages; run dashcrew knowledge doctor
 | skip  me               no personal profile; dashcrew me init adds one

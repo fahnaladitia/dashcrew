@@ -5,6 +5,7 @@ exit: 1
 stdout:
 | Detected in <root>/w:
 |   platform: none of flutter (pubspec.yaml)
+|   files: Makefile
 stderr:
 | No platform detected. Rerun without --yes to declare platform: other and its commands.
 files: (unchanged)
@@ -15,7 +16,8 @@ exit: 1
 stdout:
 | Detected in <root>/w:
 |   platform: none of flutter (pubspec.yaml)
-| platform [other]: detect (files that identify the platform, space separated): commands.analyze: 
+|   files: Makefile
+| platform [other]: detect (files that identify the platform, space separated) [Makefile]: commands.analyze: 
 (no final newline)
 stderr:
 | platform: other needs commands.analyze; rerun dashcrew init, or write platform_config in .ai/project.yaml by hand.
@@ -27,6 +29,7 @@ exit: 1
 stdout:
 | Detected in <root>/w:
 |   platform: none of flutter (pubspec.yaml)
+|   files: Makefile
 | platform [other]: 
 (no final newline)
 stderr:
@@ -39,8 +42,9 @@ exit: 0
 stdout:
 | Detected in <root>/w:
 |   platform: none of flutter (pubspec.yaml)
+|   files: Makefile
 | platform [other]:   expected one of flutter, other
-| platform [other]: detect (files that identify the platform, space separated): commands.analyze: commands.test:   required
+| platform [other]: detect (files that identify the platform, space separated) [Makefile]: commands.analyze: commands.test:   required
 | commands.test: commands.test_scoped: commands.deps: commands.format (empty for none): design [-]: tracker [-]: wrote .ai/project.yaml
 | next: dashcrew sync
 stderr: (empty)
@@ -158,7 +162,7 @@ stdout:
 | ok    hook            PreToolUse guard hook present
 | ok    claude-md       CLAUDE.md imports AGENTS.md
 | ok    mcp             no MCP servers to define
-| warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
+| ok    skills          14 referenced skills found; optional, not installed: idea-refine
 | skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 14439 of 32768 bytes
 | ok    always-on       claude-code 14.1 KiB of 40.0 KiB

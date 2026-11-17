@@ -8,7 +8,7 @@ import (
 
 	embedded "github.com/fahnaladitia/dashcrew"
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
-	"github.com/fahnaladitia/dashcrew/internal/profile"
+	"github.com/fahnaladitia/dashcrew/internal/initproject"
 	"github.com/fahnaladitia/dashcrew/internal/starter"
 	"github.com/fahnaladitia/dashcrew/internal/version"
 )
@@ -61,16 +61,12 @@ func platformCommand(cli cliIO) *command {
 			}
 			return 0, nil
 		}
-		agents := strings.Join(strings.Split(*r.option("agents"), ","), ", ")
-		text := "toolkit: 1\n" + lines + "agents: [" + agents + "]\n"
 		c, err := catalog.LoadEmbedded()
 		if err != nil {
 			return 0, err
 		}
-		if c, err = c.WithProjectPacks(projectDir); err != nil {
-			return 0, &exitError{1, "the starter does not load: " + err.Error()}
-		}
-		if _, err := profile.Parse(text, c.KnownOptions()); err != nil {
+		text, err := initproject.StarterProfile(c, projectDir, name, stack, strings.Split(*r.option("agents"), ","))
+		if err != nil {
 			return 0, &exitError{1, err.Error()}
 		}
 		if err := os.WriteFile(profilePath, []byte(text), 0o644); err != nil {
