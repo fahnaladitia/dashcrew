@@ -170,7 +170,7 @@ Goal: answer what launch users asked for, and reach the next agents.
   - import from rulesync, Ruler, `.cursor/rules` or `GEMINI.md`;
   - an opt-in safety pack for destructive and secret-reading commands.
 - [ ] Let small outside PRs skip the plan step in AGENTS.md.
-- [ ] A smaller always-on context. The generated AGENTS.md is 18-22 KB in the goldens and 25 KB in a real Flutter project, about 6k tokens in every session and subagent. The toolkit how-to ("Using this toolkit", 3.7 KB; "Workflow chain", 3.3 KB) moves into skills loaded on demand. Measured before and after with `dashcrew usage`; the `always-on` budget in `doctor` drops to match.
+- [ ] A smaller always-on context, only if `dashcrew usage` shows it matters. Measured on `sample-riverpod-gorouter` (AGENTS.md 22.5 KB): the workflow chain (3.3 KB) is the core and stays always on, and the stack sections already point to their skills. What could go is about 2 KB, some 500 tokens per session: the skill index (1.8 KB), whose names and `when_to_use` every agent already loads from `SKILL.md`, down to one line naming the `review` skills; and the bullets that apply only with a tool (`dart-mcp-server`, a code graph), moved into the skills that use them. Costs: every golden, the index check in `doctor`, and the index as a fallback when an agent cuts its skill list short (Codex has a character budget).
 
 Exit criteria:
 
