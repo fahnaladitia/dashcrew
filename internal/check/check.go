@@ -31,11 +31,12 @@ type PrCheck struct {
 	Base *string
 }
 
-// Run returns the toolkit checks of the doctor, without the machine checks, then `pr-sections` and `commits`.
-// prBody wins; otherwise the body of the pull request event in CI; without either the section check is skipped.
-// An event file that is not JSON is an error.
+// Run returns the toolkit checks of the doctor, without the machine checks, and the guard hook checks of the
+// profile's agents, then `pr-sections` and `commits`. prBody wins; otherwise the body of the pull request event in
+// CI; without either the section check is skipped. An event file that is not JSON is an error.
 func (c PrCheck) Run(prBody *string) ([]doctor.Check, error) {
-	checks := doctor.Doctor{Catalog: c.Catalog, ProjectDir: c.ProjectDir}.Run()
+	d := doctor.Doctor{Catalog: c.Catalog, ProjectDir: c.ProjectDir}
+	checks := append(d.Run(), d.HookChecks()...)
 	pullRequest, err := c.pullRequest()
 	if err != nil {
 		return nil, err

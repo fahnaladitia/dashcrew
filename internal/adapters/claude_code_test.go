@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/fahnaladitia/dashcrew/internal/dartjson"
 	"github.com/fahnaladitia/dashcrew/internal/omap"
 )
 
@@ -159,6 +160,26 @@ func TestClaudeCodeMergeLeavesAServerTheUserDefinedDifferently(t *testing.T) {
 	}
 
 	if len(result.OwnedMcp) != 0 || len(warnings) != 1 || warnings[0] != `.mcp.json already defines "dart-mcp-server" differently; left as is.` {
+		t.Errorf("owned %v, warnings %v", result.OwnedMcp, warnings)
+	}
+}
+
+func TestClaudeCodeMergeOwnsAServerThatMatchesItsOwnDefinition(t *testing.T) {
+	project := t.TempDir()
+	adapter := NewClaudeCode(shipped(t), project, "flutter")
+	ours, err := dartjson.Encode(adapter.McpServers().Value("dart-mcp-server"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, project, ".mcp.json", `{"mcpServers":{"dart-mcp-server":`+ours+`}}`)
+	var warnings []string
+
+	result, err := adapter.Merge(map[string]bool{}, &warnings)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !result.OwnedMcp["dart-mcp-server"] || len(warnings) != 0 {
 		t.Errorf("owned %v, warnings %v", result.OwnedMcp, warnings)
 	}
 }

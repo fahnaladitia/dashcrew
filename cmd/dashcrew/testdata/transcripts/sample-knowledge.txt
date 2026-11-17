@@ -313,6 +313,9 @@ stdout:
 | ok    agents-md-size  AGENTS.md 16076 of 24000 bytes
 | ok    always-on       claude-code 15.7 KiB of 40.0 KiB; codex 15.7 KiB of 40.0 KiB; antigravity 15.7 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
+| ok    hook            PreToolUse guard hook present
+| ok    codex-hook      PreToolUse guard hook present; Codex runs it once approved in /hooks
+| ok    antigravity-hookPreToolUse guard hook present under dashcrew-guard
 | skip  pr-sections     no PR body; pass --pr-body <file> or run on a pull_request event
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
 stderr: (empty)
@@ -332,6 +335,9 @@ stdout:
 | ok    agents-md-size  AGENTS.md 16076 of 24000 bytes
 | ok    always-on       claude-code 15.7 KiB of 40.0 KiB; codex 15.7 KiB of 40.0 KiB; antigravity 15.7 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
+| ok    hook            PreToolUse guard hook present
+| ok    codex-hook      PreToolUse guard hook present; Codex runs it once approved in /hooks
+| ok    antigravity-hookPreToolUse guard hook present under dashcrew-guard
 | fail  pr-sections     missing: ## Changes, ## Affected files, ## Testing, ## Notes / not done (write "None" under a heading that does not apply)
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
 stderr: (empty)
@@ -351,6 +357,9 @@ stdout:
 | ok    agents-md-size  AGENTS.md 16076 of 24000 bytes
 | ok    always-on       claude-code 15.7 KiB of 40.0 KiB; codex 15.7 KiB of 40.0 KiB; antigravity 15.7 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
+| ok    hook            PreToolUse guard hook present
+| ok    codex-hook      PreToolUse guard hook present; Codex runs it once approved in /hooks
+| ok    antigravity-hookPreToolUse guard hook present under dashcrew-guard
 | fail  pr-sections     missing: ## Changes, ## Affected files, ## Testing, ## Notes / not done (write "None" under a heading that does not apply)
 | ::error title=dashcrew pr-sections::missing: ## Changes, ## Affected files, ## Testing, ## Notes / not done (write "None" under a heading that does not apply)
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
@@ -371,6 +380,9 @@ stdout:
 | ok    agents-md-size  AGENTS.md 16076 of 24000 bytes
 | ok    always-on       claude-code 15.7 KiB of 40.0 KiB; codex 15.7 KiB of 40.0 KiB; antigravity 15.7 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
+| ok    hook            PreToolUse guard hook present
+| ok    codex-hook      PreToolUse guard hook present; Codex runs it once approved in /hooks
+| ok    antigravity-hookPreToolUse guard hook present under dashcrew-guard
 | ok    pr-sections     5 required sections present
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
 stderr: (empty)

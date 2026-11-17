@@ -8,6 +8,7 @@ package worktree
 import (
 	"bytes"
 	"errors"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path"
@@ -434,8 +435,16 @@ func (w *Worktrees) profilePaths() []string {
 func Exclude(dir string, entries []string) error { return exclude(dir, entries) }
 
 func exclude(worktree string, linked []string) error {
-	excludePath := strings.TrimSpace(git(worktree, "rev-parse", "--path-format=absolute", "--git-path", "info/exclude").stdout)
-	data, _ := os.ReadFile(excludePath)
+	out, err := gitOrFail(worktree, "rev-parse", "--path-format=absolute", "--git-path", "info/exclude")
+	if err != nil {
+		return err
+	}
+	excludePath := strings.TrimSpace(out)
+	// Only a missing file starts empty: one that cannot be read would otherwise be rewritten without its lines.
+	data, err := os.ReadFile(excludePath)
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return err
+	}
 	current := string(data)
 	lines := map[string]bool{}
 	for _, line := range strings.Split(current, "\n") {

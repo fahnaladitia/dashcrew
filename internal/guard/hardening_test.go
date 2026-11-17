@@ -391,6 +391,66 @@ func TestMalformedPayloadsAreAllowedAndLogged(t *testing.T) {
 	}
 }
 
+func TestAPolicyTheGuardCannotUseIsAllowedAndLogged(t *testing.T) {
+	dir, common := gitRepo(t)
+	now := time.Date(2026, 11, 1, 10, 0, 0, 0, time.UTC)
+	push := `{"tool_name":"Bash","tool_input":{"command":"git push"},"cwd":` + jsonString(dir) + `}`
+	lazyWrite := `{"tool_name":"Write","tool_input":{"file_path":"lib/a.dart","content":"import 'package:late/x.dart';"},"cwd":` + jsonString(dir) + `}`
+	folder := filepath.Join(dir, "folder.json")
+	if err := os.MkdirAll(folder, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range []struct {
+		name, policy, stdin, reason string
+	}{
+		{"missing", "", push, "is missing"},
+		{"a folder", "", push, "is not a file"},
+		{"not JSON", corpusPolicies["not-json"], push, "is not valid JSON"},
+		{"invalid", corpusPolicies["bad-git"], push, "is invalid: blocked_git holds a value that is not a string"},
+		{"not applicable", corpusPolicies["lazy-import"], lazyWrite, "could not be applied"},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			path := filepath.Join(dir, "missing.json")
+			switch {
+			case c.name == "a folder":
+				path = folder
+			case c.policy != "":
+				path = filepath.Join(dir, strings.ReplaceAll(c.name, " ", "-")+".json")
+				if err := os.WriteFile(path, []byte(c.policy), 0o644); err != nil {
+					t.Fatal(err)
+				}
+			}
+
+			if code := runIn(t, dir, path, c.stdin, now); code != 0 {
+				t.Errorf("exit %d, want 0", code)
+			}
+
+			lines := logLines(t, common)
+			if want := "policy " + path + " " + c.reason; len(lines) == 0 || !strings.HasSuffix(lines[len(lines)-1], "\t"+want) {
+				t.Errorf("log %q, want a last line ending in %q", lines, want)
+			}
+		})
+	}
+}
+
+func TestAMissingPolicyFoundOnlyThroughTheCwdIsNotLogged(t *testing.T) {
+	dir, common := gitRepo(t)
+	env := Env{
+		LookupEnv: func(string) (string, bool) { return "", false },
+		Getwd:     func() (string, error) { return dir, nil },
+		Now:       time.Now,
+	}
+	stdin := `{"tool_name":"Bash","tool_input":{"command":"git push"},"cwd":` + jsonString(dir) + `}`
+
+	if code := Run(nil, strings.NewReader(stdin), &bytes.Buffer{}, &bytes.Buffer{}, env); code != 0 {
+		t.Errorf("exit %d, want 0", code)
+	}
+
+	if lines := logLines(t, common); len(lines) != 0 {
+		t.Errorf("log %q", lines)
+	}
+}
+
 func TestMalformedLogFollowsTheHookCwdAndWorktrees(t *testing.T) {
 	main, common := gitRepo(t)
 	worktreeGit := filepath.Join(common, "worktrees", "wt")
@@ -509,17 +569,6 @@ func readCorpusNewBlocks(t testing.TB) []corpusNewBlock {
 		out = append(out, corpusNewBlock{fields[0], fields[1], key})
 	}
 	return out
-}
-
-// newBlockKey is what identifies a corpus case in the new-blocks tables: the shell script of a shell call, else
-// the whole payload.
-func newBlockKey(stdin string) string {
-	if object := hookObject(stdin); object != nil {
-		if events, err := AllFromHook(object); err == nil && len(events) == 1 && events[0].Kind == Shell {
-			return events[0].Command
-		}
-	}
-	return stdin
 }
 
 // TestCorpusNewBlocksAreBlockedWithTheirReason checks every recorded line in process: the guard must keep

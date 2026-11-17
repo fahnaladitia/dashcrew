@@ -218,6 +218,7 @@ func objectAt(parent *omap.Map[any], key, path string) (*omap.Map[any], error) {
 
 // MergeJSONMcpServers adds servers to the `mcpServers` map of the JSON file at path, keeping every other entry.
 // A server is replaced only when dashcrew owned it before; one the user defined differently stays, with a warning.
+// One that already matches dashcrew's definition becomes owned, as after a sync that stopped before its lock.
 // A server dashcrew owned that servers no longer lists is removed.
 func MergeJSONMcpServers(project projectfiles.Project, path string, servers *omap.Map[any], owned map[string]bool, warnings *[]string) (bool, map[string]bool, error) {
 	config, err := readJSONObject(project, path)
@@ -252,7 +253,9 @@ func MergeJSONMcpServers(project projectfiles.Project, path string, servers *oma
 		if err != nil {
 			return false, nil, err
 		}
-		if left != right {
+		if left == right {
+			nowOwned[name] = true
+		} else {
 			warn(warnings, path+` already defines "`+name+`" differently; left as is.`)
 		}
 	}

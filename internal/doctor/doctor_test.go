@@ -763,7 +763,7 @@ func TestWithoutMachineChecksOnlyTheProjectChecksRun(t *testing.T) {
 	}
 }
 
-func TestGuardLogWarnsOnMalformedPayloadsSinceTheLastSync(t *testing.T) {
+func TestGuardLogWarnsOnUncheckedCallsSinceTheLastSync(t *testing.T) {
 	f := setup(t, blocProfile)
 	f.sync()
 	f.installGuard()
@@ -780,12 +780,13 @@ func TestGuardLogWarnsOnMalformedPayloadsSinceTheLastSync(t *testing.T) {
 
 	log := filepath.Join(common, "dashcrew", guard.MalformedLogName)
 	writeFile(t, log, "2026-11-01T10:00:00Z\tcodex\tinput is not JSON\n2026-11-01T11:00:00Z\tclaude-code\tinput is not JSON\n")
-	expect(t, f.doctor(), "guard-log", Warn, "let 2 malformed payloads through since the last sync", "logged in "+log)
+	expect(t, f.doctor(), "guard-log", Warn, "let 2 tool calls through unchecked since the last sync", "logged in "+log,
+		"update dashcrew if an agent changed its hook format", "run dashcrew sync for a broken policy")
 
 	if err := guard.MarkSynced(f.project, time.Date(2026, 11, 1, 10, 30, 0, 0, time.UTC)); err != nil {
 		t.Fatal(err)
 	}
-	expect(t, f.doctor(), "guard-log", Warn, "let 1 malformed payload through")
+	expect(t, f.doctor(), "guard-log", Warn, "let 1 tool call through unchecked")
 	if _, ok := byID(Doctor{Catalog: shippedCatalog, ProjectDir: f.project}.Run())["guard-log"]; ok {
 		t.Error("guard-log without machine checks")
 	}

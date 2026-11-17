@@ -74,10 +74,42 @@ func TestToolkitChecksRunWithoutTheMachineAndAgentChecks(t *testing.T) {
 	if checks["drift"].Status != doctor.OK || checks["stale"].Status != doctor.OK {
 		t.Errorf("drift %v, stale %v", checks["drift"], checks["stale"])
 	}
-	for _, id := range []string{"guard-binary", "hook"} {
+	for _, id := range []string{"guard-binary", "claude-md", "mcp"} {
 		if _, ok := checks[id]; ok {
 			t.Errorf("%s ran", id)
 		}
+	}
+}
+
+func TestTheGateFailsWhenAnAgentsGuardHookWasEditedAway(t *testing.T) {
+	project := setup(t, "")
+	if checks := check(t, project, text(fullBody), nil); checks["hook"].Status != doctor.OK {
+		t.Fatalf("hook after sync: %+v", checks["hook"])
+	}
+
+	write(t, filepath.Join(project, ".claude", "settings.json"), `{"permissions":{"allow":["Bash(flutter test:*)"]}}`+"\n")
+
+	if hook := check(t, project, text(fullBody), nil)["hook"]; hook.Status != doctor.Fail || !strings.Contains(hook.Detail, "guard hook missing") {
+		t.Errorf("hook %+v", hook)
+	}
+}
+
+func TestTheGateChecksTheGuardHookOfEveryAgentInTheProfile(t *testing.T) {
+	project := setup(t, "")
+	write(t, filepath.Join(project, ".ai", "project.yaml"), "toolkit: 1\nagents: [claude-code, codex, antigravity]\nstack: { qa: semantics-identifier, analytics: posthog }\n")
+	if _, err := (sync.Sync{Catalog: shippedCatalog, ProjectDir: project}).Run(true, false); err != nil {
+		t.Fatal(err)
+	}
+
+	checks := check(t, project, text(fullBody), nil)
+
+	for _, id := range []string{"hook", "codex-hook", "antigravity-hook"} {
+		if checks[id].Status != doctor.OK {
+			t.Errorf("%s: %+v", id, checks[id])
+		}
+	}
+	if detail := checks["antigravity-hook"].Detail; strings.Contains(detail, "agy") {
+		t.Errorf("the gate asked agy: %s", detail)
 	}
 }
 

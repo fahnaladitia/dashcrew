@@ -193,6 +193,7 @@ stdout:
 | ok    agents-md-size  AGENTS.md 16136 of 32768 bytes
 | ok    always-on       claude-code 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
+| ok    hook            PreToolUse guard hook present
 | skip  pr-sections     no PR body; pass --pr-body <file> or run on a pull_request event
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
 | fail  links           refused  shop_core: pubspec.yaml: cannot be read
@@ -213,6 +214,7 @@ stdout:
 | ok    agents-md-size  AGENTS.md 16136 of 32768 bytes
 | ok    always-on       claude-code 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
+| ok    hook            PreToolUse guard hook present
 | fail  pr-sections     missing: ## Changes, ## Affected files, ## Testing, ## Dependencies, ## Notes / not done (write "None" under a heading that does not apply)
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
 | fail  links           refused  shop_core: pubspec.yaml: cannot be read
@@ -233,6 +235,7 @@ stdout:
 | ok    agents-md-size  AGENTS.md 16136 of 32768 bytes
 | ok    always-on       claude-code 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
+| ok    hook            PreToolUse guard hook present
 | fail  pr-sections     missing: ## Changes, ## Affected files, ## Testing, ## Dependencies, ## Notes / not done (write "None" under a heading that does not apply)
 | ::error title=dashcrew pr-sections::missing: ## Changes, ## Affected files, ## Testing, ## Dependencies, ## Notes / not done (write "None" under a heading that does not apply)
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
@@ -255,6 +258,7 @@ stdout:
 | ok    agents-md-size  AGENTS.md 16136 of 32768 bytes
 | ok    always-on       claude-code 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
+| ok    hook            PreToolUse guard hook present
 | ok    pr-sections     6 required sections present
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
 | fail  links           refused  shop_core: pubspec.yaml: cannot be read

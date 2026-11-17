@@ -40,6 +40,10 @@ changelog:
   use: github
   sort: asc
 
+# A tag with a pre-release part (v0.7.0-rc.1) is published as a GitHub pre-release, never as Latest.
+release:
+  prerelease: auto
+
 # brews is deprecated in goreleaser 2.18 (goreleaser check exits 2); kept because a formula installs the CLI on macOS and Linux alike.
 brews:
   - name: dashcrew
@@ -55,6 +59,8 @@ brews:
     commit_author:
       name: dashcrew release
       email: noreply@github.com
+    # A pre-release never reaches the tap: brew users stay on the last final release.
+    skip_upload: auto
     install: |
       bin.install "dashcrew"
     test: |

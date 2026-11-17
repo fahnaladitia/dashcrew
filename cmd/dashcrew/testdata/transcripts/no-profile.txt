@@ -42,6 +42,7 @@ stdout:
 | skip  agents-md-size  no AGENTS.md
 | ok    always-on       claude-code 0.0 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
+| fail  hook            .claude/settings.json missing; run dashcrew sync
 | fail  pr-sections     .github/pull_request_template.md missing; run dashcrew sync
 | skip  commits         no base; pass --base <branch> or run on a pull_request event
 stderr: (empty)

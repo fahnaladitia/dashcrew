@@ -10,6 +10,7 @@ import (
 
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
 	"github.com/fahnaladitia/dashcrew/internal/mustache"
+	"github.com/fahnaladitia/dashcrew/internal/projectfiles"
 )
 
 const (
@@ -115,7 +116,7 @@ func saveRepos(places Places, repos []string) error {
 	if err := os.MkdirAll(filepath.Dir(registryPath(places)), 0o755); err != nil {
 		return err
 	}
-	return os.WriteFile(registryPath(places), []byte(strings.Join(repos, "\n")+"\n"), 0o644)
+	return projectfiles.WriteAtomic(registryPath(places), []byte(strings.Join(repos, "\n")+"\n"), 0o644)
 }
 
 // Register adds a repo folder (absolute) to the repos me sync writes into.
@@ -723,7 +724,7 @@ func write(t target) (Change, error) {
 	if err := os.MkdirAll(filepath.Dir(t.path), 0o755); err != nil {
 		return Change{}, err
 	}
-	if err := os.WriteFile(t.path, []byte(out), 0o644); err != nil {
+	if err := projectfiles.WriteAtomic(t.path, []byte(out), 0o644); err != nil {
 		return Change{}, err
 	}
 	if current.owned {
@@ -744,7 +745,7 @@ func remove(t target) (Change, error) {
 	if strings.TrimSpace(rest) == "" {
 		return Change{t.path, "removed", false}, os.Remove(t.path)
 	}
-	return Change{t.path, "block removed", false}, os.WriteFile(t.path, []byte(rest+"\n"), 0o644)
+	return Change{t.path, "block removed", false}, projectfiles.WriteAtomic(t.path, []byte(rest+"\n"), 0o644)
 }
 
 // ---- personal skills ----
@@ -777,7 +778,7 @@ func linkSkill(places Places, personal fs.FS, name string) (Change, error) {
 	if err := os.MkdirAll(source, 0o755); err != nil {
 		return Change{}, err
 	}
-	if err := os.WriteFile(filepath.Join(source, "SKILL.md"), data, 0o644); err != nil {
+	if err := projectfiles.WriteAtomic(filepath.Join(source, "SKILL.md"), data, 0o644); err != nil {
 		return Change{}, err
 	}
 	return linkOrCopy(places, name, data)
@@ -814,10 +815,10 @@ func copySkill(data []byte, link string) error {
 	if err := os.MkdirAll(link, 0o755); err != nil {
 		return err
 	}
-	if err := os.WriteFile(filepath.Join(link, "SKILL.md"), data, 0o644); err != nil {
+	if err := projectfiles.WriteAtomic(filepath.Join(link, "SKILL.md"), data, 0o644); err != nil {
 		return err
 	}
-	return os.WriteFile(filepath.Join(link, copyMarker), []byte("copied by dashcrew me sync\n"), 0o644)
+	return projectfiles.WriteAtomic(filepath.Join(link, copyMarker), []byte("copied by dashcrew me sync\n"), 0o644)
 }
 
 func unlinkSkill(places Places, name string) (Change, error) {

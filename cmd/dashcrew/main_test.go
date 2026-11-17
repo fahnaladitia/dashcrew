@@ -292,7 +292,7 @@ func TestGuardInstallIsRemovedAndMalformedPayloadsReachDoctor(t *testing.T) {
 		t.Errorf("malformed guard call: exit %d, stdout %q, stderr %q", code, stdout, stderr)
 	}
 	log := filepath.Join(common, "dashcrew", "guard-malformed.log")
-	if _, stdout, _ := dashcrew(t, nil, "doctor", "-p", project); !strings.Contains(stdout, "warn  guard-log       the guard let 1 malformed payload through since the last sync, logged in "+log) {
+	if _, stdout, _ := dashcrew(t, nil, "doctor", "-p", project); !strings.Contains(stdout, "warn  guard-log       the guard let 1 tool call through unchecked since the last sync, logged in "+log) {
 		t.Errorf("doctor:\n%s", stdout)
 	}
 }
