@@ -111,6 +111,9 @@ func LoadPolicy(value any) (Policy, error) {
 	if err := backendRulesOf(object, &p); err != nil {
 		return Policy{}, err
 	}
+	if p.Push, err = pushRuleOf(object); err != nil {
+		return Policy{}, err
+	}
 	return p, nil
 }
 
@@ -208,8 +211,16 @@ func checkCommand(argv []string, p Policy) Decision {
 		}
 	}
 	if program == "git" {
-		if sub, ok := gitSubcommand(argv); ok && p.BlockedGit[sub] {
-			return Block("git " + sub + " is reserved for the user. Ask them to run it.")
+		if at, ok := gitSubcommandAt(argv); ok {
+			sub := argv[at]
+			if p.BlockedGit[sub] {
+				return Block("git " + sub + " is reserved for the user. Ask them to run it.")
+			}
+			if sub == "push" && p.Push != nil {
+				if reason := p.Push.check(argv[at+1:]); reason != "" {
+					return Block(reason)
+				}
+			}
 		}
 	}
 	if reason := blockedCommand(argv, p); reason != "" {
@@ -232,7 +243,8 @@ func stripPrefixes(argv []string) []string {
 	return argv[i:]
 }
 
-func gitSubcommand(argv []string) (string, bool) {
+// gitSubcommandAt is the index in argv of git's subcommand, past git's own options.
+func gitSubcommandAt(argv []string) (int, bool) {
 	for i := 1; i < len(argv); {
 		word := argv[i]
 		switch {
@@ -241,10 +253,10 @@ func gitSubcommand(argv []string) (string, bool) {
 		case strings.HasPrefix(word, "-"):
 			i++
 		default:
-			return word, true
+			return i, true
 		}
 	}
-	return "", false
+	return 0, false
 }
 
 // jsWhitespace is `\s` of a Dart (JavaScript) regular expression, which also matches Unicode spaces.

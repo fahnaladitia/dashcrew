@@ -1,0 +1,11 @@
+# Synthetic profile: the agent commits and pushes on the user's answer (policy.agent_push), two base branches.
+toolkit: 1
+agents: [claude-code, codex]
+stack:
+  state: bloc
+  di: get_it
+project:
+  base_branches: [develop, main]
+policy:
+  agent_commit: true
+  agent_push: true

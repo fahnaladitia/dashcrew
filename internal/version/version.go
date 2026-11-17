@@ -24,6 +24,10 @@ const GuardMinimum = "0.1.0"
 // holds them requires it; an older guard would ignore them without a word.
 const BackendGuardMinimum = "0.2.0"
 
+// PushGuardMinimum is the oldest dashcrew whose guard reads `push` in `.ai/guard.json` (policy.agent_push). An
+// older guard would find push missing from `blocked_git` and allow every push, force included.
+const PushGuardMinimum = "0.7.0"
+
 // AntigravityGuardMinimum is the oldest dashcrew whose guard answers Antigravity with an allow decision (agy fails
 // closed on a missing one) and reads agy's other write tools (P3h). A project with the antigravity agent needs it.
 const AntigravityGuardMinimum = "0.5.0"

@@ -31,5 +31,5 @@ With git's default `branch.autoSetupMerge`, a branch created from a remote-track
 
 ## Upstream and pull
 
-- The user sets the upstream exactly once, on the first push: `git push -u origin <branch>`. Never earlier, and never to a branch with a different name.
+- {{^policy.agent_push}}The user sets{{/policy.agent_push}}{{#policy.agent_push}}Set{{/policy.agent_push}} the upstream exactly once, on the first push: `git push -u origin <branch>`. Never earlier, and never to a branch with a different name.
 - Never run or suggest `git pull` on a branch, or a base, whose upstream you have not verified.

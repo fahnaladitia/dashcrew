@@ -80,6 +80,7 @@ project:
   build_wrapper: tool/build.sh
 policy:
   agent_commit: false
+  agent_push: false
   formatter: false
   dartdoc_max_lines: 3
   tier_gates: true
@@ -111,7 +112,8 @@ ci: { github: true, dashcrew_ref: v0.1.0 }
 | `project.commit.allow_email_trailers` | none | the only trailers whose value may hold an email address (DCO `Signed-off-by`); an email anywhere else fails lint |
 | `project.release_lines` | not set | `{main: <branch>, release: <regex>, hotfix: <regex>, check_ports: <bool>}`: the main line and the patterns of release and hotfix lines; see [Release lines](#release-lines) |
 | `project.links` | not set | `[{package: <name>, repo: <git url>}]`: dependencies a task may point at a local checkout with `dashcrew link` (the pubspec name or Go module path; `repo` optional, ssh or https). `has_links` gates the multi-repo text |
-| `policy.agent_commit` | `false` | `true` lets the agent commit; push stays blocked |
+| `policy.agent_commit` | `false` | `true`: at the end of each task the agent asks whether to commit for you or leave it to you, and commits only on your answer |
+| `policy.agent_push` | `false` | `true` (needs `agent_commit: true`): the same question covers the push of the task branch. The guard still blocks a force push, a deleted remote branch, `--all`, `--mirror`, `--tags`, a push to a `project.base_branches` branch, and a push that does not name its branch. Needs dashcrew 0.7.0 on every machine |
 | `policy.formatter` | `false` | `true` allows `dart format` on changed files only |
 | `policy.dartdoc_max_lines` | `3` | hard cap per documented unit |
 | `policy.tier_gates` | `true` | trivial and small tasks with a GO plan continue without waiting |
@@ -375,7 +377,7 @@ Settings, hooks and MCP files are merged: your own entries stay, and an MCP serv
 
 Each agent's pre-tool hook sends the tool call to `.ai/bin/guard`, which blocks:
 
-- `git commit` (unless `policy.agent_commit`), `push`, `stash`, `reset`, `rebase`, `cherry-pick`, `revert`, `merge`, `tag`, including behind `sudo`, `env`, `rtk`, `fvm`, variable assignments, git global options (`-C`, `-c`), `&&` chains, `$( )`, and heredocs fed to a shell;
+- `git commit` (unless `policy.agent_commit`), `push` (unless `policy.agent_push`, which still blocks force, delete, `--all`, `--mirror`, `--tags`, base branches and a push without a named branch), `stash`, `reset`, `rebase`, `cherry-pick`, `revert`, `merge`, `tag`, including behind `sudo`, `env`, `rtk`, `fvm`, variable assignments, git global options (`-C`, `-c`), `&&` chains, `$( )`, and heredocs fed to a shell;
 - `dart format`, `dart fix`, `flutter format` (unless `policy.formatter`);
 - writes by a `read` subagent (`reviewer` and `explorer` are both `read`);
 - importing the analytics vendor package in the app's `lib/` (the selected analytics pack's `vendor_import`), outside local packages;

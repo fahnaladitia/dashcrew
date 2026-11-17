@@ -94,6 +94,7 @@ Templates are strict: an unknown variable is a render error. Use only these.
 |---|---|
 | `language.dartdoc`, `language.pr`, `language.chat` | `en` |
 | `policy.agent_commit` | `false` |
+| `policy.agent_push` | `false` |
 | `policy.formatter` | `false` |
 | `policy.dartdoc_max_lines` | `3` |
 | `policy.tier_gates` | `true` |

@@ -125,6 +125,8 @@ Goal: a visitor understands dashcrew in 30 seconds, tries it in one command, and
   - [ ] Move reference material to `docs/` (profile reference, release lines, knowledge, specs, troubleshooting, migration notes), and add `docs/architecture.md`.
   - [ ] Remove stale lines (`README.md:9`, `:47`, SECURITY.md "before the first tagged release"); drop internal plan codes (P3, P4, P10b) from the README and CHANGELOG.
   - [ ] Repository description ("One source of rules, skills and guard hooks for every AI coding agent. One Go binary, any stack."), topics, homepage, a 1280×640 social preview, badges, Discussions on, and 5+ `good first issue` items.
+- **Agent commit and push** (plan: `docs/plans/agent-push-plan.md`)
+  - [x] `policy.agent_push`: at the end of a task the agent asks whether to commit and push the task branch; the guard still blocks force, delete, `--all`/`--mirror`/`--tags`, base branches and a push without a named branch.
 - **Install and `init`**
   - [ ] An `install.sh` that downloads the release archive and checks `checksums.txt`; install smoke tests in CI (brew, `go install`, script).
   - [ ] `init` without dead ends:

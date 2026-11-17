@@ -79,6 +79,9 @@ func TestMinimalProfileGetsDefaults(t *testing.T) {
 	if profile.Policy.Value("agent_commit") != false {
 		t.Error("policy.agent_commit")
 	}
+	if profile.Policy.Value("agent_push") != false {
+		t.Error("policy.agent_push")
+	}
 	if profile.Policy.Value("dartdoc_max_lines") != 3 {
 		t.Error("policy.dartdoc_max_lines")
 	}
@@ -164,6 +167,8 @@ func TestErrorPaths(t *testing.T) {
 		{"github without a ref", "toolkit: 1\nagents: [claude-code]\nci: { github: true }\n", "ci.dashcrew_ref"},
 		{"github with a commit ref", "toolkit: 1\nagents: [claude-code]\nci: { github: true, dashcrew_ref: 4c200c3 }\n", "ci.dashcrew_ref"},
 		{"unknown ci key", "toolkit: 1\nagents: [claude-code]\nci: { gitlab: true }\n", "ci.gitlab"},
+		{"agent_push without agent_commit", "toolkit: 1\nagents: [claude-code]\npolicy: { agent_push: true }\n", "policy.agent_push"},
+		{"agent_push not a bool", "toolkit: 1\nagents: [claude-code]\npolicy: { agent_commit: true, agent_push: yes please }\n", "policy.agent_push"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

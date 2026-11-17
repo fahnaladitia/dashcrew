@@ -31,6 +31,7 @@ var samples = []string{
 	"sample-go",
 	"sample-github-tracker",
 	"sample-project-skills",
+	"sample-agent-push",
 }
 
 // update rewrites the goldens from the current output instead of comparing:

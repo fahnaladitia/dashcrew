@@ -18,7 +18,8 @@ import (
 // Schema is the `schema` of `.ai/guard.json`.
 const Schema = 1
 
-// AlwaysBlockedGit are the git subcommands blocked even when `policy.agent_commit` is true.
+// AlwaysBlockedGit are the git subcommands blocked even when `policy.agent_commit` is true; `push` leaves the list
+// only under `policy.agent_push`, for the PushRule.
 var AlwaysBlockedGit = []string{"push", "stash", "reset", "rebase", "cherry-pick", "revert", "merge", "tag"}
 
 // Policy is the compiled guard policy, stored as `.ai/guard.json` by sync.
@@ -36,6 +37,8 @@ type Policy struct {
 	BlockCommands   [][]string
 	BlockSQL        SQLBlock
 	BlockMigrations MigrationBlock
+	// Push is the PushRule of `policy.agent_push`; nil keeps every push blocked through BlockedGit.
+	Push *PushRule
 
 	// knowledge is the hook's folder and KnowledgeClone resolved on this machine; Run sets it (see at). Without it
 	// the write rules read paths as text only, as the Dart guard did.
@@ -48,7 +51,8 @@ type Policy struct {
 }
 
 // CompilePolicy builds the policy for p; c must be resolved for the profile's platform.
-// Push and history-rewriting git commands stay blocked even when `policy.agent_commit` is true.
+// History-rewriting git commands stay blocked even when `policy.agent_commit` is true; push stays blocked unless
+// `policy.agent_push` is true, and then only the forms PushRule refuses.
 func CompilePolicy(p *profile.Profile, c *catalog.Catalog) Policy {
 	forbiddenImports := []string{}
 	if analytics, ok := p.Stack.Get("analytics"); ok {
@@ -73,6 +77,16 @@ func CompilePolicy(p *profile.Profile, c *catalog.Catalog) Policy {
 	if p.Policy.Value("agent_commit") != true {
 		blocked["commit"] = true
 	}
+	var push *PushRule
+	if p.Policy.Value("agent_push") == true {
+		delete(blocked, "push")
+		push = &PushRule{Protected: []string{}}
+		if bases, ok := p.Project.Value("base_branches").([]any); ok {
+			for _, base := range bases {
+				push.Protected = append(push.Protected, yamlutil.DartString(base))
+			}
+		}
+	}
 	roles := map[string]string{}
 	for _, role := range c.Roles {
 		roles[role.Name] = role.Capability
@@ -96,6 +110,7 @@ func CompilePolicy(p *profile.Profile, c *catalog.Catalog) Policy {
 		RoleCapability:   roles,
 		ForbiddenImports: forbiddenImports,
 		LocalPackages:    localPackages,
+		Push:             push,
 	}
 	if g := c.PlatformFor(p).Guard; !g.Empty() {
 		policy.BlockCommands = g.Commands
@@ -111,13 +126,18 @@ type SQLBlock struct{ Clients, Statements []string }
 // MigrationBlock blocks a migration tool run whose connection string names a host outside LocalHosts.
 type MigrationBlock struct{ Tools, LocalHosts []string }
 
-// Minimum is the oldest dashcrew whose guard enforces p: version.BackendGuardMinimum with backend rules, else
-// version.GuardMinimum. Sync writes it into the shim and the lock.
+// Minimum is the oldest dashcrew whose guard enforces p: the newest of version.GuardMinimum,
+// version.BackendGuardMinimum with backend rules and version.PushGuardMinimum with a push rule. Sync writes it into
+// the shim and the lock.
 func (p Policy) Minimum() string {
+	minimum := version.GuardMinimum
 	if p.HasBackendRules() {
-		return version.BackendGuardMinimum
+		minimum = version.BackendGuardMinimum
 	}
-	return version.GuardMinimum
+	if p.Push != nil && version.Compare(version.PushGuardMinimum, minimum) > 0 {
+		minimum = version.PushGuardMinimum
+	}
+	return minimum
 }
 
 // HasBackendRules is true when the policy holds a rule a dashcrew older than version.BackendGuardMinimum ignores.
@@ -152,6 +172,9 @@ func (p Policy) ToJSON() *omap.Map[any] {
 	)
 	if p.KnowledgeClone != "" {
 		object.Set("knowledge_clone", p.KnowledgeClone)
+	}
+	if p.Push != nil {
+		object.Set("push", p.Push.toJSON())
 	}
 	if len(p.BlockCommands) > 0 {
 		commands := make([]any, len(p.BlockCommands))
@@ -300,6 +323,9 @@ func PolicyFromJSON(text string) (Policy, error) {
 	}
 	policy := Policy{BlockedGit: blocked, BlockFormatters: blockFormatters, PlansDir: plansDir, RoleCapability: roles, ForbiddenImports: forbidden, LocalPackages: local, KnowledgeClone: clone}
 	if err := backendRulesOf(object, &policy); err != nil {
+		return Policy{}, err
+	}
+	if policy.Push, err = pushRuleOf(object); err != nil {
 		return Policy{}, err
 	}
 	return policy, nil

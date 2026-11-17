@@ -135,9 +135,52 @@ Live check:
 - **Push to a remote other than the task branch's upstream** (forks, several remotes). The protection is by branch name on any remote.
 - **A push suggestion in the default (`agent_commit: false`) rule.** It would change every golden and make every project re-sync; see question 1.
 
-## Questions for the maintainer
+## Decisions (maintainer, 2026-11-17)
 
-1. **The default rule** (`agent_commit: false`) prints only the commit command today. Should it also print the push command (`git push -u origin <branch>`)? That gives the manual path a push suggestion for everyone, at the cost of every project's AGENTS.md changing, which means a re-sync for all teams. My suggestion: no, keep it for `agent_commit: true`.
-2. **The guard protections** above (force, delete, all/mirror/tags, protected branches, no refspec on a protected branch). Are all of them wanted, or is any too strict? My suggestion: all. Without them, `agent_push` would remove the guard's main promise.
-3. **Existing `agent_commit: true` projects** switch from "commit only when the user asks" to the end-of-task question. Is that OK, given they re-sync once? My suggestion: yes, it is the same consent, asked at a predictable moment.
-4. **Roadmap placement:** v0.8 with Cursor (before launch), or after the launch? My suggestion: v0.8. It is a selling point for teams ("the agent can push your branch, never main"), and the guard tests make it safe.
+1. The default rule stays as it is: no push suggestion when `agent_commit` is false.
+2. All the guard protections.
+3. Existing `agent_commit: true` projects switch to the end-of-task question.
+4. v0.8.
+
+## Change from the design: a push must name its branch
+
+The design read the current branch from the worktree's `HEAD` for a bare `git push`. The guard judges each command's words and cannot see a `cd` earlier in the same script. So `cd ../main-checkout && git push` would be judged against the hook's folder, on a task branch, and pushed `main`.
+
+Instead, a push that names no branch is blocked: `git push`, `git push origin`, `git push origin HEAD` and `@`. The rules tell the agent to push with `git push -u origin <branch>`. This is stricter and simpler, and the guard reads no file.
+
+## Result
+
+- **Profile** (`internal/profile/profile.go`): `policy.agent_push`, default false. It must be a bool and needs `agent_commit: true`, checked in `checkAgentPush`.
+- **Guard.**
+  - `internal/guard/push.go`: `PushRule` and its check.
+  - `CompilePolicy` drops `push` from `blocked_git` and sets `Push.Protected` from `project.base_branches`.
+  - `ToJSON` writes `push`; `LoadPolicy` and `PolicyFromJSON` read it, and a malformed one is an error.
+  - `checkCommand` applies the rule after the subcommand (`gitSubcommandAt`).
+  - `Policy.Minimum` raises to `version.PushGuardMinimum` (0.7.0).
+- **Rules.**
+  - `core/rules/git.md` (first bullet).
+  - `git-commit-on.md` (the end-of-task question).
+  - `core/workflows/port/10-port.md`.
+  - `core/skills/pr-create/pr-create.md`.
+  - `core/skills/branching/branching.md`.
+
+  Every one renders the default text unchanged.
+- **Tests.**
+  - `internal/guard/push_test.go`: 7 allowed and 24 blocked forms, each bare, behind `sh -c`, `env`, `cd … &&` and `git -C`. Also covered: no push rule keeps every push blocked, compile and JSON round trip through both readers, and a malformed `push` key.
+  - Profile defaults and two error paths.
+- **Goldens.**
+  - New `test/golden/sample-agent-push` (claude-code and codex, base branches develop and main).
+  - Every other golden's generated text is unchanged. Only the catalog digest in `sample-release-lines` moved (any catalog source change does that), and with it the lock hashes in three release-line transcripts.
+  - `internal/guard/testdata` is unchanged.
+- **Docs:** README (profile example, policy table, guard list), `docs/catalog-format.md`, and two CHANGELOG entries.
+- **End-to-end** (in place of a live agent session): the generated Claude Code hook, run through `sh` with the real guard built as 0.7.0.
+  - `git push -u origin feat/login` exit 0.
+  - `git push origin main`, `git push --force origin feat/login` and `git push` exit 2 with their reasons.
+  - `git commit` exit 0, `git reset --hard` exit 2.
+  - The same shim with dashcrew 0.6.0 on PATH refuses the call (exit 2, install line).
+
+Known limits:
+
+- **`PushGuardMinimum` is 0.7.0, the next release.** If this ships later, raise it to that release.
+- **A `0.7.0-rc.N` build is older than 0.7.0 in semver,** so the shim of an `agent_push` project refuses it. The rc live run in `docs/release-checklist.md` can cover `agent_push` only once the final 0.7.0 exists, or by building `main` with `-X …version.Version=0.7.0` as the end-to-end check did.
+- **The guard judges words, not the remote's real refs.** `git push origin feat/x:main` is caught, but a remote whose `push` refspec config maps a task branch onto `main` is not. That needs `remote.<name>.push` set by hand and is out of scope.
