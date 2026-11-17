@@ -1,4 +1,6 @@
-## Unreleased
+## 0.7.0
+
+Trust: an interrupted sync finishes with a plain `dashcrew sync`, CI catches a lost guard hook, the guard logs every call it lets through unchecked, and new policies let the agent commit and push on your answer. Run `dashcrew sync` and commit what it writes: usually only `.ai/lock.json`, plus new AGENTS.md text in a project with `policy.agent_commit: true`. `guard_min_version` rises to 0.7.0 only in a project that turns on `policy.agent_push`, so every member installs 0.7.0 before that sync is committed.
 
 - New `policy.agent_push` (needs `agent_commit: true`): at the end of each task the agent asks whether to commit and push the task branch for you or leave both to you, and acts only on your answer. The guard then allows a push that names a branch, and still blocks a force push, a deleted remote branch, `--all`, `--mirror`, `--tags`, a push to a `project.base_branches` branch, and a push that names no branch. A project that turns it on needs dashcrew 0.7.0 or newer on every machine: the shim refuses an older one, whose guard would allow every push.
 - Changed: with `policy.agent_commit: true` the agent no longer waits to be asked to commit; at the end of each task it asks whether to commit for you or leave it to you, and prints the commit command when you keep it. Projects with `agent_commit: true` get new text in AGENTS.md: run `dashcrew sync` and commit what it writes. The default (`agent_commit: false`) is unchanged.

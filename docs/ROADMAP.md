@@ -86,7 +86,7 @@ Goal: no release breaks a project, and a broken guard is never silent.
   - [ ] Decide between keeping the shim, adding a `.cmd` shim that still fails closed, or stopping Windows archives until v0.9. A hook that calls `dashcrew` directly is not an option: a missing binary exits 127, which agents do not treat as a block.
   - [ ] Make the README and CI agree (`continue-on-error` and "experimental", or green).
 - **Known bugs and dropped errors**
-  - [ ] #30: not reproduced on `main` (a worktree from `base-branch` landed on the base, not on HEAD). Ask the reporter for the exact base ref (local, `origin/…`, tag) and add a regression test where HEAD is ahead of the base; the current fixture has `main`, `develop` and HEAD on one commit (`internal/worktree/worktree_test.go:66-67`).
+  - [x] #30: not reproduced on v0.5.0 or `main`. A regression test now puts HEAD one commit ahead of the base; `worktree create` branches from the resolved base commit and stops, naming both commits, when the new worktree lands elsewhere, as a `post-checkout` hook can make it (#44). The reporter was asked for their hooks and git config.
   - [x] Fix the ignored read error in `worktree.go:438`, which could rewrite the git exclude file without the user's lines. The other dropped errors in the audit (`deps.go`, `sync.go:749`, `commit/git.go`, `projectskill/adopt.go`, `usage`, `doctor`, `main.go:204`) were reviewed: best-effort cleanup, tolerant parsing of undocumented formats, or report-only walks, so they stay.
 - **Release process**
   - [x] A goreleaser snapshot build on every PR (plan: `docs/plans/v0.7-release-process-plan.md`). `goreleaser check` cannot gate PRs: it exits 2 on the `brews` block, which stays on purpose because a formula installs on Linux too.
