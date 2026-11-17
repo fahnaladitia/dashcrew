@@ -434,3 +434,44 @@ func TestGuard(t *testing.T) {
 		t.Run(c.dart, c.run)
 	}
 }
+
+// TestDocumentedBlindSpotsAreAllowed pins the misses that SECURITY.md and the README ("Hidden commands") list.
+// When one starts to be blocked, this fails: update both documents in the same change.
+func TestDocumentedBlindSpotsAreAllowed(t *testing.T) {
+	for name, command := range map[string]string{
+		"a $ expansion as the first word":       "$GIT push",
+		"source":                                "source <(echo git push)",
+		"dot":                                   ". <(echo git push)",
+		"fish -c":                               "fish -c 'git push'",
+		"stdbuf":                                "stdbuf -o0 git push",
+		"doas":                                  "doas git push",
+		"nesting deeper than the guard follows": nestedShells("git push", maxNesting+1),
+	} {
+		t.Run(name, func(t *testing.T) {
+			if blockedAll(t, allFromHook(t, bashHook(t, command))) {
+				t.Errorf("%q is blocked now: update SECURITY.md and the README", command)
+			}
+		})
+	}
+	if !blockedAll(t, allFromHook(t, bashHook(t, nestedShells("git push", maxNesting)))) {
+		t.Error("git push nested as deep as the guard follows is allowed")
+	}
+}
+
+// nestedShells wraps command in depth levels of `sh -c '...'`.
+func nestedShells(command string, depth int) string {
+	for range depth {
+		command = "sh -c '" + strings.ReplaceAll(command, "'", `'\''`) + "'"
+	}
+	return command
+}
+
+// bashHook is a Claude Code Bash hook payload running command.
+func bashHook(t *testing.T, command string) string {
+	t.Helper()
+	text, err := dartjson.Encode(omap.Of[any]("tool_name", "Bash", "tool_input", omap.Of[any]("command", command)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return text
+}

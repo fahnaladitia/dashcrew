@@ -27,8 +27,8 @@ var ProcessEnv = Env{LookupEnv: os.LookupEnv, Getwd: os.Getwd, Now: time.Now}
 
 // Run is `dashcrew guard`: hook JSON on stdin, the answer per HookResponse, the exit code returned.
 // Policy path: first argument, else `DASHCREW_GUARD_POLICY`, else `<hook cwd or first workspace path>/.ai/guard.json`.
-// Any read or parse failure allows the call (exit 0; Antigravity still gets its allow decision); `dashcrew doctor`
-// reports a broken install.
+// Any read or parse failure allows the call (exit 0; Antigravity still gets its allow decision) and, except a policy
+// that was only looked for in the hook's cwd, is logged in the malformed log; `dashcrew doctor` reports both.
 // A malformed hook input is also recorded in the malformed log (see logMalformed), which doctor reports.
 func Run(args []string, stdin io.Reader, stdout, stderr io.Writer, env Env) int {
 	object, decision := judge(args, stdin, env)
@@ -64,6 +64,11 @@ func judge(args []string, stdin io.Reader, env Env) (*omap.Map[any], Decision) {
 		logMalformed(env, object, malformedReason(err))
 		return object, Allow()
 	}
+	// unusable logs why the policy was not applied and allows the call; reasons name the file, never its content.
+	unusable := func(reason string) (*omap.Map[any], Decision) {
+		logMalformed(env, object, "policy "+policyPath+" "+reason)
+		return object, Allow()
+	}
 	resolver := newProjects(hookDir(object, env), homeOf(env))
 	resolver.project = projectOf(policyPath)
 	info, err := os.Stat(policyPath)
@@ -71,16 +76,16 @@ func judge(args []string, stdin io.Reader, env Env) (*omap.Map[any], Decision) {
 	case err == nil && !info.IsDir():
 		file, err := os.Open(policyPath)
 		if err != nil {
-			return object, Allow()
+			return unusable("could not be opened")
 		}
 		value, err := readJSON(file)
 		file.Close()
 		if err != nil {
-			return object, Allow()
+			return unusable("is not valid JSON")
 		}
 		policy, err := LoadPolicy(value)
 		if err != nil {
-			return object, Allow()
+			return unusable("is invalid: " + err.Error())
 		}
 		policy = policy.at(hookDir(object, env), resolver.project, homeOf(env))
 		resolver.policy = &policy
@@ -89,8 +94,15 @@ func judge(args []string, stdin io.Reader, env Env) (*omap.Map[any], Decision) {
 		resolver.workspace = resolver.project
 		resolver.project = ""
 		resolver.perPath = true
-	default:
+	case !policyNamed(args, env):
+		// Found through the hook's cwd only: a folder dashcrew does not manage, where allowing is right.
 		return object, Allow()
+	case errors.Is(err, os.ErrNotExist):
+		return unusable("is missing")
+	case err == nil:
+		return unusable("is not a file")
+	default:
+		return unusable("could not be read")
 	}
 	events, err := AllFromHook(object)
 	if err != nil {
@@ -105,9 +117,19 @@ func judge(args []string, stdin io.Reader, env Env) (*omap.Map[any], Decision) {
 	}
 	decision, err := resolver.evaluateAll(events)
 	if err != nil {
-		return object, Allow()
+		return unusable("could not be applied")
 	}
 	return object, decision
+}
+
+// policyNamed is true when the hook named the policy (an argument or DASHCREW_GUARD_POLICY) rather than leaving the
+// guard to look in the hook's cwd.
+func policyNamed(args []string, env Env) bool {
+	if len(args) > 0 {
+		return true
+	}
+	_, ok := env.LookupEnv("DASHCREW_GUARD_POLICY")
+	return ok
 }
 
 var errNotUTF8 = errors.New("input is not UTF-8")

@@ -318,6 +318,9 @@ func (d Doctor) antigravityHook() Check {
 	entry := config.Value(adapters.AntigravityGuardKey)
 	if encode(entry) == encode(adapters.AntigravityGuardHook()) {
 		present := "PreToolUse guard hook present under " + adapters.AntigravityGuardKey
+		if !d.MachineChecks {
+			return Check{id, OK, present}
+		}
 		switch loaded, ok := d.agyLoadsGuard(); {
 		case !ok:
 			return Check{id, OK, present}
@@ -441,6 +444,23 @@ func (d Doctor) antigravityRoles() Check {
 		return Check{id, Fail, "unknown tool names (the subagent may hang): " + strings.Join(unknown, ", ")}
 	}
 	return Check{id, OK, strconv.Itoa(count) + " roles, every tool name known"}
+}
+
+// HookChecks are the guard hook checks of the profile's agents, read from the committed files only (no agent is
+// asked): what `dashcrew check` adds in CI, where a hand edit or a merge can drop a hook without anyone noticing.
+func (d Doctor) HookChecks() []Check {
+	agents := d.agents()
+	var checks []Check
+	if agents["claude-code"] {
+		checks = append(checks, d.hook())
+	}
+	if agents["codex"] {
+		checks = append(checks, d.codexHook())
+	}
+	if agents["antigravity"] {
+		checks = append(checks, d.antigravityHook())
+	}
+	return checks
 }
 
 func (d Doctor) codexHook() Check {
@@ -945,19 +965,20 @@ func reportedVersion(path, pathEnv string) string {
 	return words[len(words)-1]
 }
 
-// guardLog warns when the guard let malformed hook payloads through since the last sync (G4b, Go only): the
-// guard read less than the agent sent, so a rule may not have applied. False when there is none.
+// guardLog warns when the guard let tool calls through unchecked since the last sync: a hook payload it could not
+// read (G4b, Go only) or a policy it could not use, so a rule may not have applied. False when there is none.
 func (d Doctor) guardLog() (Check, bool) {
 	count, path := guard.MalformedSinceSync(d.ProjectDir)
 	if count == 0 {
 		return Check{}, false
 	}
-	payloads := "payloads"
+	calls := "tool calls"
 	if count == 1 {
-		payloads = "payload"
+		calls = "tool call"
 	}
-	return Check{"guard-log", Warn, fmt.Sprintf("the guard let %d malformed %s through since the last sync, logged in %s; "+
-		"update dashcrew if an agent changed its hook format", count, payloads, path)}, true
+	return Check{"guard-log", Warn, fmt.Sprintf("the guard let %d %s through unchecked since the last sync, logged in %s "+
+		"with the reasons; update dashcrew if an agent changed its hook format, run dashcrew sync for a broken policy",
+		count, calls, path)}, true
 }
 
 // runShim feeds the shim a `git push` hook event and returns its exit code; -1 after 30 seconds.

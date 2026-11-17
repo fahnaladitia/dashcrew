@@ -116,6 +116,7 @@ stdout:
 | ok    agents-md-size  AGENTS.md 16136 of 32768 bytes
 | ok    always-on       claude-code 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
+| ok    hook            PreToolUse guard hook present
 | skip  pr-sections     no PR body; pass --pr-body <file> or run on a pull_request event
 | ok    commits         1 commit in main..HEAD follows <type>(<scope>): <subject>
 stderr: (empty)
@@ -135,6 +136,7 @@ stdout:
 | ok    agents-md-size  AGENTS.md 16136 of 32768 bytes
 | ok    always-on       claude-code 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
+| ok    hook            PreToolUse guard hook present
 | skip  pr-sections     no PR body; pass --pr-body <file> or run on a pull_request event
 | fail  commits         d0583fd subject line "WIP sharing" does not match <type>(<scope>): <subject>
 stderr: (empty)
@@ -156,6 +158,7 @@ stdout:
 | ok    agents-md-size  AGENTS.md 16136 of 32768 bytes
 | ok    always-on       claude-code 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
+| ok    hook            PreToolUse guard hook present
 | fail  pr-sections     missing: ## Summary, ## Changes, ## Affected files, ## Testing, ## Notes / not done (write "None" under a heading that does not apply)
 | ::error title=dashcrew pr-sections::missing: ## Summary, ## Changes, ## Affected files, ## Testing, ## Notes / not done (write "None" under a heading that does not apply)
 | fail  commits         d0583fd subject line "WIP sharing" does not match <type>(<scope>): <subject>
@@ -176,6 +179,7 @@ stdout:
 | ok    agents-md-size  AGENTS.md 16136 of 32768 bytes
 | ok    always-on       claude-code 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
+| ok    hook            PreToolUse guard hook present
 | skip  pr-sections     no PR body; pass --pr-body <file> or run on a pull_request event
 | fail  commits         cannot read nope..HEAD: fatal: bad revision 'nope..HEAD'; a CI checkout needs fetch-depth: 0
 stderr: (empty)
