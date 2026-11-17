@@ -245,6 +245,45 @@ func TestCreateRefusesAMissingBaseAnExistingBranchAndAnExistingFolder(t *testing
 	errorContaining(t, err, "already exists")
 }
 
+// checkedOutAhead puts the main checkout on feature-x, one commit ahead of main, and returns both tips.
+func checkedOutAhead(t *testing.T, f *fixture) (base, ahead string) {
+	t.Helper()
+	gitIn(t, f.app, "checkout", "-q", "-b", "feature-x")
+	writeFile(t, filepath.Join(f.app, "lib", "x.dart"), "void x() {}\n")
+	commitAll(t, f.app, "extra")
+	return gitIn(t, f.app, "rev-parse", "main"), gitIn(t, f.app, "rev-parse", "HEAD")
+}
+
+func TestCreateStartsFromTheBaseNotTheCheckedOutBranch(t *testing.T) {
+	f := newFixture(t)
+	base, _ := checkedOutAhead(t, f)
+
+	f.create(t, f.worktrees, "fix/new-task", "main", nil, false)
+
+	if got := gitIn(t, f.path("fix-new-task"), "rev-parse", "HEAD"); got != base {
+		t.Errorf("worktree at %s, want the base tip %s", got, base)
+	}
+}
+
+func TestCreateRefusesAWorktreeThatDidNotLandOnTheBase(t *testing.T) {
+	f := newFixture(t)
+	base, ahead := checkedOutAhead(t, f)
+	writeFile(t, filepath.Join(f.app, ".git", "hooks", "post-checkout"), "#!/bin/sh\ngit reset -q --hard "+ahead+"\n")
+	if err := os.Chmod(filepath.Join(f.app, ".git", "hooks", "post-checkout"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := f.worktrees.Create("fix/new-task", "main", nil, false, f.out)
+
+	errorContaining(t, err, "not at base main ("+base[:7])
+	errorContaining(t, err, ahead[:7])
+	for _, line := range f.output {
+		if strings.HasPrefix(line, "branch: ") {
+			t.Errorf("reported %q for a worktree that is not on the base", line)
+		}
+	}
+}
+
 func TestCreateWorksFromInsideAnotherWorktree(t *testing.T) {
 	f := newFixture(t)
 	f.create(t, f.worktrees, "feat/a", "main", nil, false)
