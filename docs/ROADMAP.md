@@ -116,7 +116,7 @@ Goal: a visitor understands dashcrew in 30 seconds, tries it in one command, and
   - [ ] Adapter for Cursor: rules plus the guard hook, golden-tested, covered by the doctor probe. Spike the hook first to confirm it can fail closed.
   - [x] Keep the agent list in one place: `internal/agents`. The per-agent cases in `doctor` and `me sync` have a test that fails for an agent without one.
   - [ ] `docs/adding-an-adapter.md`, written from the Cursor work, so Gemini CLI can be the first outside contribution.
-  - [ ] What differs per agent lives in its adapter: the doctor hook check, the always-on files, the `me sync` paths and the guard minimum. Five per-agent `switch` statements remain after `internal/agents` (doctor, budget, `me sync`, `sync`, `guard/malformed.go`); a new agent should be one package and one golden.
+  - [x] What differs per agent lives in its adapter: the doctor hook check, the always-on files, the `me sync` paths and the guard minimum. Five per-agent `switch` statements remain after `internal/agents` (doctor, budget, `me sync`, `sync`, `guard/malformed.go`); a new agent should be one package and one golden.
   - [ ] Recorded agent inputs: real hook payloads per agent and version in `internal/guard/testdata/payloads/`, run through each adapter's hook command in a test, and refreshed by the release checklist's live run. Goldens pin the bytes dashcrew writes, not what agents send.
 - **Front page**
   - [ ] README under 150 lines:
@@ -131,7 +131,7 @@ Goal: a visitor understands dashcrew in 30 seconds, tries it in one command, and
 - **Agent commit and push** (plan: `docs/plans/agent-push-plan.md`)
   - [x] `policy.agent_push`: at the end of a task the agent asks whether to commit and push the task branch; the guard still blocks force, delete, `--all`/`--mirror`/`--tags`, base branches and a push without a named branch.
 - **Install and `init`**
-  - [ ] An `install.sh` that downloads the release archive and checks `checksums.txt`; install smoke tests in CI (brew, `go install`, script).
+  - [x] An `install.sh` that downloads the release archive and checks `checksums.txt`; install smoke tests in CI (brew, `go install`, script).
   - [ ] `init` without dead ends:
     - when `go.mod` is found, offer the Go platform directly, and promote Go from starter to a built-in platform;
     - under `platform: other`, propose detected files as defaults;
