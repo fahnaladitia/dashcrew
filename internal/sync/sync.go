@@ -548,13 +548,13 @@ func (s Sync) Render(adopt bool, warnings *[]string) (*Rendered, error) {
 		GuardMinimum: minimum, SkillModes: skillModes(c, p.Agents, files)}, nil
 }
 
-// guardMinimum is the oldest dashcrew the shim accepts: the policy's minimum, raised to
-// version.AntigravityGuardMinimum when Antigravity is among the agents.
+// guardMinimum is the oldest dashcrew the shim accepts: the policy's minimum, raised to the guard minimum of
+// any agent that needs a newer guard (adapters.GuardMinimum).
 func guardMinimum(policy guard.Policy, agents []string) string {
 	minimum := policy.Minimum()
 	for _, agent := range agents {
-		if agent == "antigravity" && version.Compare(version.AntigravityGuardMinimum, minimum) > 0 {
-			minimum = version.AntigravityGuardMinimum
+		if needed := adapters.GuardMinimum(agent); version.Compare(needed, minimum) > 0 {
+			minimum = needed
 		}
 	}
 	return minimum

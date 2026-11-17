@@ -12,11 +12,10 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
-	"github.com/fahnaladitia/dashcrew/internal/adapters"
+	"github.com/fahnaladitia/dashcrew/internal/agents"
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
 	"github.com/fahnaladitia/dashcrew/internal/dartjson"
 	"github.com/fahnaladitia/dashcrew/internal/guard"
@@ -55,13 +54,15 @@ type Check struct {
 // AgentsMdLimit is the AGENTS.md size most agents read in full.
 const AgentsMdLimit = 32 * 1024
 
-// AgentsMdLimitFor is the AGENTS.md size the selected agents read in full: Antigravity cuts every rule file at
-// 24,000 bytes.
-func AgentsMdLimitFor(agents map[string]bool) int {
-	if agents["antigravity"] {
-		return 24000
+// AgentsMdLimitFor is the AGENTS.md size every selected agent reads in full: the smallest of their limits.
+func AgentsMdLimitFor(selected map[string]bool) int {
+	limit := AgentsMdLimit
+	for agent, on := range selected {
+		if a, ok := agentChecks[agent]; ok && on && a.agentsMdLimit < limit {
+			limit = a.agentsMdLimit
+		}
 	}
-	return AgentsMdLimit
+	return limit
 }
 
 // Doctor checks one project.
@@ -130,7 +131,7 @@ func (d Doctor) checks(projectPacks Check) []Check {
 			}
 		}
 	}
-	agents := d.agents()
+	selected := d.agents()
 	line := d.releaseLine()
 	checks := []Check{
 		profileCheck,
@@ -146,14 +147,11 @@ func (d Doctor) checks(projectPacks Check) []Check {
 		if guardLog, ok := d.guardLog(); ok {
 			checks = append(checks, guardLog)
 		}
-		if agents["claude-code"] {
-			checks = append(checks, d.hook(), d.claudeMd(), d.mcp(), d.skills(lockedFiles))
-		}
-		if agents["codex"] {
-			checks = append(checks, d.codexHook(), d.codexMcp(), d.codexSkillsBudget(), d.codexTrust())
-		}
-		if agents["antigravity"] {
-			checks = append(checks, d.antigravityHook(), d.antigravityMcp(), d.antigravityRoles())
+		for _, agent := range agents.All() {
+			if a, ok := agentChecks[agent]; ok && selected[agent] {
+				checks = append(checks, a.hook(d))
+				checks = append(checks, a.machine(d, lockedFiles)...)
+			}
 		}
 		if knowledgeCheck, ok := d.knowledge(lock); ok {
 			checks = append(checks, knowledgeCheck)
@@ -177,7 +175,7 @@ func (d Doctor) checks(projectPacks Check) []Check {
 			checks = append(checks, d.me())
 		}
 	}
-	checks = append(checks, d.agentsMdSize(AgentsMdLimitFor(agents)), d.alwaysOn(agents))
+	checks = append(checks, d.agentsMdSize(AgentsMdLimitFor(selected)), d.alwaysOn(selected))
 	if memory, ok := d.memoryIndex(); ok {
 		checks = append(checks, memory)
 	}
@@ -306,73 +304,6 @@ func mcpServers(config *omap.Map[any]) (*omap.Map[any], error) {
 	return servers, nil
 }
 
-func (d Doctor) antigravityHook() Check {
-	const id = "antigravity-hook"
-	if !d.exists(".agents/hooks.json") {
-		return Check{id, Fail, ".agents/hooks.json missing; run dashcrew sync"}
-	}
-	config, err := d.readObject(".agents/hooks.json")
-	if err != nil {
-		return Check{id, Fail, ".agents/hooks.json invalid: " + err.Error()}
-	}
-	entry := config.Value(adapters.AntigravityGuardKey)
-	if encode(entry) == encode(adapters.AntigravityGuardHook()) {
-		present := "PreToolUse guard hook present under " + adapters.AntigravityGuardKey
-		if !d.MachineChecks {
-			return Check{id, OK, present}
-		}
-		switch loaded, ok := d.agyLoadsGuard(); {
-		case !ok:
-			return Check{id, OK, present}
-		case !loaded:
-			return Check{id, Warn, present + ", but agy does not load it here: trust this folder in agy, since workspace hooks load only in a trusted folder"}
-		}
-		return Check{id, OK, present + "; agy loads it"}
-	}
-	problem := "guard hook differs from what sync writes"
-	if entry == nil {
-		problem = "guard hook missing"
-	}
-	return Check{id, Fail, problem + "; run dashcrew sync"}
-}
-
-// agyLoadsGuard asks agy for its active hooks in the project (`agy -p /hooks`, one tab-separated record per line).
-// loaded needs a record whose first field is the guard key and that says nothing of being skipped; a failing agy
-// that names trust means not loaded. ok is false when agy is not on PATH, does not answer within 15 seconds or fails
-// for another reason, signed out for one; the file check then stands.
-func (d Doctor) agyLoadsGuard() (loaded, ok bool) {
-	pathEnv := d.searchPath()
-	agy, found := lookPath("agy", pathEnv)
-	if !found {
-		return false, false
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-	cmd := exec.CommandContext(ctx, agy, "-p", "/hooks")
-	cmd.Dir = d.ProjectDir
-	cmd.Env = append(os.Environ(), "PATH="+pathEnv)
-	// A child that keeps the pipes open would hold Output past the timeout; WaitDelay closes them.
-	cmd.WaitDelay = 2 * time.Second
-	var stderr strings.Builder
-	cmd.Stderr = &stderr
-	out, err := cmd.Output()
-	if err != nil {
-		if strings.Contains(strings.ToLower(string(out)+stderr.String()), "trust") {
-			return false, true
-		}
-		return false, false
-	}
-	for _, line := range strings.Split(string(out), "\n") {
-		fields := strings.FieldsFunc(line, func(r rune) bool { return r == '\t' || r == ' ' })
-		lower := strings.ToLower(line)
-		if len(fields) > 0 && fields[0] == adapters.AntigravityGuardKey &&
-			!strings.Contains(lower, "skip") && !strings.Contains(lower, "disabled") && !strings.Contains(lower, "trust") {
-			return true, true
-		}
-	}
-	return false, true
-}
-
 // searchPath is the PATH doctor searches: PathEnv, else this process's.
 func (d Doctor) searchPath() string {
 	if d.PathEnv != "" {
@@ -381,102 +312,17 @@ func (d Doctor) searchPath() string {
 	return os.Getenv("PATH")
 }
 
-func (d Doctor) antigravityMcp() Check {
-	const id = "antigravity-mcp"
-	if !d.exists(".agents/mcp_config.json") {
-		return Check{id, Warn, ".agents/mcp_config.json missing; run dashcrew sync"}
-	}
-	config, err := d.readObject(".agents/mcp_config.json")
-	var servers *omap.Map[any]
-	if err == nil {
-		servers, err = mcpServers(config)
-	}
-	if err != nil {
-		return Check{id, Warn, ".agents/mcp_config.json invalid: " + err.Error()}
-	}
-	adapter := adapters.NewAntigravity(d.Catalog, d.ProjectDir, d.platform())
-	adapter.Knowledge = d.profileKnowledge()
-	expected := adapter.McpServers().Keys()
-	var missing []string
-	for _, name := range expected {
-		if !servers.Has(name) {
-			missing = append(missing, name)
-		}
-	}
-	if len(missing) > 0 {
-		return Check{id, Warn, "missing: " + strings.Join(missing, ", ") + "; run dashcrew sync"}
-	}
-	return Check{id, OK, "defined: " + strings.Join(expected, ", ")}
-}
-
-// antigravityRoles fails a role whose `tools` names a tool Antigravity does not know: the subagent may hang.
-func (d Doctor) antigravityRoles() Check {
-	const id = "antigravity-roles"
-	dir := d.path(".agents/agents")
-	if !isDir(dir) {
-		return Check{id, Fail, ".agents/agents missing; run dashcrew sync"}
-	}
-	entries, _ := os.ReadDir(dir)
-	var unknown []string
-	count := 0
-	for _, entry := range entries {
-		file := filepath.Join(dir, entry.Name())
-		if !strings.HasSuffix(entry.Name(), ".md") || !isFile(file) {
-			continue
-		}
-		count++
-		data, err := os.ReadFile(file)
-		if err != nil {
-			continue
-		}
-		tools := ""
-		if match := toolsLine.FindStringSubmatch(string(data)); match != nil {
-			tools = match[1]
-		}
-		for _, tool := range strings.Split(tools, ",") {
-			tool = strings.TrimSpace(tool)
-			if tool != "" && !contains(adapters.AntigravityKnownTools, tool) {
-				unknown = append(unknown, strings.TrimSuffix(entry.Name(), ".md")+": "+tool)
-			}
-		}
-	}
-	if len(unknown) > 0 {
-		return Check{id, Fail, "unknown tool names (the subagent may hang): " + strings.Join(unknown, ", ")}
-	}
-	return Check{id, OK, strconv.Itoa(count) + " roles, every tool name known"}
-}
-
 // HookChecks are the guard hook checks of the profile's agents, read from the committed files only (no agent is
 // asked): what `dashcrew check` adds in CI, where a hand edit or a merge can drop a hook without anyone noticing.
 func (d Doctor) HookChecks() []Check {
-	agents := d.agents()
+	selected := d.agents()
 	var checks []Check
-	if agents["claude-code"] {
-		checks = append(checks, d.hook())
-	}
-	if agents["codex"] {
-		checks = append(checks, d.codexHook())
-	}
-	if agents["antigravity"] {
-		checks = append(checks, d.antigravityHook())
+	for _, agent := range agents.All() {
+		if a, ok := agentChecks[agent]; ok && selected[agent] {
+			checks = append(checks, a.hook(d))
+		}
 	}
 	return checks
-}
-
-func (d Doctor) codexHook() Check {
-	const id = "codex-hook"
-	if !d.exists(".codex/hooks.json") {
-		return Check{id, Fail, ".codex/hooks.json missing; run dashcrew sync"}
-	}
-	config, err := d.readObject(".codex/hooks.json")
-	var entries []any
-	if err == nil {
-		entries, err = preToolUse(config)
-	}
-	if err != nil {
-		return Check{id, Fail, ".codex/hooks.json invalid: " + err.Error()}
-	}
-	return guardEntryCheck(id, entries, encode(adapters.CodexGuardHook()), "PreToolUse guard hook present; Codex runs it once approved in /hooks")
 }
 
 // guardEntryCheck passes when one of entries is the guard hook sync writes.
@@ -495,107 +341,6 @@ func guardEntryCheck(id string, entries []any, ours, okDetail string) Check {
 		return Check{id, Fail, "PreToolUse guard hook differs from what sync writes; run dashcrew sync"}
 	}
 	return Check{id, Fail, "PreToolUse guard hook missing; run dashcrew sync"}
-}
-
-func (d Doctor) codexMcp() Check {
-	const id = "codex-mcp"
-	toml := ""
-	if d.exists(".codex/config.toml") {
-		toml, _ = d.read(".codex/config.toml")
-	}
-	adapter := adapters.NewCodex(d.Catalog, d.ProjectDir, d.platform())
-	adapter.Knowledge = d.profileKnowledge()
-	expected := adapter.McpServerNames()
-	var missing []string
-	for _, name := range expected {
-		if !adapters.DefinesMcpServer(toml, name) {
-			missing = append(missing, name)
-		}
-	}
-	if len(missing) > 0 {
-		return Check{id, Warn, ".codex/config.toml does not define " + strings.Join(missing, ", ") + "; run dashcrew sync"}
-	}
-	detail := "defined: " + strings.Join(expected, ", ")
-	if !strings.Contains(toml, "# dashcrew:begin") {
-		detail += " (by the user, outside the dashcrew block)"
-	}
-	return Check{id, OK, detail}
-}
-
-func (d Doctor) codexSkillsBudget() Check {
-	const id = "codex-skills-budget"
-	dir := d.path(".agents/skills")
-	var contents []string
-	if entries, err := os.ReadDir(dir); err == nil {
-		for _, entry := range entries {
-			sub := filepath.Join(dir, entry.Name())
-			skill := filepath.Join(sub, "SKILL.md")
-			if !isDir(sub) || !isFile(skill) {
-				continue
-			}
-			data, err := os.ReadFile(skill)
-			if err != nil {
-				continue
-			}
-			contents = append(contents, string(data))
-		}
-	}
-	size := adapters.SkillListChars(contents)
-	budget := adapters.SkillListBudget
-	if size > budget {
-		return Check{id, Warn, fmt.Sprintf("skill list is %d characters, over %d; Codex may drop descriptions", size, budget)}
-	}
-	return Check{id, OK, fmt.Sprintf("%d skills, list %d of %d characters", len(contents), size, budget)}
-}
-
-// codexTrust: Codex loads `.codex/` only for a trusted project; trust is set by Codex itself, never by dashcrew.
-func (d Doctor) codexTrust() Check {
-	const id = "codex-trust"
-	home := d.CodexHome
-	if home == "" {
-		home = DefaultCodexHome(environment())
-	}
-	toml := ""
-	if home != "" {
-		if data, err := os.ReadFile(filepath.Join(home, "config.toml")); err == nil {
-			toml = string(data)
-		}
-	}
-	var trusted []string
-	for _, match := range projectTable.FindAllStringSubmatchIndex(toml, -1) {
-		rest := toml[match[1]:]
-		if next := nextTable.FindStringIndex(rest); next != nil {
-			rest = rest[:next[0]]
-		}
-		if !trustedLine.MatchString(rest) {
-			continue
-		}
-		if match[2] >= 0 {
-			trusted = append(trusted, toml[match[2]:match[3]])
-		} else {
-			trusted = append(trusted, toml[match[4]:match[5]])
-		}
-	}
-	here := []string{d.ProjectDir}
-	if isDir(d.ProjectDir) {
-		if resolved, err := filepath.EvalSymlinks(d.ProjectDir); err == nil {
-			here = append(here, resolved)
-		}
-	}
-	for _, path := range trusted {
-		for _, dir := range here {
-			if dir == path || isWithin(path, dir) {
-				return Check{id, OK, "project trusted in the Codex config"}
-			}
-		}
-	}
-	return Check{id, Warn, "project not trusted in the Codex config, so .codex/ is ignored; trust it when Codex asks, then approve the guard in /hooks"}
-}
-
-// isWithin is true when child is strictly inside parent.
-func isWithin(parent, child string) bool {
-	relative, err := filepath.Rel(parent, child)
-	return err == nil && relative != "." && relative != ".." && !strings.HasPrefix(relative, ".."+string(filepath.Separator)) && !filepath.IsAbs(relative)
 }
 
 func (d Doctor) profileCheck() Check {
@@ -1006,173 +751,6 @@ func runShim(shim, policy, projectDir, pathEnv, home string) (int, error) {
 		return 0, err
 	}
 	return 0, nil
-}
-
-func (d Doctor) hook() Check {
-	const id = "hook"
-	if !d.exists(".claude/settings.json") {
-		return Check{id, Fail, ".claude/settings.json missing; run dashcrew sync"}
-	}
-	settings, err := d.readObject(".claude/settings.json")
-	var entries []any
-	if err == nil {
-		entries, err = preToolUse(settings)
-	}
-	if err != nil {
-		return Check{id, Fail, ".claude/settings.json invalid: " + err.Error()}
-	}
-	return guardEntryCheck(id, entries, encode(adapters.ClaudeGuardHook()), "PreToolUse guard hook present")
-}
-
-func (d Doctor) claudeMd() Check {
-	const id = "claude-md"
-	if !d.exists("CLAUDE.md") {
-		return Check{id, Fail, "CLAUDE.md missing; run dashcrew sync"}
-	}
-	if text, _ := d.read("CLAUDE.md"); !strings.Contains(text, "@AGENTS.md") {
-		return Check{id, Fail, `CLAUDE.md does not import AGENTS.md; add a line "@AGENTS.md"`}
-	}
-	return Check{id, OK, "CLAUDE.md imports AGENTS.md"}
-}
-
-func (d Doctor) mcp() Check {
-	const id = "mcp"
-	if !d.exists(".mcp.json") {
-		return Check{id, Warn, ".mcp.json missing; run dashcrew sync"}
-	}
-	config, err := d.readObject(".mcp.json")
-	var servers *omap.Map[any]
-	if err == nil {
-		servers, err = mcpServers(config)
-	}
-	if err != nil {
-		return Check{id, Warn, ".mcp.json invalid: " + err.Error()}
-	}
-	adapter := adapters.NewClaudeCode(d.Catalog, d.ProjectDir, d.platform())
-	adapter.Knowledge = d.profileKnowledge()
-	expected := adapter.McpServers()
-	var problems []string
-	for _, name := range expected.Keys() {
-		switch current := servers.Value(name); {
-		case current == nil:
-			problems = append(problems, name+" missing")
-		case encode(current) != encode(expected.Value(name)):
-			problems = append(problems, name+" defined differently")
-		}
-	}
-	if len(problems) == 0 {
-		return Check{id, OK, "defined: " + strings.Join(expected.Keys(), ", ")}
-	}
-	return Check{id, Warn, strings.Join(problems, ", ")}
-}
-
-// skills fails on a missing catalog skill and only warns on a missing external one, since plugins install
-// skills elsewhere.
-func (d Doctor) skills(lockedFiles *omap.Map[string]) Check {
-	const id = "skills"
-	if lockedFiles == nil {
-		return Check{id, Skip, "needs the lock"}
-	}
-	referenced := map[string]bool{}
-	for _, path := range lockedFiles.Keys() {
-		if !strings.HasSuffix(path, ".md") || !d.exists(path) {
-			continue
-		}
-		text, err := d.read(path)
-		if err != nil {
-			continue
-		}
-		for _, match := range skillReference.FindAllStringSubmatch(text, -1) {
-			if match[1] != "" {
-				referenced[match[1]] = true
-			} else {
-				referenced[match[2]] = true
-			}
-		}
-		if path == "AGENTS.md" {
-			for _, name := range skillIndexNames(text) {
-				referenced[name] = true
-			}
-		}
-	}
-
-	platform := d.platform()
-	dashcrewSkills := map[string]bool{}
-	for name := range d.Catalog.SkillsFor(platform) {
-		dashcrewSkills[name] = true
-	}
-	for name := range d.Catalog.WorkflowsFor(platform) {
-		dashcrewSkills[name] = true
-	}
-	for _, skill := range d.Catalog.ProjectSkills {
-		if !skill.Optional {
-			dashcrewSkills[skill.Name] = true
-		}
-	}
-	packs := d.Catalog.PacksFor(platform)
-	for _, family := range packs.Keys() {
-		options := packs.Value(family)
-		for _, option := range options.Keys() {
-			for name := range options.Value(option).Skills {
-				dashcrewSkills[name] = true
-			}
-		}
-	}
-	userDir := d.UserSkillsDir
-	if userDir == "" {
-		userDir = DefaultUserSkillsDir(environment())
-	}
-	names := make([]string, 0, len(referenced))
-	for name := range referenced {
-		names = append(names, name)
-	}
-	sort.Strings(names)
-	var missing, external []string
-	for _, name := range names {
-		if d.exists(".claude/skills/" + name + "/SKILL.md") {
-			continue
-		}
-		if dashcrewSkills[name] {
-			missing = append(missing, name)
-		} else if userDir == "" || !isFile(filepath.Join(userDir, name, "SKILL.md")) {
-			external = append(external, name)
-		}
-	}
-	var leftOut []string
-	for _, skill := range d.Catalog.ProjectSkills {
-		if !skill.Optional {
-			leftOut = append(leftOut, skill.Warnings()...)
-		}
-	}
-	if len(missing) > 0 {
-		return Check{id, Fail, strings.Join(append([]string{"dashcrew skills missing: " + strings.Join(missing, ", ") + ", run dashcrew sync"}, leftOut...), "; ")}
-	}
-	warnings := leftOut
-	if len(external) > 0 {
-		warnings = append([]string{"not found locally (install, or ignore if a plugin provides them): " + strings.Join(external, ", ")}, warnings...)
-	}
-	if len(warnings) > 0 {
-		return Check{id, Warn, strings.Join(warnings, "; ")}
-	}
-	return Check{id, OK, fmt.Sprintf("%d referenced skills found", len(referenced))}
-}
-
-// skillIndexNames are the skill names listed under the `### Skill index` heading of AGENTS.md; empty when there
-// is none.
-func skillIndexNames(agentsMd string) []string {
-	start := strings.Index(agentsMd, "### Skill index\n")
-	if start < 0 {
-		return nil
-	}
-	section := agentsMd[start:]
-	if end := strings.Index(agentsMd[start+1:], "\n#"); end >= 0 {
-		section = agentsMd[start : start+1+end]
-	}
-	var names []string
-	for _, match := range indexEntry.FindAllStringSubmatch(section, -1) {
-		names = append(names, match[1])
-	}
-	return names
 }
 
 func (d Doctor) agentsMdSize(limit int) Check {

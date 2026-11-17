@@ -8,7 +8,6 @@ import (
 	"path"
 	"strings"
 
-	"github.com/fahnaladitia/dashcrew/internal/agents"
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
 	"github.com/fahnaladitia/dashcrew/internal/dartjson"
 	"github.com/fahnaladitia/dashcrew/internal/knowledge"
@@ -35,25 +34,6 @@ type Adapter interface {
 	// Merge adds dashcrew entries to files the user edits too, keeping everything else.
 	// ownedMcp are the MCP servers this adapter wrote before.
 	Merge(ownedMcp map[string]bool, warnings *[]string) (MergeResult, error)
-}
-
-// AdapterFor returns the adapter for agent on platform; a non-nil k adds the knowledge MCP server.
-func AdapterFor(agent string, c *catalog.Catalog, projectDir, platform string, k *profile.Knowledge) (Adapter, error) {
-	switch agent {
-	case "claude-code":
-		a := NewClaudeCode(c, projectDir, platform)
-		a.Knowledge = k
-		return a, nil
-	case "codex":
-		a := NewCodex(c, projectDir, platform)
-		a.Knowledge = k
-		return a, nil
-	case "antigravity":
-		a := NewAntigravity(c, projectDir, platform)
-		a.Knowledge = k
-		return a, nil
-	}
-	return nil, fmt.Errorf("Agent adapter not available yet: %s. Supported: %s.", agent, strings.Join(agents.All(), ", "))
 }
 
 func warn(warnings *[]string, message string) {
@@ -120,15 +100,6 @@ func SkillDocs(c *catalog.Catalog, p *profile.Profile, targets []render.Rendered
 func jsonString(s string) string {
 	text, _ := dartjson.Encode(s)
 	return text
-}
-
-// SkillFile is where agent reads skill name, relative to the project: Claude Code's own folder, or the
-// `.agents/skills` folder Codex and Antigravity share.
-func SkillFile(agent, name string) string {
-	if agent == "claude-code" {
-		return ".claude/skills/" + name + "/SKILL.md"
-	}
-	return ".agents/skills/" + name + "/SKILL.md"
 }
 
 // SupportingFile is where agent reads a supporting file of skill name: next to its SKILL.md.

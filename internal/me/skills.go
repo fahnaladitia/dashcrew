@@ -201,10 +201,7 @@ func repoSkillTargets(home *Profile, dir string, on []catalog.ProjectSkill) []ta
 		}
 		sort.Strings(relatives)
 		for _, relative := range relatives {
-			text := adapters.AgentsSkillFile(skill.Name, skill.Meta, body)
-			if files[relative] == "claude-code" {
-				text = adapters.ClaudeSkillFile(skill.Name, skill.Meta, body)
-			}
+			text := adapters.SkillText(files[relative], skill.Name, skill.Meta, body)
 			full := filepath.Join(dir, filepath.FromSlash(relative))
 			wanted[full] = true
 			out = append(out, target{path: full, text: text, want: true, skill: true, files: skill.Files})

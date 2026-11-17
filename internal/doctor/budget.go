@@ -52,41 +52,8 @@ func (d Doctor) alwaysOnParts(agent string) ([]alwaysOnPart, []string) {
 		parts = append(parts, alwaysOnPart{relative, int(info.Size())})
 		return true
 	}
-	switch agent {
-	case "claude-code":
-		var follow func(relative string, depth int)
-		follow = func(relative string, depth int) {
-			if !add(relative) || depth == importDepth {
-				return
-			}
-			text, _ := d.read(relative)
-			for _, target := range importsOf(text) {
-				resolved, ok := d.inProject(filepath.Join(filepath.Dir(d.path(relative)), filepath.FromSlash(target)), target)
-				if !ok {
-					outside = append(outside, target)
-					continue
-				}
-				follow(resolved, depth+1)
-			}
-		}
-		follow("CLAUDE.md", 0)
-		follow("CLAUDE.local.md", 0)
-		for _, rule := range d.ruleFiles(".claude/rules", true) {
-			if _, scoped := frontMatterValue(d.readOrEmpty(rule), "paths"); !scoped {
-				add(rule)
-			}
-		}
-	case "codex":
-		if !add("AGENTS.override.md") {
-			add("AGENTS.md")
-		}
-	case "antigravity":
-		add("AGENTS.md")
-		for _, rule := range d.ruleFiles(".agents/rules", false) {
-			if trigger, _ := frontMatterValue(d.readOrEmpty(rule), "trigger"); trigger == "always_on" {
-				add(rule)
-			}
-		}
+	if a, ok := agentChecks[agent]; ok {
+		outside = a.alwaysOn(d, add)
 	}
 	if memory, ok := d.memoryIndexPath(); ok {
 		add(memory)

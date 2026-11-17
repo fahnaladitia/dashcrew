@@ -204,7 +204,7 @@ func render(personal fs.FS, context map[string]any) (string, error) {
 func renderHome(p *Profile, personal fs.FS, agent string, linked map[string]bool, repos bool, own []ownSkill) (string, error) {
 	context := baseContext(p, linked)
 	context["home"], context["repos"], context["antigravity"] = true, repos, agent == "antigravity"
-	if agent == "claude-code" {
+	if personalAgents[agent].linksSkills {
 		context["own_skills"], context["has_own_skills"] = ownSkillLines(own), len(own) > 0
 	}
 	return render(personal, context)
@@ -219,7 +219,7 @@ func renderRepo(home *Profile, r *RepoProfile, dir string, personal fs.FS, agent
 	context["repo"] = true
 	context["new"], context["new_off"] = effective.Level == "new" && !homeNew, homeNew && effective.Level != "new"
 	context["lead"], context["lead_off"] = effective.Role == "lead" && !homeLead, homeLead && effective.Role != "lead"
-	if agent == "codex" {
+	if personalAgents[agent].repoFile == "" {
 		where := "the repository at `" + filepath.ToSlash(dir) + "`"
 		context["marker"] = false
 		context["h1"], context["h"] = "##", "###"
@@ -247,22 +247,63 @@ type target struct {
 	files []catalog.SkillFile
 }
 
+// personalAgent is where me sync writes for one agent; personalAgents holds one per agent of agents.Personal, and
+// a test fails for one missing.
+type personalAgent struct {
+	// homeFile is the member's instruction file for the agent.
+	homeFile func(Places) string
+	// block is true when homeFile is shared with the user, so dashcrew writes a marked block in it.
+	block bool
+	// repoFile is the per-repo instruction file, relative to the repo; empty when the repo's lines go into homeFile
+	// as sections.
+	repoFile string
+	// linksSkills is true when the member's own and the dashcrew personal skills are linked for this agent.
+	linksSkills bool
+}
+
+var personalAgents = map[string]personalAgent{
+	"claude-code": {
+		homeFile:    func(p Places) string { return filepath.Join(p.ClaudeDir, "rules", ruleFile) },
+		repoFile:    filepath.Join(".claude", "rules", ruleFile),
+		linksSkills: true,
+	},
+	"codex": {
+		homeFile: func(p Places) string { return filepath.Join(p.CodexDir, "AGENTS.md") },
+		block:    true,
+	},
+	"antigravity": {
+		homeFile: func(p Places) string { return filepath.Join(p.GeminiDir, "config", "rules", ruleFile) },
+		repoFile: filepath.Join(".agents", "rules", ruleFile),
+	},
+}
+
 func homeInstructionPath(places Places, agent string) string {
-	switch agent {
-	case "codex":
-		return filepath.Join(places.CodexDir, "AGENTS.md")
-	case "antigravity":
-		return filepath.Join(places.GeminiDir, "config", "rules", ruleFile)
-	default:
-		return filepath.Join(places.ClaudeDir, "rules", ruleFile)
-	}
+	return personalAgents[agent].homeFile(places)
 }
 
 func repoInstructionPath(dir, agent string) string {
-	if agent == "antigravity" {
-		return filepath.Join(dir, ".agents", "rules", ruleFile)
+	return filepath.Join(dir, personalAgents[agent].repoFile)
+}
+
+// repoAgents are the personal agents with a per-repo instruction file, in the order of agents.Personal.
+func repoAgents() []string {
+	var out []string
+	for _, agent := range agents.Personal() {
+		if personalAgents[agent].repoFile != "" {
+			out = append(out, agent)
+		}
 	}
-	return filepath.Join(dir, ".claude", "rules", ruleFile)
+	return out
+}
+
+// linksSkills is true when one of the member's agents gets the linked skills.
+func linksSkills(home *Profile) bool {
+	for _, agent := range home.Agents {
+		if personalAgents[agent].linksSkills {
+			return true
+		}
+	}
+	return false
 }
 
 func selectedSkills(home *Profile, repos []repo) []string {
@@ -295,7 +336,7 @@ type skillPlan struct {
 
 func planSkills(home *Profile, repos []repo, places Places) skillPlan {
 	plan := skillPlan{listed: map[string]bool{}, on: map[string][]catalog.ProjectSkill{}, failed: map[string]bool{}}
-	if contains(home.Agents, "claude-code") {
+	if linksSkills(home) {
 		plan.own, plan.notes = ownSkills(home, places)
 		for _, name := range home.Skills {
 			plan.listed[name] = true
@@ -317,13 +358,13 @@ func targets(home *Profile, repos []repo, places Places, personal fs.FS, linked 
 	}
 	var out []target
 	for _, agent := range agents.Personal() {
-		t := target{path: homeInstructionPath(places, agent), block: agent == "codex", want: contains(home.Agents, agent)}
+		t := target{path: homeInstructionPath(places, agent), block: personalAgents[agent].block, want: contains(home.Agents, agent)}
 		if t.want {
 			text, err := renderHome(home, personal, agent, linked, live, plan.own)
 			if err != nil {
 				return nil, err
 			}
-			if agent == "codex" {
+			if personalAgents[agent].repoFile == "" {
 				for _, r := range repos {
 					if r.profile == nil {
 						continue
@@ -340,7 +381,7 @@ func targets(home *Profile, repos []repo, places Places, personal fs.FS, linked 
 		out = append(out, t)
 	}
 	for _, r := range repos {
-		for _, agent := range []string{"claude-code", "antigravity"} {
+		for _, agent := range repoAgents() {
 			t := target{path: repoInstructionPath(r.dir, agent), want: r.profile != nil && contains(home.Agents, agent)}
 			if t.want {
 				text, err := renderRepo(home, r.profile, r.dir, personal, agent, linked, plan.on[r.dir])
@@ -368,7 +409,7 @@ func Sync(home *Profile, places Places, personal fs.FS) ([]Change, error) {
 		return nil, err
 	}
 	var changes []Change
-	claude := contains(home.Agents, "claude-code")
+	claude := linksSkills(home)
 	selected := selectedSkills(home, repos)
 	linked := map[string]bool{}
 	for _, name := range Skills {
@@ -481,7 +522,7 @@ func Status(home *Profile, places Places, personal fs.FS) ([]Change, error) {
 		return nil, err
 	}
 	var changes []Change
-	claude := contains(home.Agents, "claude-code")
+	claude := linksSkills(home)
 	selected := selectedSkills(home, repos)
 	linked := map[string]bool{}
 	for _, name := range Skills {
@@ -584,10 +625,10 @@ func Remove(places Places) ([]Change, error) {
 	}
 	var all []target
 	for _, agent := range agents.Personal() {
-		all = append(all, target{path: homeInstructionPath(places, agent), block: agent == "codex"})
+		all = append(all, target{path: homeInstructionPath(places, agent), block: personalAgents[agent].block})
 	}
 	for _, dir := range repos {
-		for _, agent := range []string{"claude-code", "antigravity"} {
+		for _, agent := range repoAgents() {
 			all = append(all, target{path: repoInstructionPath(dir, agent)})
 		}
 		all = append(all, repoSkillTargets(&Profile{}, dir, nil)...)
@@ -611,7 +652,10 @@ func Remove(places Places) ([]Change, error) {
 // skills only it selected go too; its .ai/me.yaml stays.
 func RemoveRepo(home *Profile, places Places, personal fs.FS, dir string) ([]Change, error) {
 	var changes []Change
-	all := []target{{path: repoInstructionPath(dir, "claude-code")}, {path: repoInstructionPath(dir, "antigravity")}}
+	var all []target
+	for _, agent := range repoAgents() {
+		all = append(all, target{path: repoInstructionPath(dir, agent)})
+	}
 	for _, t := range append(all, repoSkillTargets(&Profile{}, dir, nil)...) {
 		removed, err := removeTarget(t)
 		if err == nil && t.skill && len(removed) > 0 {
