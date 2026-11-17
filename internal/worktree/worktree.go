@@ -162,9 +162,11 @@ func (w *Worktrees) Create(branch, base string, name *string, installDeps bool, 
 	if git(main, "check-ref-format", "--branch", branch).code != 0 {
 		return nil, &Error{`"` + branch + `" is not a valid branch name.`}
 	}
-	if git(main, "rev-parse", "--verify", "--quiet", base+"^{commit}").code != 0 {
+	resolved := git(main, "rev-parse", "--verify", "--quiet", base+"^{commit}")
+	if resolved.code != 0 {
 		return nil, &Error{"Base " + base + " not found. Fetch it or name an existing branch."}
 	}
+	baseCommit := strings.TrimSpace(resolved.stdout)
 	if git(main, "rev-parse", "--verify", "--quiet", "refs/heads/"+branch).code == 0 {
 		return nil, &Error{"Branch " + branch + " already exists."}
 	}
@@ -172,8 +174,14 @@ func (w *Worktrees) Create(branch, base string, name *string, installDeps bool, 
 		return nil, &Error{"Folder " + target + " already exists."}
 	}
 
-	if _, err := gitOrFail(main, "worktree", "add", "--quiet", "--no-track", "-b", branch, target, base); err != nil {
+	// The commit resolved above, not the name: the branch starts exactly where the check found the base.
+	if _, err := gitOrFail(main, "worktree", "add", "--quiet", "--no-track", "-b", branch, target, baseCommit); err != nil {
 		return nil, err
+	}
+	if head := strings.TrimSpace(git(target, "rev-parse", "HEAD").stdout); head != baseCommit {
+		return nil, &Error{"Worktree " + target + " is at " + short(head) + ", not at base " + base + " (" +
+			short(baseCommit) + "): something moved it after git created it, such as a post-checkout hook. " +
+			"Check it before working there."}
 	}
 	if err := dropUpstream(target, out); err != nil {
 		return nil, err
