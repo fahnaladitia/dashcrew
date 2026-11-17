@@ -37,10 +37,14 @@ core/ + packs/ + platforms/ (shipped)  --+
 One static binary per OS, with the catalog built in. Requires git and a POSIX shell (the guard shim is `sh`).
 
 ```bash
+curl -fsSL https://raw.githubusercontent.com/fahnaladitia/dashcrew/main/install.sh | sh
+# or:
 brew install fahnaladitia/tap/dashcrew
 # or, with Go 1.26 or later:
 go install github.com/fahnaladitia/dashcrew/cmd/dashcrew@latest
 ```
+
+`install.sh` (macOS and Linux, amd64 and arm64) installs the latest release into `~/.local/bin` without `sudo`. `DASHCREW_VERSION=0.6.0` pins a release and `DASHCREW_INSTALL_DIR` picks another folder. It installs nothing unless the release's `checksums.txt` lists the archive with the same SHA-256 and the binary reports the version asked for. For build provenance as well, verify an archive with `gh attestation verify <archive> -R fahnaladitia/dashcrew`.
 
 `dashcrew --version` prints the version. A team pins one: `brew` installs the latest release, and `go install ...@v0.1.0` (or a commit) a fixed one. The guard shim needs dashcrew 0.1.0 or newer on `PATH`.
 
