@@ -101,9 +101,9 @@ func tarGz(t *testing.T, files map[string]string) []byte {
 	return buf.Bytes()
 }
 
-// runInstall runs install.sh with the given environment on top of a minimal one and returns its exit error and
-// combined output.
-func runInstall(t *testing.T, releases, installDir string, env ...string) (error, string) {
+// runInstall runs install.sh with the given environment on top of a minimal one and returns its combined output
+// and exit error.
+func runInstall(t *testing.T, releases, installDir string, env ...string) (string, error) {
 	t.Helper()
 	cmd := exec.Command("sh", "install.sh")
 	cmd.Env = append([]string{
@@ -113,7 +113,7 @@ func runInstall(t *testing.T, releases, installDir string, env ...string) (error
 		"DASHCREW_INSTALL_DIR=" + installDir,
 	}, env...)
 	out, err := cmd.CombinedOutput()
-	return err, string(out)
+	return string(out), err
 }
 
 func installedVersion(t *testing.T, dir string) string {
@@ -137,7 +137,7 @@ func TestInstallScriptInstallsTheLatestRelease(t *testing.T) {
 	releases := fakeRelease{latest: "v9.9.9", binaries: map[string]string{"v9.9.9": "dashcrew 9.9.9"}}.serve(t)
 	dir := filepath.Join(t.TempDir(), "bin")
 
-	err, out := runInstall(t, releases, dir)
+	out, err := runInstall(t, releases, dir)
 
 	if err != nil {
 		t.Fatalf("%v\n%s", err, out)
@@ -159,7 +159,7 @@ func TestInstallScriptInstallsAPinnedVersion(t *testing.T) {
 	for _, pinned := range []string{"v9.9.8", "9.9.8"} {
 		dir := filepath.Join(t.TempDir(), "bin")
 
-		err, out := runInstall(t, releases, dir, "DASHCREW_VERSION="+pinned)
+		out, err := runInstall(t, releases, dir, "DASHCREW_VERSION="+pinned)
 
 		if err != nil {
 			t.Fatalf("%s: %v\n%s", pinned, err, out)
@@ -178,7 +178,7 @@ func TestInstallScriptReplacesAnInstalledDashcrew(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err, out := runInstall(t, releases, dir, "PATH="+dir+string(os.PathListSeparator)+os.Getenv("PATH"))
+	out, err := runInstall(t, releases, dir, "PATH="+dir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
 	if err != nil {
 		t.Fatalf("%v\n%s", err, out)
@@ -203,7 +203,7 @@ func TestInstallScriptNamesAnEarlierDashcrewOnPath(t *testing.T) {
 	}
 	dir := filepath.Join(t.TempDir(), "bin")
 
-	err, out := runInstall(t, releases, dir, "PATH="+earlier+string(os.PathListSeparator)+dir+string(os.PathListSeparator)+os.Getenv("PATH"))
+	out, err := runInstall(t, releases, dir, "PATH="+earlier+string(os.PathListSeparator)+dir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
 	if err != nil {
 		t.Fatalf("%v\n%s", err, out)
@@ -242,7 +242,7 @@ func TestInstallScriptRefusesWhatItCannotVerify(t *testing.T) {
 			releases := c.release.serve(t)
 			dir := filepath.Join(t.TempDir(), "bin")
 
-			err, out := runInstall(t, releases, dir, c.env...)
+			out, err := runInstall(t, releases, dir, c.env...)
 
 			if err == nil {
 				t.Fatalf("installed:\n%s", out)
@@ -279,7 +279,7 @@ func TestInstallScriptWorksWithWgetAlone(t *testing.T) {
 	releases := fakeRelease{latest: "v9.9.9", binaries: map[string]string{"v9.9.9": "dashcrew 9.9.9"}}.serve(t)
 	dir := filepath.Join(t.TempDir(), "bin")
 
-	err, out := runInstall(t, releases, dir, "PATH="+bin)
+	out, err := runInstall(t, releases, dir, "PATH="+bin)
 
 	if err != nil {
 		t.Fatalf("%v\n%s", err, out)

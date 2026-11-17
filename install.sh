@@ -36,7 +36,9 @@ latest_tag() {
   if command -v curl >/dev/null 2>&1; then
     url=$(curl -fsSLI -o /dev/null -w '%{url_effective}' "$releases/latest")
   elif command -v wget >/dev/null 2>&1; then
-    url=$(wget -S -O /dev/null "$releases/latest" 2>&1 | sed -n 's/^ *[Ll]ocation: *//p' | tail -n 1 | tr -d '\r')
+    # -S prints each response's Location header, and wget adds its own "Location: <url> [following]" line: the
+    # first word after the last one is where the redirects ended.
+    url=$(wget -S -O /dev/null "$releases/latest" 2>&1 | tr -d '\r' | sed -n 's/^ *[Ll]ocation: *\([^ ]*\).*/\1/p' | tail -n 1)
   else
     fail "needs curl or wget"
   fi
