@@ -153,7 +153,7 @@ stdout:
 | ok    hook             PreToolUse guard hook present
 | ok    claude-md        CLAUDE.md imports AGENTS.md
 | ok    mcp              defined: dart-mcp-server, dashcrew-knowledge
-| warn  skills           not found locally (install, or ignore if a plugin provides them): idea-refine
+| ok    skills           16 referenced skills found; optional, not installed: idea-refine
 | ok    knowledge        linked to ~/.dashcrew/knowledge/notes, last pull unknown
 | warn  knowledge-stale  1 stale pointer, 1 old proposal, 2 unverified pages; run dashcrew knowledge doctor
 | skip  me               no personal profile; dashcrew me init adds one

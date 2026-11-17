@@ -132,7 +132,7 @@ stdout:
 | ok    hook            PreToolUse guard hook present
 | ok    claude-md       CLAUDE.md imports AGENTS.md
 | ok    mcp             defined: dart-mcp-server
-| warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
+| ok    skills          16 referenced skills found; optional, not installed: idea-refine
 | info  release-line    release/2.4.0 is the release line 2.4.0: toolkit 0.0.0, the main line develop has 0.0.1; dashcrew sync --upgrade moves this line
 | skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 16172 of 32768 bytes

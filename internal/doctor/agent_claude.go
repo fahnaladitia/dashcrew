@@ -8,6 +8,7 @@ import (
 
 	"github.com/fahnaladitia/dashcrew/internal/adapters"
 	"github.com/fahnaladitia/dashcrew/internal/omap"
+	"github.com/fahnaladitia/dashcrew/internal/sync"
 )
 
 func (d Doctor) hook() Check {
@@ -68,14 +69,27 @@ func (d Doctor) mcp() Check {
 	return Check{id, Warn, strings.Join(problems, ", ")}
 }
 
-// skills fails on a missing catalog skill and only warns on a missing external one, since plugins install
-// skills elsewhere.
+// skills fails on a missing catalog skill and warns on a required project skill left out. An outside skill the
+// generated files name (`idea-refine` and the like) is used only when installed, and plugins install skills
+// elsewhere, so a missing one is a note on an ok check.
 func (d Doctor) skills(lockedFiles *omap.Map[string]) Check {
 	const id = "skills"
 	if lockedFiles == nil {
 		return Check{id, Skip, "needs the lock"}
 	}
+	// referenced are the skills the files name; byUser those named only in the AGENTS.md project block, which the
+	// team writes, where a name no skill answers to is likely a typo rather than an optional outside skill.
 	referenced := map[string]bool{}
+	byUser := map[string]bool{}
+	names := func(text string, into map[string]bool) {
+		for _, match := range skillReference.FindAllStringSubmatch(text, -1) {
+			if match[1] != "" {
+				into[match[1]] = true
+			} else {
+				into[match[2]] = true
+			}
+		}
+	}
 	for _, path := range lockedFiles.Keys() {
 		if !strings.HasSuffix(path, ".md") || !d.exists(path) {
 			continue
@@ -84,17 +98,25 @@ func (d Doctor) skills(lockedFiles *omap.Map[string]) Check {
 		if err != nil {
 			continue
 		}
-		for _, match := range skillReference.FindAllStringSubmatch(text, -1) {
-			if match[1] != "" {
-				referenced[match[1]] = true
-			} else {
-				referenced[match[2]] = true
+		generated := text
+		if path == "AGENTS.md" {
+			if begin, end := strings.Index(text, sync.ProjectBegin), strings.Index(text, sync.ProjectEnd); begin >= 0 && end > begin {
+				generated = text[:begin] + text[end:]
+				names(text[begin:end], byUser)
 			}
 		}
+		names(generated, referenced)
 		if path == "AGENTS.md" {
 			for _, name := range skillIndexNames(text) {
 				referenced[name] = true
 			}
+		}
+	}
+	for name := range byUser {
+		if referenced[name] {
+			delete(byUser, name)
+		} else {
+			referenced[name] = true
 		}
 	}
 
@@ -124,20 +146,24 @@ func (d Doctor) skills(lockedFiles *omap.Map[string]) Check {
 	if userDir == "" {
 		userDir = DefaultUserSkillsDir(environment())
 	}
-	names := make([]string, 0, len(referenced))
+	sortedNames := make([]string, 0, len(referenced))
 	for name := range referenced {
-		names = append(names, name)
+		sortedNames = append(sortedNames, name)
 	}
-	sort.Strings(names)
-	var missing, external []string
-	for _, name := range names {
+	sort.Strings(sortedNames)
+	var missing, external, unknown []string
+	for _, name := range sortedNames {
 		if d.exists(".claude/skills/" + name + "/SKILL.md") {
 			continue
 		}
 		if dashcrewSkills[name] {
 			missing = append(missing, name)
 		} else if userDir == "" || !isFile(filepath.Join(userDir, name, "SKILL.md")) {
-			external = append(external, name)
+			if byUser[name] {
+				unknown = append(unknown, name)
+			} else {
+				external = append(external, name)
+			}
 		}
 	}
 	var leftOut []string
@@ -149,14 +175,24 @@ func (d Doctor) skills(lockedFiles *omap.Map[string]) Check {
 	if len(missing) > 0 {
 		return Check{id, Fail, strings.Join(append([]string{"dashcrew skills missing: " + strings.Join(missing, ", ") + ", run dashcrew sync"}, leftOut...), "; ")}
 	}
-	warnings := leftOut
+	optional := ""
 	if len(external) > 0 {
-		warnings = append([]string{"not found locally (install, or ignore if a plugin provides them): " + strings.Join(external, ", ")}, warnings...)
+		optional = "optional, not installed: " + strings.Join(external, ", ")
 	}
-	if len(warnings) > 0 {
-		return Check{id, Warn, strings.Join(warnings, "; ")}
+	if len(unknown) > 0 {
+		leftOut = append([]string{"not found locally (install, or ignore if a plugin provides them): " + strings.Join(unknown, ", ")}, leftOut...)
 	}
-	return Check{id, OK, fmt.Sprintf("%d referenced skills found", len(referenced))}
+	if len(leftOut) > 0 {
+		if optional != "" {
+			leftOut = append(leftOut, optional)
+		}
+		return Check{id, Warn, strings.Join(leftOut, "; ")}
+	}
+	detail := fmt.Sprintf("%d referenced skills found", len(referenced)-len(external)-len(unknown))
+	if optional != "" {
+		detail += "; " + optional
+	}
+	return Check{id, OK, detail}
 }
 
 // skillIndexNames are the skill names listed under the `### Skill index` heading of AGENTS.md; empty when there

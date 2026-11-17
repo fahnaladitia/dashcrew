@@ -18,3 +18,14 @@ func TestMcpChecksSayWhenThereIsNothingToDefine(t *testing.T) {
 		}
 	}
 }
+
+// TestOutsideSkillsTheRulesUseOnlyWhenInstalledAreNotAWarning pins that a fresh project on a machine without the
+// optional outside skills (idea-refine and the like) gets no skills warning, only a note.
+func TestOutsideSkillsTheRulesUseOnlyWhenInstalledAreNotAWarning(t *testing.T) {
+	f := setup(t, blocProfile)
+	f.sync()
+
+	checks := f.doctor()
+
+	expect(t, checks, "skills", OK, "optional, not installed: ", "idea-refine")
+}

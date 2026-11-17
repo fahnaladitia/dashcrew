@@ -144,7 +144,7 @@ stdout:
 | ok    hook            PreToolUse guard hook present
 | ok    claude-md       CLAUDE.md imports AGENTS.md
 | ok    mcp             no MCP servers to define
-| warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
+| ok    skills          15 referenced skills found; optional, not installed: idea-refine
 | skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 14764 of 32768 bytes
 | ok    always-on       claude-code 14.4 KiB of 40.0 KiB
@@ -167,7 +167,7 @@ stdout:
 | ok    hook            PreToolUse guard hook present
 | ok    claude-md       CLAUDE.md imports AGENTS.md
 | ok    mcp             no MCP servers to define
-| warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
+| ok    skills          15 referenced skills found; optional, not installed: idea-refine
 | skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 14764 of 32768 bytes
 | ok    always-on       claude-code 14.4 KiB of 40.0 KiB

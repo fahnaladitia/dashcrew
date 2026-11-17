@@ -296,6 +296,10 @@ func initApp(t *testing.T, s side) {
 
 func noPlatform(t *testing.T, s side) { s.write(t, "w/Makefile", "lint:\n") }
 
+func goModule(t *testing.T, s side) {
+	s.write(t, "w/go.mod", "module example.com/app\n\ngo 1.22\n\nrequire github.com/go-chi/chi/v5 v5.0.0\n")
+}
+
 const goPlatformYaml = "detect: [go.mod]\ncommands: { analyze: go vet ./..., test: go test ./..., test_scoped: go test, deps: go mod download }\n"
 
 func projectPlatform(t *testing.T, s side) {
@@ -700,6 +704,11 @@ func cliCases() []cliCase {
 			{args: []string{"init"}, stdin: "\nMakefile\n"},
 			{args: []string{"init"}, stdin: "flutter\n"},
 			{args: []string{"init"}, stdin: "nope\n\nMakefile  go.mod\nmake lint\n\nmake test\nmake one\nmake deps\nmake fmt\n"},
+			cli("sync"),
+			cli("doctor"),
+		}},
+		{name: "init a Go module", setup: goModule, steps: []step{
+			cli("init", "--yes"),
 			cli("sync"),
 			cli("doctor"),
 		}},

@@ -156,7 +156,7 @@ stdout:
 | ok    hook            PreToolUse guard hook present
 | ok    claude-md       CLAUDE.md imports AGENTS.md
 | ok    mcp             defined: dart-mcp-server
-| warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine, managing-hive-storage
+| ok    skills          19 referenced skills found; optional, not installed: idea-refine, managing-hive-storage
 | skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 21401 of 32768 bytes
 | ok    always-on       claude-code 20.9 KiB of 40.0 KiB
@@ -179,7 +179,7 @@ stdout:
 | ok    hook            PreToolUse guard hook present
 | ok    claude-md       CLAUDE.md imports AGENTS.md
 | ok    mcp             defined: dart-mcp-server
-| warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine, managing-hive-storage
+| ok    skills          19 referenced skills found; optional, not installed: idea-refine, managing-hive-storage
 | skip  me              no personal profile; dashcrew me init adds one
 | ok    agents-md-size  AGENTS.md 21401 of 32768 bytes
 | ok    always-on       claude-code 20.9 KiB of 40.0 KiB

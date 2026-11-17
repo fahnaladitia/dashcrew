@@ -187,7 +187,7 @@ stdout:
 | ok    hook             PreToolUse guard hook present
 | ok    claude-md        CLAUDE.md imports AGENTS.md
 | ok    mcp              defined: dart-mcp-server, dashcrew-knowledge
-| warn  skills           not found locally (install, or ignore if a plugin provides them): idea-refine
+| ok    skills           16 referenced skills found; optional, not installed: idea-refine
 | ok    knowledge        linked to ~/.dashcrew/knowledge/notes, last pull unknown
 | ok    knowledge-stale  no stale pointers, old proposals or unverified pages
 | warn  spec             specs/1.4.0/notes-sync@rev1: spec moved to rev 2; re-read it
