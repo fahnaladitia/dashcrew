@@ -82,10 +82,12 @@ func firstNonNull(object *omap.Map[any], keys ...string) any {
 	return nil
 }
 
-var shellTools = map[string]bool{"Bash": true, "shell": true, "local_shell": true, "exec_command": true, "container.exec": true}
+var shellTools = map[string]bool{"Bash": true, "Shell": true, "shell": true, "local_shell": true, "exec_command": true, "container.exec": true}
 
 // FromHook reads one Claude Code or Codex hook input: `Bash`, `Write`, `Edit`, `MultiEdit`, `NotebookEdit` and
 // `agent_type`; Codex `shell` or `exec_command` with a string or an argv list (`bash -lc <script>` is unwrapped).
+// Cursor's shell command comes as the `Shell` tool of `preToolUse` or as the top-level `command` of
+// `beforeShellExecution`, in its own hooks and in the Claude Code hooks it runs.
 // An error is a value of the wrong type, which the guard answers by allowing the call.
 func FromHook(json *omap.Map[any]) (Event, error) {
 	tool, err := optionalString("tool_name", json.Value("tool_name"))
@@ -98,6 +100,10 @@ func FromHook(json *omap.Map[any]) (Event, error) {
 		return Event{}, err
 	}
 
+	if tool == nil && json.Value("hook_event_name") == "beforeShellExecution" {
+		command := json.Value("command")
+		return Event{Kind: Shell, Command: shellText(command), Argv: argvOf(command), Role: role}, nil
+	}
 	switch name := orEmpty(tool); {
 	case shellTools[name]:
 		command := input.Value("command")
