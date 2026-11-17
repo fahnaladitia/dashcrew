@@ -243,13 +243,6 @@ func stripPrefixes(argv []string) []string {
 	return argv[i:]
 }
 
-func gitSubcommand(argv []string) (string, bool) {
-	if at, ok := gitSubcommandAt(argv); ok {
-		return argv[at], true
-	}
-	return "", false
-}
-
 // gitSubcommandAt is the index in argv of git's subcommand, past git's own options.
 func gitSubcommandAt(argv []string) (int, bool) {
 	for i := 1; i < len(argv); {
