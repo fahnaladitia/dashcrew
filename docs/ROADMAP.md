@@ -111,10 +111,13 @@ Goal: a visitor understands dashcrew in 30 seconds, tries it in one command, and
   - [ ] Test the pitch first. In Claude Code and Codex, set native deny rules for `git push` and try `bash -c "git push"`, `sh -c` and `env git push`. If the native rules miss them and dashcrew blocks them, that is the GIF. If not, the pitch is "one policy for every agent".
   - [ ] `dashcrew guard init`: install the guard hooks and a default git-flow policy without a `project.yaml`, as the 10-second way to try dashcrew. Decide project-level or user-level hooks first (see the open questions in `docs/ideas/launch-direction.md`).
   - [ ] The guard section opens with what it blocks and what it does not, and lists the known misses: protection against accidents, not a sandbox.
+  - [x] An input the guard does not recognize is checked or logged, never passed in silence (plan: `docs/plans/v0.8-guard-unknown-input-plan.md`). The Codex `$` hook, the Antigravity hook path and Cursor's `Shell` input were three cases of the guard no longer protecting without anyone noticing; the third reached `main` because an unknown tool name is allowed unlogged.
 - **Cursor**
   - [ ] Adapter for Cursor: rules plus the guard hook, golden-tested, covered by the doctor probe. Spike the hook first to confirm it can fail closed.
   - [x] Keep the agent list in one place: `internal/agents`. The per-agent cases in `doctor` and `me sync` have a test that fails for an agent without one.
   - [ ] `docs/adding-an-adapter.md`, written from the Cursor work, so Gemini CLI can be the first outside contribution.
+  - [ ] What differs per agent lives in its adapter: the doctor hook check, the always-on files, the `me sync` paths and the guard minimum. Five per-agent `switch` statements remain after `internal/agents` (doctor, budget, `me sync`, `sync`, `guard/malformed.go`); a new agent should be one package and one golden.
+  - [ ] Recorded agent inputs: real hook payloads per agent and version in `internal/guard/testdata/payloads/`, run through each adapter's hook command in a test, and refreshed by the release checklist's live run. Goldens pin the bytes dashcrew writes, not what agents send.
 - **Front page**
   - [ ] README under 150 lines:
     - a one-sentence hero;
@@ -167,6 +170,7 @@ Goal: answer what launch users asked for, and reach the next agents.
   - import from rulesync, Ruler, `.cursor/rules` or `GEMINI.md`;
   - an opt-in safety pack for destructive and secret-reading commands.
 - [ ] Let small outside PRs skip the plan step in AGENTS.md.
+- [ ] A smaller always-on context, only if `dashcrew usage` shows it matters. Measured on `sample-riverpod-gorouter` (AGENTS.md 22.5 KB): the workflow chain (3.3 KB) is the core and stays always on, and the stack sections already point to their skills. What could go is about 2 KB, some 500 tokens per session: the skill index (1.8 KB), whose names and `when_to_use` every agent already loads from `SKILL.md`, down to one line naming the `review` skills; and the bullets that apply only with a tool (`dart-mcp-server`, a code graph), moved into the skills that use them. Costs: every golden, the index check in `doctor`, and the index as a fallback when an agent cuts its skill list short (Codex has a character budget).
 
 Exit criteria:
 
@@ -194,7 +198,7 @@ Goal: the public surface is something we are willing to keep for years, shaped b
   - [ ] Move the argument parser out of `cmd/dashcrew/cli.go` into `internal/cli`.
   - [ ] Move profile loading out of `sync` (used from 8 call sites).
   - [ ] Split `doctor` (1263 lines) by check family.
-  - [ ] One git exec helper instead of about 10.
+  - [ ] One git exec helper instead of 23 `exec.Command("git", …)` call sites.
   - [ ] One home-directory resolver instead of five.
   - [ ] Raise `cmd/dashcrew` coverage from 40% to 70%+.
 - **Release candidates.** At least two weeks on `-rc` tags. No open bug labeled `stability`, and no golden change between the last rc and final other than the version string.

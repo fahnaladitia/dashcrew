@@ -379,7 +379,6 @@ func TestMalformedPayloadsAreAllowedAndLogged(t *testing.T) {
 	for _, stdin := range []string{
 		`{"tool_name":"Bash","tool_input":{"command":"git status"}}`,
 		patchHook("*** Update File: lib/a.dart\n*** Move to: lib/b.dart\n+x\n"),
-		`{"tool_name":"WebFetch","tool_input":{}}`,
 	} {
 		runIn(t, dir, policy, stdin, now)
 	}
