@@ -87,7 +87,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-+ w/.ai/lock.json  -rw-r--r-- sha256:cb9c8c638bf9c45e
++ w/.ai/lock.json  -rw-r--r-- sha256:4f7fda5fc37ab71c
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:c5027d9c25fbef11
@@ -141,7 +141,7 @@ files:
 + w/.github  dir
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
 + w/.mcp.json  -rw-r--r-- sha256:d8e397af03b5b032
-+ w/AGENTS.md  -rw-r--r-- sha256:eea42488b3262231
++ w/AGENTS.md  -rw-r--r-- sha256:a193fa3f3c50527b
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 6: dashcrew "doctor"
@@ -157,10 +157,10 @@ stdout:
 | fail  guard-binary    dashcrew is not on PATH, so .ai/bin/guard refuses every tool call: install dashcrew 0.1.0 or newer (brew install fahnaladitia/tap/dashcrew)
 | ok    hook            PreToolUse guard hook present
 | ok    claude-md       CLAUDE.md imports AGENTS.md
-| ok    mcp             defined: 
+| ok    mcp             no MCP servers to define
 | warn  skills          not found locally (install, or ignore if a plugin provides them): idea-refine
 | skip  me              no personal profile; dashcrew me init adds one
-| ok    agents-md-size  AGENTS.md 14425 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 14439 of 32768 bytes
 | ok    always-on       claude-code 14.1 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)

@@ -105,7 +105,7 @@ func (d Doctor) antigravityMcp() Check {
 	if len(missing) > 0 {
 		return Check{id, Warn, "missing: " + strings.Join(missing, ", ") + "; run dashcrew sync"}
 	}
-	return Check{id, OK, "defined: " + strings.Join(expected, ", ")}
+	return Check{id, OK, definedDetail(expected)}
 }
 
 // antigravityRoles fails a role whose `tools` names a tool Antigravity does not know: the subagent may hang.

@@ -63,7 +63,7 @@ func (d Doctor) mcp() Check {
 		}
 	}
 	if len(problems) == 0 {
-		return Check{id, OK, "defined: " + strings.Join(expected.Keys(), ", ")}
+		return Check{id, OK, definedDetail(expected.Keys())}
 	}
 	return Check{id, Warn, strings.Join(problems, ", ")}
 }
