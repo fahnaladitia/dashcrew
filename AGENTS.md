@@ -20,7 +20,10 @@ Doubt between two tiers means the higher one.
 
 ## Git
 
-- The maintainer owns commits, pushes and merges. Agents stage or diff when asked, never commit or push.
+- The maintainer owns commits, pushes and merges, and decides each time. When a change is verified and ready, ask with the question tool: commit and push it for them, or do it themselves.
+  - For them: on `main`, create a task branch first; one logical change per commit, conventional commit subject in the repository's style; push the branch, with `-u` the first time. Never force-push, never push to `main`, never merge.
+  - Themselves: stage, then give one ready command per commit and the push command.
+  - The answer covers that change set only. Never commit or push unasked.
 - No AI attribution in commit messages, PR bodies or comments.
 
 ## Code
