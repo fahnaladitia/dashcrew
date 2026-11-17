@@ -151,6 +151,43 @@ jobs:
           go build -o "$RUNNER_TEMP/current/dashcrew" ./cmd/dashcrew
           .github/scripts/upgrade-check.sh "$RUNNER_TEMP/previous/dashcrew" "$RUNNER_TEMP/current/dashcrew" test/golden/sample-other/project.yaml
 
+  # install.sh from this checkout installs the latest published release on every run. brew and go install test what
+  # is already published, so they run on the daily schedule and a manual run only: a broken tap must not block
+  # unrelated PRs. Every route that runs must install the same version.
+  install:
+    name: install (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: install.sh
+        run: |
+          DASHCREW_INSTALL_DIR="$RUNNER_TEMP/script" sh install.sh
+          "$RUNNER_TEMP/script/dashcrew" --version | tee "$RUNNER_TEMP/script.version"
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: go install
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: |
+          GOBIN="$RUNNER_TEMP/go" go install github.com/fahnaladitia/dashcrew/cmd/dashcrew@latest
+          "$RUNNER_TEMP/go/dashcrew" --version | tee "$RUNNER_TEMP/go.version"
+          diff "$RUNNER_TEMP/script.version" "$RUNNER_TEMP/go.version"
+      - name: brew
+        if: runner.os == 'macOS' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+        run: |
+          brew install fahnaladitia/tap/dashcrew
+          "$(brew --prefix)/bin/dashcrew" --version | tee "$RUNNER_TEMP/brew.version"
+          diff "$RUNNER_TEMP/script.version" "$RUNNER_TEMP/brew.version"
+
   # Nightly (and on a manual run): the fuzz targets past their seed corpus. A failing input is printed, so it can be
   # added to testdata/fuzz with the fix.
   fuzz:
