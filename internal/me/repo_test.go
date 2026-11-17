@@ -190,10 +190,37 @@ func TestEveryPersonalAgentHasItsOwnHomeFile(t *testing.T) {
 	pl := places(t)
 	seen := map[string]string{}
 	for _, agent := range agents.Personal() {
+		if _, ok := personalAgents[agent]; !ok {
+			continue // TestEveryPersonalAgentHasARow reports it
+		}
 		path := homeInstructionPath(pl, agent)
 		if other, ok := seen[path]; ok {
 			t.Errorf("%s and %s both write %s", other, agent, path)
 		}
 		seen[path] = agent
+	}
+}
+
+// TestEveryPersonalAgentHasARow fails when an agent joins agents.Personal without its row in personalAgents.
+func TestEveryPersonalAgentHasARow(t *testing.T) {
+	repoFiles := map[string]string{}
+	for _, agent := range agents.Personal() {
+		row, ok := personalAgents[agent]
+		if !ok || row.homeFile == nil {
+			t.Errorf("%s: no personalAgents row", agent)
+			continue
+		}
+		if row.repoFile == "" {
+			continue
+		}
+		if other, ok := repoFiles[row.repoFile]; ok {
+			t.Errorf("%s and %s both write %s in a repo", other, agent, row.repoFile)
+		}
+		repoFiles[row.repoFile] = agent
+	}
+	for agent := range personalAgents {
+		if !contains(agents.Personal(), agent) {
+			t.Errorf("%s: a row for an agent agents.Personal does not list", agent)
+		}
 	}
 }
