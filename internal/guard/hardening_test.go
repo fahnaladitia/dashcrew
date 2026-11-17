@@ -571,17 +571,6 @@ func readCorpusNewBlocks(t testing.TB) []corpusNewBlock {
 	return out
 }
 
-// newBlockKey is what identifies a corpus case in the new-blocks tables: the shell script of a shell call, else
-// the whole payload.
-func newBlockKey(stdin string) string {
-	if object := hookObject(stdin); object != nil {
-		if events, err := AllFromHook(object); err == nil && len(events) == 1 && events[0].Kind == Shell {
-			return events[0].Command
-		}
-	}
-	return stdin
-}
-
 // TestCorpusNewBlocksAreBlockedWithTheirReason checks every recorded line in process: the guard must keep
 // blocking each one with its reason.
 func TestCorpusNewBlocksAreBlockedWithTheirReason(t *testing.T) {

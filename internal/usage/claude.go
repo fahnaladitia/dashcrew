@@ -96,12 +96,12 @@ type contentBlock struct {
 
 // claudeRun sums one main transcript, one subagent file, or the old-style sidechain lines of one agent.
 type claudeRun struct {
-	agentType, prompt string
-	seen              map[string]bool
-	first             int64
-	tokens            Tokens
-	skills            map[string]int
-	model             string
+	prompt string
+	seen   map[string]bool
+	first  int64
+	tokens Tokens
+	skills map[string]int
+	model  string
 }
 
 func newClaudeRun() *claudeRun {

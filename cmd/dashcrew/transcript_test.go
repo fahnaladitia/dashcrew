@@ -95,7 +95,7 @@ func setUpCLI(t *testing.T) cliEnvironment {
 	}
 	e := cliEnvironment{binary: filepath.Join(work, "dashcrew"), bin: filepath.Join(work, "bin")}
 	// -buildvcs=false keeps the module version unstamped, so the binary reports and locks version.Unstamped.
-	build := exec.Command(filepath.Join(runtime.GOROOT(), "bin", "go"), "build", "-buildvcs=false", "-o", e.binary, "./cmd/dashcrew")
+	build := exec.Command("go", "build", "-buildvcs=false", "-o", e.binary, "./cmd/dashcrew")
 	build.Dir = repo
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("go build: %v\n%s", err, out)

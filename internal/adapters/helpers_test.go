@@ -78,11 +78,6 @@ func readFile(t *testing.T, root, relative string) string {
 	return string(data)
 }
 
-func exists(root, relative string) bool {
-	_, err := os.Stat(filepath.Join(root, filepath.FromSlash(relative)))
-	return err == nil
-}
-
 func decodeMap(t *testing.T, text string) *omap.Map[any] {
 	t.Helper()
 	value, err := dartjson.Decode(text)

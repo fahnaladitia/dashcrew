@@ -239,14 +239,13 @@ func TestPairsAreAdjacentLinesUpToMain(t *testing.T) {
 
 func TestBranchPointIsWhereTheLineLeftTheMainLinesFirstParentChain(t *testing.T) {
 	app := fixture(t)
-	all, err := List(app, releaseLines(t))
-	if err != nil {
+	if _, err := List(app, releaseLines(t)); err != nil {
 		t.Fatal(err)
 	}
 	cut := gitT(t, app, "rev-parse", "release/2.4.0~1")
 	gitT(t, app, "checkout", "-q", "develop")
 	gitT(t, app, "merge", "-q", "--no-ff", "--no-edit", "release/2.4.0")
-	all, _ = List(app, releaseLines(t))
+	all, _ := List(app, releaseLines(t))
 	for _, name := range []string{"2.4.0", "2.4.5"} {
 		base, label := BranchPoint(app, all, *Find(all, name))
 		if base != cut || label != "develop" {
