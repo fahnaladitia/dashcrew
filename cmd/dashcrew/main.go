@@ -105,18 +105,16 @@ func isGuardHook(args []string) bool {
 func ptr(value string) *string { return &value }
 
 // absolute is Dart's `Directory(path).absolute.path`: the working directory joined without normalizing.
+// absolute is path against the working directory, cleaned: `-p .` names the folder, not `<folder>/.`.
 func absolute(path string) (string, error) {
 	if filepath.IsAbs(path) {
-		return path, nil
+		return filepath.Clean(path), nil
 	}
 	cwd, err := os.Getwd()
 	if err != nil {
 		return "", err
 	}
-	if strings.HasSuffix(cwd, string(filepath.Separator)) {
-		return cwd + path, nil
-	}
-	return cwd + string(filepath.Separator) + path, nil
+	return filepath.Join(cwd, path), nil
 }
 
 func newRoot(cli cliIO) *command {
@@ -333,11 +331,15 @@ func releaseCommand(cli cliIO) *command {
 }
 
 // printChecks prints one line per check and, when annotate is on (GitHub Actions), an `::error` line per failure.
-// The exit code is 1 when any check fails.
+// IDs fill a column of 16, widened to keep two spaces after the longest. The exit code is 1 when any check fails.
 func printChecks(stdout io.Writer, checks []doctor.Check, annotate bool) int {
+	width := 16
+	for _, c := range checks {
+		width = max(width, len(c.ID)+2)
+	}
 	code := 0
 	for _, c := range checks {
-		fmt.Fprintf(stdout, "%-6s%-16s%s\n", c.Status, c.ID, c.Detail)
+		fmt.Fprintf(stdout, "%-6s%-*s%s\n", c.Status, width, c.ID, c.Detail)
 		if c.Status == doctor.Fail {
 			code = 1
 			if annotate {

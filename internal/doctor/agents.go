@@ -1,6 +1,10 @@
 package doctor
 
-import "github.com/fahnaladitia/dashcrew/internal/omap"
+import (
+	"strings"
+
+	"github.com/fahnaladitia/dashcrew/internal/omap"
+)
 
 // agentCheck is what doctor checks for one agent of the profile; agentChecks holds one per agent of
 // internal/agents, and a test fails for one missing.
@@ -42,4 +46,12 @@ var agentChecks = map[string]agentCheck{
 		// Antigravity cuts every rule file at 24,000 bytes.
 		agentsMdLimit: 24000,
 	},
+}
+
+// definedDetail is an MCP check's detail once every server is in place: their names, or that there are none.
+func definedDetail(names []string) string {
+	if len(names) == 0 {
+		return "no MCP servers to define"
+	}
+	return "defined: " + strings.Join(names, ", ")
 }

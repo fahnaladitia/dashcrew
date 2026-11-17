@@ -43,8 +43,8 @@ func (d Doctor) codexMcp() Check {
 	if len(missing) > 0 {
 		return Check{id, Warn, ".codex/config.toml does not define " + strings.Join(missing, ", ") + "; run dashcrew sync"}
 	}
-	detail := "defined: " + strings.Join(expected, ", ")
-	if !strings.Contains(toml, "# dashcrew:begin") {
+	detail := definedDetail(expected)
+	if len(expected) > 0 && !strings.Contains(toml, "# dashcrew:begin") {
 		detail += " (by the user, outside the dashcrew block)"
 	}
 	return Check{id, OK, detail}

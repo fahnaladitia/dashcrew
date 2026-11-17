@@ -4,7 +4,7 @@
 exit: 1
 stdout: (empty)
 stderr:
-| No .ai/project.yaml in <root>/w/.. Run dashcrew init first.
+| No .ai/project.yaml in <root>/w. Run dashcrew init first.
 files: (unchanged)
 
 === step 2: dashcrew "doctor"
