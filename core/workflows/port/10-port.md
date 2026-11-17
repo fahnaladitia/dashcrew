@@ -41,5 +41,5 @@ Merging and cherry-picking are the user's: print the exact command, wait until t
 
 - Run `verify` scoped to the files this port touched in the worktree.
 - One PR description per target branch (`pr-description`): the Summary names the origin line, the commits or PR, and how they came (merge or cherry-pick and why).
-- The commit command comes from `dashcrew commit suggest --ported-from <short sha>[,<short sha>...]`, which adds a `Ported-from:` trailer per origin commit. {{^policy.agent_commit}}The user commits, pushes and opens the PR.{{/policy.agent_commit}}{{#policy.agent_commit}}Commit only when the user asks; the user pushes and opens the PR.{{/policy.agent_commit}}
+- The commit command comes from `dashcrew commit suggest --ported-from <short sha>[,<short sha>...]`, which adds a `Ported-from:` trailer per origin commit. {{^policy.agent_commit}}The user commits, pushes and opens the PR.{{/policy.agent_commit}}{{#policy.agent_commit}}Commit{{#policy.agent_push}} and push{{/policy.agent_push}} on the user's answer at the end of the task (see Git); the user {{^policy.agent_push}}pushes and {{/policy.agent_push}}opens the PR.{{/policy.agent_commit}}
 - After the ports land, `dashcrew check --ports` must list none missing or lost; `dashcrew release status <version>` refreshes each release's ledger.

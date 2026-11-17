@@ -69,7 +69,7 @@ func languageDefaults() *omap.Map[any] {
 }
 
 func policyDefaults() *omap.Map[any] {
-	return omap.Of[any]("agent_commit", false, "formatter", false, "dartdoc_max_lines", 3, "tier_gates", true, "terse_prompts", false)
+	return omap.Of[any]("agent_commit", false, "agent_push", false, "formatter", false, "dartdoc_max_lines", 3, "tier_gates", true, "terse_prompts", false)
 }
 
 // PathDefaults are the `paths.*` of a profile that leaves them out.
@@ -223,6 +223,9 @@ func Parse(text string, known KnownOptions) (*Profile, error) {
 	if profile.Policy, err = merge("policy", policyDefaults(), root.Value("policy"), true); err != nil {
 		return nil, err
 	}
+	if err := checkAgentPush(profile.Policy); err != nil {
+		return nil, err
+	}
 	if profile.Paths, err = merge("paths", PathDefaults(), root.Value("paths"), false); err != nil {
 		return nil, err
 	}
@@ -233,6 +236,19 @@ func Parse(text string, known KnownOptions) (*Profile, error) {
 		return nil, err
 	}
 	return profile, nil
+}
+
+// checkAgentPush refuses `policy.agent_push` unless it is a bool, and unless `agent_commit` is on too: an agent that
+// may push but not commit would only ever push someone else's commits.
+func checkAgentPush(policy *omap.Map[any]) error {
+	push, ok := policy.Value("agent_push").(bool)
+	if !ok {
+		return fail("policy.agent_push", "expected true or false")
+	}
+	if push && policy.Value("agent_commit") != true {
+		return fail("policy.agent_push", "needs policy.agent_commit: true")
+	}
+	return nil
 }
 
 func parsePlatformConfig(platform string, value any) (*PlatformConfig, error) {

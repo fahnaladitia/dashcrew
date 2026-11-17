@@ -5,7 +5,7 @@ rules: [git.no-agent-push, git.stage-diff-only-when-asked, guard.block-git-stash
 ---
 ## Git
 
-- Never push. The user pushes, and sets the upstream on the first push.
+{{^policy.agent_push}}- Never push. The user pushes, and sets the upstream on the first push.{{/policy.agent_push}}{{#policy.agent_push}}- Push only your task branch, named outright (`git push -u origin <branch>` the first time), and only on the user's answer at the end of a task. Never force, never delete a remote branch, never push a base branch: the guard blocks these.{{/policy.agent_push}}
 - Showing a diff is fine; stage only when asked.
 - Never run `git stash` in any form: it moves the user's working tree.
 - Never run `git reset`, `rebase`, `cherry-pick`, `revert`, `merge` or `tag`; history belongs to the user.
