@@ -1,3 +1,7 @@
+## Unreleased
+
+- Fixed: the guard reads Cursor's shell input, the `Shell` tool of `preToolUse` and the `command` of `beforeShellExecution`, and blocks what it blocks for Claude Code's `Bash`. Cursor runs the Claude Code hooks in `.claude/settings.json` by default; if it sends its own input there, a `claude-code` project opened in Cursor had every shell command let through, `git push` included. Writes and deletes from Cursor are not read yet. `guard-log` names Cursor as `cursor`.
+
 ## 0.7.0
 
 Trust: an interrupted sync finishes with a plain `dashcrew sync`, CI catches a lost guard hook, the guard logs every call it lets through unchecked, and new policies let the agent commit and push on your answer. Run `dashcrew sync` and commit what it writes: usually only `.ai/lock.json`, plus new AGENTS.md text in a project with `policy.agent_commit: true`. `guard_min_version` rises to 0.7.0 only in a project that turns on `policy.agent_push`, so every member installs 0.7.0 before that sync is committed.

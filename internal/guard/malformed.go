@@ -120,6 +120,8 @@ func agentOf(input *omap.Map[any]) string {
 		return "unknown"
 	case input.Has("toolCall"):
 		return "antigravity"
+	case input.Has("cursor_version"):
+		return "cursor"
 	}
 	name, ok := input.Value("tool_name").(string)
 	switch {
