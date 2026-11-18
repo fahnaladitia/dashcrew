@@ -263,6 +263,9 @@ stdout:
 | Usage: dashcrew guard [<policy>]
 | -h, --help    Print this usage information.
 | 
+| Available subcommands:
+|   init   Write the guard alone, without .ai/project.yaml: the default policy, .ai/bin/guard and each agent's hook.
+| 
 | Run "dashcrew help" to see global options.
 stderr: (empty)
 files: (unchanged)
@@ -271,10 +274,13 @@ files: (unchanged)
 exit: 64
 stdout: (empty)
 stderr:
-| Command "dashcrew guard" does not expect a subcommand.
+| Could not find a subcommand named "install" for "dashcrew guard".
 | 
 | Usage: dashcrew guard [<policy>]
 | -h, --help    Print this usage information.
+| 
+| Available subcommands:
+|   init   Write the guard alone, without .ai/project.yaml: the default policy, .ai/bin/guard and each agent's hook.
 | 
 | Run "dashcrew help" to see global options.
 files: (unchanged)
@@ -635,6 +641,9 @@ stdout:
 | Usage: dashcrew guard [<policy>]
 | -h, --help    Print this usage information.
 | 
+| Available subcommands:
+|   init   Write the guard alone, without .ai/project.yaml: the default policy, .ai/bin/guard and each agent's hook.
+| 
 | Run "dashcrew help" to see global options.
 stderr: (empty)
 files: (unchanged)
@@ -648,11 +657,33 @@ stdout:
 | Usage: dashcrew guard [<policy>]
 | -h, --help    Print this usage information.
 | 
+| Available subcommands:
+|   init   Write the guard alone, without .ai/project.yaml: the default policy, .ai/bin/guard and each agent's hook.
+| 
 | Run "dashcrew help" to see global options.
 stderr: (empty)
 files: (unchanged)
 
-=== step 36: dashcrew "--help" "sync"
+=== step 36: dashcrew "guard" "init" "--help"
+exit: 0
+stdout:
+| Write the guard alone, without .ai/project.yaml: the default policy, .ai/bin/guard and each agent's hook.
+| The policy blocks git commit, push and history rewrites, and formatters. Writes nothing else; a later
+| dashcrew init and dashcrew sync take the files over.
+| 
+| Usage: dashcrew guard init [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root.
+|                  (defaults to ".")
+|     --agents     Agents to write the hook for.
+|                  [claude-code (default), codex, antigravity]
+|     --force      Replace a .ai/guard.json or .ai/bin/guard that guard init did not write.
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 37: dashcrew "--help" "sync"
 exit: 0
 stdout:
 | Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -671,7 +702,7 @@ stdout:
 stderr: (empty)
 files: (unchanged)
 
-=== step 37: dashcrew "-h" "worktree" "create"
+=== step 38: dashcrew "-h" "worktree" "create"
 exit: 0
 stdout:
 | Create <branch> from <base> in <repo>.worktrees/<name>, with no upstream and the toolkit linked.
@@ -688,7 +719,7 @@ stdout:
 stderr: (empty)
 files: (unchanged)
 
-=== step 38: dashcrew "worktree" "-h" "create"
+=== step 39: dashcrew "worktree" "-h" "create"
 exit: 0
 stdout:
 | One worktree per parallel task. Never commits, pushes or deletes a branch.
@@ -707,7 +738,7 @@ stdout:
 stderr: (empty)
 files: (unchanged)
 
-=== step 39: dashcrew "sync" "--help" "extra"
+=== step 40: dashcrew "sync" "--help" "extra"
 exit: 0
 stdout:
 | Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -726,7 +757,7 @@ stdout:
 stderr: (empty)
 files: (unchanged)
 
-=== step 40: dashcrew "nope"
+=== step 41: dashcrew "nope"
 exit: 64
 stdout: (empty)
 stderr:
@@ -759,7 +790,7 @@ stderr:
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
 
-=== step 41: dashcrew "snyc"
+=== step 42: dashcrew "snyc"
 exit: 64
 stdout: (empty)
 stderr:
@@ -797,7 +828,7 @@ stderr:
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
 
-=== step 42: dashcrew "worktre"
+=== step 43: dashcrew "worktre"
 exit: 64
 stdout: (empty)
 stderr:
@@ -834,7 +865,7 @@ stderr:
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
 
-=== step 43: dashcrew "sink"
+=== step 44: dashcrew "sink"
 exit: 64
 stdout: (empty)
 stderr:
@@ -872,7 +903,7 @@ stderr:
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
 
-=== step 44: dashcrew "chek"
+=== step 45: dashcrew "chek"
 exit: 64
 stdout: (empty)
 stderr:
@@ -909,7 +940,7 @@ stderr:
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
 
-=== step 45: dashcrew "worktree"
+=== step 46: dashcrew "worktree"
 exit: 64
 stdout: (empty)
 stderr:
@@ -928,7 +959,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 46: dashcrew "worktree" "nope"
+=== step 47: dashcrew "worktree" "nope"
 exit: 64
 stdout: (empty)
 stderr:
@@ -947,7 +978,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 47: dashcrew "worktree" "craete"
+=== step 48: dashcrew "worktree" "craete"
 exit: 64
 stdout: (empty)
 stderr:
@@ -970,7 +1001,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 48: dashcrew "sync" "--bogus"
+=== step 49: dashcrew "sync" "--bogus"
 exit: 64
 stdout: (empty)
 stderr:
@@ -989,7 +1020,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 49: dashcrew "sync" "-x"
+=== step 50: dashcrew "sync" "-x"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1008,7 +1039,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 50: dashcrew "sync" "-xy"
+=== step 51: dashcrew "sync" "-xy"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1027,7 +1058,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 51: dashcrew "init" "-yp"
+=== step 52: dashcrew "init" "-yp"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1045,7 +1076,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 52: dashcrew "init" "-yz"
+=== step 53: dashcrew "init" "-yz"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1063,7 +1094,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 53: dashcrew "init" "-yfoo"
+=== step 54: dashcrew "init" "-yfoo"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1081,7 +1112,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 54: dashcrew "init" "--agents" "bogus"
+=== step 55: dashcrew "init" "--agents" "bogus"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1099,7 +1130,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 55: dashcrew "init" "--agents" "codex,bogus"
+=== step 56: dashcrew "init" "--agents" "codex,bogus"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1117,7 +1148,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 56: dashcrew "init" "--agents"
+=== step 57: dashcrew "init" "--agents"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1135,7 +1166,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 57: dashcrew "init" "--no-yes"
+=== step 58: dashcrew "init" "--no-yes"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1153,7 +1184,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 58: dashcrew "sync" "--no-project"
+=== step 59: dashcrew "sync" "--no-project"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1172,7 +1203,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 59: dashcrew "sync" "--no-bogus"
+=== step 60: dashcrew "sync" "--no-bogus"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1191,7 +1222,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 60: dashcrew "doctor" "-p"
+=== step 61: dashcrew "doctor" "-p"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1206,7 +1237,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 61: dashcrew "sync" "--force=1"
+=== step 62: dashcrew "sync" "--force=1"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1225,7 +1256,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 62: dashcrew "sync" "--help=1"
+=== step 63: dashcrew "sync" "--help=1"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1244,7 +1275,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 63: dashcrew "--" "sync"
+=== step 64: dashcrew "--" "sync"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1282,7 +1313,7 @@ stderr:
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
 
-=== step 64: dashcrew "foo" "sync"
+=== step 65: dashcrew "foo" "sync"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1315,7 +1346,7 @@ stderr:
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
 
-=== step 65: dashcrew "help" "--project" "x"
+=== step 66: dashcrew "help" "--project" "x"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1327,7 +1358,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 66: dashcrew "--project" "x"
+=== step 67: dashcrew "--project" "x"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1360,7 +1391,7 @@ stderr:
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
 
-=== step 67: dashcrew "---x"
+=== step 68: dashcrew "---x"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1393,7 +1424,7 @@ stderr:
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
 
-=== step 68: dashcrew "--"
+=== step 69: dashcrew "--"
 exit: 0
 stdout:
 | Agent-agnostic AI coding toolkit with Flutter built in.
@@ -1426,7 +1457,7 @@ stdout:
 stderr: (empty)
 files: (unchanged)
 
-=== step 69: dashcrew "-"
+=== step 70: dashcrew "-"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1463,14 +1494,14 @@ stderr:
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
 
-=== step 70: dashcrew "worktree" "create"
+=== step 71: dashcrew "worktree" "create"
 exit: 1
 stdout: (empty)
 stderr:
 | . is not inside a git repository.
 files: (unchanged)
 
-=== step 71: dashcrew "worktree" "create" "-p"
+=== step 72: dashcrew "worktree" "create" "-p"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1487,21 +1518,21 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 72: dashcrew "worktree" "list"
+=== step 73: dashcrew "worktree" "list"
 exit: 1
 stdout: (empty)
 stderr:
 | . is not inside a git repository.
 files: (unchanged)
 
-=== step 73: dashcrew "worktree" "watch" "--interval" "0"
+=== step 74: dashcrew "worktree" "watch" "--interval" "0"
 exit: 1
 stdout: (empty)
 stderr:
 | . is not inside a git repository.
 files: (unchanged)
 
-=== step 74: dashcrew "check" "--pr-body"
+=== step 75: dashcrew "check" "--pr-body"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1521,7 +1552,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 75: dashcrew "check" "--pr-body" "missing.md"
+=== step 76: dashcrew "check" "--pr-body" "missing.md"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1541,7 +1572,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 76: dashcrew "check" "--pr-body" ""
+=== step 77: dashcrew "check" "--pr-body" ""
 exit: 64
 stdout: (empty)
 stderr:
@@ -1561,7 +1592,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 77: dashcrew "check" "--pr-body" "."
+=== step 78: dashcrew "check" "--pr-body" "."
 exit: 64
 stdout: (empty)
 stderr:

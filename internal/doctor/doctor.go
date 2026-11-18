@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fahnaladitia/dashcrew/internal/adapters"
 	"github.com/fahnaladitia/dashcrew/internal/agents"
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
 	"github.com/fahnaladitia/dashcrew/internal/dartjson"
@@ -115,6 +116,9 @@ func (d Doctor) Run() []Check {
 }
 
 func (d Doctor) checks(projectPacks Check) []Check {
+	if d.guardOnly() {
+		return d.guardOnlyChecks()
+	}
 	profileCheck := d.profileCheck()
 	lockCheck, lock, lockConflicted := d.lockCheck()
 	filesFrom := lock
@@ -184,6 +188,45 @@ func (d Doctor) checks(projectPacks Check) []Check {
 		checks = append(checks, rosters)
 	}
 	return checks
+}
+
+// guardOnly is true for a project that `dashcrew guard init` set up and nothing more: no profile, and the
+// default policy as it wrote it.
+func (d Doctor) guardOnly() bool {
+	if d.exists(".ai/project.yaml") {
+		return false
+	}
+	text, err := d.read(sync.GuardPolicyPath)
+	return err == nil && text == guard.InitPolicyText()
+}
+
+// guardOnlyChecks are the guard checks of a guard-only project: the policy, the shim, the log, and the hook of
+// each agent whose hook file exists (Claude Code's when none does). Their fixes name `guard init`, since sync needs
+// a profile.
+func (d Doctor) guardOnlyChecks() []Check {
+	checks := []Check{d.guardPolicy()}
+	if d.MachineChecks {
+		checks = append(checks, d.guardBinary(nil))
+		if guardLog, ok := d.guardLog(); ok {
+			checks = append(checks, guardLog)
+		}
+		hooked := false
+		for _, agent := range agents.All() {
+			if a, ok := agentChecks[agent]; ok && d.exists(adapters.HookFile(agent)) {
+				checks = append(checks, a.hook(d))
+				hooked = true
+			}
+		}
+		if !hooked {
+			checks = append(checks, agentChecks["claude-code"].hook(d))
+		}
+	}
+	checks = append(checks, d.gitignore())
+	for i := range checks {
+		checks[i].Detail = strings.ReplaceAll(checks[i].Detail, "run dashcrew sync", "run dashcrew guard init")
+	}
+	return append(checks, Check{"toolkit", Info, "guard only (dashcrew guard init); run dashcrew init and dashcrew sync " +
+		"for the rules, skills and the rest of the toolkit"})
 }
 
 func (d Doctor) path(relative string) string {
@@ -630,6 +673,9 @@ func (d Doctor) guardBinary(lock *omap.Map[any]) Check {
 		return Check{id, Fail, ".ai/bin/guard missing; run dashcrew sync"}
 	}
 	minimum := version.GuardMinimum
+	if shimText, err := d.read(guard.ShimPath); err == nil && guard.ShimMinimum(shimText) != "" {
+		minimum = guard.ShimMinimum(shimText)
+	}
 	if lock != nil {
 		if recorded, ok := lock.Value("guard_min_version").(string); ok {
 			minimum = recorded

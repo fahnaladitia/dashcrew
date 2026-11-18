@@ -1,0 +1,296 @@
+# guard init
+
+=== step 1: dashcrew "guard" "init"
+exit: 1
+stdout:
+| wrote   .ai/guard.json
+| wrote   .ai/bin/guard
+| wrote   .claude/settings.json
+| ok    guard-policy    .ai/guard.json valid
+| fail  guard-binary    dashcrew is not on PATH, so .ai/bin/guard refuses every tool call: install dashcrew 0.1.0 or newer (brew install fahnaladitia/tap/dashcrew)
+| ok    hook            PreToolUse guard hook present
+| ok    gitignore       .ai/bin/guard is not ignored
+| info  toolkit         guard only (dashcrew guard init); run dashcrew init and dashcrew sync for the rules, skills and the rest of the toolkit
+| Commit .ai/ and .claude/settings.json so every clone is guarded.
+stderr: (empty)
+files:
++ w/.ai  dir
++ w/.ai/bin  dir
++ w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
++ w/.ai/guard.json  -rw-r--r-- sha256:93ec8d58d0af500c
++ w/.claude  dir
++ w/.claude/settings.json  -rw-r--r-- sha256:ab785cea7a7a2c39
+
+=== step 2: dashcrew "guard" "init" "--agents" "codex" "--agents" "antigravity"
+env: PATH=<root>/stub:/usr/bin:/bin
+(after the case's setup for this step)
+exit: 0
+stdout:
+| wrote   .ai/bin/guard
+| wrote   .codex/hooks.json
+| wrote   .agents/hooks.json
+| ok    guard-policy      .ai/guard.json valid
+| ok    guard-binary      .ai/bin/guard blocks git push
+| ok    hook              PreToolUse guard hook present
+| ok    codex-hook        PreToolUse guard hook present; Codex runs it once approved in /hooks
+| ok    antigravity-hook  PreToolUse guard hook present under dashcrew-guard
+| ok    gitignore         .ai/bin/guard is not ignored
+| info  toolkit           guard only (dashcrew guard init); run dashcrew init and dashcrew sync for the rules, skills and the rest of the toolkit
+| Commit .ai/, .codex/hooks.json and .agents/hooks.json so every clone is guarded.
+| Codex: trust the project when Codex asks, then approve the dashcrew hook in /hooks; until both, Codex ignores .codex/.
+| Antigravity: trust the folder when agy asks; agy loads .agents/hooks.json only in a trusted folder.
+stderr: (empty)
+files:
++ home/.dashcrew  dir
++ home/.dashcrew/guard-ok  -rw-r--r-- sha256:1cb35d331d8abf9b
++ w/.agents  dir
++ w/.agents/hooks.json  -rw-r--r-- sha256:54e39fd507ae5d8e
+~ w/.ai/bin/guard  -rwxr-xr-x sha256:a4d846d82ed6094a
++ w/.codex  dir
++ w/.codex/hooks.json  -rw-r--r-- sha256:5d43adc427460026
+
+=== step 3: dashcrew "guard" "init" "--agents" "codex" "--agents" "antigravity"
+env: PATH=<root>/stub:/usr/bin:/bin
+(after the case's setup for this step)
+exit: 0
+stdout:
+| up to date
+| ok    guard-policy      .ai/guard.json valid
+| ok    guard-binary      .ai/bin/guard blocks git push
+| ok    hook              PreToolUse guard hook present
+| ok    codex-hook        PreToolUse guard hook present; Codex runs it once approved in /hooks
+| ok    antigravity-hook  PreToolUse guard hook present under dashcrew-guard
+| ok    gitignore         .ai/bin/guard is not ignored
+| info  toolkit           guard only (dashcrew guard init); run dashcrew init and dashcrew sync for the rules, skills and the rest of the toolkit
+| Commit .ai/, .codex/hooks.json and .agents/hooks.json so every clone is guarded.
+| Codex: trust the project when Codex asks, then approve the dashcrew hook in /hooks; until both, Codex ignores .codex/.
+| Antigravity: trust the folder when agy asks; agy loads .agents/hooks.json only in a trusted folder.
+stderr: (empty)
+files: (unchanged)
+
+=== step 4: dashcrew "doctor"
+env: PATH=<root>/stub:/usr/bin:/bin
+(after the case's setup for this step)
+exit: 0
+stdout:
+| ok    guard-policy      .ai/guard.json valid
+| ok    guard-binary      .ai/bin/guard blocks git push
+| ok    hook              PreToolUse guard hook present
+| ok    codex-hook        PreToolUse guard hook present; Codex runs it once approved in /hooks
+| ok    antigravity-hook  PreToolUse guard hook present under dashcrew-guard
+| ok    gitignore         .ai/bin/guard is not ignored
+| info  toolkit           guard only (dashcrew guard init); run dashcrew init and dashcrew sync for the rules, skills and the rest of the toolkit
+stderr: (empty)
+files: (unchanged)
+
+=== step 5: dashcrew "guard" "init"
+(after the case's setup for this step)
+exit: 1
+stdout: (empty)
+stderr:
+| Not written by dashcrew guard init (rerun with --force to overwrite):
+|   .ai/guard.json
+files: (unchanged)
+
+=== step 6: dashcrew "guard" "init" "--force"
+env: PATH=<root>/stub:/usr/bin:/bin
+(after the case's setup for this step)
+exit: 0
+stdout:
+| wrote   .ai/guard.json
+| ok    guard-policy      .ai/guard.json valid
+| ok    guard-binary      .ai/bin/guard blocks git push
+| ok    hook              PreToolUse guard hook present
+| ok    codex-hook        PreToolUse guard hook present; Codex runs it once approved in /hooks
+| ok    antigravity-hook  PreToolUse guard hook present under dashcrew-guard
+| ok    gitignore         .ai/bin/guard is not ignored
+| info  toolkit           guard only (dashcrew guard init); run dashcrew init and dashcrew sync for the rules, skills and the rest of the toolkit
+| Commit .ai/ and .claude/settings.json so every clone is guarded.
+stderr: (empty)
+files:
+~ w/.ai/guard.json  -rw-r--r-- sha256:93ec8d58d0af500c
+
+=== step 7: dashcrew "guard" "init" "--agents" "cursor"
+exit: 64
+stdout: (empty)
+stderr:
+| "cursor" is not an allowed value for option "--agents".
+| 
+| Usage: dashcrew guard init [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root.
+|                  (defaults to ".")
+|     --agents     Agents to write the hook for.
+|                  [claude-code (default), codex, antigravity]
+|     --force      Replace a .ai/guard.json or .ai/bin/guard that guard init did not write.
+| 
+| Run "dashcrew help" to see global options.
+files: (unchanged)
+
+=== step 8: dashcrew "init" "--yes"
+exit: 0
+stdout:
+| Detected in <root>/w:
+|   platform: none of flutter (pubspec.yaml)
+|   starter: go (go.mod)
+|   files: go.mod
+| wrote .ai/platforms/go/ (32 files)
+| wrote .ai/project.yaml (platform go, http chi, db none)
+| next: dashcrew sync
+stderr: (empty)
+files:
++ w/.ai/platforms  dir
++ w/.ai/platforms/go  dir
++ w/.ai/platforms/go/packs  dir
++ w/.ai/platforms/go/packs/db  dir
++ w/.ai/platforms/go/packs/db/gorm  dir
++ w/.ai/platforms/go/packs/db/gorm/agents_md.md  -rw-r--r-- sha256:52038ac4d8debf74
++ w/.ai/platforms/go/packs/db/gorm/pack.yaml  -rw-r--r-- sha256:be7f08f87324349e
++ w/.ai/platforms/go/packs/db/none  dir
++ w/.ai/platforms/go/packs/db/none/agents_md.md  -rw-r--r-- sha256:20fe89079df9ec0c
++ w/.ai/platforms/go/packs/db/none/pack.yaml  -rw-r--r-- sha256:03b8388560e2a5a7
++ w/.ai/platforms/go/packs/db/pgx  dir
++ w/.ai/platforms/go/packs/db/pgx/agents_md.md  -rw-r--r-- sha256:9ce872c4503784a6
++ w/.ai/platforms/go/packs/db/pgx/pack.yaml  -rw-r--r-- sha256:ac4349401ef10f70
++ w/.ai/platforms/go/packs/db/sqlc  dir
++ w/.ai/platforms/go/packs/db/sqlc/agents_md.md  -rw-r--r-- sha256:887d66f146a0bb2e
++ w/.ai/platforms/go/packs/db/sqlc/pack.yaml  -rw-r--r-- sha256:4c754d6e4ca77d30
++ w/.ai/platforms/go/packs/http  dir
++ w/.ai/platforms/go/packs/http/chi  dir
++ w/.ai/platforms/go/packs/http/chi/agents_md.md  -rw-r--r-- sha256:e05f12fa298a9a0b
++ w/.ai/platforms/go/packs/http/chi/pack.yaml  -rw-r--r-- sha256:f47db87c5958dae0
++ w/.ai/platforms/go/packs/http/echo  dir
++ w/.ai/platforms/go/packs/http/echo/agents_md.md  -rw-r--r-- sha256:76601ae6bb76ebb5
++ w/.ai/platforms/go/packs/http/echo/pack.yaml  -rw-r--r-- sha256:da1f478df8bcce4d
++ w/.ai/platforms/go/packs/http/fiber  dir
++ w/.ai/platforms/go/packs/http/fiber/agents_md.md  -rw-r--r-- sha256:73d606f861da35fa
++ w/.ai/platforms/go/packs/http/fiber/pack.yaml  -rw-r--r-- sha256:8bdf8b91dafe83de
++ w/.ai/platforms/go/packs/http/gin  dir
++ w/.ai/platforms/go/packs/http/gin/agents_md.md  -rw-r--r-- sha256:080c5a2e2303634c
++ w/.ai/platforms/go/packs/http/gin/pack.yaml  -rw-r--r-- sha256:b962d29a023850cc
++ w/.ai/platforms/go/packs/http/nethttp  dir
++ w/.ai/platforms/go/packs/http/nethttp/agents_md.md  -rw-r--r-- sha256:b62a81c66bea5394
++ w/.ai/platforms/go/packs/http/nethttp/pack.yaml  -rw-r--r-- sha256:afd21348ac3bd19e
++ w/.ai/platforms/go/packs/http/none  dir
++ w/.ai/platforms/go/packs/http/none/agents_md.md  -rw-r--r-- sha256:048f361c0f7b9573
++ w/.ai/platforms/go/packs/http/none/pack.yaml  -rw-r--r-- sha256:f04b9b7c2cc432e7
++ w/.ai/platforms/go/platform.yaml  -rw-r--r-- sha256:287507f25aa2467a
++ w/.ai/platforms/go/rules  dir
++ w/.ai/platforms/go/rules/architecture.md  -rw-r--r-- sha256:59192ba4883f5c91
++ w/.ai/platforms/go/rules/go.md  -rw-r--r-- sha256:7dde669c26e05978
++ w/.ai/platforms/go/rules/security.md  -rw-r--r-- sha256:48c78c1110ec0919
++ w/.ai/platforms/go/rules/testing.md  -rw-r--r-- sha256:466bf6da142da3b0
++ w/.ai/platforms/go/skills  dir
++ w/.ai/platforms/go/skills/backend-security  dir
++ w/.ai/platforms/go/skills/backend-security/10-backend-security.md  -rw-r--r-- sha256:b1e47c0636915d1e
++ w/.ai/platforms/go/skills/backend-security/meta.yaml  -rw-r--r-- sha256:fcc48cf27ef3f6b6
++ w/.ai/platforms/go/skills/data-layer-tdd  dir
++ w/.ai/platforms/go/skills/data-layer-tdd/10-data-layer-tdd.md  -rw-r--r-- sha256:7eab9b4336f95c60
++ w/.ai/platforms/go/skills/data-layer-tdd/20-local-storage.md  -rw-r--r-- sha256:8fb12052ecfc8f86
++ w/.ai/platforms/go/skills/data-layer-tdd/meta.yaml  -rw-r--r-- sha256:788aa65ef0e0591e
++ w/.ai/platforms/go/skills/feature-architecture  dir
++ w/.ai/platforms/go/skills/feature-architecture/10-architecture.md  -rw-r--r-- sha256:5c9c3ec6902d195f
++ w/.ai/platforms/go/skills/feature-architecture/meta.yaml  -rw-r--r-- sha256:a39786634e5190c4
++ w/.ai/project.yaml  -rw-r--r-- sha256:50e20288ac982e6b
+
+=== step 9: dashcrew "sync"
+exit: 0
+stdout:
+| wrote   AGENTS.md
+| wrote   .ai/guard.json
+| wrote   .ai/bin/guard
+| wrote   .github/pull_request_template.md
+| wrote   .claude/agents/explorer.md
+| wrote   .claude/agents/reviewer.md
+| wrote   .claude/skills/acceptance-criteria/SKILL.md
+| wrote   .claude/skills/backend-security/SKILL.md
+| wrote   .claude/skills/branching/SKILL.md
+| wrote   .claude/skills/continuous-learning/SKILL.md
+| wrote   .claude/skills/data-layer-tdd/SKILL.md
+| wrote   .claude/skills/design-fidelity/SKILL.md
+| wrote   .claude/skills/documentation/SKILL.md
+| wrote   .claude/skills/feature-architecture/SKILL.md
+| wrote   .claude/skills/guardrails/SKILL.md
+| wrote   .claude/skills/pr-create/SKILL.md
+| wrote   .claude/skills/pr-description/SKILL.md
+| wrote   .claude/skills/prompt-polish/SKILL.md
+| wrote   .claude/skills/strategic-compact/SKILL.md
+| wrote   .claude/skills/verification-loop/SKILL.md
+| wrote   .claude/skills/work-modes/SKILL.md
+| wrote   .claude/skills/audit/SKILL.md
+| wrote   .claude/skills/build-fix/SKILL.md
+| wrote   .claude/skills/code-review/SKILL.md
+| wrote   .claude/skills/learn/SKILL.md
+| wrote   .claude/skills/plan/SKILL.md
+| wrote   .claude/skills/tdd/SKILL.md
+| wrote   .claude/skills/verify/SKILL.md
+| wrote   .claude/skills/worktree/SKILL.md
+| wrote   CLAUDE.md
+| wrote   .mcp.json
+stderr: (empty)
+files:
+~ w/.ai/bin/guard  -rwxr-xr-x sha256:1dc27441f39e22e5
+~ w/.ai/guard.json  -rw-r--r-- sha256:0879faac913e7a99
++ w/.ai/lock.json  -rw-r--r-- sha256:74d225a86f809920
++ w/.claude/agents  dir
++ w/.claude/agents/explorer.md  -rw-r--r-- sha256:c5027d9c25fbef11
++ w/.claude/agents/reviewer.md  -rw-r--r-- sha256:5c1f3688fe3eb344
++ w/.claude/skills  dir
++ w/.claude/skills/acceptance-criteria  dir
++ w/.claude/skills/acceptance-criteria/SKILL.md  -rw-r--r-- sha256:afa66048ce47b04c
++ w/.claude/skills/audit  dir
++ w/.claude/skills/audit/SKILL.md  -rw-r--r-- sha256:2df5ff4ba6c6461d
++ w/.claude/skills/backend-security  dir
++ w/.claude/skills/backend-security/SKILL.md  -rw-r--r-- sha256:3b457b83f3a4fb12
++ w/.claude/skills/branching  dir
++ w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:8b93b9328ded4711
++ w/.claude/skills/build-fix  dir
++ w/.claude/skills/build-fix/SKILL.md  -rw-r--r-- sha256:d54dde90150acacc
++ w/.claude/skills/code-review  dir
++ w/.claude/skills/code-review/SKILL.md  -rw-r--r-- sha256:8379813733894a96
++ w/.claude/skills/continuous-learning  dir
++ w/.claude/skills/continuous-learning/SKILL.md  -rw-r--r-- sha256:eec6c28201da1802
++ w/.claude/skills/data-layer-tdd  dir
++ w/.claude/skills/data-layer-tdd/SKILL.md  -rw-r--r-- sha256:e06e33fee673b2f0
++ w/.claude/skills/design-fidelity  dir
++ w/.claude/skills/design-fidelity/SKILL.md  -rw-r--r-- sha256:2659d95907aab02c
++ w/.claude/skills/documentation  dir
++ w/.claude/skills/documentation/SKILL.md  -rw-r--r-- sha256:375d9c94406bae68
++ w/.claude/skills/feature-architecture  dir
++ w/.claude/skills/feature-architecture/SKILL.md  -rw-r--r-- sha256:ee99bac33a76ceb8
++ w/.claude/skills/guardrails  dir
++ w/.claude/skills/guardrails/SKILL.md  -rw-r--r-- sha256:2a354bc4b4e91bd7
++ w/.claude/skills/learn  dir
++ w/.claude/skills/learn/SKILL.md  -rw-r--r-- sha256:826b3db155435ec7
++ w/.claude/skills/plan  dir
++ w/.claude/skills/plan/SKILL.md  -rw-r--r-- sha256:9a8626f1aba8048e
++ w/.claude/skills/pr-create  dir
++ w/.claude/skills/pr-create/SKILL.md  -rw-r--r-- sha256:e534b517a93d2650
++ w/.claude/skills/pr-description  dir
++ w/.claude/skills/pr-description/SKILL.md  -rw-r--r-- sha256:c872f672bb482092
++ w/.claude/skills/prompt-polish  dir
++ w/.claude/skills/prompt-polish/SKILL.md  -rw-r--r-- sha256:7d03acdba3900bea
++ w/.claude/skills/strategic-compact  dir
++ w/.claude/skills/strategic-compact/SKILL.md  -rw-r--r-- sha256:a866040ed09e6f37
++ w/.claude/skills/tdd  dir
++ w/.claude/skills/tdd/SKILL.md  -rw-r--r-- sha256:70e0b486f8281626
++ w/.claude/skills/verification-loop  dir
++ w/.claude/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:055cbb8370ce869e
++ w/.claude/skills/verify  dir
++ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:b84b360a1af7296c
++ w/.claude/skills/work-modes  dir
++ w/.claude/skills/work-modes/SKILL.md  -rw-r--r-- sha256:42e7df44abe766f6
++ w/.claude/skills/worktree  dir
++ w/.claude/skills/worktree/SKILL.md  -rw-r--r-- sha256:3608fcc81b0c8ca8
++ w/.github  dir
++ w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
++ w/.mcp.json  -rw-r--r-- sha256:d8e397af03b5b032
++ w/AGENTS.md  -rw-r--r-- sha256:ecdcecf5c2aa0825
++ w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
+
+=== step 10: dashcrew "guard" "init"
+exit: 1
+stdout: (empty)
+stderr:
+| This project has .ai/project.yaml: dashcrew sync writes and updates its guard.
+files: (unchanged)

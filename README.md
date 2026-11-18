@@ -35,7 +35,7 @@ curl -fsSL https://raw.githubusercontent.com/fahnaladitia/dashcrew/main/install.
 
 `install.sh` (macOS and Linux, amd64 and arm64) puts the latest release in `~/.local/bin` without `sudo`, and installs nothing unless the release's `checksums.txt` lists the archive with the same SHA-256. `DASHCREW_VERSION=0.6.0` pins a release; `gh attestation verify <archive> -R fahnaladitia/dashcrew` checks build provenance. dashcrew needs git and a POSIX shell.
 
-In the project root:
+To try the guard alone first, `dashcrew guard init` in any repository writes the policy, the shim and the Claude Code hook (`--agents codex`, `--agents antigravity` for the others), then checks that `git push` is blocked. For the whole toolkit, in the project root:
 
 ```bash
 dashcrew init      # detects the platform and stack, asks what it could not detect, writes .ai/project.yaml
