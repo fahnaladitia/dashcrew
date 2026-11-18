@@ -1,0 +1,7 @@
+# Synthetic profile: a Go service on the built-in go platform, with chi and pgx, for the three agents.
+toolkit: 1
+platform: go
+agents: [claude-code, codex, antigravity]
+stack:
+  http: chi
+  db: pgx

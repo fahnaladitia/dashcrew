@@ -16,7 +16,6 @@ import (
 	"strings"
 	"time"
 
-	embedded "github.com/fahnaladitia/dashcrew"
 	"github.com/fahnaladitia/dashcrew/internal/adapters"
 	"github.com/fahnaladitia/dashcrew/internal/agents"
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
@@ -147,9 +146,8 @@ func newRoot(cli cliIO) *command {
 }
 
 func initCommand(cli cliIO) *command {
-	c := newCommand("init", "Detect the platform and stack and write .ai/project.yaml, plus a starter platform you pick.\n"+
-		"Writes nothing else. A repo no platform matches is offered the starter its root files point at (go for a go.mod),\n"+
-		"written into .ai/platforms/<name>/, else platform: other.")
+	c := newCommand("init", "Detect the platform and stack and write .ai/project.yaml. Writes nothing else.\n"+
+		"A repo no built-in platform (flutter, go) or project platform matches is offered platform: other.")
 	c.option("project", "p", "Project root.", ptr("."))
 	c.flag("yes", "y", "Write the detected profile without asking.", false, false)
 	c.multiOption("agents", "Agents to render for.", agents.All(), []string{"claude-code"})
@@ -175,8 +173,7 @@ func initCommand(cli cliIO) *command {
 			line = strings.TrimSuffix(line, "\r")
 			return &line
 		}
-		in := initproject.Init{Catalog: cat, ProjectDir: projectDir, Agents: r.multiOption("agents"),
-			Starters: embedded.StartersFS, Version: version.Current()}
+		in := initproject.Init{Catalog: cat, ProjectDir: projectDir, Agents: r.multiOption("agents")}
 		return 0, in.Run(r.flag("yes"), r.flag("force"), initproject.RemoteBranches(projectDir), ask, cli.out)
 	}
 	return c

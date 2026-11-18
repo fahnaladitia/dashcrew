@@ -1,7 +1,6 @@
 package initproject
 
 import (
-	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -13,15 +12,11 @@ import (
 	"github.com/fahnaladitia/dashcrew/internal/dartjson"
 	"github.com/fahnaladitia/dashcrew/internal/omap"
 	"github.com/fahnaladitia/dashcrew/internal/profile"
-	"github.com/fahnaladitia/dashcrew/internal/starter"
 	"github.com/fahnaladitia/dashcrew/internal/yamlutil"
 )
 
-// ProfilePath is the file init writes; a starter platform the user picks is written beside it.
+// ProfilePath is the file init writes.
 const ProfilePath = ".ai/project.yaml"
-
-// starterMarkers are the root files that make init offer a starter platform when no platform matches.
-var starterMarkers = map[string]string{"go": "go.mod"}
 
 // otherMarkers are root files that identify a stack; the ones present are the proposed `detect` of `other`.
 var otherMarkers = []string{"pyproject.toml", "setup.py", "package.json", "Cargo.toml", "go.mod", "pom.xml",
@@ -40,18 +35,13 @@ var (
 type Ask func(prompt string) *string
 
 // Init writes `.ai/project.yaml` from what DetectPlatforms and Detect find, confirmed per question unless yes.
-// A project that matches no platform is offered the starter its root files point at (go for a go.mod), else
-// `platform: other`, never the default platform. Beside a chosen starter it writes nothing else; `dashcrew sync`
-// renders the toolkit afterwards.
+// A project that matches no platform is offered `platform: other`, never the default platform. It writes nothing
+// else; `dashcrew sync` renders the toolkit afterwards.
 type Init struct {
 	Catalog    *catalog.Catalog
 	ProjectDir string
 	// Agents listed in the profile; empty means claude-code.
 	Agents []string
-	// Starters holds the starter platforms (`starters/<name>/`) init may offer; nil offers none.
-	Starters fs.FS
-	// Version is written into a starter's files.
-	Version string
 }
 
 type choice struct {
@@ -120,30 +110,19 @@ func (in Init) Run(yes, force bool, remoteBranches []string, ask Ask, out func(s
 		}
 		out("  platform: none of " + strings.Join(expected, ", "))
 	}
-	starterName := ""
-	var found []string
-	if len(matches) == 0 {
-		starterName = in.starterFor(c)
-		if starterName != "" {
-			out("  starter: " + starterName + " (" + starterMarkers[starterName] + ")")
-		}
-		found = in.markersFound()
-		if len(found) > 0 {
-			out("  files: " + strings.Join(found, ", "))
-		}
+	found := in.markersFound()
+	if len(matches) == 0 && len(found) > 0 {
+		out("  files: " + strings.Join(found, ", "))
 	}
 
 	var platform string
 	if yes {
-		platform, err = platformWithoutAsking(matches, starterName)
+		platform, err = platformWithoutAsking(matches)
 	} else {
-		platform, err = askPlatform(platformNames, matches, starterName, ask, out)
+		platform, err = askPlatform(platformNames, matches, ask, out)
 	}
 	if err != nil {
 		return err
-	}
-	if platform == starterName && starterName != "" {
-		return in.writeStarter(starterName, file, out)
 	}
 	var platformConfig *omap.Map[any]
 	if platform == profile.OtherOption {
@@ -231,14 +210,11 @@ func (in Init) Run(yes, force bool, remoteBranches []string, ask Ask, out func(s
 	return nil
 }
 
-func platformWithoutAsking(matches []string, starterName string) (string, error) {
+func platformWithoutAsking(matches []string) (string, error) {
 	switch len(matches) {
 	case 1:
 		return matches[0], nil
 	case 0:
-		if starterName != "" {
-			return starterName, nil
-		}
 		return "", &Error{"No platform detected. Rerun without --yes to declare platform: " + profile.OtherOption +
 			" and its commands."}
 	}
@@ -246,19 +222,14 @@ func platformWithoutAsking(matches []string, starterName string) (string, error)
 		". Rerun without --yes and pick one."}
 }
 
-// askPlatform proposes the one detected platform; when none matched, the starter the root files point at, else
-// `other`; and nothing when several matched.
-func askPlatform(platformNames, matches []string, starterName string, ask Ask, out func(string)) (string, error) {
+// askPlatform proposes the one detected platform; `other` when none matched; and nothing when several matched.
+func askPlatform(platformNames, matches []string, ask Ask, out func(string)) (string, error) {
 	options := append(append([]string{}, platformNames...), profile.OtherOption)
 	proposal := ""
 	shown := profile.OtherOption
 	switch len(matches) {
 	case 0:
 		proposal = profile.OtherOption
-		if starterName != "" {
-			options = append(options, starterName)
-			proposal, shown = starterName, starterName
-		}
 	case 1:
 		proposal = matches[0]
 		shown = matches[0]
@@ -468,21 +439,6 @@ func scalar(value string) string {
 	return encoded
 }
 
-// starterFor is the starter init offers for a repo no platform matched: the one whose marker file is at the root and
-// that is neither a platform already nor missing from in.Starters; empty for none.
-func (in Init) starterFor(c *catalog.Catalog) string {
-	if in.Starters == nil {
-		return ""
-	}
-	for _, name := range starter.Names(in.Starters) {
-		marker, ok := starterMarkers[name]
-		if ok && c.Platforms[name] == nil && isFile(filepath.Join(in.ProjectDir, marker)) {
-			return name
-		}
-	}
-	return ""
-}
-
 // markersFound are the otherMarkers at the project root, in their order.
 func (in Init) markersFound() []string {
 	var found []string
@@ -494,40 +450,20 @@ func (in Init) markersFound() []string {
 	return found
 }
 
-// writeStarter writes starter name into `.ai/platforms/<name>/` and the profile that uses it, with the stack its
-// root files point at.
-func (in Init) writeStarter(name, file string, out func(string)) error {
-	written, err := starter.Write(in.Starters, name, in.ProjectDir, in.Version)
-	if err != nil {
-		return &Error{err.Error()}
+// PlatformProfile is the `.ai/project.yaml` of a project on platform name with stack (families in the order given),
+// checked against the catalog with the project's own platforms, such as one `dashcrew platform new` just ejected.
+func PlatformProfile(c *catalog.Catalog, projectDir, name string, families []string, stack map[string]string, agents []string) (string, error) {
+	text := "toolkit: 1\nplatform: " + name + "\n"
+	if len(families) > 0 {
+		text += "stack:\n"
+		for _, family := range families {
+			text += "  " + family + ": " + stack[family] + "\n"
+		}
 	}
-	out("wrote " + filepath.Join(".ai", "platforms", name) + "/ (" + strconv.Itoa(len(written)) + " files)")
-	stack := map[string]string{}
-	stack["http"], stack["db"] = starter.GoDefaults(in.ProjectDir)
-	agents := in.Agents
-	if len(agents) == 0 {
-		agents = []string{"claude-code"}
-	}
-	text, err := StarterProfile(in.Catalog, in.ProjectDir, name, stack, agents)
-	if err != nil {
-		return err
-	}
-	if err := os.WriteFile(file, []byte(text), 0o644); err != nil {
-		return err
-	}
-	out("wrote " + ProfilePath + " (platform " + name + ", http " + stack["http"] + ", db " + stack["db"] + ")")
-	out("next: dashcrew sync")
-	return nil
-}
-
-// StarterProfile is the `.ai/project.yaml` of a project on starter platform name with stack, checked against the
-// catalog with the project's platforms, which must already hold the starter.
-func StarterProfile(c *catalog.Catalog, projectDir, name string, stack map[string]string, agents []string) (string, error) {
-	text := "toolkit: 1\nplatform: " + name + "\nstack:\n  http: " + stack["http"] + "\n  db: " + stack["db"] + "\nagents: [" +
-		strings.Join(agents, ", ") + "]\n"
+	text += "agents: [" + strings.Join(agents, ", ") + "]\n"
 	withProject, err := c.WithProjectPacks(projectDir)
 	if err != nil {
-		return "", &Error{"the starter does not load: " + err.Error()}
+		return "", &Error{"the platform does not load: " + err.Error()}
 	}
 	if _, err := profile.Parse(text, withProject.KnownOptions()); err != nil {
 		return "", err

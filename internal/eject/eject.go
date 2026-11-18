@@ -1,6 +1,6 @@
-// Package starter writes a platform starter (P10) into a project's `.ai/platforms/<name>/`. The team owns the folder
-// afterwards: the starter is written once and never updated by dashcrew.
-package starter
+// Package eject copies a built-in platform into a project's `.ai/platforms/<name>/` (`dashcrew platform new`), where
+// it replaces the built-in one. The team owns the folder afterwards: it is written once and never updated by dashcrew.
+package eject
 
 import (
 	"errors"
@@ -8,7 +8,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 )
@@ -18,9 +17,9 @@ type Error struct{ Message string }
 
 func (e *Error) Error() string { return e.Message }
 
-// Names are the starters in fsys (`starters/<name>/`), sorted.
+// Names are the built-in platforms in fsys (`platforms/<name>/`), sorted.
 func Names(fsys fs.FS) []string {
-	entries, _ := fs.ReadDir(fsys, "starters")
+	entries, _ := fs.ReadDir(fsys, "platforms")
 	var names []string
 	for _, entry := range entries {
 		if entry.IsDir() {
@@ -31,9 +30,9 @@ func Names(fsys fs.FS) []string {
 	return names
 }
 
-// Options are the pack options the starter ships for family, sorted; nil when it has none.
+// Options are the pack options built-in platform name ships for family, sorted; nil when it has none.
 func Options(fsys fs.FS, name, family string) []string {
-	entries, _ := fs.ReadDir(fsys, path.Join("starters", name, "packs", family))
+	entries, _ := fs.ReadDir(fsys, path.Join("platforms", name, "packs", family))
 	var options []string
 	for _, entry := range entries {
 		if entry.IsDir() {
@@ -44,12 +43,12 @@ func Options(fsys fs.FS, name, family string) []string {
 	return options
 }
 
-// Write copies starter name into projectDir/.ai/platforms/<name>/, with `{{version}}` replaced by version, and
-// returns the written paths relative to projectDir. It refuses when that folder exists.
+// Write copies built-in platform name into projectDir/.ai/platforms/<name>/, its platform.yaml headed by a comment
+// naming version, and returns the written paths relative to projectDir. It refuses when that folder exists.
 func Write(fsys fs.FS, name, projectDir, version string) ([]string, error) {
-	root := path.Join("starters", name)
-	if _, err := fs.Stat(fsys, root); err != nil {
-		return nil, &Error{"no starter " + name + "; available: " + strings.Join(Names(fsys), ", ")}
+	root := path.Join("platforms", name)
+	if _, err := fs.Stat(fsys, root); err != nil || name == "" {
+		return nil, &Error{"no built-in platform " + name + "; available: " + strings.Join(Names(fsys), ", ")}
 	}
 	target := filepath.Join(projectDir, ".ai", "platforms", name)
 	if _, err := os.Lstat(target); err == nil {
@@ -67,7 +66,10 @@ func Write(fsys fs.FS, name, projectDir, version string) ([]string, error) {
 			return err
 		}
 		relative := strings.TrimPrefix(file, root+"/")
-		text := strings.ReplaceAll(string(data), "{{version}}", version)
+		text := string(data)
+		if relative == "platform.yaml" {
+			text = header(name, version) + text
+		}
 		out := filepath.Join(target, filepath.FromSlash(relative))
 		if err := os.MkdirAll(filepath.Dir(out), 0o755); err != nil {
 			return err
@@ -81,50 +83,8 @@ func Write(fsys fs.FS, name, projectDir, version string) ([]string, error) {
 	return written, err
 }
 
-var requires = regexp.MustCompile(`(?m)^\s*(?:require\s+)?([A-Za-z0-9.\-_/]+)\s+v[0-9]`)
-
-// GoDefaults are the http and db packs the go.mod in projectDir points at; "nethttp" and "none" when it names none
-// of the libraries the starter knows, and when there is no go.mod.
-func GoDefaults(projectDir string) (http, db string) {
-	http, db = "nethttp", "none"
-	data, err := os.ReadFile(filepath.Join(projectDir, "go.mod"))
-	if err != nil {
-		return http, db
-	}
-	modules := map[string]bool{}
-	for _, match := range requires.FindAllStringSubmatch(string(data), -1) {
-		modules[match[1]] = true
-	}
-	has := func(prefix string) bool {
-		for module := range modules {
-			if module == prefix || strings.HasPrefix(module, prefix+"/") {
-				return true
-			}
-		}
-		return false
-	}
-	switch {
-	case has("github.com/go-chi/chi"):
-		http = "chi"
-	case has("github.com/gin-gonic/gin"):
-		http = "gin"
-	case has("github.com/labstack/echo"):
-		http = "echo"
-	case has("github.com/gofiber/fiber"):
-		http = "fiber"
-	}
-	switch {
-	case fileExists(filepath.Join(projectDir, "sqlc.yaml")) || fileExists(filepath.Join(projectDir, "sqlc.yml")) || fileExists(filepath.Join(projectDir, "sqlc.json")):
-		db = "sqlc"
-	case has("gorm.io/gorm"):
-		db = "gorm"
-	case has("github.com/jackc/pgx"):
-		db = "pgx"
-	}
-	return http, db
-}
-
-func fileExists(file string) bool {
-	info, err := os.Stat(file)
-	return err == nil && !info.IsDir()
+// header heads an ejected platform.yaml: where it came from, and that it no longer follows the built-in platform.
+func header(name, version string) string {
+	return "# Ejected from dashcrew " + version + ": this repository's own " + name + " platform, in place of the built-in\n" +
+		"# one. Edit it to match the code here; dashcrew never overwrites it, so it no longer gets the built-in updates.\n"
 }

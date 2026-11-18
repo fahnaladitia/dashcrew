@@ -4,7 +4,7 @@
 exit: 1
 stdout:
 | Detected in <root>/w:
-|   platform: none of flutter (pubspec.yaml)
+|   platform: none of flutter (pubspec.yaml), go (go.mod)
 |   files: Makefile
 stderr:
 | No platform detected. Rerun without --yes to declare platform: other and its commands.
@@ -15,7 +15,7 @@ stdin: "\nMakefile\n"
 exit: 1
 stdout:
 | Detected in <root>/w:
-|   platform: none of flutter (pubspec.yaml)
+|   platform: none of flutter (pubspec.yaml), go (go.mod)
 |   files: Makefile
 | platform [other]: detect (files that identify the platform, space separated) [Makefile]: commands.analyze: 
 (no final newline)
@@ -28,7 +28,7 @@ stdin: "flutter\n"
 exit: 1
 stdout:
 | Detected in <root>/w:
-|   platform: none of flutter (pubspec.yaml)
+|   platform: none of flutter (pubspec.yaml), go (go.mod)
 |   files: Makefile
 | platform [other]: 
 (no final newline)
@@ -41,9 +41,9 @@ stdin: "nope\n\nMakefile  go.mod\nmake lint\n\nmake test\nmake one\nmake deps\nm
 exit: 0
 stdout:
 | Detected in <root>/w:
-|   platform: none of flutter (pubspec.yaml)
+|   platform: none of flutter (pubspec.yaml), go (go.mod)
 |   files: Makefile
-| platform [other]:   expected one of flutter, other
+| platform [other]:   expected one of flutter, go, other
 | platform [other]: detect (files that identify the platform, space separated) [Makefile]: commands.analyze: commands.test:   required
 | commands.test: commands.test_scoped: commands.deps: commands.format (empty for none): design [-]: tracker [-]: wrote .ai/project.yaml
 | next: dashcrew sync

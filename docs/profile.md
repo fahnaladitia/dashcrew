@@ -74,22 +74,24 @@ The profile's `platform` picks one. Every stack works at the first level; the ot
 |---|---|---|
 | `platform: other` | declare it inline: `platform_config: { detect: [<file>], commands: { analyze, test, test_scoped, deps, format }, link }` (`format` and `link` optional; `link` is `pubspec_overrides.yaml` or `go.work`) | all of core: the chain, skills, guard, `reviewer` and `explorer`, PR template and `dashcrew check`; core renders your commands, with no stack-specific rules |
 | Project platform | write `.ai/platforms/<name>/` in your repo, in the format of `platforms/` (`platform.yaml`, rules, skills, workflows, packs), and set `platform: <name>` | depth for that stack, your conventions, no dashcrew release needed |
-| Built-in | `platforms/<name>/` in this repo; today `flutter` | shared with every team |
+| Built-in | `platforms/<name>/` in this repo: `flutter`, `go` | shared with every team, updated with dashcrew |
 
 ```yaml
 platform: other
 platform_config:
-  detect: [go.mod]
-  commands: { analyze: go vet, test: go test ./..., test_scoped: go test, deps: go mod download, format: gofmt -l }
+  detect: [pyproject.toml]
+  commands: { analyze: ruff check ., test: pytest, test_scoped: pytest, deps: pip install -e ., format: ruff format --check }
 ```
 
-**Starters.** `dashcrew platform new go [--http nethttp|chi|gin|echo|fiber|none] [--db pgx|sqlc|gorm|none]` writes a project platform for a Go service into `.ai/platforms/go/`: Go rules (context, error wrapping, goroutine ownership, `gofmt -l` as a check), backend architecture, security and testing rules in place of the app-oriented core ones, a `backend-security` review skill, the `data-layer-tdd` and `feature-architecture` skills for services, packs for the HTTP framework and the database layer, `link: go.work`, and the backend `guard:` rules. The packs default to what `go.mod` (and a `sqlc.yaml`) names. Without `.ai/project.yaml` it writes one; with one, it prints the keys to set. The folder is the team's from then on: dashcrew never overwrites it, so rename the layers and edit the rules to match the code. `init` offers it first when it finds a `go.mod` and no matching platform, and `init --yes` takes it.
+**Go.** `platform: go`, which `init` picks for a `go.mod`, gives a Go service: Go rules (context, error wrapping, goroutine ownership, `gofmt -l` as a check), backend architecture, security and testing rules in place of the app-oriented core ones, a `backend-security` review skill, the `data-layer-tdd` and `feature-architecture` skills for services, the `http` and `db` stack families below, `link: go.work`, and the backend `guard:` rules.
+
+**Ejecting.** `dashcrew platform new <name> [--http ...] [--db ...]` copies a built-in platform (`flutter` or `go`) into `.ai/platforms/<name>/`, where it replaces the built-in one, so a team can rename the layers and rewrite the rules to match its code. The folder is the team's from then on: dashcrew never overwrites it, and it no longer gets the built-in platform's updates. For `go`, `--http` and `--db` default to what `go.mod` (and a `sqlc.yaml`) names. Without `.ai/project.yaml` it writes one; with one, it prints the keys to set. Smaller changes do not need it: a project pack or the AGENTS.md project block covers most.
 
 A project platform with a built-in name replaces it whole. The format is in [docs/catalog-format.md](catalog-format.md#platforms).
 
 ## Stack options
 
-The `flutter` platform ships these families; `tracker` and `design` are shared by every platform.
+The `flutter` platform ships these families, and `go` ships `http` (`nethttp`, `chi`, `gin`, `echo`, `fiber`, `none`) and `db` (`pgx`, `sqlc`, `gorm`, `none`); `tracker` and `design` are shared by every platform.
 
 | Family | Options | Shipped with dashcrew |
 |---|---|---|

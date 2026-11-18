@@ -13,7 +13,7 @@ Every `dashcrew` command with its flags; `dashcrew <command> --help` prints them
 | `--agents` | `claude-code` | agents to list in the profile (repeatable) |
 | `--force` | off | replace an existing `.ai/project.yaml` |
 
-Writes only `.ai/project.yaml`, plus the starter platform you pick: a repo no platform matches is offered the starter its root files point at (`go` for a `go.mod`, written as `dashcrew platform new go` writes it), else `platform: other`. Under `other`, the root files that identify a stack (`pyproject.toml`, `package.json`, `Cargo.toml`, `Makefile` and the like) are printed first and proposed as `detect`; the commands are always asked. A required answer left empty is asked once more, then `init` stops.
+Writes only `.ai/project.yaml`. A repo matches a built-in platform by its root file (`flutter` for `pubspec.yaml`, `go` for `go.mod`) or a project platform by its `detect` files; the stack options it reads (the `pubspec.yaml` dependencies, the modules `go.mod` requires and a `sqlc.yaml`) are printed as evidence and proposed per family. A repo no platform matches is offered `platform: other`. Under `other`, the root files that identify a stack (`pyproject.toml`, `package.json`, `Cargo.toml`, `Makefile` and the like) are printed first and proposed as `detect`; the commands are always asked. A required answer left empty is asked once more, then `init` stops.
 
 ## `dashcrew sync`
 

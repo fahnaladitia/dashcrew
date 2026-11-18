@@ -28,3 +28,10 @@ Before 0.1.0, dashcrew moved from role subagents to skills (the CLI messages nam
 - **Plan gate removed.** No `dashcrew gate` command, no `plan-approval` check, no plan-gate guard rule; `.ai/guard.json` loses `plan_gate`. Delete `policy.plan_gate` from `.ai/project.yaml`: it is ignored with a warning for one release, then rejected as an unknown key. The merge gate (`dashcrew check`) stays.
 - **What `sync` does.** It deletes every generated file it no longer writes, prints `note: Migrated to P4: ...` once, and rewrites AGENTS.md around your project block. Files the team wrote are never touched: plans and handoffs under `paths.plans`, project memory under `paths.memory`, and the AGENTS.md project block.
 - **After it.** Commit the result. `doctor` lists leftover `<plans>/*/handoff/00-roster.md` files as `info`; nothing reads them, so delete them when the plans are done. Text in your project block or project packs that names a removed role or `orchestrate` is yours to edit.
+
+## Moving a Go project to the built-in go platform
+
+Before 0.8.0, Go was a starter: `init` and `dashcrew platform new go` wrote it into `.ai/platforms/go/`, and a project platform with a built-in name replaces the built-in one. Such a project keeps its folder and its output after upgrading; nothing changes until you choose.
+
+- **Never edited the folder:** delete `.ai/platforms/go/`, run `dashcrew sync` and commit the result. The project is then on the built-in `go` platform and gets its rule and guard updates with each dashcrew release.
+- **Edited it:** keep it. It stays yours; compare it with a fresh copy (`dashcrew platform new go -p <empty folder>`) to take what you want from the built-in rules.

@@ -1,4 +1,4 @@
-package starter
+package eject
 
 import (
 	"os"
@@ -14,20 +14,20 @@ import (
 )
 
 func TestNamesAndOptions(t *testing.T) {
-	if got := Names(embedded.StartersFS); !reflect.DeepEqual(got, []string{"go"}) {
+	if got := Names(embedded.CatalogFS); !reflect.DeepEqual(got, []string{"flutter", "go"}) {
 		t.Errorf("names %v", got)
 	}
-	if got := Options(embedded.StartersFS, "go", "http"); !reflect.DeepEqual(got, []string{"chi", "echo", "fiber", "gin", "nethttp", "none"}) {
+	if got := Options(embedded.CatalogFS, "go", "http"); !reflect.DeepEqual(got, []string{"chi", "echo", "fiber", "gin", "nethttp", "none"}) {
 		t.Errorf("http %v", got)
 	}
-	if got := Options(embedded.StartersFS, "go", "db"); !reflect.DeepEqual(got, []string{"gorm", "none", "pgx", "sqlc"}) {
+	if got := Options(embedded.CatalogFS, "go", "db"); !reflect.DeepEqual(got, []string{"gorm", "none", "pgx", "sqlc"}) {
 		t.Errorf("db %v", got)
 	}
 }
 
 func TestWriteOnceWithTheVersion(t *testing.T) {
 	project := t.TempDir()
-	written, err := Write(embedded.StartersFS, "go", project, "9.8.7")
+	written, err := Write(embedded.CatalogFS, "go", project, "9.8.7")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,52 +35,59 @@ func TestWriteOnceWithTheVersion(t *testing.T) {
 		t.Errorf("written %v", written)
 	}
 	manifest, _ := os.ReadFile(filepath.Join(project, ".ai", "platforms", "go", "platform.yaml"))
-	if !strings.Contains(string(manifest), "Starter from dashcrew 9.8.7") || strings.Contains(string(manifest), "{{version}}") {
+	if !strings.HasPrefix(string(manifest), "# Ejected from dashcrew 9.8.7: ") {
 		t.Errorf("platform.yaml header:\n%s", manifest)
 	}
-	if _, err := Write(embedded.StartersFS, "go", project, "9.8.7"); err == nil || !strings.Contains(err.Error(), "never overwrites") {
+	if _, err := Write(embedded.CatalogFS, "go", project, "9.8.7"); err == nil || !strings.Contains(err.Error(), "never overwrites") {
 		t.Errorf("second write: %v", err)
 	}
-	if _, err := Write(embedded.StartersFS, "rust", t.TempDir(), "1"); err == nil || !strings.Contains(err.Error(), "available: go") {
-		t.Errorf("unknown starter: %v", err)
+	if _, err := Write(embedded.CatalogFS, "rust", t.TempDir(), "1"); err == nil || !strings.Contains(err.Error(), "available: flutter, go") {
+		t.Errorf("unknown platform: %v", err)
 	}
 }
 
-func TestGoDefaults(t *testing.T) {
-	cases := []struct{ gomod, extra, http, db string }{
-		{"", "", "nethttp", "none"},
-		{"require github.com/go-chi/chi/v5 v5.2.1\nrequire github.com/jackc/pgx/v5 v5.7.4\n", "", "chi", "pgx"},
-		{"require (\n\tgithub.com/gin-gonic/gin v1.10.0\n\tgorm.io/gorm v1.25.12\n)\n", "", "gin", "gorm"},
-		{"require (\n\tgithub.com/labstack/echo/v4 v4.13.3\n\tgithub.com/jackc/pgx/v5 v5.7.4\n)\n", "sqlc.yaml", "echo", "sqlc"},
-		{"require github.com/gofiber/fiber/v2 v2.52.6\n", "", "fiber", "none"},
+// TestAnEjectedPlatformRendersLikeTheBuiltIn: ejecting changes who owns the rules, not what agents read.
+func TestAnEjectedPlatformRendersLikeTheBuiltIn(t *testing.T) {
+	c, err := catalog.LoadEmbedded()
+	if err != nil {
+		t.Fatal(err)
 	}
-	for _, c := range cases {
-		dir := t.TempDir()
-		if c.gomod != "" {
-			os.WriteFile(filepath.Join(dir, "go.mod"), []byte("module x\n\ngo 1.26\n\n"+c.gomod), 0o644)
+	for name, profile := range map[string]string{
+		"go":      "toolkit: 1\nplatform: go\nagents: [claude-code]\nstack:\n  http: chi\n  db: pgx\n",
+		"flutter": "toolkit: 1\nagents: [claude-code]\nstack:\n  state: bloc\n",
+	} {
+		builtIn, ejected := t.TempDir(), t.TempDir()
+		if _, err := Write(embedded.CatalogFS, name, ejected, "0.0.0"); err != nil {
+			t.Fatal(err)
 		}
-		if c.extra != "" {
-			os.WriteFile(filepath.Join(dir, c.extra), []byte("version: \"2\"\n"), 0o644)
+		for _, dir := range []string{builtIn, ejected} {
+			os.MkdirAll(filepath.Join(dir, ".ai"), 0o755)
+			os.WriteFile(filepath.Join(dir, ".ai", "project.yaml"), []byte(profile), 0o644)
+			if _, err := (sync.Sync{Catalog: c, ProjectDir: dir, Home: t.TempDir()}).Run(false, false); err != nil {
+				t.Fatalf("%s: %v", name, err)
+			}
 		}
-		if http, db := GoDefaults(dir); http != c.http || db != c.db {
-			t.Errorf("%q: %s %s, want %s %s", c.gomod, http, db, c.http, c.db)
+		for _, file := range []string{"AGENTS.md", ".claude/skills/plan/SKILL.md", ".ai/guard.json"} {
+			a, _ := os.ReadFile(filepath.Join(builtIn, file))
+			b, _ := os.ReadFile(filepath.Join(ejected, file))
+			if string(a) != string(b) {
+				t.Errorf("%s: %s differs between the built-in and the ejected platform", name, file)
+			}
 		}
 	}
 }
 
-// TestEveryGoPackSyncs syncs the starter with every http and db option, for the three agents: it must load, sync,
-// pass doctor and keep AGENTS.md under Antigravity's limit.
+// TestEveryGoPackSyncs syncs the built-in go platform with every http and db option, for the three agents: it must
+// sync, pass doctor and keep AGENTS.md under Antigravity's limit.
 func TestEveryGoPackSyncs(t *testing.T) {
 	c, err := catalog.LoadEmbedded()
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, http := range Options(embedded.StartersFS, "go", "http") {
-		for _, db := range Options(embedded.StartersFS, "go", "db") {
+	for _, http := range Options(embedded.CatalogFS, "go", "http") {
+		for _, db := range Options(embedded.CatalogFS, "go", "db") {
 			project := t.TempDir()
-			if _, err := Write(embedded.StartersFS, "go", project, "0.0.0"); err != nil {
-				t.Fatal(err)
-			}
+			os.MkdirAll(filepath.Join(project, ".ai"), 0o755)
 			profile := "toolkit: 1\nplatform: go\nagents: [claude-code, codex, antigravity]\nstack:\n  http: " + http + "\n  db: " + db + "\n"
 			os.WriteFile(filepath.Join(project, ".ai", "project.yaml"), []byte(profile), 0o644)
 			if _, err := (sync.Sync{Catalog: c, ProjectDir: project, Home: t.TempDir()}).Run(false, false); err != nil {
