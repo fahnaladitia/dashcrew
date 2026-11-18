@@ -1,0 +1,12 @@
+# Synthetic profile: the agent commits and pushes, and its own prompt asks the user each time (agent_commit: ask);
+# Codex cannot ask, so its calls are blocked.
+toolkit: 1
+agents: [claude-code, codex, antigravity]
+stack:
+  state: bloc
+  di: get_it
+project:
+  base_branches: [develop, main]
+policy:
+  agent_commit: ask
+  agent_push: ask

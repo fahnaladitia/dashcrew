@@ -222,7 +222,7 @@ func Parse(text string, known KnownOptions) (*Profile, error) {
 	if profile.Policy, err = merge("policy", policyDefaults(), root.Value("policy"), true); err != nil {
 		return nil, err
 	}
-	if err := checkAgentPush(profile.Policy); err != nil {
+	if err := checkAgentGit(profile.Policy); err != nil {
 		return nil, err
 	}
 	if profile.Paths, err = merge("paths", PathDefaults(), root.Value("paths"), false); err != nil {
@@ -237,15 +237,21 @@ func Parse(text string, known KnownOptions) (*Profile, error) {
 	return profile, nil
 }
 
-// checkAgentPush refuses `policy.agent_push` unless it is a bool, and unless `agent_commit` is on too: an agent that
-// may push but not commit would only ever push someone else's commits.
-func checkAgentPush(policy *omap.Map[any]) error {
-	push, ok := policy.Value("agent_push").(bool)
-	if !ok {
-		return fail("policy.agent_push", "expected true or false")
+// checkAgentGit refuses `policy.agent_commit` and `policy.agent_push` unless each is true, false or ask, and unless
+// push matches commit: an agent that may push but not commit would only ever push someone else's commits, and a
+// push without a prompt after a commit with one would skip the check the member asked for.
+func checkAgentGit(policy *omap.Map[any]) error {
+	commit, push := policy.Value("agent_commit"), policy.Value("agent_push")
+	for _, key := range []string{"agent_commit", "agent_push"} {
+		if value := policy.Value(key); value != true && value != false && value != "ask" {
+			return fail("policy."+key, "expected true, false or ask")
+		}
 	}
-	if push && policy.Value("agent_commit") != true {
-		return fail("policy.agent_push", "needs policy.agent_commit: true")
+	switch {
+	case push == true && commit != true:
+		return fail("policy.agent_push", "true needs policy.agent_commit: true")
+	case push == "ask" && commit != "ask":
+		return fail("policy.agent_push", "ask needs policy.agent_commit: ask")
 	}
 	return nil
 }
@@ -522,7 +528,8 @@ func (p *Profile) ToContext() map[string]any {
 		"has_links":         len(p.Links) > 0,
 		"has_tracker":       hasTracker(p),
 		"project":           p.Project,
-		"policy":            p.Policy,
+		"policy":            renderedPolicy(p.Policy),
+		"git_ask":           p.Policy.Value("agent_commit") == "ask",
 		"paths":             p.Paths,
 		"ci":                p.CI,
 		"build":             map[string]any{"flavors": buildFlavors, "has_flavors": len(buildFlavors) > 0},
@@ -536,6 +543,21 @@ func contains(list []string, value string) bool {
 		}
 	}
 	return false
+}
+
+// renderedPolicy is the policy as templates read it: `agent_commit` and `agent_push` set to ask read as true, since
+// the agent commits or pushes then too (strict Mustache refuses a string in an inverted section); `git_ask` tells
+// the ask mode apart.
+func renderedPolicy(policy *omap.Map[any]) *omap.Map[any] {
+	out := omap.New[any]()
+	for _, key := range policy.Keys() {
+		value := policy.Value(key)
+		if (key == "agent_commit" || key == "agent_push") && value == "ask" {
+			value = true
+		}
+		out.Set(key, value)
+	}
+	return out
 }
 
 // hasTracker is true when the profile picks a tracker pack: a `tracker` choice that is neither none nor other.

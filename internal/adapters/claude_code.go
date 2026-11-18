@@ -13,8 +13,9 @@ import (
 const (
 	// ClaudeGuardMatcher is the PreToolUse matcher of the guard entry.
 	ClaudeGuardMatcher = "Bash|Write|Edit|MultiEdit|NotebookEdit"
-	// ClaudeGuardCommand runs the guard from any working directory through CLAUDE_PROJECT_DIR.
-	ClaudeGuardCommand = `"$CLAUDE_PROJECT_DIR/.ai/bin/guard" "$CLAUDE_PROJECT_DIR/.ai/guard.json"`
+	// ClaudeGuardCommand runs the guard from any working directory through CLAUDE_PROJECT_DIR. Its last argument,
+	// guard.ClaudeCodeArgument, tells the guard Claude Code called, so it may answer ask (`agent_commit: ask`).
+	ClaudeGuardCommand = `"$CLAUDE_PROJECT_DIR/.ai/bin/guard" "$CLAUDE_PROJECT_DIR/.ai/guard.json" claude-code`
 )
 
 // ClaudeGuardHook is the PreToolUse entry sync keeps in `.claude/settings.json`.

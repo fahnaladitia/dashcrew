@@ -46,7 +46,7 @@ files:
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:c5027d9c25fbef11
 + w/.claude/agents/reviewer.md  -rw-r--r-- sha256:5c1f3688fe3eb344
-+ w/.claude/settings.json  -rw-r--r-- sha256:ab785cea7a7a2c39
++ w/.claude/settings.json  -rw-r--r-- sha256:159fc2265d8aabad
 + w/.claude/skills  dir
 + w/.claude/skills/acceptance-criteria  dir
 + w/.claude/skills/acceptance-criteria/SKILL.md  -rw-r--r-- sha256:ae96af8d4fdad818
@@ -138,7 +138,7 @@ stdout:
 | ok    gitignore       .ai/bin/guard is not ignored
 | ok    hook            PreToolUse guard hook present
 | skip  pr-sections     no PR body; pass --pr-body <file> or run on a pull_request event
-| fail  commits         d0583fd subject line "WIP sharing" does not match <type>(<scope>): <subject>
+| fail  commits         3081927 subject line "WIP sharing" does not match <type>(<scope>): <subject>
 stderr: (empty)
 files: (unchanged)
 
@@ -161,8 +161,8 @@ stdout:
 | ok    hook            PreToolUse guard hook present
 | fail  pr-sections     missing: ## Summary, ## Changes, ## Affected files, ## Testing, ## Notes / not done (write "None" under a heading that does not apply)
 | ::error title=dashcrew pr-sections::missing: ## Summary, ## Changes, ## Affected files, ## Testing, ## Notes / not done (write "None" under a heading that does not apply)
-| fail  commits         d0583fd subject line "WIP sharing" does not match <type>(<scope>): <subject>
-| ::error title=dashcrew commits::d0583fd subject line "WIP sharing" does not match <type>(<scope>): <subject>
+| fail  commits         3081927 subject line "WIP sharing" does not match <type>(<scope>): <subject>
+| ::error title=dashcrew commits::3081927 subject line "WIP sharing" does not match <type>(<scope>): <subject>
 stderr: (empty)
 files: (unchanged)
 

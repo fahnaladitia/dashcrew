@@ -30,15 +30,20 @@ func newProjects(hookDir, home string) *projects {
 	return &projects{k: newKnowledgeRoots(pathstyle.Host, osFS{}, hookDir, "", home, ""), home: home, loaded: map[string]*Policy{}}
 }
 
-// evaluateAll blocks when any event is blocked under its policy, with the first reason; see Evaluate for errors.
+// evaluateAll blocks when any event is blocked under its policy, with the first reason, else asks when any asks;
+// see Evaluate for errors.
 func (r *projects) evaluateAll(events []Event) (Decision, error) {
+	result := Allow()
 	for _, event := range events {
 		decision, err := r.evaluate(event)
 		if err != nil || decision.Blocked {
 			return decision, err
 		}
+		if decision.Ask && !result.Ask {
+			result = decision
+		}
 	}
-	return Allow(), nil
+	return result, nil
 }
 
 func (r *projects) evaluate(event Event) (Decision, error) {
@@ -54,14 +59,19 @@ func (r *projects) evaluate(event Event) (Decision, error) {
 	if r.policy != nil {
 		return Evaluate(event, *r.policy)
 	}
+	asked := Allow()
 	if event.Kind == Shell {
 		for _, p := range r.below() {
-			if decision, err := Evaluate(event, *p); err != nil || decision.Blocked {
+			decision, err := Evaluate(event, *p)
+			if err != nil || decision.Blocked {
 				return decision, err
+			}
+			if decision.Ask {
+				asked = decision
 			}
 		}
 	}
-	return Allow(), nil
+	return asked, nil
 }
 
 // ownerOf is the nearest folder holding path that has `.ai/guard.json`; empty when none does.

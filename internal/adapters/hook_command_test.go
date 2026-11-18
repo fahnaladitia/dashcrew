@@ -54,7 +54,7 @@ func TestClaudeCodeHookReachesTheGuardFromASubfolder(t *testing.T) {
 
 	runHook(t, ClaudeGuardCommand, filepath.Join(root, "lib", "feature"), "CLAUDE_PROJECT_DIR="+root)
 
-	if got := readFile(t, root, "calls.txt"); got != "called "+filepath.Join(root, ".ai", "guard.json")+"\n" {
+	if got := readFile(t, root, "calls.txt"); got != "called "+filepath.Join(root, ".ai", "guard.json")+" claude-code\n" {
 		t.Errorf("calls %q (%s)", got, calls)
 	}
 }

@@ -32,7 +32,11 @@ var ProcessEnv = Env{LookupEnv: os.LookupEnv, Getwd: os.Getwd, Now: time.Now}
 // A malformed hook input is also recorded in the malformed log (see logMalformed), which doctor reports.
 func Run(args []string, stdin io.Reader, stdout, stderr io.Writer, env Env) int {
 	object, decision := judge(args, stdin, env)
-	response := HookResponse(object, decision)
+	agent := ""
+	if len(args) > 1 {
+		agent = args[1]
+	}
+	response := HookResponse(object, decision, agent)
 	if response.Stdout != "" {
 		fmt.Fprintln(stdout, response.Stdout)
 	}

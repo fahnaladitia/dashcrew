@@ -6,6 +6,7 @@ import (
 
 	"github.com/fahnaladitia/dashcrew/internal/agents"
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
+	"github.com/fahnaladitia/dashcrew/internal/guard"
 	"github.com/fahnaladitia/dashcrew/internal/version"
 )
 
@@ -92,5 +93,18 @@ func TestGuardHookIsWhatMergeWrites(t *testing.T) {
 	}
 	if _, _, err := MergeGuardHook("cursor", t.TempDir()); err == nil {
 		t.Error("MergeGuardHook accepted an agent dashcrew does not support")
+	}
+}
+
+// TestClaudeHookNamesClaudeCode: the guard answers ask only to the agent its argument names, so the Claude Code
+// hook must pass the argument the guard reads.
+func TestClaudeHookNamesClaudeCode(t *testing.T) {
+	if !strings.HasSuffix(ClaudeGuardCommand, " "+guard.ClaudeCodeArgument) {
+		t.Errorf("ClaudeGuardCommand %q does not end with %q", ClaudeGuardCommand, guard.ClaudeCodeArgument)
+	}
+	for _, command := range []string{GitGuardCommand, AntigravityGuardCommand} {
+		if strings.Contains(command, guard.ClaudeCodeArgument) {
+			t.Errorf("another agent's hook names Claude Code: %q", command)
+		}
 	}
 }
