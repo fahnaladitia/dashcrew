@@ -105,6 +105,7 @@ Pre-1.0: the profile format and CLI can still change before 1.0, and each change
 | [docs/troubleshooting.md](docs/troubleshooting.md) | messages and their fixes, migrating an old toolkit |
 | [docs/catalog-format.md](docs/catalog-format.md) | writing your own packs and platforms |
 | [docs/architecture.md](docs/architecture.md) | the code, for contributors |
+| [docs/design-notes.md](docs/design-notes.md) | why it is built this way: skills over roles, no server, how the guard fails |
 
 ## Contributing, security, license
 
