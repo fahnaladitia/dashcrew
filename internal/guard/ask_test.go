@@ -119,7 +119,7 @@ func TestRunPassesTheAgentArgument(t *testing.T) {
 		t.Fatal(err)
 	}
 	env := Env{LookupEnv: func(string) (string, bool) { return "", false }, Getwd: func() (string, error) { return dir, nil }}
-	input := `{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m x"},"cwd":"` + dir + `"}`
+	input := `{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit -m x"},"cwd":` + jsonString(dir) + `}`
 
 	var out, errOut strings.Builder
 	code := Run([]string{path, "claude-code"}, strings.NewReader(input), &out, &errOut, env)
