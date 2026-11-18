@@ -41,8 +41,9 @@ const ClaudeCodeArgument = "claude-code"
 // or its default policy, it approves nothing). Claude Code and Codex read exit code 2 with the reason on stderr, and
 // nothing for an allowed call. input may be nil when the hook input did not parse.
 //
-// An ask goes to Antigravity as `force_ask` and to Claude Code, known by agent ClaudeCodeArgument, as a JSON ask;
-// every other agent gets a block, since none of them is known to ask.
+// An ask goes to Antigravity as `force_ask` and to Claude Code, known by agent ClaudeCodeArgument and a payload of its
+// shape, as a JSON ask; every other agent gets a block, since none of them is known to ask. Cursor runs the Claude
+// Code hook, argument included, so its payload (`cursor_version`) gets the block too.
 func HookResponse(input *omap.Map[any], decision Decision, agent string) Response {
 	antigravity := false
 	if input != nil {
@@ -54,7 +55,7 @@ func HookResponse(input *omap.Map[any], decision Decision, agent string) Respons
 		case antigravity:
 			text, _ := dartjson.Encode(omap.Of[any]("decision", "force_ask", "reason", reason))
 			return Response{Stdout: text}
-		case agent == ClaudeCodeArgument:
+		case agent == ClaudeCodeArgument && agentOf(input) == "claude-code":
 			text, _ := dartjson.Encode(omap.Of[any]("hookSpecificOutput", omap.Of[any]("hookEventName", "PreToolUse",
 				"permissionDecision", "ask", "permissionDecisionReason", reason)))
 			return Response{Stdout: text}

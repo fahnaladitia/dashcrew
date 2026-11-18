@@ -132,3 +132,15 @@ func TestRunPassesTheAgentArgument(t *testing.T) {
 		t.Errorf("without the argument: exit %d, stdout %q", code, out.String())
 	}
 }
+
+// TestCursorRunningTheClaudeHookIsBlockedNotAsked: Cursor runs the hooks of `.claude/settings.json`, argument
+// included, and how it reads Claude Code's ask answer is undocumented; its payload names it, so it gets a block.
+func TestCursorRunningTheClaudeHookIsBlockedNotAsked(t *testing.T) {
+	ask := Decision{Ask: true, Reason: "git commit needs your approval (policy.agent_commit: ask)"}
+	for name, input := range cursorShellInputs("git commit -m x") {
+		got := HookResponse(hook(t, input), ask, ClaudeCodeArgument)
+		if got.ExitCode != 2 || got.Stdout != "" {
+			t.Errorf("%s: %+v", name, got)
+		}
+	}
+}
