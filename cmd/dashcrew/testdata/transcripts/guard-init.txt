@@ -22,7 +22,7 @@ files:
 + w/.claude/settings.json  -rw-r--r-- sha256:ab785cea7a7a2c39
 
 === step 2: dashcrew "guard" "init" "--agents" "codex" "--agents" "antigravity"
-env: PATH=../stub:/usr/bin:/bin
+env: PATH=<root>/stub:/usr/bin:/bin
 (after the case's setup for this step)
 exit: 0
 stdout:
@@ -42,7 +42,7 @@ stdout:
 stderr: (empty)
 files:
 + home/.dashcrew  dir
-+ home/.dashcrew/guard-ok  -rw-r--r-- sha256:888aa225179d0d5d
++ home/.dashcrew/guard-ok  -rw-r--r-- sha256:1cb35d331d8abf9b
 + w/.agents  dir
 + w/.agents/hooks.json  -rw-r--r-- sha256:54e39fd507ae5d8e
 ~ w/.ai/bin/guard  -rwxr-xr-x sha256:a4d846d82ed6094a
@@ -50,7 +50,7 @@ files:
 + w/.codex/hooks.json  -rw-r--r-- sha256:5d43adc427460026
 
 === step 3: dashcrew "guard" "init" "--agents" "codex" "--agents" "antigravity"
-env: PATH=../stub:/usr/bin:/bin
+env: PATH=<root>/stub:/usr/bin:/bin
 (after the case's setup for this step)
 exit: 0
 stdout:
@@ -69,7 +69,7 @@ stderr: (empty)
 files: (unchanged)
 
 === step 4: dashcrew "doctor"
-env: PATH=../stub:/usr/bin:/bin
+env: PATH=<root>/stub:/usr/bin:/bin
 (after the case's setup for this step)
 exit: 0
 stdout:
@@ -93,7 +93,7 @@ stderr:
 files: (unchanged)
 
 === step 6: dashcrew "guard" "init" "--force"
-env: PATH=../stub:/usr/bin:/bin
+env: PATH=<root>/stub:/usr/bin:/bin
 (after the case's setup for this step)
 exit: 0
 stdout:

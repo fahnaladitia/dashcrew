@@ -151,7 +151,8 @@ func (e cliEnvironment) run(t *testing.T, s side, st step) outcome {
 	cmd.Dir = s.path(dir)
 	cmd.Env = append([]string{}, s.env...)
 	for key, value := range st.env {
-		cmd.Env = append(cmd.Env, key+"="+value)
+		// <root> is the side root, so a path in a value is absolute and reads the same in the transcript.
+		cmd.Env = append(cmd.Env, key+"="+strings.ReplaceAll(value, "<root>", s.root))
 	}
 	cmd.Stdin = strings.NewReader(st.stdin)
 	var stdout, stderr bytes.Buffer
@@ -624,7 +625,7 @@ func cli(args ...string) step { return step{args: args} }
 // withDashcrew runs st with a stand-in dashcrew first on PATH, in the side's stub folder: a release that blocks the
 // doctor's git push, so guard checks pass without a real install.
 func withDashcrew(st step) step {
-	st.env = map[string]string{"PATH": "../stub:/usr/bin:/bin"}
+	st.env = map[string]string{"PATH": "<root>/stub:/usr/bin:/bin"}
 	st.before = func(t *testing.T, s side) {
 		stub := "#!/bin/sh\nif [ \"$1\" = --version ]; then echo dashcrew 9.9.9; exit 0; fi\ncat >/dev/null\nexit 2\n"
 		s.write(t, "stub/dashcrew", stub)
