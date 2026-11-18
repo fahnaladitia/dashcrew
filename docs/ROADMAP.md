@@ -128,9 +128,12 @@ Goal: a visitor understands dashcrew in 30 seconds, tries it in one command, and
   - [ ] Record the guard GIF (an agent's nested `git push` blocked in two agents) and put it in place of the README's text demo.
   - [x] Move reference material to `docs/` (profile reference, release lines, knowledge, specs, troubleshooting, migration notes), and add `docs/architecture.md`.
   - [x] Remove stale lines (`README.md:9`, `:47`, SECURITY.md "before the first tagged release"); drop internal plan codes (P3, P4, P10b) from the README and CHANGELOG.
-  - [ ] Repository description ("One source of rules, skills and guard hooks for every AI coding agent. One Go binary, any stack."), topics, homepage, a 1280×640 social preview, badges, Discussions on, and 5+ `good first issue` items.
+  - [x] Repository description ("One source of rules, skills and guard hooks for every AI coding agent. One Go binary, any stack."), 14 topics, badges, Discussions on, and 5 `good first issue` items (#56 to #60). The wiki, stale since 2026-11-02, is off; its Recipes and Design Notes pages have no `docs/` page yet (#60 covers the recipes).
+  - [ ] A 1280×640 social preview, uploaded in the repository settings (no API). A homepage waits for a site.
 - **Agent commit and push** (plan: `docs/plans/agent-push-plan.md`)
   - [x] `policy.agent_push`: at the end of a task the agent asks whether to commit and push the task branch; the guard still blocks force, delete, `--all`/`--mirror`/`--tags`, base branches and a push without a named branch.
+  - [x] `agent_commit: ask` and `agent_push: ask` (plan: `docs/plans/v0.8-confirm-git-plan.md`): the guard has Claude Code and Antigravity ask the user to approve each commit and push; Codex, whose hooks cannot ask, gets a block.
+  - [ ] Live check of `ask` in Claude Code, with and without a `Bash(git commit:*)` allow rule, and the result in `docs/guard.md`.
 - **Install and `init`**
   - [x] An `install.sh` that downloads the release archive and checks `checksums.txt`; install smoke tests in CI (brew, `go install`, script).
   - [x] `init` without dead ends:
