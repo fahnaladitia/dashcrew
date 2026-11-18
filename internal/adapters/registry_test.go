@@ -1,6 +1,7 @@
 package adapters
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/fahnaladitia/dashcrew/internal/agents"
@@ -50,5 +51,46 @@ func TestSkillTextIsEachAgentsFormat(t *testing.T) {
 		if got, want := SkillText(agent, "x", meta, "b"), AgentsSkillFile("x", meta, "b"); got != want {
 			t.Errorf("%s: %q, want %q", agent, got, want)
 		}
+	}
+}
+
+// TestGuardHookIsWhatMergeWrites: `dashcrew guard init` writes each agent's hook with MergeGuardHook, which must
+// give the same file as a sync's Merge and keep the user's own entries.
+func TestGuardHookIsWhatMergeWrites(t *testing.T) {
+	c := shipped(t)
+	user := map[string]string{
+		".claude/settings.json": `{"hooks":{"PreToolUse":[{"matcher":"Read","hooks":[{"type":"command","command":"mine"}]}]},"model":"x"}`,
+		".codex/hooks.json":     `{"hooks":{"PreToolUse":[{"matcher":"Bash","hooks":[{"type":"command","command":"mine"}]}]}}`,
+		".agents/hooks.json":    `{"mine":{"PreToolUse":[]}}`,
+	}
+	for _, agent := range agents.All() {
+		viaInit, viaMerge := t.TempDir(), t.TempDir()
+		path, changed, err := MergeGuardHook(agent, viaInit)
+		if err != nil || !changed {
+			t.Fatalf("%s: MergeGuardHook = %q, %v, %v", agent, path, changed, err)
+		}
+		adapter, _ := AdapterFor(agent, c, viaMerge, "flutter", nil)
+		if _, err := adapter.Merge(nil, nil); err != nil {
+			t.Fatal(err)
+		}
+		if got, want := readFile(t, viaInit, path), readFile(t, viaMerge, path); got != want {
+			t.Errorf("%s: %s from guard init:\n%s\nfrom sync:\n%s", agent, path, got, want)
+		}
+		if _, changed, _ := MergeGuardHook(agent, viaInit); changed {
+			t.Errorf("%s: a second MergeGuardHook changed %s", agent, path)
+		}
+
+		mine := t.TempDir()
+		writeFile(t, mine, path, user[path])
+		if _, _, err := MergeGuardHook(agent, mine); err != nil {
+			t.Fatal(err)
+		}
+		got := readFile(t, mine, path)
+		if !strings.Contains(got, `"mine"`) || !strings.Contains(got, ".ai/bin/guard") {
+			t.Errorf("%s: %s lost the user's entry or lacks the guard:\n%s", agent, path, got)
+		}
+	}
+	if _, _, err := MergeGuardHook("cursor", t.TempDir()); err == nil {
+		t.Error("MergeGuardHook accepted an agent dashcrew does not support")
 	}
 }

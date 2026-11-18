@@ -11,16 +11,19 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
 
 	embedded "github.com/fahnaladitia/dashcrew"
+	"github.com/fahnaladitia/dashcrew/internal/adapters"
 	"github.com/fahnaladitia/dashcrew/internal/agents"
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
 	"github.com/fahnaladitia/dashcrew/internal/check"
 	"github.com/fahnaladitia/dashcrew/internal/doctor"
 	"github.com/fahnaladitia/dashcrew/internal/guard"
+	"github.com/fahnaladitia/dashcrew/internal/guardinit"
 	"github.com/fahnaladitia/dashcrew/internal/initproject"
 	"github.com/fahnaladitia/dashcrew/internal/knowledge"
 	"github.com/fahnaladitia/dashcrew/internal/knowledgemcp"
@@ -95,12 +98,13 @@ const guardInstallRemoved = "dashcrew guard install was removed: hooks run dashc
 // compileGuardNotice is printed when `sync` gets `--[no-]compile-guard`, a flag kept so old scripts still run.
 const compileGuardNotice = "note: --compile-guard is deprecated and does nothing: hooks run dashcrew guard from PATH."
 
-// isGuardHook is `dashcrew guard [<policy>]`: anything after guard but help belongs to the hook.
+// isGuardHook is `dashcrew guard [<policy>]`: anything after guard but help and the `init` subcommand belongs to the
+// hook. Hooks pass a path or nothing, so a policy file named init is passed as ./init.
 func isGuardHook(args []string) bool {
 	if len(args) == 0 || args[0] != "guard" {
 		return false
 	}
-	return len(args) == 1 || (args[1] != "--help" && args[1] != "-h")
+	return len(args) == 1 || (args[1] != "--help" && args[1] != "-h" && args[1] != "init")
 }
 
 func ptr(value string) *string { return &value }
@@ -128,7 +132,7 @@ func newRoot(cli cliIO) *command {
 		add(doctorCommand(cli)).
 		add(worktreeCommand(cli)).
 		add(knowledgeCommand(cli)).
-		add(guardCommand()).
+		add(guardCommand(cli)).
 		add(checkCommand(cli)).
 		add(commitCommand(cli)).
 		add(verifyCommand(cli)).
@@ -919,12 +923,56 @@ func dartTryParseInt(text string) (int64, bool) {
 
 // guardCommand holds the help text of `dashcrew guard`; running it is the hook (see isGuardHook), so the parser only
 // reaches it for `--help` and `help guard`.
-func guardCommand() *command {
+func guardCommand(cli cliIO) *command {
 	c := newCommand("guard", "Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.\n"+
 		"Hooks run it through .ai/bin/guard. The policy is <policy>, else .ai/guard.json in the hook's working directory.")
 	c.invocation = "dashcrew guard [<policy>]"
 	c.run = func(r *results) (int, error) {
 		return guard.Run(r.rest, stdin, os.Stdout, os.Stderr, guard.ProcessEnv), nil
+	}
+	return c.add(guardInitCommand(cli))
+}
+
+func guardInitCommand(cli cliIO) *command {
+	c := newCommand("init", "Write the guard alone, without .ai/project.yaml: the default policy, .ai/bin/guard and each agent's hook.\n"+
+		"The policy blocks git commit, push and history rewrites, and formatters. Writes nothing else; a later\n"+
+		"dashcrew init and dashcrew sync take the files over.")
+	c.option("project", "p", "Project root.", ptr("."))
+	c.multiOption("agents", "Agents to write the hook for.", agents.All(), []string{"claude-code"})
+	c.flag("force", "", "Replace a .ai/guard.json or .ai/bin/guard that guard init did not write.", false, false)
+	c.run = func(r *results) (int, error) {
+		projectDir, err := absolute(*r.option("project"))
+		if err != nil {
+			return 0, err
+		}
+		selected := r.multiOption("agents")
+		written, err := guardinit.Init{ProjectDir: projectDir, Agents: selected, Force: r.flag("force")}.Run()
+		for _, path := range written {
+			cli.out("wrote   " + path)
+		}
+		if err != nil {
+			return 0, err
+		}
+		if len(written) == 0 {
+			cli.out("up to date")
+		}
+		cat, err := catalog.LoadEmbedded()
+		if err != nil {
+			return 0, err
+		}
+		code := printChecks(cli.stdout, doctor.Doctor{Catalog: cat, ProjectDir: projectDir, MachineChecks: true}.Run(), false)
+		files := []string{".ai/"}
+		for _, agent := range selected {
+			if file := adapters.HookFile(agent); !slices.Contains(files, file) {
+				files = append(files, file)
+			}
+		}
+		last := len(files) - 1
+		cli.out("Commit " + strings.Join(files[:last], ", ") + " and " + files[last] + " so every clone is guarded.")
+		for _, note := range guardinit.Notes(selected) {
+			cli.out(note)
+		}
+		return code, nil
 	}
 	return c
 }

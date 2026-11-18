@@ -71,22 +71,30 @@ func (a *Codex) Files(p *profile.Profile, targets []render.RenderedTarget, conte
 	return files, nil
 }
 
+// codexHookFile holds the project's Codex hooks.
+const codexHookFile = ".codex/hooks.json"
+
+// mergeCodexGuardHook keeps one guard entry in `.codex/hooks.json`; true when the file changed.
+func mergeCodexGuardHook(project projectfiles.Project) (bool, error) {
+	config, err := readJSONObject(project, codexHookFile)
+	if err != nil {
+		return false, err
+	}
+	if err := replaceGuardEntry(config, CodexGuardHook(), codexHookFile); err != nil {
+		return false, err
+	}
+	return writeJSON(project, codexHookFile, config)
+}
+
 // Merge keeps one guard entry in `.codex/hooks.json` and the dashcrew block in `.codex/config.toml`.
 func (a *Codex) Merge(ownedMcp map[string]bool, warnings *[]string) (MergeResult, error) {
 	result := MergeResult{}
-	config, err := readJSONObject(a.project, ".codex/hooks.json")
-	if err != nil {
-		return result, err
-	}
-	if err := replaceGuardEntry(config, CodexGuardHook(), ".codex/hooks.json"); err != nil {
-		return result, err
-	}
-	changed, err := writeJSON(a.project, ".codex/hooks.json", config)
+	changed, err := mergeCodexGuardHook(a.project)
 	if err != nil {
 		return result, err
 	}
 	if changed {
-		result.Written = append(result.Written, ".codex/hooks.json")
+		result.Written = append(result.Written, codexHookFile)
 	}
 	changed, owned, err := a.mergeMcp(warnings)
 	if err != nil {

@@ -41,7 +41,7 @@ const (
 	// GithubWorkflowPath is written when `ci.github` is on; its `check` job is meant to be a required status check.
 	GithubWorkflowPath = ".github/workflows/dashcrew.yml"
 	// GuardPolicyPath is the compiled guard policy.
-	GuardPolicyPath = ".ai/guard.json"
+	GuardPolicyPath = guard.InitPolicyPath
 	// LockPath is the lock file.
 	LockPath = ".ai/lock.json"
 
@@ -212,7 +212,9 @@ func (s Sync) RunWith(opts Options) (*Result, error) {
 		// A file that already holds what this sync renders is no conflict, whatever the lock says: a sync that
 		// stopped before writing the lock leaves exactly such files.
 		alreadyRendered := isGenerated && generated == content
-		if !adoptedAgentsMd && (!isLocked || locked != FileHash(path, content)) && !alreadyRendered {
+		// `dashcrew guard init` writes the policy and the shim without a lock; unedited, they are sync's to replace.
+		fromGuardInit := !isLocked && guard.WrittenByInit(path, content)
+		if !adoptedAgentsMd && (!isLocked || locked != FileHash(path, content)) && !alreadyRendered && !fromGuardInit {
 			conflicts = append(conflicts, path)
 		}
 	}

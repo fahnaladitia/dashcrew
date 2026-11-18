@@ -621,6 +621,20 @@ func editProfile(t *testing.T, s side, from, to string) {
 
 func cli(args ...string) step { return step{args: args} }
 
+// withDashcrew runs st with a stand-in dashcrew first on PATH, in the side's stub folder: a release that blocks the
+// doctor's git push, so guard checks pass without a real install.
+func withDashcrew(st step) step {
+	st.env = map[string]string{"PATH": "../stub:/usr/bin:/bin"}
+	st.before = func(t *testing.T, s side) {
+		stub := "#!/bin/sh\nif [ \"$1\" = --version ]; then echo dashcrew 9.9.9; exit 0; fi\ncat >/dev/null\nexit 2\n"
+		s.write(t, "stub/dashcrew", stub)
+		if err := os.Chmod(s.path("stub/dashcrew"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return st
+}
+
 func usageSteps() []step {
 	lines := [][]string{
 		{}, {"--help"}, {"-h"}, {"help"}, {"help", "help"}, {"help", "init"}, {"help", "sync"}, {"help", "doctor"},
@@ -629,7 +643,7 @@ func usageSteps() []step {
 		{"help", "nope"}, {"help", "sync", "extra"}, {"help", "worktree", "nope"}, {"help", "-h"},
 		{"init", "--help"}, {"sync", "-h"}, {"doctor", "--help"}, {"check", "--help"}, {"worktree", "--help"},
 		{"worktree", "create", "--help"}, {"worktree", "list", "--help"}, {"worktree", "link", "--help"},
-		{"worktree", "remove", "--help"}, {"worktree", "watch", "--help"}, {"guard", "--help"}, {"guard", "-h"},
+		{"worktree", "remove", "--help"}, {"worktree", "watch", "--help"}, {"guard", "--help"}, {"guard", "-h"}, {"guard", "init", "--help"},
 		{"--help", "sync"}, {"-h", "worktree", "create"}, {"worktree", "-h", "create"}, {"sync", "--help", "extra"},
 		{"nope"}, {"snyc"}, {"worktre"}, {"sink"}, {"chek"}, {"worktree"}, {"worktree", "nope"}, {"worktree", "craete"},
 		{"sync", "--bogus"}, {"sync", "-x"}, {"sync", "-xy"}, {"init", "-yp"}, {"init", "-yz"}, {"init", "-yfoo"},
@@ -711,6 +725,18 @@ func cliCases() []cliCase {
 			cli("init", "--yes"),
 			cli("sync"),
 			cli("doctor"),
+		}},
+		{name: "guard init", setup: goModule, steps: []step{
+			cli("guard", "init"),
+			withDashcrew(cli("guard", "init", "--agents", "codex", "--agents", "antigravity")),
+			withDashcrew(cli("guard", "init", "--agents", "codex", "--agents", "antigravity")),
+			withDashcrew(cli("doctor")),
+			{args: []string{"guard", "init"}, before: func(t *testing.T, s side) { s.write(t, "w/.ai/guard.json", "{}\n") }},
+			withDashcrew(cli("guard", "init", "--force")),
+			cli("guard", "init", "--agents", "cursor"),
+			cli("init", "--yes"),
+			cli("sync"),
+			cli("guard", "init"),
 		}},
 		{name: "init with a project platform", setup: projectPlatform, steps: []step{
 			cli("init", "--yes", "--agents", "codex"),

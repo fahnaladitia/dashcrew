@@ -109,7 +109,7 @@ Goal: a visitor understands dashcrew in 30 seconds, tries it in one command, and
 
 - **The guard is the story**
   - [ ] Test the pitch first. In Claude Code and Codex, set native deny rules for `git push` and try `bash -c "git push"`, `sh -c` and `env git push`. If the native rules miss them and dashcrew blocks them, that is the GIF. If not, the pitch is "one policy for every agent".
-  - [ ] `dashcrew guard init`: install the guard hooks and a default git-flow policy without a `project.yaml`, as the 10-second way to try dashcrew. Decide project-level or user-level hooks first (see the open questions in `docs/ideas/launch-direction.md`).
+  - [x] `dashcrew guard init`: install the guard hooks and a default git-flow policy without a `project.yaml`, as the 10-second way to try dashcrew. Project-level hooks, decided 2026-11-18 (plan: `docs/plans/v0.8-guard-init-plan.md`).
   - [ ] The guard section opens with what it blocks and what it does not, and lists the known misses: protection against accidents, not a sandbox.
   - [x] An input the guard does not recognize is checked or logged, never passed in silence (plan: `docs/plans/v0.8-guard-unknown-input-plan.md`). The Codex `$` hook, the Antigravity hook path and Cursor's `Shell` input were three cases of the guard no longer protecting without anyone noticing; the third reached `main` because an unknown tool name is allowed unlogged.
 - **Cursor**

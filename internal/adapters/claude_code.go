@@ -90,22 +90,30 @@ func (a *ClaudeCode) Files(p *profile.Profile, targets []render.RenderedTarget, 
 	return files, nil
 }
 
+// claudeHookFile holds Claude Code's hooks next to the user's own settings.
+const claudeHookFile = ".claude/settings.json"
+
+// mergeClaudeGuardHook keeps one guard entry in `.claude/settings.json`; true when the file changed.
+func mergeClaudeGuardHook(project projectfiles.Project) (bool, error) {
+	settings, err := readJSONObject(project, claudeHookFile)
+	if err != nil {
+		return false, err
+	}
+	if err := replaceGuardEntry(settings, ClaudeGuardHook(), claudeHookFile); err != nil {
+		return false, err
+	}
+	return writeJSON(project, claudeHookFile, settings)
+}
+
 // Merge keeps one guard entry in `.claude/settings.json` and the platform servers in `.mcp.json`.
 func (a *ClaudeCode) Merge(ownedMcp map[string]bool, warnings *[]string) (MergeResult, error) {
 	result := MergeResult{}
-	settings, err := readJSONObject(a.project, ".claude/settings.json")
-	if err != nil {
-		return result, err
-	}
-	if err := replaceGuardEntry(settings, ClaudeGuardHook(), ".claude/settings.json"); err != nil {
-		return result, err
-	}
-	changed, err := writeJSON(a.project, ".claude/settings.json", settings)
+	changed, err := mergeClaudeGuardHook(a.project)
 	if err != nil {
 		return result, err
 	}
 	if changed {
-		result.Written = append(result.Written, ".claude/settings.json")
+		result.Written = append(result.Written, claudeHookFile)
 	}
 	changed, owned, err := MergeJSONMcpServers(a.project, ".mcp.json", a.McpServers(), ownedMcp, warnings)
 	if err != nil {

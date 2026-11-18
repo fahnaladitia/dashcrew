@@ -1,5 +1,7 @@
 # Guard
 
+To try it without a profile, `dashcrew guard init` writes the default policy, the shim and the hooks; see [commands.md](commands.md#dashcrew-guard-init).
+
 Each agent's pre-tool hook sends the tool call to `.ai/bin/guard`, which blocks:
 
 - `git commit` (unless `policy.agent_commit`), `push` (unless `policy.agent_push`, which still blocks force, delete, `--all`, `--mirror`, `--tags`, base branches and a push without a named branch), `stash`, `reset`, `rebase`, `cherry-pick`, `revert`, `merge`, `tag`, including behind `sudo`, `env`, `rtk`, `fvm`, variable assignments, git global options (`-C`, `-c`), `&&` chains, `$( )`, and heredocs fed to a shell;

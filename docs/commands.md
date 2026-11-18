@@ -26,6 +26,16 @@ Writes only `.ai/project.yaml`, plus the starter platform you pick: a repo no pl
 
 Running it twice writes nothing the second time. Files it stops generating are deleted.
 
+## `dashcrew guard init`
+
+| Flag | Default | |
+|---|---|---|
+| `-p, --project` | `.` | project root |
+| `--agents` | `claude-code` | agents to write the hook for (repeatable) |
+| `--force` | off | replace a `.ai/guard.json` or `.ai/bin/guard` that `guard init` did not write |
+
+The guard alone, without `.ai/project.yaml`: writes the default policy `.ai/guard.json` (git `commit`, `push`, `stash`, `reset`, `rebase`, `cherry-pick`, `revert`, `merge` and `tag` blocked, formatters blocked), the shim `.ai/bin/guard`, and each agent's hook entry into the file `sync` merges it into, keeping your own entries. Then it runs the guard checks of `doctor`, so a missing or old dashcrew on `PATH` shows at once, and exits 1 when one fails. A second run writes nothing. It refuses a project with a profile, where `sync` writes the guard. A later `dashcrew init` and `dashcrew sync` replace the policy and the shim without `--force` while they are as `guard init` wrote them; `doctor` in a guard-only project runs only the guard checks.
+
 ## `dashcrew guard [<policy>]`
 
 The guard hook: reads one tool call as hook JSON on stdin and answers per agent (see [Guard](guard.md)). The policy is `<policy>`, else `.ai/guard.json` in the hook's working directory. Hooks call it through `.ai/bin/guard`; you do not run it yourself. `dashcrew guard install` was removed with the per-machine compiled guard.

@@ -97,20 +97,28 @@ func (a *Antigravity) Files(p *profile.Profile, targets []render.RenderedTarget,
 	return files, nil
 }
 
+// antigravityHookFile holds the workspace's agy hooks, one key per owner.
+const antigravityHookFile = ".agents/hooks.json"
+
+// mergeAntigravityGuardHook sets AntigravityGuardKey in `.agents/hooks.json`; true when the file changed.
+func mergeAntigravityGuardHook(project projectfiles.Project) (bool, error) {
+	config, err := readJSONObject(project, antigravityHookFile)
+	if err != nil {
+		return false, err
+	}
+	config.Set(AntigravityGuardKey, AntigravityGuardHook())
+	return writeJSON(project, antigravityHookFile, config)
+}
+
 // Merge sets AntigravityGuardKey in `.agents/hooks.json` and the platform servers in `.agents/mcp_config.json`.
 func (a *Antigravity) Merge(ownedMcp map[string]bool, warnings *[]string) (MergeResult, error) {
 	result := MergeResult{}
-	config, err := readJSONObject(a.project, ".agents/hooks.json")
-	if err != nil {
-		return result, err
-	}
-	config.Set(AntigravityGuardKey, AntigravityGuardHook())
-	changed, err := writeJSON(a.project, ".agents/hooks.json", config)
+	changed, err := mergeAntigravityGuardHook(a.project)
 	if err != nil {
 		return result, err
 	}
 	if changed {
-		result.Written = append(result.Written, ".agents/hooks.json")
+		result.Written = append(result.Written, antigravityHookFile)
 	}
 	changed, owned, err := MergeJSONMcpServers(a.project, ".agents/mcp_config.json", a.McpServers(), ownedMcp, warnings)
 	if err != nil {
