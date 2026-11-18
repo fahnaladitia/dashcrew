@@ -95,6 +95,19 @@ func Compare(a, b string) int {
 	}
 }
 
+// MeetsGuardMinimum is the shim's check (`at_least` in guard.Shim): reported's major.minor.patch, pre-release and build
+// metadata ignored, is not older than minimum's. So a release candidate of the minimum runs the guard.
+func MeetsGuardMinimum(reported, minimum string) bool {
+	left, _ := parse(reported)
+	right, _ := parse(minimum)
+	for i := 0; i < 3; i++ {
+		if left[i] != right[i] {
+			return left[i] > right[i]
+		}
+	}
+	return true
+}
+
 func parse(version string) ([3]int, bool) {
 	core, _, _ := strings.Cut(version, "+")
 	dash := strings.Index(core, "-")

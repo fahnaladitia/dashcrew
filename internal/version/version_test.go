@@ -71,3 +71,23 @@ func TestCompareOrdersByMajorMinorPatchAndIgnoresBuildMetadata(t *testing.T) {
 		}
 	}
 }
+
+// TestMeetsGuardMinimumAsTheShimDoes: the shim compares major.minor.patch only, so a release candidate of the
+// minimum runs the guard; doctor must agree with it.
+func TestMeetsGuardMinimumAsTheShimDoes(t *testing.T) {
+	for _, c := range []struct {
+		reported, minimum string
+		want              bool
+	}{
+		{"0.8.0", "0.8.0", true},
+		{"0.8.0-rc.1", "0.8.0", true},
+		{"0.8.1-rc.1", "0.8.0", true},
+		{"0.7.9", "0.8.0", false},
+		{"0.7.9-rc.2", "0.8.0", false},
+		{"0.8.0+build.5", "0.8.0", true},
+	} {
+		if got := MeetsGuardMinimum(c.reported, c.minimum); got != c.want {
+			t.Errorf("MeetsGuardMinimum(%s, %s) = %v, want %v", c.reported, c.minimum, got, c.want)
+		}
+	}
+}

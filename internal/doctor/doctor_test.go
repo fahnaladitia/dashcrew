@@ -239,6 +239,17 @@ func TestGuardBinary(t *testing.T) {
 		expect(t, f.doctor(), "guard-binary", Warn, "is 0.1.0, older than 0.5.0", "install dashcrew 0.5.0 or newer")
 	})
 
+	t.Run("a release candidate of the minimum passes, as the shim lets it", func(t *testing.T) {
+		f := setup(t, blocProfile)
+		f.sync()
+		f.write(sync.LockPath, strings.Replace(f.read(sync.LockPath), `"guard_min_version": "0.1.0"`, `"guard_min_version": "0.5.0"`, 1))
+		f.installDashcrew("0.5.0-rc.1", 2)
+		expect(t, f.doctor(), "guard-binary", OK, ".ai/bin/guard blocks git push")
+
+		f.installDashcrew("0.4.9-rc.1", 2)
+		expect(t, f.doctor(), "guard-binary", Warn, "is 0.4.9-rc.1, older than 0.5.0")
+	})
+
 	t.Run("a guard that does not block fails", func(t *testing.T) {
 		f := setup(t, blocProfile)
 		f.sync()

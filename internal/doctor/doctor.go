@@ -691,7 +691,7 @@ func (d Doctor) guardBinary(lock *omap.Map[any]) Check {
 		return Check{id, Warn, "the dashcrew first on PATH (" + found + ") is the Dart one, so .ai/bin/guard refuses every tool call: " +
 			install + ", then dart pub global deactivate dashcrew"}
 	}
-	if reported := reportedVersion(found, pathEnv); !version.IsSemantic(reported) || version.Compare(reported, minimum) < 0 {
+	if reported := reportedVersion(found, pathEnv); !version.IsSemantic(reported) || !version.MeetsGuardMinimum(reported, minimum) {
 		described := "reports no version"
 		if version.IsSemantic(reported) {
 			described = "is " + reported
