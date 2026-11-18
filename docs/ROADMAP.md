@@ -2,7 +2,7 @@
 
 Status as of 2026-11-17, at v0.6.0. Dates are estimates for one full-time maintainer and move with feedback.
 
-The direction behind this order is in `docs/ideas/launch-direction.md`: build for teams that mix agents, lead with the guard, launch once Cursor is supported, and freeze 1.0 after real users have shaped it.
+The direction behind this order is in `docs/ideas/launch-direction.md`: build for teams that mix agents, lead with the guard, and freeze 1.0 after real users have shaped it. Decided 2026-11-18: dashcrew stays on Claude Code, Codex and Antigravity until 1.0.0; Cursor, Gemini CLI and Copilot come after it.
 
 ## Where dashcrew stands
 
@@ -63,9 +63,9 @@ Generated Markdown text is not covered: wording in rules and skills may improve 
 
 ```
 v0.7  Trust          2026-11-28  sync, guard and release process stop surprising users
-v0.8  Launch-ready   2026-12-19  front page, guard init, Cursor, install; soft launch
+v0.8  Launch-ready   2026-12-19  front page, guard init, install; soft launch
       Launch         2027-01-12  Show HN, Reddit, X
-v0.9  Reach          ~2027-02    Gemini CLI, Copilot, Windows, what launch users ask for
+v0.9  Reach          ~2027-02    Windows, what launch users ask for
 v1.0  Freeze         ~2027-03    public surface cleaned up, migration, RC soak
 ```
 
@@ -80,9 +80,9 @@ Goal: no release breaks a project, and a broken guard is never silent.
   - [x] `dashcrew check` runs the guard hook checks of every agent, so a project's CI sees a hook lost to a hand edit or a merge. (Running hook commands through `sh` was already covered by `internal/adapters/hook_command_test.go`.)
   - [x] Log the fail-open causes the guard did not log (a named policy missing, unreadable, invalid or not applicable), so `guard-log` reports them.
   - [x] Pin the SECURITY.md blind spots (`$` as first word, `source`, `.`, `fish -c`, `stdbuf`, `doas`, deep nesting) in a test, so a future fix updates the docs.
-  - The in-session notice when the guard fails open moves to v0.9, with the Cursor adapter.
+  - The in-session notice when the guard fails open moves to v0.9.
 - **Windows investigation** (1-2 days, no shipped change required)
-  - [ ] Find which shell Claude Code, Codex and Cursor run hooks with on Windows, and whether the `sh` shim already works there.
+  - [ ] Find which shell Claude Code, Codex and Antigravity run hooks with on Windows, and whether the `sh` shim already works there.
   - [ ] Decide between keeping the shim, adding a `.cmd` shim that still fails closed, or stopping Windows archives until v0.9. A hook that calls `dashcrew` directly is not an option: a missing binary exits 127, which agents do not treat as a block.
   - [ ] Make the README and CI agree (`continue-on-error` and "experimental", or green).
 - **Known bugs and dropped errors**
@@ -112,10 +112,8 @@ Goal: a visitor understands dashcrew in 30 seconds, tries it in one command, and
   - [x] `dashcrew guard init`: install the guard hooks and a default git-flow policy without a `project.yaml`, as the 10-second way to try dashcrew. Project-level hooks, decided 2026-11-18 (plan: `docs/plans/v0.8-guard-init-plan.md`).
   - [ ] The guard section opens with what it blocks and what it does not, and lists the known misses: protection against accidents, not a sandbox.
   - [x] An input the guard does not recognize is checked or logged, never passed in silence (plan: `docs/plans/v0.8-guard-unknown-input-plan.md`). The Codex `$` hook, the Antigravity hook path and Cursor's `Shell` input were three cases of the guard no longer protecting without anyone noticing; the third reached `main` because an unknown tool name is allowed unlogged.
-- **Cursor**
-  - [ ] Adapter for Cursor: rules plus the guard hook, golden-tested, covered by the doctor probe. Spike the hook first to confirm it can fail closed.
+- **Agents** (Claude Code, Codex and Antigravity until 1.0.0; Cursor moved to After 1.0)
   - [x] Keep the agent list in one place: `internal/agents`. The per-agent cases in `doctor` and `me sync` have a test that fails for an agent without one.
-  - [ ] `docs/adding-an-adapter.md`, written from the Cursor work, so Gemini CLI can be the first outside contribution.
   - [x] What differs per agent lives in its adapter: the doctor hook check, the always-on files, the `me sync` paths and the guard minimum. Five per-agent `switch` statements remain after `internal/agents` (doctor, budget, `me sync`, `sync`, `guard/malformed.go`); a new agent should be one package and one golden.
   - [ ] Recorded agent inputs: real hook payloads per agent and version in `internal/guard/testdata/payloads/`, run through each adapter's hook command in a test, and refreshed by the release checklist's live run. Goldens pin the bytes dashcrew writes, not what agents send.
 - **Front page**
@@ -149,23 +147,22 @@ Goal: a visitor understands dashcrew in 30 seconds, tries it in one command, and
 Exit criteria:
 
 - Three people outside the project install and run dashcrew on Flutter, Go and one other stack without help.
-- The Cursor guard probe passes.
+- The doctor guard probe passes on a live install of Claude Code, Codex and Antigravity.
 - `guard init` works in a repo with no dashcrew setup.
 
 ### Launch (Tuesday 2027-01-12)
 
 Not a release. The tag is whichever v0.8.x is current, or v0.9.0 if it is ready; see the open question on calling it `v1.0.0-rc.1`. Launching after the holidays avoids the late-December traffic dip.
 
-- [ ] Show HN: "Show HN: dashcrew – one guard and one set of rules for Claude Code, Codex and Cursor".
-- [ ] Posts on r/ClaudeAI, r/ChatGPTCoding, r/cursor, r/golang and r/FlutterDev; an X/Bluesky thread with the GIF.
+- [ ] Show HN: "Show HN: dashcrew – one guard and one set of rules for Claude Code, Codex and Antigravity".
+- [ ] Posts on r/ClaudeAI, r/ChatGPTCoding, r/golang and r/FlutterDev; an X/Bluesky thread with the GIF.
 - [ ] Someone besides the maintainer is available to answer issues and comments for the first 24 hours.
 - [ ] For the following two weeks, track release downloads, new issues and Discussions from new people, not only stars.
 
 ### v0.9.0 "Reach" (target ~2027-02)
 
-Goal: answer what launch users asked for, and reach the next agents.
+Goal: answer what launch users asked for, and make Windows a decision instead of a gap.
 
-- [ ] Gemini CLI adapter, ideally an outside contribution against `docs/adding-an-adapter.md`; then GitHub Copilot.
 - [ ] Windows support, if it did not fit in v0.8:
   - hooks that fail closed without a POSIX shell;
   - transcripts running on Windows;
@@ -179,7 +176,6 @@ Goal: answer what launch users asked for, and reach the next agents.
 
 Exit criteria:
 
-- 5+ agents generated and golden-tested.
 - At least one merged outside contribution.
 - Windows either green in CI without skips in the guard path, or explicitly out of 1.0.
 
@@ -215,6 +211,8 @@ Exit criteria:
 - README, docs and `--help` agree.
 
 ## After 1.0
+
+- **More agents.** Cursor first: the guard already reads its shell input, and `docs/plans/v0.8-cursor-adapter-plan.md` holds the plan, starting with a spike that confirms its hook can fail closed and records its Write and Delete input. Then Gemini CLI, ideally an outside contribution against a `docs/adding-an-adapter.md` written from the Cursor work, and GitHub Copilot.
 
 These ideas stay in `docs/ideas/` and `docs/plans/` until users ask for them:
 
