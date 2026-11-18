@@ -1,6 +1,6 @@
 # Contributing to dashcrew
 
-Thanks for helping. Bugs and ideas start as an issue (use the templates); a security problem goes through [SECURITY.md](SECURITY.md) instead. AI agents working on this repository also follow [AGENTS.md](AGENTS.md).
+Thanks for helping. Bugs and ideas start as an issue (use the templates); a security problem goes through [SECURITY.md](SECURITY.md) instead. AI agents working on this repository also follow [AGENTS.md](AGENTS.md). [docs/architecture.md](docs/architecture.md) maps the code.
 
 ## Build and test
 
@@ -15,7 +15,7 @@ go test -race ./...
 go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
 ```
 
-CI runs the same on every pull request: `go vet` and `go test` on Linux, macOS and Windows, plus `gofmt`, `-race`, `govulncheck` and CodeQL. Windows is not supported yet (the guard shim is a `sh` script), so tests that need `sh` skip there and a Windows failure does not fail the run.
+CI runs the same on every pull request: `go vet` and `go test` on Linux, macOS and Windows, plus `gofmt`, `-race`, `govulncheck` and CodeQL. Windows is not supported yet (the guard shim is a `sh` script), so tests that need `sh` skip there; the Windows job still has to pass.
 
 Style:
 
@@ -26,10 +26,10 @@ Style:
 
 ## Goldens and transcripts
 
-Generated output is pinned byte for byte:
+Generated output is pinned byte for byte, in the format the earlier Dart engine wrote (JSON layout, YAML scalars, Mustache rendering, help text), so a project sees no diff after upgrading:
 
 - `test/golden/`: the files `sync` and `init` write, checked by `internal/conformance`.
-- `cmd/dashcrew/testdata/transcripts/`: stdout, stderr, exit code and file changes of every CLI call in the README.
+- `cmd/dashcrew/testdata/transcripts/`: stdout, stderr, exit code and file changes of every CLI call the README and `docs/` show.
 - `internal/guard/testdata/`: the guard's answer to every corpus case it blocks.
 
 When a change to output is intended, rewrite them and read every changed file before you ask for review:
@@ -61,8 +61,12 @@ dashcrew is a general tool. Code, docs, examples, fixtures and commit messages n
 
 `docs/plans/` holds the design history: one plan per change of the standard tier or larger, written and confirmed before the code. Read the plans of the area you touch before changing it, and add a plan for a standard or large change (sizing rules in [AGENTS.md](AGENTS.md)). `docs/ideas/` holds ideas not yet planned.
 
+## Releases
+
+The maintainer cuts a release by pushing a `v*` tag, following [docs/release-checklist.md](docs/release-checklist.md). `.github/workflows/release.yaml` runs goreleaser (`.goreleaser.yaml`), which stamps the version, builds darwin, linux and windows for amd64 and arm64, publishes a GitHub Release with `checksums.txt` and build attestations, and updates the Homebrew formula in `fahnaladitia/homebrew-tap`.
+
 ## Pull requests
 
-Fill in the pull request template. Keep one concern per pull request, update the README and the unreleased section of `CHANGELOG.md` when behaviour changes, and include the golden diff review when output changed. The maintainer merges.
+Fill in the pull request template. Keep one concern per pull request. When behaviour changes, update the page that describes it (the README or one under `docs/`) and the unreleased section of `CHANGELOG.md`. Include the golden diff review when output changed. The maintainer merges.
 
 By contributing you agree that your work is licensed under the [BSD-3-Clause license](LICENSE) and that you follow the [Code of Conduct](CODE_OF_CONDUCT.md).
