@@ -129,7 +129,7 @@ Goal: a visitor understands dashcrew in 30 seconds, tries it in one command, and
   - [x] Move reference material to `docs/` (profile reference, release lines, knowledge, specs, troubleshooting, migration notes), and add `docs/architecture.md`.
   - [x] Remove stale lines (`README.md:9`, `:47`, SECURITY.md "before the first tagged release"); drop internal plan codes (P3, P4, P10b) from the README and CHANGELOG.
   - [x] Repository description ("One source of rules, skills and guard hooks for every AI coding agent. One Go binary, any stack."), 14 topics, badges, Discussions on, and 5 `good first issue` items (#56 to #60). The wiki, stale since 2026-11-02, is off; its Recipes and Design Notes pages have no `docs/` page yet (#60 covers the recipes).
-  - [ ] A 1280×640 social preview, uploaded in the repository settings (no API). A homepage waits for a site.
+  - [x] The 1280×640 social preview, `docs/assets/social-preview.png` (source and rebuild command in `social-preview.html` next to it), uploaded in the repository settings on 2026-11-18. A homepage waits for a site.
 - **Agent commit and push** (plan: `docs/plans/agent-push-plan.md`)
   - [x] `policy.agent_push`: at the end of a task the agent asks whether to commit and push the task branch; the guard still blocks force, delete, `--all`/`--mirror`/`--tags`, base branches and a push without a named branch.
   - [x] `agent_commit: ask` and `agent_push: ask` (plan: `docs/plans/v0.8-confirm-git-plan.md`): the guard has Claude Code and Antigravity ask the user to approve each commit and push; Codex, whose hooks cannot ask, gets a block.
