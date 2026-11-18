@@ -11,7 +11,7 @@ stdout:
 | warn  stale                99 files would change (.agents/agents/dart-tdd-guide.md, .agents/agents/design-refiner.md, .agents/agents/explorer.md, .agents/agents/flutter-architect.md, .agents/agents/flutter-build-error-resolver.md, ...); run dashcrew sync
 | ok    guard-policy         .ai/guard.json valid
 | fail  guard-binary         dashcrew is not on PATH, so .ai/bin/guard refuses every tool call: install dashcrew 0.1.0 or newer (brew install fahnaladitia/tap/dashcrew)
-| ok    hook                 PreToolUse guard hook present
+| fail  hook                 PreToolUse guard hook differs from what sync writes; run dashcrew sync
 | ok    claude-md            CLAUDE.md imports AGENTS.md
 | ok    mcp                  defined: dart-mcp-server
 | ok    skills               8 referenced skills found; optional, not installed: flutter-development, idea-refine, managing-hive-storage
@@ -89,6 +89,7 @@ stdout:
 | wrote   .agents/skills/worktree/SKILL.md
 | wrote   .agents/agents/explorer.md
 | wrote   .agents/agents/reviewer.md
+| wrote   .claude/settings.json
 | wrote   .agents/hooks.json
 | removed .agents/agents/dart-tdd-guide.md
 | removed .agents/agents/design-refiner.md
@@ -200,6 +201,7 @@ files:
 + w/.claude/agents/reviewer.md  -rw-r--r-- sha256:5c1f3688fe3eb344
 - w/.claude/agents/tech-lead.md
 - w/.claude/agents/worktree-monitor.md
+~ w/.claude/settings.json  -rw-r--r-- sha256:159fc2265d8aabad
 + w/.claude/skills/acceptance-criteria  dir
 + w/.claude/skills/acceptance-criteria/SKILL.md  -rw-r--r-- sha256:ae96af8d4fdad818
 ~ w/.claude/skills/audit/SKILL.md  -rw-r--r-- sha256:f1d546184756c826

@@ -1,7 +1,7 @@
 ---
 target: agents_md
 order: 31
-when: { policy.agent_commit: true }
+when: { policy.agent_commit: true, git_ask: false }
 rules: [git.commit-lint-first]
 ---
 - At the end of every task, after the PR description, ask with your question tool whether to commit{{#policy.agent_push}} and push{{/policy.agent_push}} for the user or leave it to them. The answer covers that round only; never commit{{#policy.agent_push}} or push{{/policy.agent_push}} unasked.

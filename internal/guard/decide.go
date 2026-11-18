@@ -11,9 +11,11 @@ import (
 	"github.com/fahnaladitia/dashcrew/internal/omap"
 )
 
-// Decision is the guard's answer to one tool call; Reason is set when Blocked.
+// Decision is the guard's answer to one tool call; Reason is set when Blocked or Ask. Ask lets the call run only
+// once the user approves it, on an agent that can ask (see HookResponse).
 type Decision struct {
 	Blocked bool
+	Ask     bool
 	Reason  string
 }
 
@@ -30,14 +32,34 @@ type Response struct {
 	Stderr   string
 }
 
+// ClaudeCodeArgument is the second argument of the Claude Code hook command. It is how the guard knows Claude Code
+// called: Codex sends the same `Bash` payload, and Codex runs a call whose hook asked.
+const ClaudeCodeArgument = "claude-code"
+
 // HookResponse answers the agent that called: Antigravity (`toolCall` input) reads a JSON decision on stdout, and
 // gets `allow` for an allowed call since it fails closed on a missing one (`allow` hands the call on to the next hook
 // or its default policy, it approves nothing). Claude Code and Codex read exit code 2 with the reason on stderr, and
 // nothing for an allowed call. input may be nil when the hook input did not parse.
-func HookResponse(input *omap.Map[any], decision Decision) Response {
+//
+// An ask goes to Antigravity as `force_ask` and to Claude Code, known by agent ClaudeCodeArgument, as a JSON ask;
+// every other agent gets a block, since none of them is known to ask.
+func HookResponse(input *omap.Map[any], decision Decision, agent string) Response {
 	antigravity := false
 	if input != nil {
 		_, antigravity = input.Value("toolCall").(*omap.Map[any])
+	}
+	if decision.Ask && !decision.Blocked {
+		reason := "[dashcrew guard] " + decision.Reason
+		switch {
+		case antigravity:
+			text, _ := dartjson.Encode(omap.Of[any]("decision", "force_ask", "reason", reason))
+			return Response{Stdout: text}
+		case agent == ClaudeCodeArgument:
+			text, _ := dartjson.Encode(omap.Of[any]("hookSpecificOutput", omap.Of[any]("hookEventName", "PreToolUse",
+				"permissionDecision", "ask", "permissionDecisionReason", reason)))
+			return Response{Stdout: text}
+		}
+		decision = Block(decision.Reason + "; this agent's hooks cannot ask for approval, so ask the user to run it")
 	}
 	if !decision.Blocked {
 		if antigravity {
@@ -114,6 +136,9 @@ func LoadPolicy(value any) (Policy, error) {
 	if p.Push, err = pushRuleOf(object); err != nil {
 		return Policy{}, err
 	}
+	if p.AskGit, err = askGitOf(object); err != nil {
+		return Policy{}, err
+	}
 	return p, nil
 }
 
@@ -134,20 +159,45 @@ func lazyStrings(object *omap.Map[any], key string) (items []string, broken bool
 	return items, false, nil
 }
 
-// EvaluateAll blocks when any of events is blocked, with the first reason. An error (a policy entry of the wrong
-// type reached on the way) means the call is allowed, as in the Dart guard.
+// EvaluateAll blocks when any of events is blocked, with the first reason; else it asks when any asks. An error (a
+// policy entry of the wrong type reached on the way) means the call is allowed, as in the Dart guard.
 func EvaluateAll(events []Event, p Policy) (Decision, error) {
+	result := Allow()
 	for _, event := range events {
 		decision, err := Evaluate(event, p)
 		if err != nil || decision.Blocked {
 			return decision, err
 		}
+		if decision.Ask && !result.Ask {
+			result = decision
+		}
 	}
-	return Allow(), nil
+	return result, nil
 }
 
-// Evaluate allows or blocks one tool call under p.
+// Evaluate allows, asks about or blocks one tool call under p. A call the rules allow is checked again with the
+// AskGit subcommands blocked: what that blocks, in any of the forms the rules unwrap, is asked about instead.
 func Evaluate(event Event, p Policy) (Decision, error) {
+	decision, err := evaluate(event, p)
+	if err != nil || decision.Blocked || len(p.AskGit) == 0 || p.asking {
+		return decision, err
+	}
+	strict := p
+	strict.asking = true
+	strict.BlockedGit = map[string]bool{}
+	for sub := range p.BlockedGit {
+		strict.BlockedGit[sub] = true
+	}
+	for sub := range p.AskGit {
+		strict.BlockedGit[sub] = true
+	}
+	if second, err := evaluate(event, strict); err == nil && second.Blocked {
+		return Decision{Ask: true, Reason: second.Reason}, nil
+	}
+	return decision, nil
+}
+
+func evaluate(event Event, p Policy) (Decision, error) {
 	switch event.Kind {
 	case Shell:
 		return evaluateShell(event.Command, event.Argv, p), nil
@@ -213,6 +263,9 @@ func checkCommand(argv []string, p Policy) Decision {
 	if program == "git" {
 		if at, ok := gitSubcommandAt(argv); ok {
 			sub := argv[at]
+			if p.asking && p.AskGit[sub] {
+				return Block("git " + sub + " needs your approval (policy.agent_" + sub + ": ask)")
+			}
 			if p.BlockedGit[sub] {
 				return Block("git " + sub + " is reserved for the user. Ask them to run it.")
 			}

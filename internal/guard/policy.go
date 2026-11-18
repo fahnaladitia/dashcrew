@@ -39,6 +39,11 @@ type Policy struct {
 	BlockMigrations MigrationBlock
 	// Push is the PushRule of `policy.agent_push`; nil keeps every push blocked through BlockedGit.
 	Push *PushRule
+	// AskGit are the git subcommands (`commit`, `push`) the agent runs only after the user approves the call, from
+	// `agent_commit: ask` and `agent_push: ask`. A call the rules allow that runs one gets an ask decision.
+	AskGit map[string]bool
+	// asking marks the second pass of Evaluate, where AskGit subcommands are in BlockedGit to find them.
+	asking bool
 
 	// knowledge is the hook's folder and KnowledgeClone resolved on this machine; Run sets it (see at). Without it
 	// the write rules read paths as text only, as the Dart guard did.
@@ -74,11 +79,22 @@ func CompilePolicy(p *profile.Profile, c *catalog.Catalog) Policy {
 	for _, sub := range AlwaysBlockedGit {
 		blocked[sub] = true
 	}
-	if p.Policy.Value("agent_commit") != true {
+	var ask map[string]bool // nil without an ask, as PolicyFromJSON reads it back
+	switch p.Policy.Value("agent_commit") {
+	case true:
+	case "ask":
+		ask = map[string]bool{"commit": true}
+	default:
 		blocked["commit"] = true
 	}
 	var push *PushRule
-	if p.Policy.Value("agent_push") == true {
+	if agentPush := p.Policy.Value("agent_push"); agentPush == true || agentPush == "ask" {
+		if agentPush == "ask" {
+			if ask == nil {
+				ask = map[string]bool{}
+			}
+			ask["push"] = true
+		}
 		delete(blocked, "push")
 		push = &PushRule{Protected: []string{}}
 		if bases, ok := p.Project.Value("base_branches").([]any); ok {
@@ -111,6 +127,7 @@ func CompilePolicy(p *profile.Profile, c *catalog.Catalog) Policy {
 		ForbiddenImports: forbiddenImports,
 		LocalPackages:    localPackages,
 		Push:             push,
+		AskGit:           ask,
 	}
 	if g := c.PlatformFor(p).Guard; !g.Empty() {
 		policy.BlockCommands = g.Commands
@@ -136,6 +153,9 @@ func (p Policy) Minimum() string {
 	}
 	if p.Push != nil && version.Compare(version.PushGuardMinimum, minimum) > 0 {
 		minimum = version.PushGuardMinimum
+	}
+	if len(p.AskGit) > 0 && version.Compare(version.AskGuardMinimum, minimum) > 0 {
+		minimum = version.AskGuardMinimum
 	}
 	return minimum
 }
@@ -175,6 +195,14 @@ func (p Policy) ToJSON() *omap.Map[any] {
 	}
 	if p.Push != nil {
 		object.Set("push", p.Push.toJSON())
+	}
+	if len(p.AskGit) > 0 {
+		asked := make([]string, 0, len(p.AskGit))
+		for sub := range p.AskGit {
+			asked = append(asked, sub)
+		}
+		sort.Strings(asked)
+		object.Set("ask_git", toAny(asked))
 	}
 	if len(p.BlockCommands) > 0 {
 		commands := make([]any, len(p.BlockCommands))
@@ -328,7 +356,31 @@ func PolicyFromJSON(text string) (Policy, error) {
 	if policy.Push, err = pushRuleOf(object); err != nil {
 		return Policy{}, err
 	}
+	if policy.AskGit, err = askGitOf(object); err != nil {
+		return Policy{}, err
+	}
 	return policy, nil
+}
+
+// askGitOf reads the optional `ask_git` list of git subcommands.
+func askGitOf(object *omap.Map[any]) (map[string]bool, error) {
+	raw := object.Value("ask_git")
+	if raw == nil {
+		return nil, nil
+	}
+	list, ok := raw.([]any)
+	if !ok {
+		return nil, errors.New("ask_git is not a list")
+	}
+	asked := map[string]bool{}
+	for _, item := range list {
+		sub, ok := item.(string)
+		if !ok {
+			return nil, errors.New("ask_git holds a value that is not a string")
+		}
+		asked[sub] = true
+	}
+	return asked, nil
 }
 
 func stringsOf(object *omap.Map[any], key string) ([]string, error) {

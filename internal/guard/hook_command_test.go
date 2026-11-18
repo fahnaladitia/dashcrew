@@ -74,7 +74,7 @@ var hookCommandCases = []struct {
 		root, calls := hookProject(t)
 		// Dart's Process.runSync merges the given environment into the parent's.
 		code, out := runHook(t, adapters.ClaudeGuardCommand, filepath.Join(root, "lib", "feature"), append(os.Environ(), "CLAUDE_PROJECT_DIR="+root))
-		assertCalled(t, code, out, calls, "called "+filepath.Join(root, ".ai", "guard.json")+"\n")
+		assertCalled(t, code, out, calls, "called "+filepath.Join(root, ".ai", "guard.json")+" claude-code\n")
 	}},
 	{"codex reaches the guard from a subfolder through git rev-parse", func(t *testing.T) {
 		root, calls := hookProject(t)

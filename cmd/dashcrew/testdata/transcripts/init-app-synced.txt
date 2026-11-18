@@ -71,7 +71,7 @@ files:
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:c5027d9c25fbef11
 + w/.claude/agents/reviewer.md  -rw-r--r-- sha256:5c1f3688fe3eb344
-+ w/.claude/settings.json  -rw-r--r-- sha256:ab785cea7a7a2c39
++ w/.claude/settings.json  -rw-r--r-- sha256:159fc2265d8aabad
 + w/.claude/skills  dir
 + w/.claude/skills/acceptance-criteria  dir
 + w/.claude/skills/acceptance-criteria/SKILL.md  -rw-r--r-- sha256:ae96af8d4fdad818

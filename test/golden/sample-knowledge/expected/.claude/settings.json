@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR/.ai/bin/guard\" \"$CLAUDE_PROJECT_DIR/.ai/guard.json\""
+            "command": "\"$CLAUDE_PROJECT_DIR/.ai/bin/guard\" \"$CLAUDE_PROJECT_DIR/.ai/guard.json\" claude-code"
           }
         ]
       }

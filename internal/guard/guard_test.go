@@ -331,24 +331,24 @@ func guardCases() []guardCase {
 		}},
 
 		guardCase{"hookResponse claude code and codex get exit 2 and the reason on stderr", func(t *testing.T) {
-			response := HookResponse(hook(t, `{"tool_name": "Bash"}`), Block("git push is reserved for the user. Ask them to run it."))
+			response := HookResponse(hook(t, `{"tool_name": "Bash"}`), Block("git push is reserved for the user. Ask them to run it."), "")
 			want := Response{ExitCode: 2, Stderr: "[dashcrew guard] git push is reserved for the user. Ask them to run it."}
 			if response != want {
 				t.Errorf("%+v", response)
 			}
 		}},
 		guardCase{"hookResponse antigravity gets a deny decision on stdout and exit 0", func(t *testing.T) {
-			response := HookResponse(hook(t, `{"toolCall": {"name": "run_command"}}`), Block("git push is reserved for the user. Ask them to run it."))
+			response := HookResponse(hook(t, `{"toolCall": {"name": "run_command"}}`), Block("git push is reserved for the user. Ask them to run it."), "")
 			want := Response{Stdout: `{"decision":"deny","reason":"[dashcrew guard] git push is reserved for the user. Ask them to run it."}`}
 			if response != want {
 				t.Errorf("%+v", response)
 			}
 		}},
 		guardCase{"hookResponse an allowed call prints nothing for claude code and codex, an allow decision for antigravity", func(t *testing.T) {
-			if response := HookResponse(hook(t, `{"tool_name": "Bash"}`), Allow()); response != (Response{}) {
+			if response := HookResponse(hook(t, `{"tool_name": "Bash"}`), Allow(), ""); response != (Response{}) {
 				t.Errorf("claude code: %+v", response)
 			}
-			if response := HookResponse(hook(t, `{"toolCall": {"name": "run_command"}}`), Allow()); response != (Response{Stdout: `{"decision":"allow"}`}) {
+			if response := HookResponse(hook(t, `{"toolCall": {"name": "run_command"}}`), Allow(), ""); response != (Response{Stdout: `{"decision":"allow"}`}) {
 				t.Errorf("antigravity: %+v", response)
 			}
 		}},

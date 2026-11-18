@@ -169,6 +169,9 @@ func TestErrorPaths(t *testing.T) {
 		{"unknown ci key", "toolkit: 1\nagents: [claude-code]\nci: { gitlab: true }\n", "ci.gitlab"},
 		{"agent_push without agent_commit", "toolkit: 1\nagents: [claude-code]\npolicy: { agent_push: true }\n", "policy.agent_push"},
 		{"agent_push not a bool", "toolkit: 1\nagents: [claude-code]\npolicy: { agent_commit: true, agent_push: yes please }\n", "policy.agent_push"},
+		{"agent_commit another word", "toolkit: 1\nagents: [claude-code]\npolicy: { agent_commit: always }\n", "policy.agent_commit"},
+		{"agent_push ask without agent_commit ask", "toolkit: 1\nagents: [claude-code]\npolicy: { agent_commit: true, agent_push: ask }\n", "policy.agent_push"},
+		{"agent_push true with agent_commit ask", "toolkit: 1\nagents: [claude-code]\npolicy: { agent_commit: ask, agent_push: true }\n", "policy.agent_push"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -568,5 +571,38 @@ func TestGlobRegexp(t *testing.T) {
 		if got := re.MatchString(c.path); got != c.match {
 			t.Errorf("%s ~ %s = %v", c.glob, c.path, got)
 		}
+	}
+}
+
+func TestAskIsAcceptedForCommitAndPush(t *testing.T) {
+	for _, yaml := range []string{
+		"toolkit: 1\nagents: [claude-code]\npolicy: { agent_commit: ask }\n",
+		"toolkit: 1\nagents: [claude-code]\npolicy: { agent_commit: ask, agent_push: ask }\n",
+	} {
+		p, err := Parse(yaml, known())
+		if err != nil {
+			t.Errorf("%q: %v", yaml, err)
+			continue
+		}
+		if p.Policy.Value("agent_commit") != "ask" {
+			t.Errorf("%q: agent_commit %v", yaml, p.Policy.Value("agent_commit"))
+		}
+		if p.ToContext()["git_ask"] != true {
+			t.Errorf("%q: git_ask is not set in the render context", yaml)
+		}
+	}
+}
+
+func TestAskReadsAsOnInTemplates(t *testing.T) {
+	p, err := Parse("toolkit: 1\nagents: [claude-code]\npolicy: { agent_commit: ask, agent_push: ask }\n", known())
+	if err != nil {
+		t.Fatal(err)
+	}
+	policy := p.ToContext()["policy"].(*omap.Map[any])
+	if policy.Value("agent_commit") != true || policy.Value("agent_push") != true {
+		t.Errorf("rendered policy %v", policy)
+	}
+	if p.Policy.Value("agent_commit") != "ask" {
+		t.Error("the profile's own policy was changed")
 	}
 }
