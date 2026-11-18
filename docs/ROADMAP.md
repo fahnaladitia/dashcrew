@@ -139,7 +139,7 @@ Goal: a visitor understands dashcrew in 30 seconds, tries it in one command, and
     - under `platform: other`, propose detected files as defaults;
     - print detected stacks before the prompts;
     - a fresh project passes `doctor` with zero warnings.
-  - [ ] Promote Go from starter to a built-in platform. It changes the output layout of every Go project, so it gets its own plan.
+  - [x] Promote Go from starter to a built-in platform (plan: `docs/plans/v0.8-go-built-in-plan.md`). `init` writes only the profile on a Go module, and `platform new` ejects any built-in platform.
   - [x] Fix messages: the `/..` path in "No .ai/project.yaml in …", `ok mcp defined: ` with an empty value, odd command text such as `ruff check . <changed paths>`, and the status table's 16-column ID field that `antigravity-hook` fills, so it runs into its detail (`cmd/dashcrew/main.go:339`).
 - **Windows**, if the v0.7 investigation found a small fix: ship it here. Otherwise it moves to v0.9.
 - **Soft launch** in December to the office team and a few outside developers. Their friction notes are fixed or filed before the launch.

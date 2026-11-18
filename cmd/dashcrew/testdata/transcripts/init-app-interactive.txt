@@ -26,12 +26,12 @@ files:
 + w/.ai/project.yaml  -rw-r--r-- sha256:63fa1eef9092cd4b
 
 === step 2: dashcrew "init" "--force"
-stdin: "go\n\r\nflutter\r\n"
+stdin: "rust\n\r\nflutter\r\n"
 exit: 0
 stdout:
 | Detected in <root>/w:
 |   platform: flutter (pubspec.yaml)
-| platform [flutter]:   expected one of flutter, other
+| platform [flutter]:   expected one of flutter, go, other
 | platform [flutter]:   analytics: posthog (posthog_flutter in dependencies)
 |   di: get_it (get_it in dependencies)
 |   network: dio (dio in dependencies) | http (http in dependencies)

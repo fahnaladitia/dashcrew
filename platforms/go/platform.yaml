@@ -1,5 +1,3 @@
-# Starter from dashcrew {{version}}: the Go platform of this repository. Edit every file in this folder to match the
-# code here (layer names, folders, libraries); dashcrew never overwrites it.
 description: Go services and command-line tools.
 detect: [go.mod]
 commands:

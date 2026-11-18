@@ -131,67 +131,13 @@ files: (unchanged)
 exit: 0
 stdout:
 | Detected in <root>/w:
-|   platform: none of flutter (pubspec.yaml)
-|   starter: go (go.mod)
-|   files: go.mod
-| wrote .ai/platforms/go/ (32 files)
-| wrote .ai/project.yaml (platform go, http chi, db none)
+|   platform: go (go.mod)
+|   http: chi (github.com/go-chi/chi/v5 in go.mod)
+| wrote .ai/project.yaml
 | next: dashcrew sync
 stderr: (empty)
 files:
-+ w/.ai/platforms  dir
-+ w/.ai/platforms/go  dir
-+ w/.ai/platforms/go/packs  dir
-+ w/.ai/platforms/go/packs/db  dir
-+ w/.ai/platforms/go/packs/db/gorm  dir
-+ w/.ai/platforms/go/packs/db/gorm/agents_md.md  -rw-r--r-- sha256:52038ac4d8debf74
-+ w/.ai/platforms/go/packs/db/gorm/pack.yaml  -rw-r--r-- sha256:be7f08f87324349e
-+ w/.ai/platforms/go/packs/db/none  dir
-+ w/.ai/platforms/go/packs/db/none/agents_md.md  -rw-r--r-- sha256:20fe89079df9ec0c
-+ w/.ai/platforms/go/packs/db/none/pack.yaml  -rw-r--r-- sha256:03b8388560e2a5a7
-+ w/.ai/platforms/go/packs/db/pgx  dir
-+ w/.ai/platforms/go/packs/db/pgx/agents_md.md  -rw-r--r-- sha256:9ce872c4503784a6
-+ w/.ai/platforms/go/packs/db/pgx/pack.yaml  -rw-r--r-- sha256:ac4349401ef10f70
-+ w/.ai/platforms/go/packs/db/sqlc  dir
-+ w/.ai/platforms/go/packs/db/sqlc/agents_md.md  -rw-r--r-- sha256:887d66f146a0bb2e
-+ w/.ai/platforms/go/packs/db/sqlc/pack.yaml  -rw-r--r-- sha256:4c754d6e4ca77d30
-+ w/.ai/platforms/go/packs/http  dir
-+ w/.ai/platforms/go/packs/http/chi  dir
-+ w/.ai/platforms/go/packs/http/chi/agents_md.md  -rw-r--r-- sha256:e05f12fa298a9a0b
-+ w/.ai/platforms/go/packs/http/chi/pack.yaml  -rw-r--r-- sha256:f47db87c5958dae0
-+ w/.ai/platforms/go/packs/http/echo  dir
-+ w/.ai/platforms/go/packs/http/echo/agents_md.md  -rw-r--r-- sha256:76601ae6bb76ebb5
-+ w/.ai/platforms/go/packs/http/echo/pack.yaml  -rw-r--r-- sha256:da1f478df8bcce4d
-+ w/.ai/platforms/go/packs/http/fiber  dir
-+ w/.ai/platforms/go/packs/http/fiber/agents_md.md  -rw-r--r-- sha256:73d606f861da35fa
-+ w/.ai/platforms/go/packs/http/fiber/pack.yaml  -rw-r--r-- sha256:8bdf8b91dafe83de
-+ w/.ai/platforms/go/packs/http/gin  dir
-+ w/.ai/platforms/go/packs/http/gin/agents_md.md  -rw-r--r-- sha256:080c5a2e2303634c
-+ w/.ai/platforms/go/packs/http/gin/pack.yaml  -rw-r--r-- sha256:b962d29a023850cc
-+ w/.ai/platforms/go/packs/http/nethttp  dir
-+ w/.ai/platforms/go/packs/http/nethttp/agents_md.md  -rw-r--r-- sha256:b62a81c66bea5394
-+ w/.ai/platforms/go/packs/http/nethttp/pack.yaml  -rw-r--r-- sha256:afd21348ac3bd19e
-+ w/.ai/platforms/go/packs/http/none  dir
-+ w/.ai/platforms/go/packs/http/none/agents_md.md  -rw-r--r-- sha256:048f361c0f7b9573
-+ w/.ai/platforms/go/packs/http/none/pack.yaml  -rw-r--r-- sha256:f04b9b7c2cc432e7
-+ w/.ai/platforms/go/platform.yaml  -rw-r--r-- sha256:287507f25aa2467a
-+ w/.ai/platforms/go/rules  dir
-+ w/.ai/platforms/go/rules/architecture.md  -rw-r--r-- sha256:59192ba4883f5c91
-+ w/.ai/platforms/go/rules/go.md  -rw-r--r-- sha256:7dde669c26e05978
-+ w/.ai/platforms/go/rules/security.md  -rw-r--r-- sha256:48c78c1110ec0919
-+ w/.ai/platforms/go/rules/testing.md  -rw-r--r-- sha256:466bf6da142da3b0
-+ w/.ai/platforms/go/skills  dir
-+ w/.ai/platforms/go/skills/backend-security  dir
-+ w/.ai/platforms/go/skills/backend-security/10-backend-security.md  -rw-r--r-- sha256:b1e47c0636915d1e
-+ w/.ai/platforms/go/skills/backend-security/meta.yaml  -rw-r--r-- sha256:fcc48cf27ef3f6b6
-+ w/.ai/platforms/go/skills/data-layer-tdd  dir
-+ w/.ai/platforms/go/skills/data-layer-tdd/10-data-layer-tdd.md  -rw-r--r-- sha256:7eab9b4336f95c60
-+ w/.ai/platforms/go/skills/data-layer-tdd/20-local-storage.md  -rw-r--r-- sha256:8fb12052ecfc8f86
-+ w/.ai/platforms/go/skills/data-layer-tdd/meta.yaml  -rw-r--r-- sha256:788aa65ef0e0591e
-+ w/.ai/platforms/go/skills/feature-architecture  dir
-+ w/.ai/platforms/go/skills/feature-architecture/10-architecture.md  -rw-r--r-- sha256:5c9c3ec6902d195f
-+ w/.ai/platforms/go/skills/feature-architecture/meta.yaml  -rw-r--r-- sha256:a39786634e5190c4
-+ w/.ai/project.yaml  -rw-r--r-- sha256:50e20288ac982e6b
++ w/.ai/project.yaml  -rw-r--r-- sha256:7c6e18fa88a1d6e9
 
 === step 9: dashcrew "sync"
 exit: 0
@@ -231,7 +177,7 @@ stderr: (empty)
 files:
 ~ w/.ai/bin/guard  -rwxr-xr-x sha256:1dc27441f39e22e5
 ~ w/.ai/guard.json  -rw-r--r-- sha256:0879faac913e7a99
-+ w/.ai/lock.json  -rw-r--r-- sha256:74d225a86f809920
++ w/.ai/lock.json  -rw-r--r-- sha256:754065869e19af24
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:c5027d9c25fbef11
 + w/.claude/agents/reviewer.md  -rw-r--r-- sha256:5c1f3688fe3eb344
@@ -285,7 +231,7 @@ files:
 + w/.github  dir
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
 + w/.mcp.json  -rw-r--r-- sha256:d8e397af03b5b032
-+ w/AGENTS.md  -rw-r--r-- sha256:ecdcecf5c2aa0825
++ w/AGENTS.md  -rw-r--r-- sha256:a9c0c94dd4d04014
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 10: dashcrew "guard" "init"

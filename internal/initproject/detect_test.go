@@ -273,3 +273,35 @@ func TestAPlatformOtherThanTheDefaultReadsNoPubspec(t *testing.T) {
 		t.Errorf("base branches %v", detection.BaseBranches)
 	}
 }
+
+func TestGoModulesDetectTheGoPacks(t *testing.T) {
+	cases := []struct{ gomod, extra, http, db string }{
+		{"require github.com/go-chi/chi/v5 v5.2.1\nrequire github.com/jackc/pgx/v5 v5.7.4\n", "", "chi", "pgx"},
+		{"require (\n\tgithub.com/gin-gonic/gin v1.10.0\n\tgorm.io/gorm v1.25.12\n)\n", "", "gin", "gorm"},
+		{"require github.com/labstack/echo/v4 v4.13.3\n", "sqlc.yaml", "echo", "sqlc"},
+		{"require github.com/gofiber/fiber/v2 v2.52.6\n", "", "fiber", ""},
+		{"", "", "", ""},
+	}
+	for _, c := range cases {
+		project := t.TempDir()
+		write(t, project, "go.mod", "module x\n\ngo 1.26\n\n"+c.gomod)
+		if c.extra != "" {
+			write(t, project, c.extra, "version: \"2\"\n")
+		}
+		detection, err := Detect(project, nil, "go")
+		if err != nil {
+			t.Fatal(err)
+		}
+		for family, want := range map[string]string{"http": c.http, "db": c.db} {
+			got := ""
+			if candidates := detection.Stack.Value(family); len(candidates) == 1 {
+				got = candidates[0].Option
+			} else if len(candidates) > 1 {
+				got = "several"
+			}
+			if got != want {
+				t.Errorf("%q %s: %q, want %q", c.gomod, family, got, want)
+			}
+		}
+	}
+}

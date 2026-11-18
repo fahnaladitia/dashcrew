@@ -11,7 +11,7 @@ import (
 	embedded "github.com/fahnaladitia/dashcrew"
 	"github.com/fahnaladitia/dashcrew/internal/catalog"
 	"github.com/fahnaladitia/dashcrew/internal/doctor"
-	"github.com/fahnaladitia/dashcrew/internal/starter"
+	"github.com/fahnaladitia/dashcrew/internal/eject"
 	"github.com/fahnaladitia/dashcrew/internal/sync"
 )
 
@@ -29,6 +29,7 @@ var samples = []string{
 	"sample-release-lines",
 	"sample-links",
 	"sample-go",
+	"sample-go-built-in",
 	"sample-github-tracker",
 	"sample-project-skills",
 	"sample-agent-push",
@@ -116,9 +117,10 @@ func TestGoldenSamplesAreByteIdentical(t *testing.T) {
 			for _, folder := range []string{"packs", "platforms", "skills"} {
 				copyInto(t, tree(t, filepath.Join(fixture, folder)), filepath.Join(project, ".ai", folder))
 			}
-			// A fixture with a `starter` file takes its platform from the embedded starter, so the two never drift.
-			if name, err := os.ReadFile(filepath.Join(fixture, "starter")); err == nil {
-				if _, err := starter.Write(embedded.StartersFS, strings.TrimSpace(string(name)), project, "0.0.0"); err != nil {
+			// A fixture with an `eject` file takes that built-in platform as a project platform, as `dashcrew platform
+			// new` ejects it, so the two never drift.
+			if name, err := os.ReadFile(filepath.Join(fixture, "eject")); err == nil {
+				if _, err := eject.Write(embedded.CatalogFS, strings.TrimSpace(string(name)), project, "0.0.0"); err != nil {
 					t.Fatal(err)
 				}
 			}

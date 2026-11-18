@@ -644,7 +644,7 @@ func usageSteps() []step {
 		{"help", "nope"}, {"help", "sync", "extra"}, {"help", "worktree", "nope"}, {"help", "-h"},
 		{"init", "--help"}, {"sync", "-h"}, {"doctor", "--help"}, {"check", "--help"}, {"worktree", "--help"},
 		{"worktree", "create", "--help"}, {"worktree", "list", "--help"}, {"worktree", "link", "--help"},
-		{"worktree", "remove", "--help"}, {"worktree", "watch", "--help"}, {"guard", "--help"}, {"guard", "-h"}, {"guard", "init", "--help"},
+		{"worktree", "remove", "--help"}, {"worktree", "watch", "--help"}, {"guard", "--help"}, {"guard", "-h"}, {"guard", "init", "--help"}, {"platform", "new", "--help"},
 		{"--help", "sync"}, {"-h", "worktree", "create"}, {"worktree", "-h", "create"}, {"sync", "--help", "extra"},
 		{"nope"}, {"snyc"}, {"worktre"}, {"sink"}, {"chek"}, {"worktree"}, {"worktree", "nope"}, {"worktree", "craete"},
 		{"sync", "--bogus"}, {"sync", "-x"}, {"sync", "-xy"}, {"init", "-yp"}, {"init", "-yz"}, {"init", "-yfoo"},
@@ -710,7 +710,7 @@ func cliCases() []cliCase {
 		}},
 		{name: "init-app interactive", setup: initApp, steps: []step{
 			{args: []string{"init"}, stdin: "\n\n\ndio\n-\nnope\nother chopper\n\n\n\n\n\n\n\n\n"},
-			{args: []string{"init", "--force"}, stdin: "go\n\r\nflutter\r\n"},
+			{args: []string{"init", "--force"}, stdin: "rust\n\r\nflutter\r\n"},
 			{args: []string{"init", "--force"}},
 		}},
 		{name: "init-app synced", setup: initApp, steps: append([]step{cli("init", "--yes")}, toolkitSteps()...)},
@@ -726,6 +726,14 @@ func cliCases() []cliCase {
 			cli("init", "--yes"),
 			cli("sync"),
 			cli("doctor"),
+		}},
+		{name: "platform new ejects a built-in platform", setup: goModule, steps: []step{
+			cli("platform", "new", "go"),
+			cli("platform", "new", "go"),
+			cli("platform", "new", "flutter", "--http", "chi"),
+			cli("platform", "new", "rust"),
+			cli("platform", "new"),
+			cli("sync"),
 		}},
 		{name: "guard init", setup: goModule, steps: []step{
 			cli("guard", "init"),

@@ -16,11 +16,11 @@ stdout:
 |   commit      Commit messages in the team's pattern (project.commit): a ready command, and a lint. Never commits.
 |   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init        Detect the platform and stack and write .ai/project.yaml, plus a starter platform you pick.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
-|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
+|   platform    Built-in platforms: eject one into .ai/platforms/<name>/ for the team to own. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -49,11 +49,11 @@ stdout:
 |   commit      Commit messages in the team's pattern (project.commit): a ready command, and a lint. Never commits.
 |   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init        Detect the platform and stack and write .ai/project.yaml, plus a starter platform you pick.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
-|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
+|   platform    Built-in platforms: eject one into .ai/platforms/<name>/ for the team to own. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -82,11 +82,11 @@ stdout:
 |   commit      Commit messages in the team's pattern (project.commit): a ready command, and a lint. Never commits.
 |   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init        Detect the platform and stack and write .ai/project.yaml, plus a starter platform you pick.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
-|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
+|   platform    Built-in platforms: eject one into .ai/platforms/<name>/ for the team to own. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -115,11 +115,11 @@ stdout:
 |   commit      Commit messages in the team's pattern (project.commit): a ready command, and a lint. Never commits.
 |   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init        Detect the platform and stack and write .ai/project.yaml, plus a starter platform you pick.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
-|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
+|   platform    Built-in platforms: eject one into .ai/platforms/<name>/ for the team to own. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -147,9 +147,8 @@ files: (unchanged)
 === step 6: dashcrew "help" "init"
 exit: 0
 stdout:
-| Detect the platform and stack and write .ai/project.yaml, plus a starter platform you pick.
-| Writes nothing else. A repo no platform matches is offered the starter its root files point at (go for a go.mod),
-| written into .ai/platforms/<name>/, else platform: other.
+| Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+| A repo no built-in platform (flutter, go) or project platform matches is offered platform: other.
 | 
 | Usage: dashcrew init [arguments]
 | -h, --help       Print this usage information.
@@ -330,11 +329,11 @@ stderr:
 |   commit      Commit messages in the team's pattern (project.commit): a ready command, and a lint. Never commits.
 |   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init        Detect the platform and stack and write .ai/project.yaml, plus a starter platform you pick.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
-|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
+|   platform    Built-in platforms: eject one into .ai/platforms/<name>/ for the team to own. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -363,11 +362,11 @@ stderr:
 |   commit      Commit messages in the team's pattern (project.commit): a ready command, and a lint. Never commits.
 |   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init        Detect the platform and stack and write .ai/project.yaml, plus a starter platform you pick.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
-|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
+|   platform    Built-in platforms: eject one into .ai/platforms/<name>/ for the team to own. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -396,11 +395,11 @@ stderr:
 |   commit      Commit messages in the team's pattern (project.commit): a ready command, and a lint. Never commits.
 |   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init        Detect the platform and stack and write .ai/project.yaml, plus a starter platform you pick.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
-|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
+|   platform    Built-in platforms: eject one into .ai/platforms/<name>/ for the team to own. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -465,9 +464,8 @@ files: (unchanged)
 === step 24: dashcrew "init" "--help"
 exit: 0
 stdout:
-| Detect the platform and stack and write .ai/project.yaml, plus a starter platform you pick.
-| Writes nothing else. A repo no platform matches is offered the starter its root files point at (go for a go.mod),
-| written into .ai/platforms/<name>/, else platform: other.
+| Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
+| A repo no built-in platform (flutter, go) or project platform matches is offered platform: other.
 | 
 | Usage: dashcrew init [arguments]
 | -h, --help       Print this usage information.
@@ -683,7 +681,27 @@ stdout:
 stderr: (empty)
 files: (unchanged)
 
-=== step 37: dashcrew "--help" "sync"
+=== step 37: dashcrew "platform" "new" "--help"
+exit: 0
+stdout:
+| Copy built-in platform <name> (flutter, go) into .ai/platforms/<name>/, where it replaces the built-in one,
+| and write .ai/project.yaml when there is none. The folder is the team's afterwards: dashcrew never overwrites it,
+| so it no longer gets the built-in platform's updates.
+| 
+| Usage: dashcrew platform new <name> [arguments]
+| -h, --help       Print this usage information.
+| -p, --project    Project root.
+|                  (defaults to ".")
+|     --http       go only. HTTP pack: nethttp, chi, gin, echo, fiber or none; default from go.mod.
+|     --db         go only. Database pack: pgx, sqlc, gorm or none; default from go.mod and sqlc.yaml.
+|     --agents     Agents for a new .ai/project.yaml, comma-separated.
+|                  (defaults to "claude-code")
+| 
+| Run "dashcrew help" to see global options.
+stderr: (empty)
+files: (unchanged)
+
+=== step 38: dashcrew "--help" "sync"
 exit: 0
 stdout:
 | Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -702,7 +720,7 @@ stdout:
 stderr: (empty)
 files: (unchanged)
 
-=== step 38: dashcrew "-h" "worktree" "create"
+=== step 39: dashcrew "-h" "worktree" "create"
 exit: 0
 stdout:
 | Create <branch> from <base> in <repo>.worktrees/<name>, with no upstream and the toolkit linked.
@@ -719,7 +737,7 @@ stdout:
 stderr: (empty)
 files: (unchanged)
 
-=== step 39: dashcrew "worktree" "-h" "create"
+=== step 40: dashcrew "worktree" "-h" "create"
 exit: 0
 stdout:
 | One worktree per parallel task. Never commits, pushes or deletes a branch.
@@ -738,7 +756,7 @@ stdout:
 stderr: (empty)
 files: (unchanged)
 
-=== step 40: dashcrew "sync" "--help" "extra"
+=== step 41: dashcrew "sync" "--help" "extra"
 exit: 0
 stdout:
 | Render rules, roles, skills, guard and hooks for the agents in .ai/project.yaml.
@@ -757,7 +775,7 @@ stdout:
 stderr: (empty)
 files: (unchanged)
 
-=== step 41: dashcrew "nope"
+=== step 42: dashcrew "nope"
 exit: 64
 stdout: (empty)
 stderr:
@@ -774,11 +792,11 @@ stderr:
 |   commit      Commit messages in the team's pattern (project.commit): a ready command, and a lint. Never commits.
 |   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init        Detect the platform and stack and write .ai/project.yaml, plus a starter platform you pick.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
-|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
+|   platform    Built-in platforms: eject one into .ai/platforms/<name>/ for the team to own. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -790,7 +808,7 @@ stderr:
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
 
-=== step 42: dashcrew "snyc"
+=== step 43: dashcrew "snyc"
 exit: 64
 stdout: (empty)
 stderr:
@@ -812,11 +830,11 @@ stderr:
 |   commit      Commit messages in the team's pattern (project.commit): a ready command, and a lint. Never commits.
 |   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init        Detect the platform and stack and write .ai/project.yaml, plus a starter platform you pick.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
-|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
+|   platform    Built-in platforms: eject one into .ai/platforms/<name>/ for the team to own. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -828,7 +846,7 @@ stderr:
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
 
-=== step 43: dashcrew "worktre"
+=== step 44: dashcrew "worktre"
 exit: 64
 stdout: (empty)
 stderr:
@@ -849,11 +867,11 @@ stderr:
 |   commit      Commit messages in the team's pattern (project.commit): a ready command, and a lint. Never commits.
 |   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init        Detect the platform and stack and write .ai/project.yaml, plus a starter platform you pick.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
-|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
+|   platform    Built-in platforms: eject one into .ai/platforms/<name>/ for the team to own. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -865,7 +883,7 @@ stderr:
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
 
-=== step 44: dashcrew "sink"
+=== step 45: dashcrew "sink"
 exit: 64
 stdout: (empty)
 stderr:
@@ -887,11 +905,11 @@ stderr:
 |   commit      Commit messages in the team's pattern (project.commit): a ready command, and a lint. Never commits.
 |   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init        Detect the platform and stack and write .ai/project.yaml, plus a starter platform you pick.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
-|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
+|   platform    Built-in platforms: eject one into .ai/platforms/<name>/ for the team to own. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -903,7 +921,7 @@ stderr:
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
 
-=== step 45: dashcrew "chek"
+=== step 46: dashcrew "chek"
 exit: 64
 stdout: (empty)
 stderr:
@@ -924,11 +942,11 @@ stderr:
 |   commit      Commit messages in the team's pattern (project.commit): a ready command, and a lint. Never commits.
 |   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init        Detect the platform and stack and write .ai/project.yaml, plus a starter platform you pick.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
-|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
+|   platform    Built-in platforms: eject one into .ai/platforms/<name>/ for the team to own. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -940,7 +958,7 @@ stderr:
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
 
-=== step 46: dashcrew "worktree"
+=== step 47: dashcrew "worktree"
 exit: 64
 stdout: (empty)
 stderr:
@@ -959,7 +977,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 47: dashcrew "worktree" "nope"
+=== step 48: dashcrew "worktree" "nope"
 exit: 64
 stdout: (empty)
 stderr:
@@ -978,7 +996,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 48: dashcrew "worktree" "craete"
+=== step 49: dashcrew "worktree" "craete"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1001,7 +1019,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 49: dashcrew "sync" "--bogus"
+=== step 50: dashcrew "sync" "--bogus"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1020,7 +1038,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 50: dashcrew "sync" "-x"
+=== step 51: dashcrew "sync" "-x"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1039,7 +1057,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 51: dashcrew "sync" "-xy"
+=== step 52: dashcrew "sync" "-xy"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1058,7 +1076,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 52: dashcrew "init" "-yp"
+=== step 53: dashcrew "init" "-yp"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1076,7 +1094,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 53: dashcrew "init" "-yz"
+=== step 54: dashcrew "init" "-yz"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1094,7 +1112,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 54: dashcrew "init" "-yfoo"
+=== step 55: dashcrew "init" "-yfoo"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1112,7 +1130,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 55: dashcrew "init" "--agents" "bogus"
+=== step 56: dashcrew "init" "--agents" "bogus"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1130,7 +1148,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 56: dashcrew "init" "--agents" "codex,bogus"
+=== step 57: dashcrew "init" "--agents" "codex,bogus"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1148,7 +1166,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 57: dashcrew "init" "--agents"
+=== step 58: dashcrew "init" "--agents"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1166,7 +1184,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 58: dashcrew "init" "--no-yes"
+=== step 59: dashcrew "init" "--no-yes"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1184,7 +1202,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 59: dashcrew "sync" "--no-project"
+=== step 60: dashcrew "sync" "--no-project"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1203,7 +1221,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 60: dashcrew "sync" "--no-bogus"
+=== step 61: dashcrew "sync" "--no-bogus"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1222,7 +1240,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 61: dashcrew "doctor" "-p"
+=== step 62: dashcrew "doctor" "-p"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1237,7 +1255,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 62: dashcrew "sync" "--force=1"
+=== step 63: dashcrew "sync" "--force=1"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1256,7 +1274,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 63: dashcrew "sync" "--help=1"
+=== step 64: dashcrew "sync" "--help=1"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1275,7 +1293,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 64: dashcrew "--" "sync"
+=== step 65: dashcrew "--" "sync"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1297,11 +1315,11 @@ stderr:
 |   commit      Commit messages in the team's pattern (project.commit): a ready command, and a lint. Never commits.
 |   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init        Detect the platform and stack and write .ai/project.yaml, plus a starter platform you pick.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
-|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
+|   platform    Built-in platforms: eject one into .ai/platforms/<name>/ for the team to own. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -1313,7 +1331,7 @@ stderr:
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
 
-=== step 65: dashcrew "foo" "sync"
+=== step 66: dashcrew "foo" "sync"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1330,11 +1348,11 @@ stderr:
 |   commit      Commit messages in the team's pattern (project.commit): a ready command, and a lint. Never commits.
 |   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init        Detect the platform and stack and write .ai/project.yaml, plus a starter platform you pick.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
-|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
+|   platform    Built-in platforms: eject one into .ai/platforms/<name>/ for the team to own. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -1346,7 +1364,7 @@ stderr:
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
 
-=== step 66: dashcrew "help" "--project" "x"
+=== step 67: dashcrew "help" "--project" "x"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1358,7 +1376,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 67: dashcrew "--project" "x"
+=== step 68: dashcrew "--project" "x"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1375,11 +1393,11 @@ stderr:
 |   commit      Commit messages in the team's pattern (project.commit): a ready command, and a lint. Never commits.
 |   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init        Detect the platform and stack and write .ai/project.yaml, plus a starter platform you pick.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
-|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
+|   platform    Built-in platforms: eject one into .ai/platforms/<name>/ for the team to own. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -1391,7 +1409,7 @@ stderr:
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
 
-=== step 68: dashcrew "---x"
+=== step 69: dashcrew "---x"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1408,11 +1426,11 @@ stderr:
 |   commit      Commit messages in the team's pattern (project.commit): a ready command, and a lint. Never commits.
 |   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init        Detect the platform and stack and write .ai/project.yaml, plus a starter platform you pick.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
-|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
+|   platform    Built-in platforms: eject one into .ai/platforms/<name>/ for the team to own. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -1424,7 +1442,7 @@ stderr:
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
 
-=== step 69: dashcrew "--"
+=== step 70: dashcrew "--"
 exit: 0
 stdout:
 | Agent-agnostic AI coding toolkit with Flutter built in.
@@ -1440,11 +1458,11 @@ stdout:
 |   commit      Commit messages in the team's pattern (project.commit): a ready command, and a lint. Never commits.
 |   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init        Detect the platform and stack and write .ai/project.yaml, plus a starter platform you pick.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
-|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
+|   platform    Built-in platforms: eject one into .ai/platforms/<name>/ for the team to own. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -1457,7 +1475,7 @@ stdout:
 stderr: (empty)
 files: (unchanged)
 
-=== step 70: dashcrew "-"
+=== step 71: dashcrew "-"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1478,11 +1496,11 @@ stderr:
 |   commit      Commit messages in the team's pattern (project.commit): a ready command, and a lint. Never commits.
 |   doctor      Check that the generated toolkit is installed, untouched and current. Writes nothing.
 |   guard       Check one agent tool call: hook JSON on stdin, the answer on stdout or stderr and in the exit code.
-|   init        Detect the platform and stack and write .ai/project.yaml, plus a starter platform you pick.
+|   init        Detect the platform and stack and write .ai/project.yaml. Writes nothing else.
 |   knowledge   Shared product knowledge: scaffold the repo, keep its clone current, review proposals, find stale pages.
 |   link        Point a dependency in project.links at a local checkout. Writes only a git-excluded file.
 |   me          Your personal profile: ~/.dashcrew/me.yaml for you, a repo's .ai/me.yaml for your role there.
-|   platform    Platform starters: write a platform into .ai/platforms/<name>/ for the team to edit. Writes once.
+|   platform    Built-in platforms: eject one into .ai/platforms/<name>/ for the team to own. Writes once.
 |   release     Release lines from project.release_lines. Reads git only.
 |   skill       Project skills in .ai/skills/: adopt one from your own skills or a local folder. Never commits.
 |   spec        Feature specs (PRD and TRD) in the knowledge repo: scaffold, lint, revise and status. Never runs git write commands.
@@ -1494,14 +1512,14 @@ stderr:
 | Run "dashcrew help <command>" for more information about a command.
 files: (unchanged)
 
-=== step 71: dashcrew "worktree" "create"
+=== step 72: dashcrew "worktree" "create"
 exit: 1
 stdout: (empty)
 stderr:
 | . is not inside a git repository.
 files: (unchanged)
 
-=== step 72: dashcrew "worktree" "create" "-p"
+=== step 73: dashcrew "worktree" "create" "-p"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1518,21 +1536,21 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 73: dashcrew "worktree" "list"
+=== step 74: dashcrew "worktree" "list"
 exit: 1
 stdout: (empty)
 stderr:
 | . is not inside a git repository.
 files: (unchanged)
 
-=== step 74: dashcrew "worktree" "watch" "--interval" "0"
+=== step 75: dashcrew "worktree" "watch" "--interval" "0"
 exit: 1
 stdout: (empty)
 stderr:
 | . is not inside a git repository.
 files: (unchanged)
 
-=== step 75: dashcrew "check" "--pr-body"
+=== step 76: dashcrew "check" "--pr-body"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1552,7 +1570,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 76: dashcrew "check" "--pr-body" "missing.md"
+=== step 77: dashcrew "check" "--pr-body" "missing.md"
 exit: 64
 stdout: (empty)
 stderr:
@@ -1572,7 +1590,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 77: dashcrew "check" "--pr-body" ""
+=== step 78: dashcrew "check" "--pr-body" ""
 exit: 64
 stdout: (empty)
 stderr:
@@ -1592,7 +1610,7 @@ stderr:
 | Run "dashcrew help" to see global options.
 files: (unchanged)
 
-=== step 78: dashcrew "check" "--pr-body" "."
+=== step 79: dashcrew "check" "--pr-body" "."
 exit: 64
 stdout: (empty)
 stderr:

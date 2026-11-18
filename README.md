@@ -15,7 +15,7 @@ $ echo $?
 2
 ```
 
-Claude Code, Codex and Antigravity each get that answer in the format they read. Flutter is the built-in platform; any other stack works through `platform: other` or a platform of your own.
+Claude Code, Codex and Antigravity each get that answer in the format they read. Flutter and Go are built-in platforms; any other stack works through `platform: other` or a platform of your own.
 
 Not affiliated with or endorsed by Google, the Flutter team, Anthropic or OpenAI.
 

@@ -150,6 +150,15 @@ func Detect(projectDir string, remoteBranches []string, platform string) (*Detec
 			}
 		}
 	}
+	if platform == "go" {
+		for _, pack := range goPacksIn(projectDir) {
+			candidate := newCandidate(pack.family, pack.option, "")
+			candidate.Packages = []string{strings.TrimSuffix(pack.evidence, " in go.mod")}
+			candidate.Evidence = []string{pack.evidence}
+			detection.Stack.Set(pack.family, append(detection.Stack.Value(pack.family), candidate))
+		}
+		return detection, nil
+	}
 	if platform != profile.DefaultPlatform {
 		return detection, nil
 	}

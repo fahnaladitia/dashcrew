@@ -13,7 +13,7 @@ core/ + packs/ + platforms/ (shipped)  --+
                                                                    .ai/lock.json     hashes, versions, owned entries
 ```
 
-- **Neutral sources** are Markdown or YAML with front matter, with no agent-specific fields: `core/` (rules, skills, workflows, the two subagents, the PR template), `packs/<family>/<option>/` shared by every platform, and `platforms/<name>/` (today `flutter`). `catalog_embed.go` builds them into the binary, with `starters/` (`dashcrew platform new`) and `personal/` (`dashcrew me`). Their format is in [catalog-format.md](catalog-format.md).
+- **Neutral sources** are Markdown or YAML with front matter, with no agent-specific fields: `core/` (rules, skills, workflows, the two subagents, the PR template), `packs/<family>/<option>/` shared by every platform, and `platforms/<name>/` (`flutter`, `go`). `catalog_embed.go` builds them into the binary, with `personal/` (`dashcrew me`). Their format is in [catalog-format.md](catalog-format.md).
 - **The profile** `.ai/project.yaml` picks a platform, the stack options and the agents.
 - **`sync`** loads the catalog, renders it for the profile, hands the result to one adapter per agent, writes the guard policy and shim, and records every file it owns in the lock.
 - **The guard** runs on every tool call, through each agent's pre-tool hook and the committed shim, and decides from the policy alone.
@@ -29,7 +29,7 @@ core/ + packs/ + platforms/ (shipped)  --+
 | Writing | `sync` (the run and the lock), `adapters` (per-agent files), `agents` (the list of agents), `projectfiles` (writes inside the project, never through a link), `filemode`, `pathstyle`, `version` |
 | Guard | `guard`: `event.go` reads each agent's hook JSON into one event, `unwrap.go` finds the commands inside nested shells and wrappers, `decide.go`, `push.go`, `backend.go` and `knowledge.go` apply the policy, `HookResponse` in `decide.go` answers in the agent's format, `run.go` ties it together, `malformed.go` logs what it could not read, `shim.go` and `policy.go` are what `sync` writes |
 | Checks | `doctor` (one file per agent: `agent_claude.go`, `agent_codex.go`, `agent_antigravity.go`), `check` (the PR gate), `commit` (suggest and lint), `deps` and `ports` (parts of `check`) |
-| Project setup | `initproject` (`init`), `starter` (`platform new`), `projectskill` (`skill adopt`), `me` (the personal profile) |
+| Project setup | `initproject` (`init`), `eject` (`platform new`), `projectskill` (`skill adopt`), `me` (the personal profile) |
 | Team features | `knowledge`, `knowledgemcp`, `spec`, `lines`, `ledger`, `link`, `worktree`, `usage` |
 | Tests only | `conformance` (the goldens of `test/golden/`) |
 
