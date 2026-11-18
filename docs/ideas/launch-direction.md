@@ -2,6 +2,8 @@
 
 Outcome of an idea-refine session on `docs/ROADMAP.md`, 2026-11-17. Chosen: the team layer as the substance, the guard as the story, launch before the 1.0 freeze.
 
+> Changed 2026-11-18: the launch does not wait for Cursor. dashcrew stays on Claude Code, Codex and Antigravity until 1.0.0, and Cursor, Gemini CLI and Copilot come after it; `docs/ROADMAP.md` is the current plan.
+
 ## Problem Statement
 
 How might we make dashcrew the tool mixed-agent teams trust to run their AI coding agents, so that a visitor from GitHub Trending understands it in 30 seconds, tries it in one command, and keeps using it?

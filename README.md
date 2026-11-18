@@ -79,7 +79,7 @@ It prevents accidents, not a determined attacker. It is not a sandbox, and its k
 | | dashcrew | rulesync | Ruler | Hand-written hooks |
 |---|---|---|---|---|
 | Install | one Go binary | npm, Homebrew or a single binary | npm (Node.js 20+) | per agent |
-| Agents | Claude Code, Codex, Antigravity; Cursor next | 60+ tool targets | 30+ agents | the one you write it for |
+| Agents | Claude Code, Codex, Antigravity | 60+ tool targets | 30+ agents | the one you write it for |
 | Rules, skills, subagents and MCP from one source | yes | yes | yes (skills and subagents experimental) | no |
 | A shipped policy for git, formatters and read-only subagents, nested shells unwrapped | one policy for every agent | generates the hook and permission config you write | no | what you write |
 | A lock, and a CI check for hand edits and stale output | `dashcrew check` | not in its README | a CI recipe comparing `git status` | no |
