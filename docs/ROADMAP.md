@@ -119,14 +119,15 @@ Goal: a visitor understands dashcrew in 30 seconds, tries it in one command, and
   - [x] What differs per agent lives in its adapter: the doctor hook check, the always-on files, the `me sync` paths and the guard minimum. Five per-agent `switch` statements remain after `internal/agents` (doctor, budget, `me sync`, `sync`, `guard/malformed.go`); a new agent should be one package and one golden.
   - [ ] Recorded agent inputs: real hook payloads per agent and version in `internal/guard/testdata/payloads/`, run through each adapter's hook command in a test, and refreshed by the release checklist's live run. Goldens pin the bytes dashcrew writes, not what agents send.
 - **Front page**
-  - [ ] README under 150 lines:
+  - [x] README under 150 lines (plan: `docs/plans/v0.8-front-page-plan.md`); a text demo of a blocked push holds the place of the GIF:
     - a one-sentence hero;
     - the guard GIF;
     - three "why" bullets with the team layer (lock and drift check in CI, team and personal profiles, one guard policy);
     - a quickstart;
     - a comparison table against rulesync, Ruler and standalone guard hooks.
-  - [ ] Move reference material to `docs/` (profile reference, release lines, knowledge, specs, troubleshooting, migration notes), and add `docs/architecture.md`.
-  - [ ] Remove stale lines (`README.md:9`, `:47`, SECURITY.md "before the first tagged release"); drop internal plan codes (P3, P4, P10b) from the README and CHANGELOG.
+  - [ ] Record the guard GIF (an agent's nested `git push` blocked in two agents) and put it in place of the README's text demo.
+  - [x] Move reference material to `docs/` (profile reference, release lines, knowledge, specs, troubleshooting, migration notes), and add `docs/architecture.md`.
+  - [x] Remove stale lines (`README.md:9`, `:47`, SECURITY.md "before the first tagged release"); drop internal plan codes (P3, P4, P10b) from the README and CHANGELOG.
   - [ ] Repository description ("One source of rules, skills and guard hooks for every AI coding agent. One Go binary, any stack."), topics, homepage, a 1280×640 social preview, badges, Discussions on, and 5+ `good first issue` items.
 - **Agent commit and push** (plan: `docs/plans/agent-push-plan.md`)
   - [x] `policy.agent_push`: at the end of a task the agent asks whether to commit and push the task branch; the guard still blocks force, delete, `--all`/`--mirror`/`--tags`, base branches and a push without a named branch.
