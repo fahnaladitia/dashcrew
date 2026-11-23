@@ -99,7 +99,7 @@ The `flutter` platform ships these families, and `go` ships `http` (`nethttp`, `
 | `di` | `get_it` (param `injectable`), `riverpod`, `provider`, `none` | registration rules |
 | `router` | `go_router`, `auto_route`, `getx`, `none` | navigation rules |
 | `network` | `dio`, `http`, `retrofit`, `none` | client placement, error mapping, test client |
-| `storage` | `hive`, `shared_preferences`, `sqflite`, `none` | access through repositories, migrations |
+| `storage` | `hive`, `shared_preferences`, `sqflite`, `drift`, `none` | access through repositories, migrations |
 | `test` | `manual-fakes`, `mocktail`, `mockito`, `none` | mocking conventions |
 | `analytics` | `posthog`, `firebase`, `mixpanel`, `none` | ask-before-tracking, facade-only imports |
 | `tracker` | `clickup`, `github` (param `mode`: `project` or `labels`), `none` | task status flow: start when the branch exists, review with the PR link when the PR exists, only for work that started from a task |

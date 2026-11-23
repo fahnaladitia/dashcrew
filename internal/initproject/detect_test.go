@@ -74,7 +74,7 @@ func TestEachPackageDetectsItsFamily(t *testing.T) {
 		{"retrofit", "network: retrofit"},
 		{"chopper", "network: other chopper"},
 		{"isar", "storage: other isar"},
-		{"drift", "storage: other drift"},
+		{"drift", "storage: drift"},
 		{"sqflite", "storage: sqflite"},
 		{"shared_preferences", "storage: shared_preferences"},
 		{"firebase_analytics", "analytics: firebase"},

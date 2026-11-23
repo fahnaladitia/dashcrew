@@ -65,7 +65,7 @@ var DetectionRules = map[string][]DetectionRule{
 	"shared_preferences": {rule("storage", "shared_preferences")},
 	"sqflite":            {rule("storage", "sqflite")},
 	"isar":               {otherRule("storage", "isar")},
-	"drift":              {otherRule("storage", "drift")},
+	"drift":              {rule("storage", "drift")},
 	"posthog_flutter":    {rule("analytics", "posthog")},
 	"firebase_analytics": {rule("analytics", "firebase")},
 	"mixpanel_flutter":   {rule("analytics", "mixpanel")},

@@ -1,3 +1,7 @@
+## Unreleased
+
+- New `storage: drift` pack for Flutter: one database class opened once, generated code never edited, versioned `onUpgrade` steps, `variables` for raw SQL, awaited queries in a transaction, and in-memory database tests. `init` proposes it for `drift` instead of `{use: other, name: drift}`; a profile that already says `use: other` keeps the generic rules until it switches (#56).
+
 ## 0.8.0
 
 Launch-ready: Go is a built-in platform, `dashcrew guard init` tries the guard in ten seconds, the agent can commit and push behind a prompt the guard enforces (`ask`), `install.sh` installs a release, and the guard no longer lets an unknown tool through in silence. Run `dashcrew sync` and commit what it writes: every project with Claude Code gets one changed line in `.claude/settings.json` (the hook passes `claude-code`), a project on `platform: other` or a project platform gets a reworded testing line in AGENTS.md, and `.ai/lock.json` changes. `guard_min_version` rises to 0.8.0 only in a project that sets `agent_commit: ask`; there, every teammate installs 0.8.0 before that sync is committed. 0.7.0 was published as a release candidate only (`v0.7.0-rc.1`); its changes, below, ship in 0.8.0.

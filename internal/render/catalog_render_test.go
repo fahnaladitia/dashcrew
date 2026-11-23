@@ -210,6 +210,7 @@ func TestPackHeadings(t *testing.T) {
 		"network: none":               "## Network: no HTTP package",
 		"storage: shared_preferences": "## Local storage: shared_preferences",
 		"storage: sqflite":            "## Local storage: sqflite",
+		"storage: drift":              "## Local storage: drift",
 		"test: mocktail":              "## Tests: mocktail",
 		"test: mockito":               "## Tests: mockito",
 		"test: none":                  "## Tests: no mocking convention",
