@@ -153,6 +153,24 @@ func TestInstallScriptInstallsTheLatestRelease(t *testing.T) {
 	}
 }
 
+func TestInstallScriptGivesFishItsOwnPathHint(t *testing.T) {
+	skipWithoutPOSIX(t)
+	releases := fakeRelease{latest: "v9.9.9", binaries: map[string]string{"v9.9.9": "dashcrew 9.9.9"}}.serve(t)
+	dir := filepath.Join(t.TempDir(), "bin")
+
+	out, err := runInstall(t, releases, dir, "SHELL=/opt/homebrew/bin/fish")
+
+	if err != nil {
+		t.Fatalf("%v\n%s", err, out)
+	}
+	if !strings.Contains(out, "fish_add_path "+dir+"\n") {
+		t.Errorf("output does not give fish a fish_add_path line for %s:\n%s", dir, out)
+	}
+	if strings.Contains(out, "export PATH") {
+		t.Errorf("output gives fish an export line it cannot read:\n%s", out)
+	}
+}
+
 func TestInstallScriptInstallsAPinnedVersion(t *testing.T) {
 	skipWithoutPOSIX(t)
 	releases := fakeRelease{latest: "v9.9.9", binaries: map[string]string{"v9.9.9": "dashcrew 9.9.9", "v9.9.8": "dashcrew 9.9.8"}}.serve(t)

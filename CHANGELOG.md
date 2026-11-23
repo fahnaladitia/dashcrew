@@ -1,5 +1,6 @@
 ## Unreleased
 
+- Changed: when the install folder is not on `PATH` and `$SHELL` is fish, `install.sh` prints `fish_add_path <dir>` instead of an `export PATH` line fish cannot read (#59).
 - Docs: `docs/recipes.md` holds four complete profiles to start from: a Flutter app with bloc, get_it, go_router and two flavors, a Python service on `platform: other`, a team on Claude Code, Codex and Antigravity with the GitHub merge gate and `agent_commit: ask`, and a Go service (#60).
 
 ## 0.8.0

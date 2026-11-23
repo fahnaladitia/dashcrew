@@ -110,7 +110,13 @@ mv -f "$staged" "$install_dir/dashcrew"
 printf 'Installed dashcrew %s to %s\n' "$version" "$install_dir/dashcrew"
 case ":${PATH:-}:" in
   *":$install_dir:"*) ;;
-  *) printf '%s is not on PATH. Add it, for example in your shell profile:\n  export PATH="%s:$PATH"\n' "$install_dir" "$install_dir" ;;
+  *)
+    # fish cannot read an export line; fish_add_path keeps the folder for every later session.
+    case "${SHELL:-}" in
+      */fish) printf '%s is not on PATH. Add it, for example by running once:\n  fish_add_path %s\n' "$install_dir" "$install_dir" ;;
+      *) printf '%s is not on PATH. Add it, for example in your shell profile:\n  export PATH="%s:$PATH"\n' "$install_dir" "$install_dir" ;;
+    esac
+    ;;
 esac
 first=$(command -v dashcrew 2>/dev/null || true)
 if [ -n "$first" ] && [ "$first" != "$install_dir/dashcrew" ]; then
