@@ -17,7 +17,7 @@ stdout:
 |   local packages: packages/core (path dependencies)
 |   base branches: main, develop (remote branches)
 | analytics [posthog]: design [-]: di [get_it]:   expected one of get_it, none, provider, riverpod, other <package>, - (none)
-| di [get_it]: network [dio | http]:   expected one of dio, http, none, retrofit, other <package>, - (none)
+| di [get_it]: network [dio | http]:   expected one of chopper, dio, http, none, retrofit, other <package>, - (none)
 | network [dio | http]: qa [-]: router [go_router]: state [bloc]: storage [hive]: test [mocktail]: tracker [-]: wrote .ai/project.yaml
 | next: dashcrew sync
 stderr: (empty)

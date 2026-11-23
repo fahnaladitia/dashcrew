@@ -72,7 +72,7 @@ func TestEachPackageDetectsItsFamily(t *testing.T) {
 		{"mobx", "state: other mobx"},
 		{"http", "network: http"},
 		{"retrofit", "network: retrofit"},
-		{"chopper", "network: other chopper"},
+		{"chopper", "network: chopper"},
 		{"isar", "storage: other isar"},
 		{"drift", "storage: drift"},
 		{"sqflite", "storage: sqflite"},

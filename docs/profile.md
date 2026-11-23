@@ -98,7 +98,7 @@ The `flutter` platform ships these families, and `go` ships `http` (`nethttp`, `
 | `state` | `bloc`, `riverpod`, `provider`, `none` | rules, a patterns skill, test guidance |
 | `di` | `get_it` (param `injectable`), `riverpod`, `provider`, `none` | registration rules |
 | `router` | `go_router`, `auto_route`, `getx`, `none` | navigation rules |
-| `network` | `dio`, `http`, `retrofit`, `none` | client placement, error mapping, test client |
+| `network` | `dio`, `http`, `retrofit`, `chopper`, `none` | client placement, error mapping, test client |
 | `storage` | `hive`, `shared_preferences`, `sqflite`, `drift`, `none` | access through repositories, migrations |
 | `test` | `manual-fakes`, `mocktail`, `mockito`, `none` | mocking conventions |
 | `analytics` | `posthog`, `firebase`, `mixpanel`, `none` | ask-before-tracking, facade-only imports |

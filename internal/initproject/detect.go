@@ -57,7 +57,7 @@ var DetectionRules = map[string][]DetectionRule{
 	"dio":                {rule("network", "dio")},
 	"http":               {rule("network", "http")},
 	"retrofit":           {rule("network", "retrofit")},
-	"chopper":            {otherRule("network", "chopper")},
+	"chopper":            {rule("network", "chopper")},
 	"hive":               {rule("storage", "hive")},
 	"hive_ce":            {rule("storage", "hive")},
 	"hive_flutter":       {rule("storage", "hive")},

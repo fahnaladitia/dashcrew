@@ -207,6 +207,7 @@ func TestPackHeadings(t *testing.T) {
 		"router: none":                "## Navigation: Navigator",
 		"network: http":               "## Network: http",
 		"network: retrofit":           "## Network: Retrofit",
+		"network: chopper":            "## Network: Chopper",
 		"network: none":               "## Network: no HTTP package",
 		"storage: shared_preferences": "## Local storage: shared_preferences",
 		"storage: sqflite":            "## Local storage: sqflite",

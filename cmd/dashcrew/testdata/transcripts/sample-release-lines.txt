@@ -129,7 +129,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:1cf48fb4beea6249
-+ w/.ai/lock.json  -rw-r--r-- sha256:5713584834c002fc
++ w/.ai/lock.json  -rw-r--r-- sha256:6074516788565c9d
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:2e98a0bf10f22e04
