@@ -207,14 +207,17 @@ func TestPackHeadings(t *testing.T) {
 		"router: none":                "## Navigation: Navigator",
 		"network: http":               "## Network: http",
 		"network: retrofit":           "## Network: Retrofit",
+		"network: chopper":            "## Network: Chopper",
 		"network: none":               "## Network: no HTTP package",
 		"storage: shared_preferences": "## Local storage: shared_preferences",
 		"storage: sqflite":            "## Local storage: sqflite",
+		"storage: drift":              "## Local storage: drift",
 		"test: mocktail":              "## Tests: mocktail",
 		"test: mockito":               "## Tests: mockito",
 		"test: none":                  "## Tests: no mocking convention",
 		"analytics: firebase":         "## Analytics: Firebase",
 		"analytics: mixpanel":         "## Analytics: Mixpanel",
+		"analytics: amplitude":        "## Analytics: Amplitude",
 	}
 	for stack, heading := range headings {
 		if content := targetContent(t, renderShipped(t, "toolkit: 1\nagents: [claude-code]\nstack: { "+stack+" }\n"), "agents_md"); !strings.Contains(content, heading) {
@@ -317,7 +320,7 @@ func TestPrTemplate(t *testing.T) {
 	if got := prHeadings(t, ""); !reflect.DeepEqual(got, core) {
 		t.Errorf("core %v", got)
 	}
-	for _, analytics := range []string{"posthog", "firebase", "mixpanel"} {
+	for _, analytics := range []string{"posthog", "firebase", "mixpanel", "amplitude"} {
 		want := []string{"## Summary", "## Changes", "## Affected files", "## Testing", "## QA Identifiers", "## Analytics", "## Notes / not done"}
 		if got := prHeadings(t, "qa: semantics-identifier, analytics: "+analytics); !reflect.DeepEqual(got, want) {
 			t.Errorf("%s: %v", analytics, got)

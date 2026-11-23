@@ -72,16 +72,17 @@ func TestEachPackageDetectsItsFamily(t *testing.T) {
 		{"mobx", "state: other mobx"},
 		{"http", "network: http"},
 		{"retrofit", "network: retrofit"},
-		{"chopper", "network: other chopper"},
+		{"chopper", "network: chopper"},
 		{"isar", "storage: other isar"},
-		{"drift", "storage: other drift"},
+		{"drift", "storage: drift"},
 		{"sqflite", "storage: sqflite"},
 		{"shared_preferences", "storage: shared_preferences"},
 		{"firebase_analytics", "analytics: firebase"},
 		{"mixpanel_flutter", "analytics: mixpanel"},
+		{"amplitude_flutter", "analytics: amplitude"},
 	}
-	if len(rows) != 21 {
-		t.Fatalf("%d rows, the Dart test has 21", len(rows))
+	if len(rows) != 22 {
+		t.Fatalf("%d rows, want 22", len(rows))
 	}
 	for _, row := range rows {
 		t.Run(row.pkg+" detects "+row.expected, func(t *testing.T) {
