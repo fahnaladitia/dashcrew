@@ -1,3 +1,7 @@
+## Unreleased
+
+- Docs: `docs/recipes.md` holds four complete profiles to start from: a Flutter app with bloc, get_it, go_router and two flavors, a Python service on `platform: other`, a team on Claude Code, Codex and Antigravity with the GitHub merge gate and `agent_commit: ask`, and a Go service (#60).
+
 ## 0.8.0
 
 Launch-ready: Go is a built-in platform, `dashcrew guard init` tries the guard in ten seconds, the agent can commit and push behind a prompt the guard enforces (`ask`), `install.sh` installs a release, and the guard no longer lets an unknown tool through in silence. Run `dashcrew sync` and commit what it writes: every project with Claude Code gets one changed line in `.claude/settings.json` (the hook passes `claude-code`), a project on `platform: other` or a project platform gets a reworded testing line in AGENTS.md, and `.ai/lock.json` changes. `guard_min_version` rises to 0.8.0 only in a project that sets `agent_commit: ask`; there, every teammate installs 0.8.0 before that sync is committed. 0.7.0 was published as a release candidate only (`v0.7.0-rc.1`); its changes, below, ship in 0.8.0.

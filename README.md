@@ -97,6 +97,7 @@ Pre-1.0: the profile format and CLI can still change before 1.0, and each change
 | | |
 |---|---|
 | [docs/profile.md](docs/profile.md) | `.ai/project.yaml`, platforms, stack options, choosing skills |
+| [docs/recipes.md](docs/recipes.md) | complete example profiles: Flutter, Python, a multi-agent team, Go |
 | [docs/commands.md](docs/commands.md) | every command and flag |
 | [docs/guard.md](docs/guard.md) | what the guard blocks, how it reads hidden commands, where it runs |
 | [docs/team.md](docs/team.md) | setting up a team, the merge gate on GitHub, what each agent enforces |
