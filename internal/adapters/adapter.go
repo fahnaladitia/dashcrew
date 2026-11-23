@@ -129,8 +129,8 @@ func AgentsSkillFile(name string, meta catalog.DocMeta, body string) string {
 	return "---\nname: " + name + "\ndescription: " + jsonString(description) + "\n---\n\n" + arguments + body
 }
 
-// rolesIn yields each role target whose role exists and matches context.
-func rolesIn(c *catalog.Catalog, targets []render.RenderedTarget, context map[string]any, each func(role catalog.RoleMeta, body string)) {
+// rolesIn yields each role target whose role exists and matches context, with the profile's `roles` override applied.
+func rolesIn(c *catalog.Catalog, p *profile.Profile, targets []render.RenderedTarget, context map[string]any, each func(role catalog.RoleMeta, body string)) {
 	for _, target := range targets {
 		name, ok := strings.CutPrefix(target.Target, "role/")
 		if !ok {
@@ -140,8 +140,27 @@ func rolesIn(c *catalog.Catalog, targets []render.RenderedTarget, context map[st
 		if !ok || !render.WhenMatches(role.When, context) {
 			continue
 		}
-		each(role, target.Content)
+		each(withOverride(role, p.Roles[name]), target.Content)
 	}
+}
+
+// withOverride is role with the profile's model and effort in place of its own. `inherit` clears the value, so no
+// adapter writes the line: the agent then takes the session's model and effort, or the member's own default for
+// subagents (Claude Code's `CLAUDE_CODE_SUBAGENT_MODEL`, Codex's `[agents] default_subagent_reasoning_effort`).
+func withOverride(role catalog.RoleMeta, override profile.RoleOverride) catalog.RoleMeta {
+	pick := func(own, profileValue *string) *string {
+		switch {
+		case profileValue == nil:
+			return own
+		case *profileValue == "inherit":
+			return nil
+		default:
+			return profileValue
+		}
+	}
+	role.Model = pick(role.Model, override.Model)
+	role.Effort = pick(role.Effort, override.Effort)
+	return role
 }
 
 // readJSONObject reads a JSON object file; a missing file is an empty object.

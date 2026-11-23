@@ -39,6 +39,26 @@ them in the format it reads.
 
 dashcrew keeps AGENTS.md under the smallest cut of the selected agents, and `doctor` warns above it.
 
+## Subagent model and effort
+
+The model and effort of `reviewer` and `explorer` are written into their committed files, so they are the same for every member. The team changes them in `.ai/project.yaml` (`roles`, see [the profile](profile.md#the-profile-aiprojectyaml)):
+
+```yaml
+roles:
+  reviewer: { model: standard, effort: medium }
+  explorer: { model: inherit, effort: inherit }
+```
+
+A value the team writes wins over every member's own setting: Claude Code and Codex apply a subagent file's `model` and effort before any user default, and a same-named subagent in a member's home folder loses to the project's. To let each member choose, write `inherit`; the line is left out of the file, and each member sets their own default:
+
+| | Model | Effort |
+|---|---|---|
+| Claude Code | `CLAUDE_CODE_SUBAGENT_MODEL` in the `env` block of `~/.claude/settings.json` (Claude Code 2.1.251 or newer reads it as a default) | `CLAUDE_CODE_SUBAGENT_EFFORT` in the same block (2.1.316 or newer) |
+| Codex | not written by dashcrew in any case: `[agents] default_subagent_model` in `~/.codex/config.toml` | `[agents] default_subagent_reasoning_effort` in `~/.codex/config.toml` |
+| Antigravity | the session's model (`/model`, `--model`) | the session's effort (`/effort`, `--effort`) |
+
+A member who sets nothing runs the subagent on the session's model and effort. Claude Code also has switches that beat a value the team wrote, `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1` and `CLAUDE_CODE_EFFORT_LEVEL`, but they apply to every subagent, and the effort one to the main session too; dashcrew does not use them. While a subagent runs, Claude Code's `/tasks` shows the model it runs on.
+
 ## Merge gate on GitHub
 
 The plan is confirmed in the session by the task owner; the team reviews in the pull request, where this gate holds. GitHub is the only infrastructure.

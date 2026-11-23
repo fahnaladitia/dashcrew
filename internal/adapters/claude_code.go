@@ -65,7 +65,7 @@ func (a *ClaudeCode) McpServers() *omap.Map[any] {
 // AGENTS.md is reported in warnings.
 func (a *ClaudeCode) Files(p *profile.Profile, targets []render.RenderedTarget, context map[string]any, lockedFiles map[string]string, warnings *[]string) (*omap.Map[string], error) {
 	files := omap.New[string]()
-	rolesIn(a.catalog, targets, context, func(role catalog.RoleMeta, body string) {
+	rolesIn(a.catalog, p, targets, context, func(role catalog.RoleMeta, body string) {
 		files.Set(".claude/agents/"+role.Name+".md", claudeAgent(role, body))
 	})
 	docs, err := SkillDocs(a.catalog, p, targets, warnings)

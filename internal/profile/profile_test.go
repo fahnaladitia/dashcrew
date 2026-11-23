@@ -606,3 +606,42 @@ func TestAskReadsAsOnInTemplates(t *testing.T) {
 		t.Error("the profile's own policy was changed")
 	}
 }
+
+func TestRolesOverrideModelAndEffort(t *testing.T) {
+	p := parse(t, "toolkit: 1\nagents: [claude-code]\nroles:\n  reviewer: { model: standard, effort: medium }\n  explorer: { effort: inherit }\n")
+
+	str := func(s string) *string { return &s }
+	want := map[string]RoleOverride{
+		"reviewer": {Model: str("standard"), Effort: str("medium")},
+		"explorer": {Effort: str("inherit")},
+	}
+	if !reflect.DeepEqual(p.Roles, want) {
+		t.Errorf("roles %+v", p.Roles)
+	}
+	if _, ok := p.ToContext()["roles"]; ok {
+		t.Error("roles reached the template context")
+	}
+}
+
+func TestNoRolesKeyGivesNoOverrides(t *testing.T) {
+	if p := parse(t, "toolkit: 1\nagents: [claude-code]\n"); len(p.Roles) != 0 {
+		t.Errorf("roles %+v", p.Roles)
+	}
+}
+
+func TestRolesErrors(t *testing.T) {
+	for yaml, message := range map[string]string{
+		"roles: [reviewer]\n":                    "project.yaml roles: expected a map",
+		"roles: { planner: { effort: low } }\n":  "project.yaml roles.planner: unknown role, expected one of explorer, reviewer",
+		"roles: { reviewer: high }\n":            "project.yaml roles.reviewer: expected a map with model or effort",
+		"roles: { reviewer: { tools: [a] } }\n":  "project.yaml roles.reviewer.tools: unknown key",
+		"roles: { reviewer: { model: opus } }\n": "project.yaml roles.reviewer.model: expected high, standard or inherit",
+		"roles: { explorer: { effort: max } }\n": "project.yaml roles.explorer.effort: expected low, medium, high or inherit",
+		"roles: { explorer: { effort: 1 } }\n":   "project.yaml roles.explorer.effort: expected low, medium, high or inherit",
+	} {
+		_, err := Parse("toolkit: 1\nagents: [claude-code]\n"+yaml, known())
+		if err == nil || err.Error() != message {
+			t.Errorf("%q:\n got %v\nwant %s", yaml, err, message)
+		}
+	}
+}

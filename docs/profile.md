@@ -65,6 +65,7 @@ ci: { github: true, dashcrew_ref: v0.1.0 }
 | `ci.github` | `false` | write `.github/workflows/dashcrew.yml`, which runs `dashcrew check` on every pull request; see [Merge gate on GitHub](team.md#merge-gate-on-github) |
 | `ci.dashcrew_ref` | none | dashcrew release tag that workflow installs, `v0.1.0` or newer; required with `ci.github`. A commit or branch is refused |
 | `knowledge` | not set | `{repo: <git url or path>, name: <folder>}`: the team's shared knowledge repo; see [Shared knowledge](knowledge.md) |
+| `roles.<name>.model`, `.effort` | the role's `role.yaml`: `reviewer` `high`/`high`, `explorer` `standard`/`low` | model and effort of the `reviewer` and `explorer` subagents. `model`: `high` (Claude Code `opus`), `standard` (`sonnet`) or `inherit`; `effort`: `low`, `medium`, `high` or `inherit`. `inherit` leaves the line out, so the subagent takes the session's value or each member's own default; see [Subagent model and effort](team.md#subagent-model-and-effort). Codex reads only `effort`, Antigravity neither: its subagents always run on the session's model and effort |
 
 ## Platforms
 

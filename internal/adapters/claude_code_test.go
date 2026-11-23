@@ -198,3 +198,45 @@ func TestAdapterForNamesTheSupportedAgents(t *testing.T) {
 		t.Errorf("cursor: %v", err)
 	}
 }
+
+const roleOverrides = "roles:\n  reviewer: { model: standard, effort: medium }\n  explorer: { model: inherit, effort: inherit }\n"
+
+func TestProfileRolesOverrideTheRoleModelAndEffort(t *testing.T) {
+	c := shipped(t)
+	claude := files(t, c, NewClaudeCode(c, t.TempDir(), "flutter"), "toolkit: 1\nagents: [claude-code]\n"+roleOverrides)
+
+	if !strings.Contains(claude[".claude/agents/reviewer.md"], "tools: Read, Grep, Glob, Bash\nmodel: sonnet\neffort: medium\n---\n") {
+		t.Errorf("reviewer %q", claude[".claude/agents/reviewer.md"][:300])
+	}
+	if !strings.Contains(claude[".claude/agents/explorer.md"], "tools: Read, Grep, Glob, Bash\n---\n") {
+		t.Errorf("explorer %q", claude[".claude/agents/explorer.md"][:300])
+	}
+
+	codex := codexFiles(t, "toolkit: 1\nagents: [codex]\n"+roleOverrides)
+	if !strings.Contains(codex[".codex/agents/reviewer.toml"], "\nmodel_reasoning_effort = \"medium\"\n") {
+		t.Error("codex reviewer effort")
+	}
+	if strings.Contains(codex[".codex/agents/explorer.toml"], "model_reasoning_effort") {
+		t.Error("codex explorer effort written")
+	}
+
+	plainProfile := files(t, c, NewAntigravity(c, t.TempDir(), "flutter"), "toolkit: 1\nagents: [antigravity]\n")
+	overridden := files(t, c, NewAntigravity(c, t.TempDir(), "flutter"), "toolkit: 1\nagents: [antigravity]\n"+roleOverrides)
+	for _, role := range []string{"reviewer", "explorer"} {
+		if path := ".agents/agents/" + role + ".md"; overridden[path] != plainProfile[path] {
+			t.Errorf("antigravity %s changed", role)
+		}
+	}
+}
+
+func TestAKeyLeftOutKeepsTheRoleYamlValue(t *testing.T) {
+	c := shipped(t)
+	out := files(t, c, NewClaudeCode(c, t.TempDir(), "flutter"), "toolkit: 1\nagents: [claude-code]\nroles: { explorer: { effort: high } }\n")
+
+	if !strings.Contains(out[".claude/agents/explorer.md"], "model: sonnet\neffort: high\n") {
+		t.Error("explorer")
+	}
+	if !strings.Contains(out[".claude/agents/reviewer.md"], "model: opus\neffort: high\n") {
+		t.Error("reviewer")
+	}
+}

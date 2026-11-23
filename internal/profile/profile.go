@@ -40,6 +40,14 @@ type PlatformConfig struct {
 	Commands *omap.Map[any]
 }
 
+// RoleOverride is one `roles.<name>` entry of the profile; a nil field keeps the value of the role's `role.yaml`.
+type RoleOverride struct {
+	// Model is high, standard or inherit.
+	Model *string
+	// Effort is low, medium, high or inherit.
+	Effort *string
+}
+
 // KnownOptions maps every valid platform name, `other` included, to its stack families and their options in order.
 type KnownOptions map[string]*omap.Map[[]string]
 
@@ -58,7 +66,11 @@ var (
 	// OptionalPlatformCommands a platform may leave out.
 	OptionalPlatformCommands = []string{"format"}
 
-	topLevelKeys = []string{"toolkit", "platform", "platform_config", "agents", "language", "stack", "project", "policy", "paths", "ci", "knowledge"}
+	topLevelKeys = []string{"toolkit", "platform", "platform_config", "agents", "language", "stack", "project", "policy", "paths", "ci", "knowledge", "roles"}
+	// RoleNames are the roles a profile may override, sorted: the roles of `core/roles/`, where every role lives.
+	RoleNames = []string{"explorer", "reviewer"}
+	// roleValues are the values each `roles.<name>` key accepts, in the order error messages list them.
+	roleValues = omap.Of[[]string]("model", []string{"high", "standard", "inherit"}, "effort", []string{"low", "medium", "high", "inherit"})
 )
 
 func ciDefaults() *omap.Map[any] { return omap.Of[any]("github", false, "dashcrew_ref", nil) }
@@ -110,6 +122,9 @@ type Profile struct {
 	// Knowledge is the shared knowledge repo; nil when the profile has no `knowledge` key. Templates see only
 	// `has_knowledge`, which `when:` gates on, so a profile without it renders as before.
 	Knowledge *Knowledge
+	// Roles holds `roles`, the model and effort a role takes instead of its `role.yaml` values; empty without the key.
+	// Kept out of ToContext: only the adapters read it.
+	Roles map[string]RoleOverride
 	// Warnings are keys the profile still accepts but ignores.
 	Warnings []string
 }
@@ -234,7 +249,50 @@ func Parse(text string, known KnownOptions) (*Profile, error) {
 	if profile.Knowledge, err = parseKnowledge(root.Value("knowledge")); err != nil {
 		return nil, err
 	}
+	if profile.Roles, err = parseRoles(root.Value("roles")); err != nil {
+		return nil, err
+	}
 	return profile, nil
+}
+
+// parseRoles reads `roles`: a map of role name to `model` and `effort`, each from roleValues.
+func parseRoles(value any) (map[string]RoleOverride, error) {
+	roles := map[string]RoleOverride{}
+	if value == nil {
+		return roles, nil
+	}
+	entries, ok := value.(*omap.Map[any])
+	if !ok {
+		return nil, fail("roles", "expected a map")
+	}
+	for _, name := range entries.Keys() {
+		path := "roles." + name
+		if !contains(RoleNames, name) {
+			return nil, fail(path, "unknown role, expected one of "+strings.Join(RoleNames, ", "))
+		}
+		keys, ok := entries.Value(name).(*omap.Map[any])
+		if !ok {
+			return nil, fail(path, "expected a map with model or effort")
+		}
+		var override RoleOverride
+		for _, key := range keys.Keys() {
+			allowed, known := roleValues.Get(key)
+			if !known {
+				return nil, fail(path+"."+key, "unknown key")
+			}
+			text, isString := keys.Value(key).(string)
+			if !isString || !contains(allowed, text) {
+				return nil, fail(path+"."+key, "expected "+strings.Join(allowed[:len(allowed)-1], ", ")+" or "+allowed[len(allowed)-1])
+			}
+			if key == "model" {
+				override.Model = &text
+			} else {
+				override.Effort = &text
+			}
+		}
+		roles[name] = override
+	}
+	return roles, nil
 }
 
 // checkAgentGit refuses `policy.agent_commit` and `policy.agent_push` unless each is true, false or ask, and unless
