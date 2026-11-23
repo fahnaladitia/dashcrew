@@ -151,9 +151,10 @@ jobs:
           go build -o "$RUNNER_TEMP/current/dashcrew" ./cmd/dashcrew
           .github/scripts/upgrade-check.sh "$RUNNER_TEMP/previous/dashcrew" "$RUNNER_TEMP/current/dashcrew" test/golden/sample-other/project.yaml
 
-  # install.sh from this checkout installs the latest published release on every run. brew and go install test what
-  # is already published, so they run on the daily schedule and a manual run only: a broken tap must not block
-  # unrelated PRs. Every route that runs must install the same version.
+  # On a push or a PR, install.sh from this checkout installs this checkout's build from a local releases folder: a
+  # download from the GitHub releases counts as an install there, so CI must not add to the count on every commit.
+  # The published release is installed only on the daily schedule and a manual run, through install.sh, brew and
+  # go install: a broken tap must not block unrelated PRs. Every route that runs must install the same version.
   install:
     name: install (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -166,15 +167,29 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: install.sh
-        run: |
-          DASHCREW_INSTALL_DIR="$RUNNER_TEMP/script" sh install.sh
-          "$RUNNER_TEMP/script/dashcrew" --version | tee "$RUNNER_TEMP/script.version"
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         with:
           go-version-file: go.mod
           cache: false
+      - name: install.sh (this checkout's build)
+        if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
+        run: |
+          version=0.0.0-ci
+          archive="dashcrew_${version}_$(go env GOOS)_$(go env GOARCH).tar.gz"
+          release="$RUNNER_TEMP/releases/download/v$version"
+          mkdir -p "$release" "$RUNNER_TEMP/build"
+          go build -trimpath -o "$RUNNER_TEMP/build/dashcrew" \
+            -ldflags "-X github.com/fahnaladitia/dashcrew/internal/version.Version=$version" ./cmd/dashcrew
+          tar -czf "$release/$archive" -C "$RUNNER_TEMP/build" dashcrew
+          (cd "$release" && shasum -a 256 "$archive" > checksums.txt)
+          DASHCREW_RELEASES_URL="file://$RUNNER_TEMP/releases" DASHCREW_VERSION="$version" \
+            DASHCREW_INSTALL_DIR="$RUNNER_TEMP/script" sh install.sh
+          "$RUNNER_TEMP/script/dashcrew" --version
+      - name: install.sh (published release)
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: |
+          DASHCREW_INSTALL_DIR="$RUNNER_TEMP/script" sh install.sh
+          "$RUNNER_TEMP/script/dashcrew" --version | tee "$RUNNER_TEMP/script.version"
       - name: go install
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         run: |
