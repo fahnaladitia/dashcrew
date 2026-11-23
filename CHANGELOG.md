@@ -1,4 +1,6 @@
-## Unreleased
+## 0.8.1
+
+A team can now choose the model and effort of the `reviewer` and `explorer` subagents. Nothing changes for a project that does not use it: upgrade the binary, and the next `dashcrew sync` rewrites only the version in `.ai/lock.json`. A project that adds `roles` to `.ai/project.yaml` needs dashcrew 0.8.1 on every machine and as `ci.dashcrew_ref`, since an older dashcrew stops at `project.yaml roles: unknown key`. `guard_min_version` does not change.
 
 - New `roles` key in `.ai/project.yaml`: a team sets the model and effort of the `reviewer` and `explorer` subagents (`roles: { reviewer: { model: standard, effort: medium } }`) instead of the catalog's `high`/`high` and `standard`/`low`. `inherit` leaves the line out of the generated file, so each member's own default applies (`CLAUDE_CODE_SUBAGENT_MODEL` and `CLAUDE_CODE_SUBAGENT_EFFORT` for Claude Code, `[agents] default_subagent_reasoning_effort` for Codex); see `docs/team.md`. Codex reads only `effort`, and Antigravity subagents keep the session's model and effort. A profile without `roles` renders as before.
 
