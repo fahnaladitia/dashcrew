@@ -58,7 +58,7 @@ func (a *Codex) McpServerNames() []string {
 // Files are the role TOML files and the shared skill files.
 func (a *Codex) Files(p *profile.Profile, targets []render.RenderedTarget, context map[string]any, lockedFiles map[string]string, warnings *[]string) (*omap.Map[string], error) {
 	files := omap.New[string]()
-	rolesIn(a.catalog, targets, context, func(role catalog.RoleMeta, body string) {
+	rolesIn(a.catalog, p, targets, context, func(role catalog.RoleMeta, body string) {
 		files.Set(".codex/agents/"+role.Name+".toml", codexRole(role, body))
 	})
 	docs, err := SkillDocs(a.catalog, p, targets, warnings)

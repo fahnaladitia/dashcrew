@@ -573,3 +573,18 @@ func TestDigestIgnoresHiddenFilesAndFolders(t *testing.T) {
 		t.Errorf("a hidden folder changed the digest: %s, want %s (%v, %v)", b, a, errA, errB)
 	}
 }
+
+func TestProfileRoleNamesAreTheShippedRoles(t *testing.T) {
+	catalog, err := LoadEmbedded()
+	if err != nil {
+		t.Fatal(err)
+	}
+	names := make([]string, 0, len(catalog.Roles))
+	for name := range catalog.Roles {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	if !reflect.DeepEqual(names, profile.RoleNames) {
+		t.Errorf("catalog roles %v, profile.RoleNames %v", names, profile.RoleNames)
+	}
+}

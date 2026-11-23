@@ -54,7 +54,7 @@ model: high                 # high | standard (adapter maps to a concrete model)
 effort: high                # low | medium | high
 ```
 
-`read` roles never edit files; `write-plans` roles may write only under `{{paths.plans}}`; `write-code` roles edit source and tests. The catalog ships two `read` roles, `reviewer` and `explorer`, both in `core/roles/`. Roles are defined only there: packs and platforms add skills and workflow sections, never new roles. There is no `orchestrate` or `checkpoint` workflow; the chain in AGENTS.md runs the workflows.
+A project overrides `model` and `effort` in its profile (`roles.<name>`, see [profile](profile.md)), never `capability`. `read` roles never edit files; `write-plans` roles may write only under `{{paths.plans}}`; `write-code` roles edit source and tests. The catalog ships two `read` roles, `reviewer` and `explorer`, both in `core/roles/`. Roles are defined only there: packs and platforms add skills and workflow sections, never new roles. There is no `orchestrate` or `checkpoint` workflow; the chain in AGENTS.md runs the workflows.
 
 ## Platforms
 
