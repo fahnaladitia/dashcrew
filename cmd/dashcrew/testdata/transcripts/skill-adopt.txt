@@ -111,7 +111,7 @@ files:
 + w/.agents/skills/verification-loop  dir
 + w/.agents/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:487563193e58e790
 + w/.agents/skills/verify  dir
-+ w/.agents/skills/verify/SKILL.md  -rw-r--r-- sha256:226aa63da3c01d8f
++ w/.agents/skills/verify/SKILL.md  -rw-r--r-- sha256:d042ffc235fe6e8e
 + w/.agents/skills/work-modes  dir
 + w/.agents/skills/work-modes/SKILL.md  -rw-r--r-- sha256:cca07dc711f2e958
 + w/.agents/skills/worktree  dir
@@ -119,7 +119,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-+ w/.ai/lock.json  -rw-r--r-- sha256:7c5e90c2d482aebf
++ w/.ai/lock.json  -rw-r--r-- sha256:806f017b85c7d419
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:c5027d9c25fbef11
@@ -169,7 +169,7 @@ files:
 + w/.claude/skills/verification-loop  dir
 + w/.claude/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:d54707cb287e4465
 + w/.claude/skills/verify  dir
-+ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:1bac5d2d073976a3
++ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:a52e05a5457e4f61
 + w/.claude/skills/work-modes  dir
 + w/.claude/skills/work-modes/SKILL.md  -rw-r--r-- sha256:42e7df44abe766f6
 + w/.claude/skills/worktree  dir
@@ -183,7 +183,7 @@ files:
 + w/.github  dir
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
 + w/.mcp.json  -rw-r--r-- sha256:745dcf12d577148c
-+ w/AGENTS.md  -rw-r--r-- sha256:11849da7a8e34cdb
++ w/AGENTS.md  -rw-r--r-- sha256:364c62d928b9a542
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 2: dashcrew "me" "sync"
@@ -248,10 +248,10 @@ stderr: (empty)
 files:
 + w/.agents/skills/api-style  dir
 + w/.agents/skills/api-style/SKILL.md  -rw-r--r-- sha256:dee04b0012ee5371
-~ w/.ai/lock.json  -rw-r--r-- sha256:320c9a9bb2c71d48
+~ w/.ai/lock.json  -rw-r--r-- sha256:8c53cbc5734010f2
 + w/.claude/skills/api-style  dir
 + w/.claude/skills/api-style/SKILL.md  -rw-r--r-- sha256:dee04b0012ee5371
-~ w/AGENTS.md  -rw-r--r-- sha256:9a8c7ad7000a8136
+~ w/AGENTS.md  -rw-r--r-- sha256:59519bc712464560
 
 === step 7: dashcrew "me" "init"
 stdin: "\n\n"

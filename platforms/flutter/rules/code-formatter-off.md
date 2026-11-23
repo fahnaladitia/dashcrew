@@ -4,4 +4,4 @@ order: 51
 when: { policy.formatter: false }
 rules: [lint.no-formatter]
 ---
-- Never run a formatter or an auto-fixer (`dart format`, `dart fix`) as part of a change. Fix analyzer findings by hand, on task lines only.
+- Never let a formatter or auto-fixer (`dart format`, `dart fix`) rewrite files. Fix analyzer findings by hand, on task lines only.

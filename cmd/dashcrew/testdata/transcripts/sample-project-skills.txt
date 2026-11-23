@@ -123,7 +123,7 @@ files:
 + w/.agents/skills/verification-loop  dir
 + w/.agents/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:487563193e58e790
 + w/.agents/skills/verify  dir
-+ w/.agents/skills/verify/SKILL.md  -rw-r--r-- sha256:226aa63da3c01d8f
++ w/.agents/skills/verify/SKILL.md  -rw-r--r-- sha256:d042ffc235fe6e8e
 + w/.agents/skills/work-modes  dir
 + w/.agents/skills/work-modes/SKILL.md  -rw-r--r-- sha256:cca07dc711f2e958
 + w/.agents/skills/worktree  dir
@@ -131,7 +131,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-+ w/.ai/lock.json  -rw-r--r-- sha256:0c9fdcb0d963c5d5
++ w/.ai/lock.json  -rw-r--r-- sha256:eb79694688aa05e1
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:c5027d9c25fbef11
@@ -187,7 +187,7 @@ files:
 + w/.claude/skills/verification-loop  dir
 + w/.claude/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:d54707cb287e4465
 + w/.claude/skills/verify  dir
-+ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:1bac5d2d073976a3
++ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:a52e05a5457e4f61
 + w/.claude/skills/work-modes  dir
 + w/.claude/skills/work-modes/SKILL.md  -rw-r--r-- sha256:42e7df44abe766f6
 + w/.claude/skills/worktree  dir
@@ -201,7 +201,7 @@ files:
 + w/.github  dir
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
 + w/.mcp.json  -rw-r--r-- sha256:745dcf12d577148c
-+ w/AGENTS.md  -rw-r--r-- sha256:72391ebb1c205297
++ w/AGENTS.md  -rw-r--r-- sha256:a0f525f5b0a42189
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 2: dashcrew "sync" "-p" "."
@@ -255,7 +255,7 @@ stdout:
 | ok    codex-skills-budget  25 skills, list 4521 of 8000 characters
 | warn  codex-trust          project not trusted in the Codex config, so .codex/ is ignored; trust it when Codex asks, then approve the guard in /hooks
 | skip  me                   no personal profile; dashcrew me init adds one
-| ok    agents-md-size       AGENTS.md 16196 of 32768 bytes
+| ok    agents-md-size       AGENTS.md 16187 of 32768 bytes
 | ok    always-on            claude-code 15.8 KiB of 40.0 KiB; codex 15.8 KiB of 40.0 KiB
 | ok    gitignore            .ai/bin/guard is not ignored
 stderr: (empty)
@@ -282,7 +282,7 @@ stdout:
 | ok    codex-skills-budget  25 skills, list 4521 of 8000 characters
 | warn  codex-trust          project not trusted in the Codex config, so .codex/ is ignored; trust it when Codex asks, then approve the guard in /hooks
 | skip  me                   no personal profile; dashcrew me init adds one
-| ok    agents-md-size       AGENTS.md 16196 of 32768 bytes
+| ok    agents-md-size       AGENTS.md 16187 of 32768 bytes
 | ok    always-on            claude-code 15.8 KiB of 40.0 KiB; codex 15.8 KiB of 40.0 KiB
 | ok    gitignore            .ai/bin/guard is not ignored
 stderr: (empty)
@@ -298,7 +298,7 @@ stdout:
 | ok    drift           63 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16196 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16187 of 32768 bytes
 | ok    always-on       claude-code 15.8 KiB of 40.0 KiB; codex 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | ok    hook            PreToolUse guard hook present
@@ -319,7 +319,7 @@ stdout:
 | ok    drift           63 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16196 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16187 of 32768 bytes
 | ok    always-on       claude-code 15.8 KiB of 40.0 KiB; codex 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | ok    hook            PreToolUse guard hook present
@@ -340,7 +340,7 @@ stdout:
 | ok    drift           63 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16196 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16187 of 32768 bytes
 | ok    always-on       claude-code 15.8 KiB of 40.0 KiB; codex 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | ok    hook            PreToolUse guard hook present
@@ -362,7 +362,7 @@ stdout:
 | ok    drift           63 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16196 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16187 of 32768 bytes
 | ok    always-on       claude-code 15.8 KiB of 40.0 KiB; codex 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | ok    hook            PreToolUse guard hook present

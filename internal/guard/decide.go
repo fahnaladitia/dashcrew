@@ -282,11 +282,52 @@ func checkCommand(argv []string, p Policy) Decision {
 	}
 	if p.BlockFormatters && len(argv) > 1 {
 		sub := argv[1]
-		if (program == "dart" && (sub == "format" || sub == "fix")) || (program == "flutter" && sub == "format") {
+		writingFormat := program == "dart" && sub == "format" && dartFormatWrites(argv[2:])
+		if writingFormat || (program == "dart" && sub == "fix") || (program == "flutter" && sub == "format") {
 			return Block(program + " " + sub + " rewrites untouched lines. Fix only the lines your task needs.")
 		}
 	}
 	return Allow()
+}
+
+// dartFormatFlags and dartFormatValueOptions are the `dart format` options dartFormatWrites knows; a value option
+// given without `=` takes the next word as its value, whatever it looks like.
+var (
+	dartFormatFlags        = map[string]bool{"--set-exit-if-changed": true, "--follow-links": true, "--fix": true, "-v": true, "--verbose": true}
+	dartFormatValueOptions = map[string]bool{"-l": true, "--line-length": true, "--page-width": true, "--indent": true, "--language-version": true, "--enable-experiment": true, "--show": true, "--summary": true, "--trailing-commas": true}
+)
+
+// dartFormatWrites reports whether `dart format` with these arguments may write files: true unless its last
+// --output (-o) value, read before a `--`, is none, show or json. An option it does not know, or a missing or
+// unknown output value, counts as writing, since an unknown option could take the next word as its value.
+func dartFormatWrites(args []string) bool {
+	output := "write"
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		name, _, hasValue := strings.Cut(arg, "=")
+		switch {
+		case arg == "--":
+			i = len(args)
+		case arg == "--output" || arg == "-o" || dartFormatValueOptions[arg]:
+			if i+1 >= len(args) {
+				return true
+			}
+			i++
+			if arg == "--output" || arg == "-o" {
+				output = args[i]
+			}
+		case name == "--output" && hasValue:
+			output = strings.TrimPrefix(arg, "--output=")
+		case strings.HasPrefix(arg, "-o") && !strings.HasPrefix(arg, "--"):
+			output = strings.TrimPrefix(arg, "-o")
+		case strings.HasPrefix(arg, "-l") && !strings.HasPrefix(arg, "--"):
+			// -l100: the line length attached to its flag.
+		case dartFormatFlags[arg], hasValue && dartFormatValueOptions[name]:
+		case strings.HasPrefix(arg, "-"):
+			return true
+		}
+	}
+	return output != "none" && output != "show" && output != "json"
 }
 
 func stripPrefixes(argv []string) []string {

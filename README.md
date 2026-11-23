@@ -67,7 +67,7 @@ Settings, hooks and MCP files are merged: your own entries stay, and an MCP serv
 The guard blocks, in every agent:
 
 - `git commit`, `push`, `reset`, `rebase`, `merge`, `stash`, `tag` and the other history commands, unless the profile lets the agent commit or push (and then never a force push, a deleted branch or a push to a base branch);
-- `dart format` and `dart fix`, unless the profile allows the formatter;
+- `dart format` and `dart fix`, unless the profile allows the formatter (a read-only format check is always allowed);
 - writes by a read-only subagent;
 - the analytics vendor package imported in the app's `lib/`, and `gh` approvals;
 - on backend platforms, the commands and SQL statements the platform lists, and migrations against a remote database.

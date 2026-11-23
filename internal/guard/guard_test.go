@@ -429,6 +429,49 @@ func TestEveryDartGuardTestIsPorted(t *testing.T) {
 	t.Logf("guard_test.dart: %d tests ported", len(names))
 }
 
+// TestReadOnlyDartFormatPassesTheFormatterBlock: verify runs `dart format --output=none --set-exit-if-changed`
+// under formatter: false, so a dart format that cannot write is allowed; any other formatter call stays blocked.
+func TestReadOnlyDartFormatPassesTheFormatterBlock(t *testing.T) {
+	p := testPolicy(false, false)
+	for _, command := range []string{
+		"dart format --output=none --set-exit-if-changed lib/a.dart",
+		"dart format --output none lib/",
+		"dart format -o none lib/",
+		"dart format -onone lib/",
+		"dart format -o write -o none lib/",
+		"fvm dart format --output=show lib/a.dart",
+		"dart format --output=json lib/a.dart",
+		"bash -c 'dart format --output=none --set-exit-if-changed lib/a.dart'",
+		"dart format -l 100 --output=none --set-exit-if-changed lib/a.dart",
+		"dart format --line-length=100 --follow-links -o none lib/",
+	} {
+		if blocked(t, shellEvent(command), p) {
+			t.Errorf("blocks %q", command)
+		}
+	}
+	for _, command := range []string{
+		"dart format lib/",
+		"dart format --output=write lib/",
+		"dart format -o none -o write lib/",
+		"dart format --set-exit-if-changed lib/",
+		"dart format --output",
+		"dart format -o",
+		"dart format --output=nonsense lib/",
+		"dart format --output=none lib/ && dart format lib/",
+		"dart format -- --output=none",
+		"dart format --enable-experiment -o none lib/",
+		"dart format -l -o none lib/",
+		"dart format --unknown-option -o none lib/",
+		"dart format -x -o none lib/",
+		"dart fix --dry-run",
+		"flutter format --output=none lib/",
+	} {
+		if !blocked(t, shellEvent(command), p) {
+			t.Errorf("allows %q", command)
+		}
+	}
+}
+
 func TestGuard(t *testing.T) {
 	for _, c := range guardCases() {
 		t.Run(c.dart, c.run)

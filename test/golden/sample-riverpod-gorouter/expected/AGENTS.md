@@ -115,7 +115,7 @@ Trivial and small run without a plan or another stop. Standard and large stop af
 - Names explain themselves: functions, variables, files.
 - No `//` comment that explains what code does; rewrite the code instead. Inline comments are only for non-obvious external constraints (an API quirk, OS behavior, a legal requirement), never for logic.
 
-- Never run a formatter or an auto-fixer (`dart format`, `dart fix`) as part of a change. Fix analyzer findings by hand, on task lines only.
+- Never let a formatter or auto-fixer (`dart format`, `dart fix`) rewrite files. Fix analyzer findings by hand, on task lines only.
 
 ## Documentation
 
