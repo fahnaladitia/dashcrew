@@ -2,6 +2,7 @@
 
 - New `storage: drift` pack for Flutter: one database class opened once, generated code never edited, versioned `onUpgrade` steps, `variables` for raw SQL, awaited queries in a transaction, and in-memory database tests. `init` proposes it for `drift` instead of `{use: other, name: drift}`; a profile that already says `use: other` keeps the generic rules until it switches (#56).
 - New `network: chopper` pack for Flutter: generated services in `client_dir`, one configured `ChopperClient`, bodies decoded by its converter, a non-2xx `Response` mapped to app errors in repositories, and `MockClient` tests. `init` proposes it for `chopper` instead of `{use: other, name: chopper}` (#57).
+- New `analytics: amplitude` pack for Flutter, like `mixpanel`: ask before tracking, the SDK only behind the facade, constants for names, and a `server_zone` param. The guard blocks importing `package:amplitude_flutter` in `lib/` outside local packages. `init` detects `amplitude_flutter` (#58).
 
 ## 0.8.0
 

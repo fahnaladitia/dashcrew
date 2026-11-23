@@ -68,6 +68,25 @@ func TestAnalyticsVendorImportAndLocalPackagesFlowIntoThePolicy(t *testing.T) {
 	}
 }
 
+func TestAmplitudeImportIsBlockedInAppLibOnly(t *testing.T) {
+	policy := compile(t, "toolkit: 1\nagents: [claude-code]\nstack: { analytics: amplitude }\nproject: { local_packages: [core] }\n")
+	if !reflect.DeepEqual(policy.ForbiddenImports, []string{"package:amplitude_flutter"}) {
+		t.Fatalf("forbidden imports %v", policy.ForbiddenImports)
+	}
+
+	content := "import 'package:amplitude_flutter/amplitude.dart';\n"
+	event := func(path string) Event { return Event{Kind: Write, FilePath: path, Content: content} }
+	if !blocked(t, event("/repo/lib/feature/a.dart"), policy) {
+		t.Error("app lib allowed")
+	}
+	if blocked(t, event("/repo/core/lib/a.dart"), policy) {
+		t.Error("local package blocked")
+	}
+	if blocked(t, event("/repo/test/a_test.dart"), policy) {
+		t.Error("test blocked")
+	}
+}
+
 func TestPolicyJSONIsSortedAndReadsBack(t *testing.T) {
 	policy := compile(t, "toolkit: 1\nagents: [claude-code]\n")
 

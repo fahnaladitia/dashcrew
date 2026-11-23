@@ -79,9 +79,10 @@ func TestEachPackageDetectsItsFamily(t *testing.T) {
 		{"shared_preferences", "storage: shared_preferences"},
 		{"firebase_analytics", "analytics: firebase"},
 		{"mixpanel_flutter", "analytics: mixpanel"},
+		{"amplitude_flutter", "analytics: amplitude"},
 	}
-	if len(rows) != 21 {
-		t.Fatalf("%d rows, the Dart test has 21", len(rows))
+	if len(rows) != 22 {
+		t.Fatalf("%d rows, want 22", len(rows))
 	}
 	for _, row := range rows {
 		t.Run(row.pkg+" detects "+row.expected, func(t *testing.T) {

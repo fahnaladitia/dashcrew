@@ -42,7 +42,7 @@ stdout:
 |   flavors: dev, prod (lib/main_<flavor>.dart)
 |   local packages: packages/core (path dependencies)
 |   base branches: main, develop (remote branches)
-| analytics [posthog]:   expected one of firebase, mixpanel, none, posthog, other <package>, - (none)
+| analytics [posthog]:   expected one of amplitude, firebase, mixpanel, none, posthog, other <package>, - (none)
 | analytics [posthog]: design [-]: di [get_it]: network [dio | http]: qa [-]: router [go_router]: state [bloc]: storage [hive]: test [mocktail]: tracker [-]: wrote .ai/project.yaml
 | next: dashcrew sync
 stderr: (empty)

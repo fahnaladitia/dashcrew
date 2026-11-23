@@ -69,6 +69,7 @@ var DetectionRules = map[string][]DetectionRule{
 	"posthog_flutter":    {rule("analytics", "posthog")},
 	"firebase_analytics": {rule("analytics", "firebase")},
 	"mixpanel_flutter":   {rule("analytics", "mixpanel")},
+	"amplitude_flutter":  {rule("analytics", "amplitude")},
 	"mocktail":           {rule("test", "mocktail")},
 	"mockito":            {rule("test", "mockito")},
 }
