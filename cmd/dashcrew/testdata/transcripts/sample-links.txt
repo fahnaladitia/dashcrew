@@ -41,7 +41,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-+ w/.ai/lock.json  -rw-r--r-- sha256:ed8ead9d13e38216
++ w/.ai/lock.json  -rw-r--r-- sha256:89c7c57c63329383
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:c5027d9c25fbef11
@@ -91,7 +91,7 @@ files:
 + w/.claude/skills/verification-loop  dir
 + w/.claude/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:d54707cb287e4465
 + w/.claude/skills/verify  dir
-+ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:9708e83d4aa9e6b9
++ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:de16cf333f45fc9a
 + w/.claude/skills/work-modes  dir
 + w/.claude/skills/work-modes/SKILL.md  -rw-r--r-- sha256:42e7df44abe766f6
 + w/.claude/skills/worktree  dir
@@ -99,7 +99,7 @@ files:
 + w/.github  dir
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:d95651b615955b58
 + w/.mcp.json  -rw-r--r-- sha256:745dcf12d577148c
-+ w/AGENTS.md  -rw-r--r-- sha256:11849da7a8e34cdb
++ w/AGENTS.md  -rw-r--r-- sha256:364c62d928b9a542
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 2: dashcrew "sync" "-p" "."
@@ -150,7 +150,7 @@ stdout:
 | ok    skills          16 referenced skills found; optional, not installed: idea-refine
 | ok    links           no links; dashcrew link add <package> <path> points a dependency at a local checkout
 | skip  me              no personal profile; dashcrew me init adds one
-| ok    agents-md-size  AGENTS.md 16136 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16127 of 32768 bytes
 | ok    always-on       claude-code 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
@@ -174,7 +174,7 @@ stdout:
 | ok    skills          16 referenced skills found; optional, not installed: idea-refine
 | ok    links           no links; dashcrew link add <package> <path> points a dependency at a local checkout
 | skip  me              no personal profile; dashcrew me init adds one
-| ok    agents-md-size  AGENTS.md 16136 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16127 of 32768 bytes
 | ok    always-on       claude-code 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
@@ -190,7 +190,7 @@ stdout:
 | ok    drift           31 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16136 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16127 of 32768 bytes
 | ok    always-on       claude-code 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | ok    hook            PreToolUse guard hook present
@@ -211,7 +211,7 @@ stdout:
 | ok    drift           31 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16136 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16127 of 32768 bytes
 | ok    always-on       claude-code 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | ok    hook            PreToolUse guard hook present
@@ -232,7 +232,7 @@ stdout:
 | ok    drift           31 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16136 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16127 of 32768 bytes
 | ok    always-on       claude-code 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | ok    hook            PreToolUse guard hook present
@@ -255,7 +255,7 @@ stdout:
 | ok    drift           31 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 16136 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16127 of 32768 bytes
 | ok    always-on       claude-code 15.8 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | ok    hook            PreToolUse guard hook present

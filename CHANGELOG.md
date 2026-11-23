@@ -1,3 +1,7 @@
+## Unreleased
+
+- Changed: Flutter verify runs `dart format --output=none --set-exit-if-changed` on the changed Dart files in phase 1, so a branch that fails a CI format check no longer reports ready. With `policy.formatter: false` the agent fixes what it lists by hand. The guard now allows a `dart format` that cannot write (its last `--output` is `none`, `show` or `json`, with no option it does not know) under any policy; `dart fix` and other `dart format` calls stay blocked. Every Flutter project gets a changed verify skill and a reworded formatter line in AGENTS.md: run `dashcrew sync` and commit what it writes. An older dashcrew's guard blocks the check, and verify says to report that (#67).
+
 ## 0.8.0
 
 Launch-ready: Go is a built-in platform, `dashcrew guard init` tries the guard in ten seconds, the agent can commit and push behind a prompt the guard enforces (`ask`), `install.sh` installs a release, and the guard no longer lets an unknown tool through in silence. Run `dashcrew sync` and commit what it writes: every project with Claude Code gets one changed line in `.claude/settings.json` (the hook passes `claude-code`), a project on `platform: other` or a project platform gets a reworded testing line in AGENTS.md, and `.ai/lock.json` changes. `guard_min_version` rises to 0.8.0 only in a project that sets `agent_commit: ask`; there, every teammate installs 0.8.0 before that sync is committed. 0.7.0 was published as a release candidate only (`v0.7.0-rc.1`); its changes, below, ship in 0.8.0.

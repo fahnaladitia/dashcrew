@@ -180,12 +180,12 @@ files:
 ~ w/.agents/skills/strategic-compact/SKILL.md  -rw-r--r-- sha256:ef4f497b22288e0c
 ~ w/.agents/skills/tdd/SKILL.md  -rw-r--r-- sha256:fc475d8ce6a5ceab
 ~ w/.agents/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:487563193e58e790
-~ w/.agents/skills/verify/SKILL.md  -rw-r--r-- sha256:226aa63da3c01d8f
+~ w/.agents/skills/verify/SKILL.md  -rw-r--r-- sha256:d042ffc235fe6e8e
 ~ w/.agents/skills/work-modes/SKILL.md  -rw-r--r-- sha256:cca07dc711f2e958
 ~ w/.agents/skills/worktree/SKILL.md  -rw-r--r-- sha256:05e374e3165f3e56
 ~ w/.ai/bin/guard  -rwxr-xr-x sha256:a4d846d82ed6094a
 ~ w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
-~ w/.ai/lock.json  -rw-r--r-- sha256:b2b6961b0221a1b3
+~ w/.ai/lock.json  -rw-r--r-- sha256:fce71c0c353a2cca
 - w/.claude/agents/dart-tdd-guide.md
 - w/.claude/agents/design-refiner.md
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:c5027d9c25fbef11
@@ -228,7 +228,7 @@ files:
 ~ w/.claude/skills/strategic-compact/SKILL.md  -rw-r--r-- sha256:a866040ed09e6f37
 ~ w/.claude/skills/tdd/SKILL.md  -rw-r--r-- sha256:f2c8bea4c991f31f
 ~ w/.claude/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:d54707cb287e4465
-~ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:1bac5d2d073976a3
+~ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:a52e05a5457e4f61
 ~ w/.claude/skills/work-modes/SKILL.md  -rw-r--r-- sha256:42e7df44abe766f6
 ~ w/.claude/skills/worktree/SKILL.md  -rw-r--r-- sha256:5ec38c7fbd7746bb
 - w/.codex/agents/dart-tdd-guide.toml
@@ -247,7 +247,7 @@ files:
 - w/.codex/agents/tech-lead.toml
 - w/.codex/agents/worktree-monitor.toml
 ~ w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
-~ w/AGENTS.md  -rw-r--r-- sha256:3f71770a81a30e0b
+~ w/AGENTS.md  -rw-r--r-- sha256:7f11202841318015
 
 === step 3: dashcrew "sync"
 exit: 0
@@ -280,7 +280,7 @@ stdout:
 | ok    antigravity-mcp      defined: dart-mcp-server
 | ok    antigravity-roles    2 roles, every tool name known
 | skip  me                   no personal profile; dashcrew me init adds one
-| ok    agents-md-size       AGENTS.md 17632 of 24000 bytes
+| ok    agents-md-size       AGENTS.md 17623 of 24000 bytes
 | ok    always-on            claude-code 17.2 KiB of 40.0 KiB; codex 17.2 KiB of 40.0 KiB; antigravity 17.2 KiB of 40.0 KiB
 | ok    gitignore            .ai/bin/guard is not ignored
 | info  handoff-rosters      .ai/plans/todo-filter/handoff/00-roster.md left from the pre-P4 team flow; nothing reads them now, delete them when done

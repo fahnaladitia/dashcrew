@@ -720,3 +720,26 @@ func TestEachChatBlockHasOneSource(t *testing.T) {
 		}
 	}
 }
+
+func TestFlutterVerifyChecksFormatReadOnly(t *testing.T) {
+	verify := func(profile string) string { return targetContent(t, renderShipped(t, profile), "workflow/verify") }
+	const check = "dart format --output=none --set-exit-if-changed"
+
+	off := verify(minimal)
+	if !strings.Contains(off, check) || !strings.Contains(off, "Format the listed lines by hand") {
+		t.Errorf("formatter false: no read-only check or no by-hand fix:\n%s", off)
+	}
+	on := verify("toolkit: 1\nagents: [claude-code]\npolicy: { formatter: true }\n")
+	if !strings.Contains(on, check) || !strings.Contains(on, "Run `dart format` on the listed files") {
+		t.Errorf("formatter true: no read-only check or no dart format fix:\n%s", on)
+	}
+	if strings.Contains(on, "Format the listed lines by hand") {
+		t.Error("formatter true renders the by-hand fix")
+	}
+	if strings.Index(off, check) > strings.Index(off, "## Phase 2") {
+		t.Error("the format check is not in phase 1")
+	}
+	if strings.Contains(verify("toolkit: 1\nplatform: go\nagents: [claude-code]\n"), check) {
+		t.Error("go renders the dart format check")
+	}
+}

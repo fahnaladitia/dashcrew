@@ -5,7 +5,7 @@ To try it without a profile, `dashcrew guard init` writes the default policy, th
 Each agent's pre-tool hook sends the tool call to `.ai/bin/guard`, which blocks:
 
 - `git commit` (unless `policy.agent_commit`), `push` (unless `policy.agent_push`, which still blocks force, delete, `--all`, `--mirror`, `--tags`, base branches and a push without a named branch), `stash`, `reset`, `rebase`, `cherry-pick`, `revert`, `merge`, `tag`, including behind `sudo`, `env`, `rtk`, `fvm`, variable assignments, git global options (`-C`, `-c`), `&&` chains, `$( )`, and heredocs fed to a shell;
-- `dart format`, `dart fix`, `flutter format` (unless `policy.formatter`);
+- `dart format`, `dart fix`, `flutter format` (unless `policy.formatter`); a `dart format` that cannot write, whose last `--output` (`-o`) is `none`, `show` or `json`, is always allowed, so verify can run `dart format --output=none --set-exit-if-changed`;
 - writes by a `read` subagent (`reviewer` and `explorer` are both `read`);
 - importing the analytics vendor package in the app's `lib/` (the selected analytics pack's `vendor_import`), outside local packages;
 - a `gh` command whose arguments contain `/approve`: approvals are the user's, on whatever approval flow a team keeps on GitHub.

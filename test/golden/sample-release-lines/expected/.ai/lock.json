@@ -25,7 +25,7 @@
     ".agents/skills/strategic-compact/SKILL.md": "ef4f497b22288e0ce3e2d2606d879e89232245b4686f150b5b91b46936618d8e",
     ".agents/skills/tdd/SKILL.md": "fc475d8ce6a5ceabfb7dba31d2dad2efc70f55761a34a4e25596f22ae008430d",
     ".agents/skills/verification-loop/SKILL.md": "487563193e58e7906021d4cb71e9def3788cf32bb44c315cce47d5e68fd3d3e1",
-    ".agents/skills/verify/SKILL.md": "226aa63da3c01d8f6020c1b0186786ec56a32b8cf44be45163400e7b8005218b",
+    ".agents/skills/verify/SKILL.md": "d042ffc235fe6e8e5ec04660b258a79d777c54d78217c769b2c5d2aa18add042",
     ".agents/skills/work-modes/SKILL.md": "cca07dc711f2e958a196efa2aae16742d89941e30fd2d01af1fb26026836ff16",
     ".agents/skills/worktree/SKILL.md": "05e374e3165f3e56463cf7a52366a256bf3c0da3ed0a6fcb1a253ec4c57fdee5",
     ".ai/bin/guard": "561e018a69e1d3ce725ff417961294867e563e4786f0d97d8e8e1bbb0eb9b1bb",
@@ -55,13 +55,13 @@
     ".claude/skills/strategic-compact/SKILL.md": "a866040ed09e6f37bba02a199b46b91184ca6809f592fb63710b38f34209c9a3",
     ".claude/skills/tdd/SKILL.md": "f2c8bea4c991f31f8db4cfcce7a4caecf8ba829443447258d1e1611450a296b3",
     ".claude/skills/verification-loop/SKILL.md": "d54707cb287e4465d8aa5785af891ddc44294fd5908b2c10e49c5fa2ca824f50",
-    ".claude/skills/verify/SKILL.md": "1bac5d2d073976a38b02a4de600b95efeb14adeeb32554badf3a2cdec19d0bab",
+    ".claude/skills/verify/SKILL.md": "a52e05a5457e4f61ca9872194302d070ddb6115458c6a590d7a6fde3c73ddeb6",
     ".claude/skills/work-modes/SKILL.md": "42e7df44abe766f6727062a32c48428e095b5f0b186f47445793b8b2678420f7",
     ".claude/skills/worktree/SKILL.md": "5ec38c7fbd7746bb00a969489ba580226286d427190c615f3a51114769cb4167",
     ".codex/agents/explorer.toml": "c00f0dbb747eb2287c1e0ecc998ae5e62ade7c9ca5a1f410d58578a0ee1b9f89",
     ".codex/agents/reviewer.toml": "7b998a688ad60a50f998d67ad6ab45dfe0d1ed776e83462be665ee8809fd7d06",
     ".github/pull_request_template.md": "62399ed678218b8c8c1a474de439efe5e61053333d60b49bbfa5e3794daef52e",
-    "AGENTS.md": "589340cf7fd9295de4279239ba70da1419d1f7a095dcc869a7398b1fd19e37ad",
+    "AGENTS.md": "295f265a8d0645b535b0871041d8533c443ef287755d4934a34f4a079ef299d4",
     "CLAUDE.md": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49"
   },
   "packs": {},
@@ -82,7 +82,7 @@
     "state": "missing"
   },
   "inputs": {
-    "catalog": "8e17eb42a8c314ea755d7aea9037f2ac83fd452876fc77468b8b8877456e7f17",
+    "catalog": "8a2f66a4601eeb66569626c5d9ceb6f9cc2aa74ee5c3f325ee33b2bb184028d0",
     "profile": "405bb53fb3d8afcef842660afa99ab4c9611b417d2ed81b31d77158eb97dd75d"
   }
 }

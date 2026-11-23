@@ -46,6 +46,17 @@ flutter analyze <files and folders from the scope> 2>&1 | tail -30
 - Warnings are reported but do not block.
 - Fix issues by hand, only on lines that belong to the task.
 
+Then check formatting without writing, on the Dart files in scope except generated ones:
+
+```bash
+dart format --output=none --set-exit-if-changed <Dart files from the scope, without *.g.dart and *.freezed.dart>
+```
+
+- It writes nothing: it lists each file whose layout differs and exits 1. Verify does not pass while a task line fails it.
+- When the guard blocks this check, the installed dashcrew is older than the check: report it and do not count formatting as checked.
+
+Format the listed lines by hand when they belong to the task, then run the check again. A listed file whose differences are all outside the task is reported, and the user decides.
+
 ## Phase 2: Tests
 
 Run every test file in scope in one call; each call pays a 10 to 20 second compile.
@@ -103,7 +114,7 @@ Read each changed file. Look for:
 - missing error handling
 - edge cases not handled
 
-Never run `dart format` or `dart fix` to clear analyzer or diff output.
+Never let `dart format` or `dart fix` rewrite files to clear analyzer or diff output; the read-only check in phase 1 is the only formatter call.
 
 ## Output
 

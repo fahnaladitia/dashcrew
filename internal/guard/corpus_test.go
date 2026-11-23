@@ -83,6 +83,9 @@ func seedCommands() []string {
 		"dart",
 		"git",
 		"",
+		"dart format --output=none --set-exit-if-changed lib/a.dart",
+		"dart format -o none -o write lib",
+		"fvm dart format -o show lib",
 	)
 }
 

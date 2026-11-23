@@ -43,7 +43,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:070a62fe34ddf294
-+ w/.ai/lock.json  -rw-r--r-- sha256:27a2e330209b9ec4
++ w/.ai/lock.json  -rw-r--r-- sha256:6db8d324b900f137
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:c5027d9c25fbef11
@@ -97,7 +97,7 @@ files:
 + w/.claude/skills/verification-loop  dir
 + w/.claude/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:d54707cb287e4465
 + w/.claude/skills/verify  dir
-+ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:1bac5d2d073976a3
++ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:a52e05a5457e4f61
 + w/.claude/skills/work-modes  dir
 + w/.claude/skills/work-modes/SKILL.md  -rw-r--r-- sha256:42e7df44abe766f6
 + w/.claude/skills/worktree  dir
@@ -105,7 +105,7 @@ files:
 + w/.github  dir
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:30e7b379fcfe1cab
 + w/.mcp.json  -rw-r--r-- sha256:745dcf12d577148c
-+ w/AGENTS.md  -rw-r--r-- sha256:603635233825a08f
++ w/AGENTS.md  -rw-r--r-- sha256:11f40cb72f4e6b67
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 2: dashcrew "sync" "-p" "."
@@ -155,7 +155,7 @@ stdout:
 | ok    mcp             defined: dart-mcp-server
 | ok    skills          18 referenced skills found; optional, not installed: idea-refine
 | skip  me              no personal profile; dashcrew me init adds one
-| ok    agents-md-size  AGENTS.md 22501 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 22492 of 32768 bytes
 | ok    always-on       claude-code 22.0 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
@@ -178,7 +178,7 @@ stdout:
 | ok    mcp             defined: dart-mcp-server
 | ok    skills          18 referenced skills found; optional, not installed: idea-refine
 | skip  me              no personal profile; dashcrew me init adds one
-| ok    agents-md-size  AGENTS.md 22501 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 22492 of 32768 bytes
 | ok    always-on       claude-code 22.0 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
@@ -194,7 +194,7 @@ stdout:
 | ok    drift           33 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 22501 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 22492 of 32768 bytes
 | ok    always-on       claude-code 22.0 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | ok    hook            PreToolUse guard hook present
@@ -214,7 +214,7 @@ stdout:
 | ok    drift           33 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 22501 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 22492 of 32768 bytes
 | ok    always-on       claude-code 22.0 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | ok    hook            PreToolUse guard hook present
@@ -234,7 +234,7 @@ stdout:
 | ok    drift           33 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 22501 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 22492 of 32768 bytes
 | ok    always-on       claude-code 22.0 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | ok    hook            PreToolUse guard hook present
@@ -255,7 +255,7 @@ stdout:
 | ok    drift           33 generated files match the lock
 | ok    stale           output matches the current profile and catalog
 | ok    guard-policy    .ai/guard.json valid
-| ok    agents-md-size  AGENTS.md 22501 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 22492 of 32768 bytes
 | ok    always-on       claude-code 22.0 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 | ok    hook            PreToolUse guard hook present

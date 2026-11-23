@@ -44,7 +44,7 @@ files:
 + w/.ai/bin  dir
 + w/.ai/bin/guard  -rwxr-xr-x sha256:561e018a69e1d3ce
 + w/.ai/guard.json  -rw-r--r-- sha256:36bfb1be82c0b298
-+ w/.ai/lock.json  -rw-r--r-- sha256:9e95e023acf922c3
++ w/.ai/lock.json  -rw-r--r-- sha256:b297bd306c084616
 + w/.claude  dir
 + w/.claude/agents  dir
 + w/.claude/agents/explorer.md  -rw-r--r-- sha256:2e98a0bf10f22e04
@@ -96,7 +96,7 @@ files:
 + w/.claude/skills/verification-loop  dir
 + w/.claude/skills/verification-loop/SKILL.md  -rw-r--r-- sha256:d54707cb287e4465
 + w/.claude/skills/verify  dir
-+ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:1bac5d2d073976a3
++ w/.claude/skills/verify/SKILL.md  -rw-r--r-- sha256:a52e05a5457e4f61
 + w/.claude/skills/work-modes  dir
 + w/.claude/skills/work-modes/SKILL.md  -rw-r--r-- sha256:42e7df44abe766f6
 + w/.claude/skills/worktree  dir
@@ -105,7 +105,7 @@ files:
 + w/.github/pull_request_template.md  -rw-r--r-- sha256:62399ed678218b8c
 + w/.gitignore  -rw-r--r-- sha256:3a003918a77c43a0
 + w/.mcp.json  -rw-r--r-- sha256:af388c2fd3ed6bef
-+ w/AGENTS.md  -rw-r--r-- sha256:73f84c62b3c5c3c3
++ w/AGENTS.md  -rw-r--r-- sha256:de4c5f9874eeb2d1
 + w/CLAUDE.md  -rw-r--r-- sha256:336cc4fbf19beaad
 
 === step 2: dashcrew "doctor"
@@ -125,7 +125,7 @@ stdout:
 | ok    skills          16 referenced skills found; optional, not installed: idea-refine
 | warn  knowledge       no clone of notes at ~/.dashcrew/knowledge/notes; run dashcrew knowledge pull
 | skip  me              no personal profile; dashcrew me init adds one
-| ok    agents-md-size  AGENTS.md 16076 of 32768 bytes
+| ok    agents-md-size  AGENTS.md 16067 of 32768 bytes
 | ok    always-on       claude-code 15.7 KiB of 40.0 KiB
 | ok    gitignore       .ai/bin/guard is not ignored
 stderr: (empty)
@@ -162,7 +162,7 @@ stdout:
 stderr: (empty)
 files:
 + w/.ai/knowledge  link -> <root>/home/.dashcrew/knowledge/notes
-~ w/.ai/lock.json  -rw-r--r-- sha256:baa56d90b6ae4ef2
+~ w/.ai/lock.json  -rw-r--r-- sha256:6091c7ea41b5116f
 
 === step 6: dashcrew "sync"
 exit: 0
@@ -225,7 +225,7 @@ stdout:
 | up to date
 stderr: (empty)
 files:
-~ w/.ai/lock.json  -rw-r--r-- sha256:f697ddeadb99cd8f
+~ w/.ai/lock.json  -rw-r--r-- sha256:c11c12a8527b9916
 
 === step 14: dashcrew "doctor" "--fetch"
 (after the case's setup for this step)
@@ -246,7 +246,7 @@ stdout:
 | warn  knowledge        linked to ~/.dashcrew/knowledge/notes, pulled less than an hour ago, 1 commit behind its remote; run dashcrew knowledge pull
 | warn  knowledge-stale  2 unverified pages; run dashcrew knowledge doctor
 | skip  me               no personal profile; dashcrew me init adds one
-| ok    agents-md-size   AGENTS.md 16076 of 32768 bytes
+| ok    agents-md-size   AGENTS.md 16067 of 32768 bytes
 | ok    always-on        claude-code 15.7 KiB of 40.0 KiB
 | ok    gitignore        .ai/bin/guard is not ignored
 stderr: (empty)
@@ -281,7 +281,7 @@ stderr: (empty)
 files:
 ~ w/.ai/guard.json  -rw-r--r-- sha256:402ed0fcf76a6fba
 - w/.ai/knowledge
-~ w/.ai/lock.json  -rw-r--r-- sha256:328a73faae2c6ddf
+~ w/.ai/lock.json  -rw-r--r-- sha256:979bdd617a2daca9
 ~ w/.claude/agents/explorer.md  -rw-r--r-- sha256:c5027d9c25fbef11
 ~ w/.claude/agents/reviewer.md  -rw-r--r-- sha256:5c1f3688fe3eb344
 ~ w/.claude/skills/branching/SKILL.md  -rw-r--r-- sha256:8b93b9328ded4711
@@ -292,4 +292,4 @@ files:
 - w/.claude/skills/spec/SKILL.md
 - w/.gitignore
 ~ w/.mcp.json  -rw-r--r-- sha256:745dcf12d577148c
-~ w/AGENTS.md  -rw-r--r-- sha256:11849da7a8e34cdb
+~ w/AGENTS.md  -rw-r--r-- sha256:364c62d928b9a542
