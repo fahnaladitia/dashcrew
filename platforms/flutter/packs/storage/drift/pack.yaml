@@ -1,0 +1,3 @@
+description: drift SQLite database with generated tables and queries, opened once by one database class, with versioned migrations.
+params:
+  database_class: AppDatabase

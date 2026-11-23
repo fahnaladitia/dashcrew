@@ -1,5 +1,10 @@
 ## Unreleased
 
+- Changed: when the install folder is not on `PATH` and `$SHELL` is fish, `install.sh` prints `fish_add_path <dir>` instead of an `export PATH` line fish cannot read (#59).
+- Docs: `docs/recipes.md` holds four complete profiles to start from: a Flutter app with bloc, get_it, go_router and two flavors, a Python service on `platform: other`, a team on Claude Code, Codex and Antigravity with the GitHub merge gate and `agent_commit: ask`, and a Go service (#60).
+- New `storage: drift` pack for Flutter: one database class opened once, generated code never edited, versioned `onUpgrade` steps, `variables` for raw SQL, awaited queries in a transaction, and in-memory database tests. `init` proposes it for `drift` instead of `{use: other, name: drift}`; a profile that already says `use: other` keeps the generic rules until it switches (#56).
+- New `network: chopper` pack for Flutter: generated services in `client_dir`, one configured `ChopperClient`, bodies decoded by its converter, a non-2xx `Response` mapped to app errors in repositories, and `MockClient` tests. `init` proposes it for `chopper` instead of `{use: other, name: chopper}` (#57).
+- New `analytics: amplitude` pack for Flutter, like `mixpanel`: ask before tracking, the SDK only behind the facade, constants for names, and a `server_zone` param. The guard blocks importing `package:amplitude_flutter` in `lib/` outside local packages. `init` detects `amplitude_flutter` (#58).
 - Changed: Flutter verify runs `dart format --output=none --set-exit-if-changed` on the changed Dart files in phase 1, so a branch that fails a CI format check no longer reports ready. With `policy.formatter: false` the agent fixes what it lists by hand. The guard now allows a `dart format` that cannot write (its last `--output` is `none`, `show` or `json`, with no option it does not know) under any policy; `dart fix` and other `dart format` calls stay blocked. Every Flutter project gets a changed verify skill and a reworded formatter line in AGENTS.md: run `dashcrew sync` and commit what it writes. An older dashcrew's guard blocks the check, and verify says to report that (#67).
 
 ## 0.8.0
